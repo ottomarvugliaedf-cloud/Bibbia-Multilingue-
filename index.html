@@ -10,39 +10,38 @@
   <link rel="manifest" href='data:application/manifest+json,{"name":"Bibbia Studio","short_name":"Bibbia","start_url":".","display":"standalone","background_color":"#0d47a1","theme_color":"#0d47a1","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3004/3004458.png","sizes":"512x512","type":"image/png"}]}'>
   <style>
     :root {
-      --bg-main: #f4f8fb;
+      --bg-main: #f0f6fc;
       --bg-card: #ffffff;
       --text-main: #102a43;
-      --text-muted: #627d98;
+      --text-muted: #52667a;
       --primary-dark: #0a367e;
       --primary-main: #1565c0;
-      --primary-light: #1e88e5;
-      --accent-cyan: #00acc1;
-      --border-color: #d9e2ec;
-      --verse-hover: #e3f2fd;
+      --primary-light: #0288d1;
+      --border-color: #d1dfed;
+      --verse-hover: #e1f5fe;
       --font-size-verse: 18px;
-      /* Colori griglia libri stile JW (toni dal blu scuro all'azzurro) */
+      /* Palette Blu-Azzurro stile JW Library */
       --cat-1: #0d47a1; /* Pentateuco / Vangeli */
-      --cat-2: #1976d2; /* Storici / Atti */
-      --cat-3: #0288d1; /* Poetici / Lettere Paolo */
-      --cat-4: #0097a7; /* Profeti / Lettere Generali & Rivelazione */
+      --cat-2: #1565c0; /* Storici / Atti */
+      --cat-3: #0288d1; /* Poetici / Lettere di Paolo */
+      --cat-4: #0097a7; /* Profetici / Lettere Generali & Rivelazione */
     }
 
     body.dark-mode {
-      --bg-main: #0b192c;
-      --bg-card: #162a45;
+      --bg-main: #091526;
+      --bg-card: #12243d;
       --text-main: #e6f1ff;
-      --text-muted: #8892b0;
-      --primary-dark: #071120;
-      --primary-main: #112240;
-      --primary-light: #1d3b66;
-      --border-color: #233554;
-      --verse-hover: #1e3a5f;
+      --text-muted: #8ca0ba;
+      --primary-dark: #050d1a;
+      --primary-main: #0d213f;
+      --primary-light: #29b6f6;
+      --border-color: #1f3758;
+      --verse-hover: #1a3354;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background-color: var(--bg-main);
       color: var(--text-main);
       display: flex;
@@ -51,7 +50,6 @@
       overflow: hidden;
     }
 
-    /* TOP BAR */
     header {
       background: linear-gradient(135deg, var(--primary-dark), var(--primary-main));
       color: #fff;
@@ -59,66 +57,61 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.22);
       z-index: 100;
       flex-shrink: 0;
     }
-    .header-left { display: flex; align-items: center; gap: 10px; }
     .book-selector-btn {
-      background: rgba(255,255,255,0.15);
-      border: 1px solid rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.35);
       color: #fff;
-      padding: 7px 13px;
+      padding: 7px 14px;
       border-radius: 6px;
       font-size: 16px;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 6px;
     }
-    .header-Controls { display: flex; align-items: center; gap: 6px; }
+    .header-controls { display: flex; align-items: center; gap: 4px; }
     .icon-btn {
       background: transparent;
       border: none;
       color: #fff;
-      padding: 8px;
-      border-radius: 50%;
+      padding: 7px 9px;
+      border-radius: 6px;
       cursor: pointer;
-      font-size: 17px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      font-size: 16px;
+      font-weight: 600;
     }
-    .icon-btn.active { background: rgba(255,255,255,0.25); }
 
-    /* BARRA TRADUZIONI */
     .trans-bar {
       background: var(--bg-card);
       border-bottom: 1px solid var(--border-color);
-      padding: 8px 14px;
+      padding: 8px 12px;
       display: flex;
-      gap: 8px;
+      gap: 6px;
       align-items: center;
       flex-shrink: 0;
       flex-wrap: wrap;
     }
     .trans-select {
       flex: 1;
-      min-width: 130px;
-      padding: 7px 10px;
+      min-width: 125px;
+      padding: 7px 8px;
       border-radius: 6px;
       border: 1px solid var(--border-color);
       background: var(--bg-main);
       color: var(--text-main);
-      font-size: 14px;
-      font-weight: 500;
+      font-size: 13.5px;
+      font-weight: 600;
     }
     .parallel-toggle {
       background: var(--primary-light);
       color: #fff;
       border: none;
-      padding: 7px 12px;
+      padding: 7px 11px;
       border-radius: 6px;
       font-size: 13px;
       font-weight: 600;
@@ -131,19 +124,16 @@
       border: 1px solid var(--border-color);
     }
 
-    /* CONTENUTO PRINCIPALE */
     main {
       flex: 1;
       overflow-y: auto;
       padding: 14px;
-      scroll-behavior: smooth;
     }
 
-    /* VISTA GRIGLIA LIBRI (STILE JW LIBRARY) */
     .section-title {
       font-size: 13px;
       text-transform: uppercase;
-      letter-spacing: 0.8px;
+      letter-spacing: 0.7px;
       color: var(--primary-light);
       font-weight: 700;
       margin: 16px 0 8px 0;
@@ -154,8 +144,8 @@
     .books-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(62px, 1fr));
-      gap: 6px;
-      margin-bottom: 18px;
+      gap: 5px;
+      margin-bottom: 16px;
     }
     .book-tile {
       color: #fff;
@@ -164,14 +154,12 @@
       height: 48px;
       padding: 6px;
       display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: flex-start;
+      align-items: center;
+      justify-content: flex-start;
       cursor: pointer;
-      font-weight: 600;
-      font-size: 15px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-      transition: transform 0.1s, filter 0.1s;
+      font-weight: 700;
+      font-size: 14.5px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
     }
     .book-tile:active { transform: scale(0.95); filter: brightness(1.15); }
     .book-tile.cat-1 { background-color: var(--cat-1); }
@@ -179,11 +167,10 @@
     .book-tile.cat-3 { background-color: var(--cat-3); }
     .book-tile.cat-4 { background-color: var(--cat-4); }
 
-    /* GRIGLIA CAPITOLI */
     .chapters-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(54px, 1fr));
-      gap: 8px;
+      grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+      gap: 7px;
       margin-top: 12px;
     }
     .chapter-tile {
@@ -191,31 +178,27 @@
       color: var(--text-main);
       border: 1px solid var(--border-color);
       border-radius: 6px;
-      height: 50px;
-      font-size: 17px;
-      font-weight: 600;
+      height: 48px;
+      font-size: 16px;
+      font-weight: 700;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
-    .chapter-tile:active, .chapter-tile.current {
+    .chapter-tile.current {
       background: var(--primary-main);
       color: #fff;
       border-color: var(--primary-main);
     }
 
-    /* VISTA LETTURA CAPITOLO */
     .chapter-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       padding-bottom: 8px;
       border-bottom: 1px solid var(--border-color);
     }
-    .chapter-title { font-size: 22px; font-weight: 700; color: var(--primary-light); }
-    .chapter-nav-btns { display: flex; gap: 8px; }
+    .chapter-title { font-size: 20px; font-weight: 800; color: var(--primary-light); }
+    .chapter-nav-btns { display: flex; gap: 6px; }
     .nav-btn {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
@@ -229,71 +212,63 @@
     .verse-row {
       padding: 8px 6px;
       border-radius: 6px;
-      line-height: 1.55;
+      line-height: 1.58;
       font-size: var(--font-size-verse);
       cursor: pointer;
-      transition: background 0.15s;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
     }
     .verse-row:hover { background: var(--verse-hover); }
     .verse-num {
-      font-weight: 700;
+      font-weight: 800;
       color: var(--primary-light);
-      font-size: 0.8em;
+      font-size: 0.78em;
       vertical-align: super;
       margin-right: 5px;
-      user-select: none;
     }
 
-    /* LETTURA IN PARALLELO */
     .parallel-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      padding: 10px 6px;
+      gap: 10px;
+      padding: 10px 4px;
       border-bottom: 1px solid var(--border-color);
       font-size: var(--font-size-verse);
-      line-height: 1.5;
-    }
-    .parallel-col {
-      padding-right: 4px;
+      line-height: 1.52;
+      cursor: pointer;
     }
     .parallel-col + .parallel-col {
       border-left: 2px solid var(--primary-light);
       padding-left: 10px;
     }
 
-    /* COLORI EVIDENZIAZIONE */
     .hl-yellow { background-color: rgba(255, 235, 59, 0.38) !important; }
     .hl-blue   { background-color: rgba(3, 169, 244, 0.32) !important; }
     .hl-green  { background-color: rgba(76, 175, 80, 0.32) !important; }
     .hl-pink   { background-color: rgba(233, 30, 99, 0.28) !important; }
 
-    /* BARRA AZIONI VERSETTO (POPUP IN BASSO) */
-    .verse-Action-bar {
+    .verse-action-bar {
       position: fixed;
-      bottom: 58px;
+      bottom: 62px;
       left: 50%;
       transform: translateX(-50%);
       background: var(--bg-card);
       border: 1px solid var(--border-color);
-      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
       border-radius: 30px;
-      padding: 8px 16px;
+      padding: 8px 14px;
       display: none;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       z-index: 200;
     }
     .color-dot {
-      width: 26px;
-      height: 26px;
+      width: 25px;
+      height: 25px;
       border-radius: 50%;
       border: 2px solid rgba(0,0,0,0.2);
       cursor: pointer;
     }
 
-    /* BOTTOM NAVIGATION */
     nav.bottom-nav {
       background: var(--bg-card);
       border-top: 1px solid var(--border-color);
@@ -306,24 +281,19 @@
       background: none;
       border: none;
       color: var(--text-muted);
-      font-size: 12px;
+      font-size: 11.5px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 3px;
+      gap: 2px;
       cursor: pointer;
-      padding: 4px 12px;
-      font-weight: 500;
+      padding: 4px 8px;
+      font-weight: 600;
     }
-    .tab-btn.active { color: var(--primary-light); font-weight: 700; }
-    .tab-icon { font-size: 19px; }
+    .tab-btn.active { color: var(--primary-light); font-weight: 800; }
+    .tab-icon { font-size: 18px; }
 
-    /* RICERCA & SEGNALIBRI */
-    .search-box {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 14px;
-    }
+    .search-box { display: flex; gap: 8px; margin-bottom: 14px; }
     .search-input {
       flex: 1;
       padding: 10px 12px;
@@ -331,15 +301,15 @@
       border: 1px solid var(--border-color);
       background: var(--bg-card);
       color: var(--text-main);
-      font-size: 16px;
+      font-size: 15px;
     }
     .search-btn {
       background: var(--primary-main);
       color: #fff;
       border: none;
-      padding: 0 18px;
+      padding: 0 16px;
       border-radius: 8px;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
     }
     .result-card {
@@ -347,113 +317,74 @@
       border: 1px solid var(--border-color);
       border-radius: 8px;
       padding: 12px;
-      margin-bottom: 10px;
+      margin-bottom: 9px;
       cursor: pointer;
     }
     .result-ref { font-weight: 700; color: var(--primary-light); margin-bottom: 4px; font-size: 14px; }
-    .loader { text-align: center; padding: 30px; color: var(--text-muted); font-style: italic; }
+    .loader { text-align: center; padding: 28px 14px; color: var(--text-muted); line-height: 1.5; }
+    .badge {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      background: var(--primary-light);
+      color: #fff;
+      font-weight: 700;
+    }
   </style>
 </head>
 <body>
 
-  <!-- TOP BAR -->
   <header>
-    <div class="header-left">
+    <div>
       <button class="book-selector-btn" onclick="showBooksView()">
         <span id="currentRefLabel">Genesi 1</span>
         <span>▾</span>
       </button>
     </div>
-    <div class="header-Controls">
-      <button class="icon-btn" onclick="changeFontSize(-2)" title="Riduci testo">A-</button>
-      <button class="icon-btn" onclick="changeFontSize(2)" title="Ingrandisci testo">A+</button>
-      <button class="icon-btn" onclick="toggleDarkMode()" title="Modalità Notturna">🌙</button>
+    <div class="header-controls">
+      <button class="icon-btn" onclick="changeFontSize(-2)">A-</button>
+      <button class="icon-btn" onclick="changeFontSize(2)">A+</button>
+      <button class="icon-btn" onclick="toggleDarkMode()">🌙</button>
     </div>
   </header>
 
-  <!-- SELETTORE TRADUZIONI E MODALITÀ PARALLELA -->
   <div class="trans-bar">
-    <select id="trans1" class="trans-select" onchange="onTranslationChange()">
-      <optgroup label="Italiano">
-        <option value="ITA1927">Riveduta 1927 (Luzzi)</option>
-        <option value="DIODATI">Giovanni Diodati (1649)</option>
-      </optgroup>
-      <optgroup label="Inglese">
-        <option value="KJV">King James Version (KJV)</option>
-        <option value="WEB">World English Bible (WEB)</option>
-        <option value="ASV">American Standard (ASV)</option>
-      </optgroup>
-      <optgroup label="Spagnolo / Tedesco">
-        <option value="RV1909">Reina Valera (1909)</option>
-        <option value="LUT">Lutherbibel (1912)</option>
-      </optgroup>
-      <optgroup label="Lingue Originali">
-        <option value="WLC">Ebraico (Westminster Leningrad)</option>
-        <option value="TR">Greco (Textus Receptus)</option>
-      </optgroup>
-    </select>
-
-    <button id="parallelBtn" class="parallel-toggle off" onclick="toggleParallel()">
-      ⚖️ Parallelo: OFF
-    </button>
-
-    <select id="trans2" class="trans-select" style="display:none;" onchange="onTranslationChange()">
-      <optgroup label="Italiano">
-        <option value="DIODATI">Giovanni Diodati (1649)</option>
-        <option value="ITA1927">Riveduta 1927 (Luzzi)</option>
-      </optgroup>
-      <optgroup label="Inglese">
-        <option value="KJV" selected>King James Version (KJV)</option>
-        <option value="WEB">World English Bible (WEB)</option>
-        <option value="ASV">American Standard (ASV)</option>
-      </optgroup>
-      <optgroup label="Spagnolo / Tedesco">
-        <option value="RV1909">Reina Valera (1909)</option>
-        <option value="LUT">Lutherbibel (1912)</option>
-      </optgroup>
-      <optgroup label="Lingue Originali">
-        <option value="WLC">Ebraico (Westminster Leningrad)</option>
-        <option value="TR">Greco (Textus Receptus)</option>
-      </optgroup>
-    </select>
+    <select id="trans1" class="trans-select" onchange="onTranslationChange()"></select>
+    <button id="parallelBtn" class="parallel-toggle off" onclick="toggleParallel()">⚖️ Parallelo: OFF</button>
+    <select id="trans2" class="trans-select" style="display:none;" onchange="onTranslationChange()"></select>
   </div>
 
-  <!-- AREA PRINCIPALE -->
   <main id="mainContainer"></main>
 
-  <!-- POPUP EVIDENZIAZIONE E SEGNALIBRO -->
-  <div id="verseActionBar" class="verse-Action-bar">
+  <div id="verseActionBar" class="verse-action-bar">
     <div class="color-dot" style="background:#ffeb3b;" onclick="applyHighlight('hl-yellow')"></div>
     <div class="color-dot" style="background:#03a9f4;" onclick="applyHighlight('hl-blue')"></div>
     <div class="color-dot" style="background:#4caf50;" onclick="applyHighlight('hl-green')"></div>
     <div class="color-dot" style="background:#e91e63;" onclick="applyHighlight('hl-pink')"></div>
-    <button class="icon-btn" style="color:var(--text-main);font-size:15px;" onclick="applyHighlight('')">🚫</button>
-    <button class="icon-btn" style="color:var(--primary-light);font-size:16px;" onclick="saveBookmark()">🔖</button>
-    <button class="icon-btn" style="color:var(--text-muted);font-size:15px;" onclick="closeActionBar()">✕</button>
+    <button class="icon-btn" style="color:var(--text-main);" onclick="applyHighlight('')">🚫</button>
+    <button class="icon-btn" style="color:var(--primary-light);" onclick="saveBookmark()">🔖</button>
+    <button class="icon-btn" style="color:var(--text-muted);" onclick="closeActionBar()">✕</button>
   </div>
 
-  <!-- MENU IN BASSO -->
   <nav class="bottom-nav">
     <button class="tab-btn active" id="tabRead" onclick="loadChapterView()">
-      <span class="tab-icon">📖</span>
-      <span>Lettura</span>
+      <span class="tab-icon">📖</span><span>Lettura</span>
     </button>
     <button class="tab-btn" id="tabBooks" onclick="showBooksView()">
-      <span class="tab-icon">🟦</span>
-      <span>Libri (66)</span>
+      <span class="tab-icon">🟦</span><span>Libri (66)</span>
     </button>
     <button class="tab-btn" id="tabSearch" onclick="showSearchView()">
-      <span class="tab-icon">🔍</span>
-      <span>Cerca</span>
+      <span class="tab-icon">🔍</span><span>Cerca</span>
     </button>
     <button class="tab-btn" id="tabSaved" onclick="showSavedView()">
-      <span class="tab-icon">🔖</span>
-      <span>Segnalibri</span>
+      <span class="tab-icon">🔖</span><span>Segnalibri</span>
+    </button>
+    <button class="tab-btn" id="tabCatalog" onclick="showCatalogView()">
+      <span class="tab-icon">⬇️</span><span>Traduzioni</span>
     </button>
   </nav>
 
 <script>
-// ELENCO 66 LIBRI (39 Ebraico-Aramaiche + 27 Greche Cristiane) con categorie colore JW Library
 const BIBLE_BOOKS = [
   // SCRITTURE EBRAICO-ARAMAICHE (39)
   { id: 1,  name: "Genesi", abbr: "Gen", ch: 50, sec: "OT", cat: 1 },
@@ -523,21 +454,81 @@ const BIBLE_BOOKS = [
   { id: 63, name: "2 Giovanni", abbr: "2Gv", ch: 1, sec: "NT", cat: 4 },
   { id: 64, name: "3 Giovanni", abbr: "3Gv", ch: 1, sec: "NT", cat: 4 },
   { id: 65, name: "Giuda", abbr: "Gda", ch: 1, sec: "NT", cat: 4 },
-  { id: 66, name: "Rivelazione (Apocalisse)", abbr: "Riv", ch: 22, sec: "NT", cat: 4 }
+  { id: 66, name: "Rivelazione", abbr: "Riv", ch: 22, sec: "NT", cat: 4 }
+];
+
+// TRADUZIONI PREDEFINITE VERIFICATE (GetBible v2 + Bolls)
+const DEFAULT_TRANSLATIONS = [
+  { id: "gb:riveduta", name: "🇮🇹 Riveduta 1927 (Luzzi)" },
+  { id: "gb:giovanni", name: "🇮🇹 Giovanni Diodati (1649)" },
+  { id: "bl:NR06",     name: "🇮🇹 Nuova Riveduta (2006)" },
+  { id: "gb:kjv",      name: "🇬🇧 King James Version (KJV)" },
+  { id: "gb:web",      name: "🇬🇧 World English Bible (WEB)" },
+  { id: "gb:asv",      name: "🇬🇧 American Standard (ASV)" },
+  { id: "gb:ylt",      name: "🇬🇧 Young's Literal (YLT)" },
+  { id: "gb:valera",   name: "🇪🇸 Reina Valera (1909)" },
+  { id: "gb:luther1912", name: "🇩🇪 Lutherbibel (1912)" },
+  { id: "gb:schlachter", name: "🇩🇪 Schlachter (1951)" },
+  { id: "gb:codex",    name: "📜 Ebraico (Westminster Leningrad)" },
+  { id: "gb:aleppo",   name: "📜 Ebraico (Codice di Aleppo)" },
+  { id: "gb:textusreceptus", name: "📜 Greco NT (Textus Receptus)" }
 ];
 
 let state = {
   bookId: 1,
   chapter: 1,
-  trans1: "ITA1927",
-  trans2: "KJV",
+  trans1: "gb:riveduta",
+  trans2: "gb:giovanni",
   parallel: false,
   fontSize: 18,
   selectedVerse: null,
   selectedVerseText: "",
+  customTrans: JSON.parse(localStorage.getItem("bible_custom_trans") || "[]"),
   highlights: JSON.parse(localStorage.getItem("bible_hl") || "{}"),
-  bookmarks: JSON.parse(localStorage.getItem("bible_bm") || "[]")
+  bookmarks: JSON.parse(localStorage.getItem("bible_bm") || "[]"),
+  fullCatalog: null
 };
+
+// DATABASE LOCALE INDEXEDDB PER SALVARE INTERE BIBBIE OFFLINE
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open("BibleStudioOfflineDB", 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore("bibles");
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror = e => reject(e);
+  });
+}
+async function getOfflineBible(id) {
+  try {
+    const db = await openDB();
+    return new Promise(res => {
+      const tx = db.transaction("bibles", "readonly");
+      const req = tx.objectStore("bibles").get(id);
+      req.onsuccess = () => res(req.result || null);
+      req.onerror = () => res(null);
+    });
+  } catch(e) { return null; }
+}
+async function saveOfflineBible(id, data) {
+  const db = await openDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction("bibles", "readwrite");
+    tx.objectStore("bibles").put(data, id);
+    tx.oncomplete = () => res();
+    tx.onerror = e => rej(e);
+  });
+}
+
+function populateSelects() {
+  const all = [...DEFAULT_TRANSLATIONS, ...state.customTrans];
+  const s1 = document.getElementById("trans1");
+  const s2 = document.getElementById("trans2");
+  const html = all.map(t => `<option value="${t.id}">${t.name}</option>`).join("");
+  s1.innerHTML = html;
+  s2.innerHTML = html;
+  s1.value = state.trans1;
+  s2.value = state.trans2;
+}
 
 function setActiveTab(tabId) {
   document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -549,7 +540,7 @@ function getBook(id) {
   return BIBLE_BOOKS.find(b => b.id === id) || BIBLE_BOOKS[0];
 }
 
-// 1. VISTA LIBRI (STILE JW LIBRARY: 39 + 27)
+// 1. VISTA GRIGLIA 66 LIBRI (39 + 27)
 function showBooksView() {
   closeActionBar();
   setActiveTab("tabBooks");
@@ -557,303 +548,6 @@ function showBooksView() {
   const otBooks = BIBLE_BOOKS.filter(b => b.sec === "OT");
   const ntBooks = BIBLE_BOOKS.filter(b => b.sec === "NT");
 
-  let html = `
+  main.innerHTML = `
     <div class="section-title">Scritture Ebraico-Aramaiche (39)</div>
-    <div class="books-grid">
-      ${otBooks.map(b => `<button class="book-tile cat-${b.cat}" onclick="showChaptersView(${b.id})">${b.abbr}</button>`).join("")}
-    </div>
-    <div class="section-title">Scritture Greche Cristiane (27)</div>
-    <div class="books-grid">
-      ${ntBooks.map(b => `<button class="book-tile cat-${b.cat}" onclick="showChaptersView(${b.id})">${b.abbr}</button>`).join("")}
-    </div>
-  `;
-  main.innerHTML = html;
-  main.scrollTop = 0;
-}
-
-// 2. VISTA CAPITOLI DEL LIBRO SCELTO
-function showChaptersView(bookId) {
-  state.bookId = bookId;
-  const book = getBook(bookId);
-  if (book.ch === 1) {
-    state.chapter = 1;
-    loadChapterView();
-    return;
-  }
-  const main = document.getElementById("mainContainer");
-  let chButtons = "";
-  for (let i = 1; i <= book.ch; i++) {
-    const isCurr = (i === state.chapter) ? "current" : "";
-    chButtons += `<button class="chapter-tile ${isCurr}" onclick="selectChapter(${i})">${i}</button>`;
-  }
-  main.innerHTML = `
-    <div class="chapter-header">
-      <div class="chapter-title">${book.name} — Scegli capitolo</div>
-      <button class="nav-btn" onclick="showBooksView()">← Libri</button>
-    </div>
-    <div class="chapters-grid">${chButtons}</div>
-  `;
-  main.scrollTop = 0;
-}
-
-function selectChapter(ch) {
-  state.chapter = ch;
-  loadChapterView();
-}
-
-// SCARICAMENTO CAPITOLO CON CACHE LOCALE OFFLINE
-async function fetchChapterData(trans, bookId, chapter) {
-  const cacheKey = `ch_${trans}_${bookId}_${chapter}`;
-  const cached = localStorage.getItem(cacheKey);
-  if (cached) return JSON.parse(cached);
-
-  const url = `https://bolls.life/get-text/${trans}/${bookId}/${chapter}/`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("Errore nel caricamento della traduzione");
-  const data = await res.json();
-  try { localStorage.setItem(cacheKey, JSON.stringify(data)); } catch(e) {}
-  return data;
-}
-
-// 3. VISTA LETTURA (SINGOLA O PARALLELA)
-async function loadChapterView() {
-  closeActionBar();
-  setActiveTab("tabRead");
-  const book = getBook(state.bookId);
-  document.getElementById("currentRefLabel").textContent = `${book.name} ${state.chapter}`;
-
-  const main = document.getElementById("mainContainer");
-  main.innerHTML = `<div class="loader">Caricamento di ${book.name} ${state.chapter}...</div>`;
-
-  try {
-    const data1 = await fetchChapterData(state.trans1, state.bookId, state.chapter);
-    let data2 = [];
-    if (state.parallel) {
-      data2 = await fetchChapterData(state.trans2, state.bookId, state.chapter);
-    }
-
-    let versesHtml = "";
-    if (!state.parallel) {
-      versesHtml = data1.map(v => {
-        const key = `${state.bookId}_${state.chapter}_${v.verse}`;
-        const hlClass = state.highlights[key] || "";
-        const cleanText = v.text.replace(/<[^>]*>?/gm, "");
-        return `
-          <div class="verse-row ${hlClass}" id="v_${v.verse}" onclick="onVerseClick(${v.verse}, \`${cleanText.replace(/`/g, "'")}\`)">
-            <span class="verse-num">${v.verse}</span>
-            <span>${v.text}</span>
-          </div>
-        `;
-      }).join("");
-    } else {
-      const map2 = {};
-      data2.forEach(v => map2[v.verse] = v.text);
-      versesHtml = data1.map(v => {
-        const key = `${state.bookId}_${state.chapter}_${v.verse}`;
-        const hlClass = state.highlights[key] || "";
-        const cleanText = v.text.replace(/<[^>]*>?/gm, "");
-        const text2 = map2[v.verse] || "—";
-        return `
-          <div class="parallel-row ${hlClass}" id="v_${v.verse}" onclick="onVerseClick(${v.verse}, \`${cleanText.replace(/`/g, "'")}\`)">
-            <div class="parallel-col"><span class="verse-num">${v.verse}</span>${v.text}</div>
-            <div class="parallel-col"><span class="verse-num">${v.verse}</span>${text2}</div>
-          </div>
-        `;
-      }).join("");
-    }
-
-    main.innerHTML = `
-      <div class="chapter-header">
-        <div class="chapter-title">${book.name} ${state.chapter}</div>
-        <div class="chapter-nav-btns">
-          <button class="nav-btn" onclick="prevChapter()">◀ Prec</button>
-          <button class="nav-btn" onclick="nextChapter()">Succ ▶</button>
-        </div>
-      </div>
-      <div>${versesHtml}</div>
-    `;
-    main.scrollTop = 0;
-  } catch (err) {
-    main.innerHTML = `<div class="loader">Impossibile caricare il capitolo. Verifica la connessione o scegli un'altra traduzione.</div>`;
-  }
-}
-
-function prevChapter() {
-  if (state.chapter > 1) {
-    state.chapter--;
-  } else if (state.bookId > 1) {
-    state.bookId--;
-    state.chapter = getBook(state.bookId).ch;
-  }
-  loadChapterView();
-}
-
-function nextChapter() {
-  const book = getBook(state.bookId);
-  if (state.chapter < book.ch) {
-    state.chapter++;
-  } else if (state.bookId < 66) {
-    state.bookId++;
-    state.chapter = 1;
-  }
-  loadChapterView();
-}
-
-function onTranslationChange() {
-  state.trans1 = document.getElementById("trans1").value;
-  state.trans2 = document.getElementById("trans2").value;
-  loadChapterView();
-}
-
-function toggleParallel() {
-  state.parallel = !state.parallel;
-  const btn = document.getElementById("parallelBtn");
-  const sel2 = document.getElementById("trans2");
-  if (state.parallel) {
-    btn.textContent = "⚖️ Parallelo: ON";
-    btn.classList.remove("off");
-    sel2.style.display = "block";
-  } else {
-    btn.textContent = "⚖️ Parallelo: OFF";
-    btn.classList.add("off");
-    sel2.style.display = "none";
-  }
-  loadChapterView();
-}
-
-// EVIDENZIAZIONE E SEGNALIBRI
-function onVerseClick(verseNum, text) {
-  state.selectedVerse = verseNum;
-  state.selectedVerseText = text;
-  document.getElementById("verseActionBar").style.display = "flex";
-}
-
-function closeActionBar() {
-  document.getElementById("verseActionBar").style.display = "none";
-  state.selectedVerse = null;
-}
-
-function applyHighlight(colorClass) {
-  if (!state.selectedVerse) return;
-  const key = `${state.bookId}_${state.chapter}_${state.selectedVerse}`;
-  if (colorClass) {
-    state.highlights[key] = colorClass;
-  } else {
-    delete state.highlights[key];
-  }
-  localStorage.setItem("bible_hl", JSON.stringify(state.highlights));
-  const row = document.getElementById(`v_${state.selectedVerse}`);
-  if (row) {
-    row.classList.remove("hl-yellow", "hl-blue", "hl-green", "hl-pink");
-    if (colorClass) row.classList.add(colorClass);
-  }
-  closeActionBar();
-}
-
-function saveBookmark() {
-  if (!state.selectedVerse) return;
-  const book = getBook(state.bookId);
-  const bm = {
-    bookId: state.bookId,
-    chapter: state.chapter,
-    verse: state.selectedVerse,
-    ref: `${book.name} ${state.chapter}:${state.selectedVerse}`,
-    text: state.selectedVerseText
-  };
-  state.bookmarks.unshift(bm);
-  localStorage.setItem("bible_bm", JSON.stringify(state.bookmarks));
-  closeActionBar();
-  alert(`Segnalibro salvato: ${bm.ref}`);
-}
-
-// 4. VISTA RICERCA
-function showSearchView() {
-  closeActionBar();
-  setActiveTab("tabSearch");
-  const main = document.getElementById("mainContainer");
-  main.innerHTML = `
-    <div class="search-box">
-      <input type="text" id="searchInput" class="search-input" placeholder="Cerca parola o frase nella Bibbia..." onkeydown="if(event.key==='Enter') executeSearch()">
-      <button class="search-btn" onclick="executeSearch()">Cerca</button>
-    </div>
-    <div id="searchResults"></div>
-  `;
-  document.getElementById("searchInput").focus();
-}
-
-async function executeSearch() {
-  const query = document.getElementById("searchInput").value.trim();
-  if (!query) return;
-  const resDiv = document.getElementById("searchResults");
-  resDiv.innerHTML = `<div class="loader">Ricerca di "${query}" in corso...</div>`;
-  try {
-    const url = `https://bolls.life/find/${state.trans1}/?search=${encodeURIComponent(query)}`;
-    const res = await fetch(url);
-    const results = await res.json();
-    if (!results.length) {
-      resDiv.innerHTML = `<div class="loader">Nessun risultato trovato.</div>`;
-      return;
-    }
-    resDiv.innerHTML = `<div style="margin-bottom:10px;font-size:13px;color:var(--text-muted);">Trovati ${results.length} versetti (mostrati i primi 50):</div>` +
-      results.slice(0, 50).map(r => {
-        const b = getBook(r.book);
-        return `
-          <div class="result-card" onclick="openRef(${r.book}, ${r.chapter})">
-            <div class="result-ref">${b.name} ${r.chapter}:${r.verse}</div>
-            <div>${r.text}</div>
-          </div>
-        `;
-      }).join("");
-  } catch (e) {
-    resDiv.innerHTML = `<div class="loader">Errore durante la ricerca.</div>`;
-  }
-}
-
-// 5. VISTA SEGNALIBRI
-function showSavedView() {
-  closeActionBar();
-  setActiveTab("tabSaved");
-  const main = document.getElementById("mainContainer");
-  if (!state.bookmarks.length) {
-    main.innerHTML = `<div class="loader">Nessun segnalibro salvato.<br><br>Tocca un versetto durante la lettura e premi 🔖 per salvarlo qui.</div>`;
-    return;
-  }
-  main.innerHTML = `<div class="section-title">I tuoi Segnalibri (${state.bookmarks.length})</div>` +
-    state.bookmarks.map((b, idx) => `
-      <div class="result-card" onclick="openRef(${b.bookId}, ${b.chapter})">
-        <div class="result-ref" style="display:flex;justify-content:space-between;">
-          <span>🔖 ${b.ref}</span>
-          <span onclick="event.stopPropagation();deleteBookmark(${idx})" style="color:#e53935;">Elimina</span>
-        </div>
-        <div>${b.text}</div>
-      </div>
-    `).join("");
-}
-
-function deleteBookmark(idx) {
-  state.bookmarks.splice(idx, 1);
-  localStorage.setItem("bible_bm", JSON.stringify(state.bookmarks));
-  showSavedView();
-}
-
-function openRef(bookId, chapter) {
-  state.bookId = bookId;
-  state.chapter = chapter;
-  loadChapterView();
-}
-
-// IMPOSTAZIONI GRAFICHE (TESTO E TEMA SCURO)
-function changeFontSize(delta) {
-  state.fontSize = Math.min(28, Math.max(14, state.fontSize + delta));
-  document.documentElement.style.setProperty("--font-size-verse", state.fontSize + "px");
-}
-
-function toggleDarkMode() {
-  document.body.classList.toggle("dark-mode");
-}
-
-// AVVIO INIZIALE
-loadChapterView();
-</script>
-</body>
-</html>
+    <
