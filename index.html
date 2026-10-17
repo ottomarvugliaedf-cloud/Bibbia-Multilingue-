@@ -13,75 +13,194 @@
   <link rel="manifest" href='data:application/manifest+json,{"name":"Bibbia Multilingue","short_name":"BM Bibbia","start_url":".","display":"standalone","background_color":"#0d47a1","theme_color":"#0d47a1","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3004/3004458.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}'>
   <style>
     :root {
-      --bg-main: #f4f8fb; --bg-card: #ffffff; --text-main: #102a43; --text-muted: #627d98;
-      --primary-dark: #0a367e; --primary-main: #1565c0; --primary-light: #0288d1;
-      --border-color: #d9e2ec; --verse-hover: #e3f2fd; --font-size-verse: 18px;
-      --cat-1: #0d47a1; --cat-2: #1565c0; --cat-3: #0288d1; --cat-4: #0097a7;
+      --bg-main: #f4f8fb;
+      --bg-card: #ffffff;
+      --text-main: #102a43;
+      --text-muted: #627d98;
+      --primary-dark: #0a367e;
+      --primary-main: #1565c0;
+      --primary-light: #0288d1;
+      --border-color: #d9e2ec;
+      --verse-hover: #e3f2fd;
+      --font-size-verse: 18px;
+      --cat-1: #0d47a1;
+      --cat-2: #1565c0;
+      --cat-3: #0288d1;
+      --cat-4: #0097a7;
     }
+
     body.dark-mode {
-      --bg-main: #0b192c; --bg-card: #162a45; --text-main: #e6f1ff; --text-muted: #8892b0;
-      --primary-dark: #071120; --primary-main: #112240; --primary-light: #29b6f6;
-      --border-color: #233554; --verse-hover: #1e3a5f;
+      --bg-main: #0b192c;
+      --bg-card: #162a45;
+      --text-main: #e6f1ff;
+      --text-muted: #8892b0;
+      --primary-dark: #071120;
+      --primary-main: #112240;
+      --primary-light: #29b6f6;
+      --border-color: #233554;
+      --verse-hover: #1e3a5f;
     }
+
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-main); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-    #splashScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #ffffff; display: flex; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.4s ease; }
-    .splash-box { width: 110px; height: 110px; background: linear-gradient(135deg, #0d47a1, #1565c0); border-radius: 18px; display: flex; justify-content: center; align-items: center; box-shadow: 0 10px 25px rgba(13, 71, 161, 0.3); }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #splashScreen {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background-color: #ffffff; display: flex; justify-content: center; align-items: center;
+      z-index: 9999; transition: opacity 0.4s ease;
+    }
+    .splash-box {
+      width: 110px; height: 110px; background: linear-gradient(135deg, #0d47a1, #1565c0);
+      border-radius: 18px; display: flex; justify-content: center; align-items: center;
+      box-shadow: 0 10px 25px rgba(13, 71, 161, 0.3);
+    }
     .splash-text { color: #ffffff; font-size: 42px; font-weight: 900; font-family: serif; }
-    header { background: linear-gradient(135deg, var(--primary-dark), var(--primary-main)); color: #fff; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 100; flex-shrink: 0; }
-    .book-selector-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 7px 13px; border-radius: 6px; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+
+    header {
+      background: linear-gradient(135deg, var(--primary-dark), var(--primary-main));
+      color: #fff; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 100; flex-shrink: 0;
+    }
+    .book-selector-btn {
+      background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+      color: #fff; padding: 7px 13px; border-radius: 6px; font-size: 16px; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; gap: 6px;
+    }
     .header-controls { display: flex; align-items: center; gap: 4px; }
     .icon-btn { background: transparent; border: none; color: #fff; padding: 7px; border-radius: 6px; cursor: pointer; font-size: 16px; }
-    .trans-bar { background: var(--bg-card); border-bottom: 1px solid var(--border-color); padding: 8px 12px; display: flex; gap: 6px; align-items: center; flex-shrink: 0; flex-wrap: wrap; }
-    .trans-select { flex: 1; min-width: 130px; padding: 7px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); font-size: 14px; font-weight: 600; }
-    .parallel-toggle { background: var(--primary-light); color: #fff; border: none; padding: 7px 11px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+
+    .trans-bar {
+      background: var(--bg-card); border-bottom: 1px solid var(--border-color);
+      padding: 8px 12px; display: flex; gap: 6px; align-items: center; flex-shrink: 0; flex-wrap: wrap;
+    }
+    .trans-select {
+      flex: 1; min-width: 130px; padding: 7px; border-radius: 6px;
+      border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); font-size: 14px; font-weight: 600;
+    }
+    .parallel-toggle {
+      background: var(--primary-light); color: #fff; border: none; padding: 7px 11px;
+      border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;
+    }
     .parallel-toggle.off { background: var(--bg-main); color: var(--text-muted); border: 1px solid var(--border-color); }
+
     main { flex: 1; overflow-y: auto; padding: 14px; }
-    .section-title { font-size: 13px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--primary-light); font-weight: 800; margin: 16px 0 8px 0; border-bottom: 2px solid var(--primary-light); padding-bottom: 4px; }
-    .books-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); gap: 5px; margin-bottom: 16px; }
-    .book-tile { color: #fff; border: none; border-radius: 4px; height: 48px; padding: 6px; display: flex; align-items: center; justify-content: flex-start; cursor: pointer; font-weight: 700; font-size: 14.5px; }
-    .book-tile.cat-1 { background-color: var(--cat-1); } .book-tile.cat-2 { background-color: var(--cat-2); } .book-tile.cat-3 { background-color: var(--cat-3); } .book-tile.cat-4 { background-color: var(--cat-4); }
-    .chapters-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: 7px; margin-top: 12px; }
-    .chapter-tile { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px; height: 48px; font-size: 16px; font-weight: 700; cursor: pointer; }
+
+    .section-title {
+      font-size: 13px; text-transform: uppercase; letter-spacing: 0.8px;
+      color: var(--primary-light); font-weight: 800; margin: 16px 0 8px 0;
+      border-bottom: 2px solid var(--primary-light); padding-bottom: 4px;
+    }
+    .section-title:first-child { margin-top: 2px; }
+    .books-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); gap: 5px; margin-bottom: 16px;
+    }
+    .book-tile {
+      color: #fff; border: none; border-radius: 4px; height: 48px; padding: 6px;
+      display: flex; align-items: center; justify-content: flex-start; cursor: pointer; font-weight: 700; font-size: 14.5px;
+    }
+    .book-tile.cat-1 { background-color: var(--cat-1); }
+    .book-tile.cat-2 { background-color: var(--cat-2); }
+    .book-tile.cat-3 { background-color: var(--cat-3); }
+    .book-tile.cat-4 { background-color: var(--cat-4); }
+
+    .chapters-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: 7px; margin-top: 12px;
+    }
+    .chapter-tile {
+      background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color);
+      border-radius: 6px; height: 48px; font-size: 16px; font-weight: 700; cursor: pointer;
+    }
     .chapter-tile.current { background: var(--primary-main); color: #fff; border-color: var(--primary-main); }
-    .chapter-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border-color); }
+
+    .chapter-header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border-color);
+    }
     .chapter-title { font-size: 20px; font-weight: 800; color: var(--primary-light); }
-    .nav-btn { background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); padding: 6px 12px; border-radius: 6px; font-weight: 600; cursor: pointer; }
-    .verse-row { padding: 8px 6px; border-radius: 6px; line-height: 1.58; font-size: var(--font-size-verse); cursor: pointer; margin-bottom: 3px; }
+    .nav-btn {
+      background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main);
+      padding: 6px 12px; border-radius: 6px; font-weight: 600; cursor: pointer;
+    }
+
+    .verse-row {
+      padding: 8px 6px; border-radius: 6px; line-height: 1.58; font-size: var(--font-size-verse); cursor: pointer; margin-bottom: 3px;
+    }
     .verse-row:hover { background: var(--verse-hover); }
     .verse-num { font-weight: 800; color: var(--primary-light); font-size: 0.78em; vertical-align: super; margin-right: 5px; }
-    .parallel-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px 4px; border-bottom: 1px solid var(--border-color); font-size: var(--font-size-verse); line-height: 1.52; cursor: pointer; }
+
+    .parallel-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px 4px;
+      border-bottom: 1px solid var(--border-color); font-size: var(--font-size-verse); line-height: 1.52; cursor: pointer;
+    }
     .parallel-col + .parallel-col { border-left: 2px solid var(--primary-light); padding-left: 10px; }
-    .hl-yellow { background-color: rgba(255, 235, 59, 0.38) !important; } .hl-blue { background-color: rgba(3, 169, 244, 0.32) !important; } .hl-green { background-color: rgba(76, 175, 80, 0.32) !important; } .hl-pink { background-color: rgba(233, 30, 99, 0.28) !important; }
-    .verse-action-bar { position: fixed; bottom: 62px; left: 50%; transform: translateX(-50%); background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: 0 4px 16px rgba(0,0,0,0.3); border-radius: 30px; padding: 8px 14px; display: none; align-items: center; gap: 10px; z-index: 200; }
+
+    .hl-yellow { background-color: rgba(255, 235, 59, 0.38) !important; }
+    .hl-blue   { background-color: rgba(3, 169, 244, 0.32) !important; }
+    .hl-green  { background-color: rgba(76, 175, 80, 0.32) !important; }
+    .hl-pink   { background-color: rgba(233, 30, 99, 0.28) !important; }
+
+    .verse-action-bar {
+      position: fixed; bottom: 62px; left: 50%; transform: translateX(-50%);
+      background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      border-radius: 30px; padding: 8px 14px; display: none; align-items: center; gap: 10px; z-index: 200;
+    }
     .color-dot { width: 25px; height: 25px; border-radius: 50%; border: 2px solid rgba(0,0,0,0.2); cursor: pointer; }
-    nav.bottom-nav { background: var(--bg-card); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; padding: 6px 0; flex-shrink: 0; }
-    .tab-btn { background: none; border: none; color: var(--text-muted); font-size: 11px; display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; padding: 4px 6px; font-weight: 600; }
+
+    nav.bottom-nav {
+      background: var(--bg-card); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; padding: 6px 0; flex-shrink: 0;
+    }
+    .tab-btn {
+      background: none; border: none; color: var(--text-muted); font-size: 11px;
+      display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; padding: 4px 6px; font-weight: 600;
+    }
     .tab-btn.active { color: var(--primary-light); font-weight: 800; }
     .tab-icon { font-size: 17px; }
-    .result-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 9px; cursor: pointer; }
+
+    .result-card {
+      background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 9px; cursor: pointer;
+    }
     .result-ref { font-weight: 700; color: var(--primary-light); margin-bottom: 4px; font-size: 14px; }
     .loader { text-align: center; padding: 28px 14px; color: var(--text-muted); line-height: 1.5; }
-    .badge-btn { background: var(--primary-main); color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 12px; }
+    .badge-btn {
+      background: var(--primary-main); color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 12px;
+    }
     .badge-btn.downloaded { background: #388e3c; }
   </style>
 </head>
 <body>
-  <div id="splashScreen"><div class="splash-box"><span class="splash-text">BM</span></div></div>
+
+  <div id="splashScreen">
+    <div class="splash-box"><span class="splash-text">BM</span></div>
+  </div>
+
   <header>
-    <div><button class="book-selector-btn" onclick="showBooksView()"><span id="currentRefLabel">Genesi 1</span><span>▾</span></button></div>
+    <div>
+      <button class="book-selector-btn" onclick="showBooksView()">
+        <span id="currentRefLabel">Genesi 1</span><span>▾</span>
+      </button>
+    </div>
     <div class="header-controls">
       <button class="icon-btn" onclick="changeFontSize(-2)">A-</button>
       <button class="icon-btn" onclick="changeFontSize(2)">A+</button>
       <button class="icon-btn" onclick="toggleDarkMode()">🌙</button>
     </div>
   </header>
+
   <div class="trans-bar">
     <select id="trans1" class="trans-select" onchange="onTranslationChange()"></select>
     <button id="parallelBtn" class="parallel-toggle off" onclick="toggleParallel()">⚖️ Parallelo: OFF</button>
     <select id="trans2" class="trans-select" style="display:none;" onchange="onTranslationChange()"></select>
   </div>
+
   <main id="mainContainer"></main>
+
   <div id="verseActionBar" class="verse-action-bar">
     <div class="color-dot" style="background:#ffeb3b;" onclick="applyHighlight('hl-yellow')"></div>
     <div class="color-dot" style="background:#03a9f4;" onclick="applyHighlight('hl-blue')"></div>
@@ -92,13 +211,26 @@
     <button class="icon-btn" style="color:#ffb300;" onclick="openNoteModalForVerse()">📝</button>
     <button class="icon-btn" style="color:var(--text-muted);" onclick="closeActionBar()">✕</button>
   </div>
+
   <nav class="bottom-nav">
-    <button class="tab-btn active" id="tabRead" onclick="loadChapterView()"><span class="tab-icon">📖</span><span>Lettura</span></button>
-    <button class="tab-btn" id="tabBooks" onclick="showBooksView()"><span class="tab-icon">🟦</span><span>Libri</span></button>
-    <button class="tab-btn" id="tabSearch" onclick="showSearchView()"><span class="tab-icon">🔍</span><span>Cerca</span></button>
-    <button class="tab-btn" id="tabSaved" onclick="showSavedView()"><span class="tab-icon">🔖</span><span>Preferiti</span></button>
-    <button class="tab-btn" id="tabNotes" onclick="showNotesView()"><span class="tab-icon">📝</span><span>Appunti</span></button>
-    <button class="tab-btn" id="tabCatalog" onclick="showCatalogView()"><span class="tab-icon">⬇️</span><span>Gestione</span></button>
+    <button class="tab-btn active" id="tabRead" onclick="loadChapterView()">
+      <span class="tab-icon">📖</span><span>Lettura</span>
+    </button>
+    <button class="tab-btn" id="tabBooks" onclick="showBooksView()">
+      <span class="tab-icon">🟦</span><span>Libri</span>
+    </button>
+    <button class="tab-btn" id="tabSearch" onclick="showSearchView()">
+      <span class="tab-icon">🔍</span><span>Cerca</span>
+    </button>
+    <button class="tab-btn" id="tabSaved" onclick="showSavedView()">
+      <span class="tab-icon">🔖</span><span>Preferiti</span>
+    </button>
+    <button class="tab-btn" id="tabNotes" onclick="showNotesView()">
+      <span class="tab-icon">📝</span><span>Appunti</span>
+    </button>
+    <button class="tab-btn" id="tabCatalog" onclick="showCatalogView()">
+      <span class="tab-icon">⬇️</span><span>Gestione</span>
+    </button>
   </nav>
   <script>
 const BIBLE_BOOKS = [
@@ -142,7 +274,8 @@ const BIBLE_BOOKS = [
   { id: 38, name: "Zaccaria", abbr: "Zac", ch: 14, sec: "OT", cat: 4 },
   { id: 39, name: "Malachia", abbr: "Mal", ch: 4, sec: "OT", cat: 4 }
 ];
-    const BIBLE_BOOKS_NT = [
+
+const BIBLE_BOOKS_NT = [
   { id: 40, name: "Matteo", abbr: "Mat", ch: 28, sec: "NT", cat: 1 },
   { id: 41, name: "Marco", abbr: "Mar", ch: 16, sec: "NT", cat: 1 },
   { id: 42, name: "Luca", abbr: "Luc", ch: 24, sec: "NT", cat: 1 },
@@ -284,7 +417,8 @@ function showChaptersView(bookId) {
   main.scrollTop = 0;
 }
 function selectChapter(ch) { state.chapter = ch; loadChapterView(); }
-    async function fetchChapterData(transId, bookId, chapter) {
+
+async function fetchChapterData(transId, bookId, chapter) {
   const fullOffline = await getOfflineBible(transId);
   if (fullOffline && fullOffline.books) {
     const bObj = fullOffline.books.find(b => Number(b.nr) === Number(bookId));
@@ -342,8 +476,7 @@ async function loadChapterView() {
     main.innerHTML = `<div class="loader">Capitolo non disponibile.<br><br><button class="nav-btn" onclick="showBooksView()">Scegli Libro</button></div>`;
   }
 }
-
-function prevChapter() {
+    function prevChapter() {
   if (state.chapter > 1) state.chapter--;
   else if (state.bookId > 1) { state.bookId--; state.chapter = getBook(state.bookId).ch; }
   loadChapterView();
@@ -366,7 +499,8 @@ function toggleParallel() {
   else { btn.textContent = "⚖️ Parallelo: OFF"; btn.classList.add("off"); sel2.style.display = "none"; }
   loadChapterView();
 }
-    function onVerseClick(verseNum, text) { state.selectedVerse = verseNum; state.selectedVerseText = text; document.getElementById("verseActionBar").style.display = "flex"; }
+
+function onVerseClick(verseNum, text) { state.selectedVerse = verseNum; state.selectedVerseText = text; document.getElementById("verseActionBar").style.display = "flex"; }
 function closeActionBar() { document.getElementById("verseActionBar").style.display = "none"; state.selectedVerse = null; }
 
 function applyHighlight(colorClass) {
