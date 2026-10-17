@@ -6,8 +6,10 @@
   <meta name="theme-color" content="#0d47a1">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Bibbia Studio Open</title>
-  <link rel="manifest" href='data:application/manifest+json,{"name":"Bibbia Studio","short_name":"Bibbia","start_url":".","display":"standalone","background_color":"#0d47a1","theme_color":"#0d47a1","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3004/3004458.png","sizes":"512x512","type":"image/png"}]}'>
+  <title>Bibbia Multilingue</title>
+  <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3004/3004458.png">
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3004/3004458.png">
+  <link rel="manifest" href='data:application/manifest+json,{"name":"Bibbia Multilingue","short_name":"Bibbia BM","start_url":".","display":"standalone","background_color":"#0d47a1","theme_color":"#0d47a1","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3004/3004458.png","sizes":"512x512","type":"image/png"}]}'>
   <style>
     :root {
       --bg-main: #f0f6fc;
@@ -20,11 +22,10 @@
       --border-color: #d1dfed;
       --verse-hover: #e1f5fe;
       --font-size-verse: 18px;
-      /* Palette Blu-Azzurro stile JW Library */
-      --cat-1: #0d47a1; /* Pentateuco / Vangeli */
-      --cat-2: #1565c0; /* Storici / Atti */
-      --cat-3: #0288d1; /* Poetici / Lettere di Paolo */
-      --cat-4: #0097a7; /* Profetici / Lettere Generali & Rivelazione */
+      --cat-1: #0d47a1;
+      --cat-2: #1565c0;
+      --cat-3: #0288d1;
+      --cat-4: #0097a7;
     }
 
     body.dark-mode {
@@ -48,6 +49,34 @@
       flex-direction: column;
       height: 100vh;
       overflow: hidden;
+    }
+
+    /* SPLASH SCREEN STILE JW LIBRARY */
+    #splashScreen {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background-color: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.4s ease;
+    }
+    .splash-box {
+      width: 110px; height: 110px;
+      background: linear-gradient(135deg, #0d47a1, #1565c0);
+      border-radius: 18px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 10px 25px rgba(13, 71, 161, 0.3);
+    }
+    .splash-text {
+      color: #ffffff;
+      font-size: 42px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      font-family: serif;
     }
 
     header {
@@ -85,7 +114,6 @@
       font-size: 16px;
       font-weight: 600;
     }
-
     .trans-bar {
       background: var(--bg-card);
       border-bottom: 1px solid var(--border-color);
@@ -334,6 +362,13 @@
 </head>
 <body>
 
+  <!-- SCHERMATA DI AVVIO BM -->
+  <div id="splashScreen">
+    <div class="splash-box">
+      <span class="splash-text">BM</span>
+    </div>
+  </div>
+
   <header>
     <div>
       <button class="book-selector-btn" onclick="showBooksView()">
@@ -383,10 +418,8 @@
       <span class="tab-icon">⬇️</span><span>Traduzioni</span>
     </button>
   </nav>
-
-<script>
+  <script>
 const BIBLE_BOOKS = [
-  // SCRITTURE EBRAICO-ARAMAICHE (39)
   { id: 1,  name: "Genesi", abbr: "Gen", ch: 50, sec: "OT", cat: 1 },
   { id: 2,  name: "Esodo", abbr: "Eso", ch: 40, sec: "OT", cat: 1 },
   { id: 3,  name: "Levitico", abbr: "Lev", ch: 27, sec: "OT", cat: 1 },
@@ -426,8 +459,6 @@ const BIBLE_BOOKS = [
   { id: 37, name: "Aggeo", abbr: "Agg", ch: 2, sec: "OT", cat: 4 },
   { id: 38, name: "Zaccaria", abbr: "Zac", ch: 14, sec: "OT", cat: 4 },
   { id: 39, name: "Malachia", abbr: "Mal", ch: 4, sec: "OT", cat: 4 },
-
-  // SCRITTURE GRECHE CRISTIANE (27)
   { id: 40, name: "Matteo", abbr: "Mat", ch: 28, sec: "NT", cat: 1 },
   { id: 41, name: "Marco", abbr: "Mar", ch: 16, sec: "NT", cat: 1 },
   { id: 42, name: "Luca", abbr: "Luc", ch: 24, sec: "NT", cat: 1 },
@@ -457,20 +488,15 @@ const BIBLE_BOOKS = [
   { id: 66, name: "Rivelazione", abbr: "Riv", ch: 22, sec: "NT", cat: 4 }
 ];
 
-// TRADUZIONI PREDEFINITE VERIFICATE (GetBible v2 + Bolls)
 const DEFAULT_TRANSLATIONS = [
   { id: "gb:riveduta", name: "🇮🇹 Riveduta 1927 (Luzzi)" },
   { id: "gb:giovanni", name: "🇮🇹 Giovanni Diodati (1649)" },
   { id: "bl:NR06",     name: "🇮🇹 Nuova Riveduta (2006)" },
   { id: "gb:kjv",      name: "🇬🇧 King James Version (KJV)" },
   { id: "gb:web",      name: "🇬🇧 World English Bible (WEB)" },
-  { id: "gb:asv",      name: "🇬🇧 American Standard (ASV)" },
-  { id: "gb:ylt",      name: "🇬🇧 Young's Literal (YLT)" },
   { id: "gb:valera",   name: "🇪🇸 Reina Valera (1909)" },
   { id: "gb:luther1912", name: "🇩🇪 Lutherbibel (1912)" },
-  { id: "gb:schlachter", name: "🇩🇪 Schlachter (1951)" },
   { id: "gb:codex",    name: "📜 Ebraico (Westminster Leningrad)" },
-  { id: "gb:aleppo",   name: "📜 Ebraico (Codice di Aleppo)" },
   { id: "gb:textusreceptus", name: "📜 Greco NT (Textus Receptus)" }
 ];
 
@@ -483,16 +509,15 @@ let state = {
   fontSize: 18,
   selectedVerse: null,
   selectedVerseText: "",
-  customTrans: JSON.parse(localStorage.getItem("bible_custom_trans") || "[]"),
-  highlights: JSON.parse(localStorage.getItem("bible_hl") || "{}"),
-  bookmarks: JSON.parse(localStorage.getItem("bible_bm") || "[]"),
+  customTrans: JSON.parse(localStorage.getItem("bm_custom_trans") || "[]"),
+  highlights: JSON.parse(localStorage.getItem("bm_hl") || "{}"),
+  bookmarks: JSON.parse(localStorage.getItem("bm_bm") || "[]"),
   fullCatalog: null
 };
 
-// DATABASE LOCALE INDEXEDDB PER SALVARE INTERE BIBBIE OFFLINE
 function openDB() {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open("BibleStudioOfflineDB", 1);
+    const req = indexedDB.open("BM_OfflineDB", 1);
     req.onupgradeneeded = e => e.target.result.createObjectStore("bibles");
     req.onsuccess = e => resolve(e.target.result);
     req.onerror = e => reject(e);
@@ -540,7 +565,6 @@ function getBook(id) {
   return BIBLE_BOOKS.find(b => b.id === id) || BIBLE_BOOKS[0];
 }
 
-// 1. VISTA GRIGLIA 66 LIBRI (39 + 27)
 function showBooksView() {
   closeActionBar();
   setActiveTab("tabBooks");
@@ -550,4 +574,429 @@ function showBooksView() {
 
   main.innerHTML = `
     <div class="section-title">Scritture Ebraico-Aramaiche (39)</div>
-    <
+    <div class="books-grid">
+      ${otBooks.map(b => `<button class="book-tile cat-${b.cat}" onclick="showChaptersView(${b.id})">${b.abbr}</button>`).join("")}
+    </div>
+    <div class="section-title">Scritture Greche Cristiane (27)</div>
+    <div class="books-grid">
+      ${ntBooks.map(b => `<button class="book-tile cat-${b.cat}" onclick="showChaptersView(${b.id})">${b.abbr}</button>`).join("")}
+    </div>
+  `;
+  main.scrollTop = 0;
+}
+    function showChaptersView(bookId) {
+  state.bookId = bookId;
+  const book = getBook(bookId);
+  if (book.ch === 1) {
+    state.chapter = 1;
+    loadChapterView();
+    return;
+  }
+  const main = document.getElementById("mainContainer");
+  let chButtons = "";
+  for (let i = 1; i <= book.ch; i++) {
+    const isCurr = (i === state.chapter) ? "current" : "";
+    chButtons += `<button class="chapter-tile ${isCurr}" onclick="selectChapter(${i})">${i}</button>`;
+  }
+  main.innerHTML = `
+    <div class="chapter-header">
+      <div class="chapter-title">${book.name} — Capitoli</div>
+      <button class="nav-btn" onclick="showBooksView()">← Libri</button>
+    </div>
+    <div class="chapters-grid">${chButtons}</div>
+  `;
+  main.scrollTop = 0;
+}
+
+function selectChapter(ch) {
+  state.chapter = ch;
+  loadChapterView();
+}
+
+async function fetchChapterData(transId, bookId, chapter) {
+  const fullOffline = await getOfflineBible(transId);
+  if (fullOffline && fullOffline.books) {
+    const bObj = fullOffline.books.find(b => Number(b.nr) === Number(bookId));
+    if (bObj && bObj.chapters) {
+      const cObj = bObj.chapters.find(c => Number(c.chapter) === Number(chapter));
+      if (cObj && cObj.verses) return cObj.verses;
+    }
+  }
+
+  const cacheKey = `bm_ch_${transId}_${bookId}_${chapter}`;
+  const cached = localStorage.getItem(cacheKey);
+  if (cached) {
+    const parsed = JSON.parse(cached);
+    if (parsed && parsed.length > 0) return parsed;
+  }
+
+  const [provider, code] = transId.includes(":") ? transId.split(":") : ["gb", transId];
+  let verses = [];
+
+  if (provider === "gb") {
+    const url = `https://api.getbible.net/v2/${code}/${bookId}/${chapter}.json`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Capitolo non presente");
+    const data = await res.json();
+    verses = (data.verses || []).map(v => ({ verse: v.verse, text: v.text }));
+  } else {
+    const url = `https://bolls.life/get-text/${code}/${bookId}/${chapter}/`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Capitolo non disponibile");
+    const data = await res.json();
+    verses = (data || []).map(v => ({ verse: v.verse, text: v.text }));
+  }
+
+  if (verses.length > 0) {
+    try { localStorage.setItem(cacheKey, JSON.stringify(verses)); } catch(e) {}
+  }
+  return verses;
+}
+
+async function loadChapterView() {
+  closeActionBar();
+  setActiveTab("tabRead");
+  const book = getBook(state.bookId);
+  document.getElementById("currentRefLabel").textContent = `${book.name}${state.chapter}`;
+
+  const main = document.getElementById("mainContainer");
+  main.innerHTML = `<div class="loader">Caricamento di <b>${book.name}${state.chapter}</b>...</div>`;
+
+  try {
+    const data1 = await fetchChapterData(state.trans1, state.bookId, state.chapter);
+    let data2 = [];
+    if (state.parallel) {
+      try { data2 = await fetchChapterData(state.trans2, state.bookId, state.chapter); } catch(e) { data2 = []; }
+    }
+
+    if (!data1 || data1.length === 0) {
+      main.innerHTML = `<div class="loader">Libro non disponibile in questa traduzione.</div>`;
+      return;
+    }
+
+    let versesHtml = "";
+    if (!state.parallel) {
+      versesHtml = data1.map(v => {
+        const key = `${state.bookId}_${state.chapter}_${v.verse}`;
+        const hlClass = state.highlights[key] || "";
+        const cleanText = (v.text || "").replace(/<[^>]*>?/gm, "").replace(/"/g, "&quot;");
+        return `
+          <div class="verse-row ${hlClass}" id="v_${v.verse}" data-text="${cleanText}" onclick="onVerseClick(${v.verse}, this.getAttribute('data-text'))">
+            <span class="verse-num">${v.verse}</span>
+            <span>${v.text}</span>
+          </div>
+        `;
+      }).join("");
+    } else {
+      const map2 = {};
+      data2.forEach(v => map2[v.verse] = v.text);
+      versesHtml = data1.map(v => {
+        const key = `${state.bookId}_${state.chapter}_${v.verse}`;
+        const hlClass = state.highlights[key] || "";
+        const cleanText = (v.text || "").replace(/<[^>]*>?/gm, "").replace(/"/g, "&quot;");
+        const text2 = map2[v.verse] || "—";
+        return `
+          <div class="parallel-row ${hlClass}" id="v_${v.verse}" data-text="${cleanText}" onclick="onVerseClick(${v.verse}, this.getAttribute('data-text'))">
+            <div class="parallel-col"><span class="verse-num">${v.verse}</span>${v.text}</div>
+            <div class="parallel-col"><span class="verse-num">${v.verse}</span>${text2}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    main.innerHTML = `
+      <div class="chapter-header">
+        <div class="chapter-title">${book.name}${state.chapter}</div>
+        <div class="chapter-nav-btns">
+          <button class="nav-btn" onclick="prevChapter()">◀ Prec</button>
+          <button class="nav-btn" onclick="nextChapter()">Succ ▶</button>
+        </div>
+      </div>
+      <div>${versesHtml}</div>
+    `;
+    main.scrollTop = 0;
+  } catch (err) {
+    main.innerHTML = `<div class="loader">Capitolo non disponibile.<br><br><button class="nav-btn" onclick="showBooksView()">Scegli Libro</button></div>`;
+  }
+}
+
+function prevChapter() {
+  if (state.chapter > 1) state.chapter--;
+  else if (state.bookId > 1) { state.bookId--; state.chapter = getBook(state.bookId).ch; }
+  loadChapterView();
+}
+
+function nextChapter() {
+  const book = getBook(state.bookId);
+  if (state.chapter < book.ch) state.chapter++;
+  else if (state.bookId < 66) { state.bookId++; state.chapter = 1; }
+  loadChapterView();
+}
+
+function onTranslationChange() {
+  state.trans1 = document.getElementById("trans1").value;
+  state.trans2 = document.getElementById("trans2").value;
+  loadChapterView();
+}
+
+function toggleParallel() {
+  state.parallel = !state.parallel;
+  const btn = document.getElementById("parallelBtn");
+  const sel2 = document.getElementById("trans2");
+  if (state.parallel) {
+    btn.textContent = "⚖️ Parallelo: ON";
+    btn.classList.remove("off");
+    sel2.style.display = "block";
+  } else {
+    btn.textContent = "⚖️ Parallelo: OFF";
+    btn.classList.add("off");
+    sel2.style.display = "none";
+  }
+  loadChapterView();
+}
+
+function onVerseClick(verseNum, text) {
+  state.selectedVerse = verseNum;
+  state.selectedVerseText = text;
+  document.getElementById("verseActionBar").style.display = "flex";
+}
+
+function closeActionBar() {
+  document.getElementById("verseActionBar").style.display = "none";
+  state.selectedVerse = null;
+}
+
+function applyHighlight(colorClass) {
+  if (!state.selectedVerse) return;
+  const key = `${state.bookId}_${state.chapter}_${state.selectedVerse}`;
+  if (colorClass) state.highlights[key] = colorClass;
+  else delete state.highlights[key];
+  localStorage.setItem("bm_hl", JSON.stringify(state.highlights));
+  const row = document.getElementById(`v_${state.selectedVerse}`);
+  if (row) {
+    row.classList.remove("hl-yellow", "hl-blue", "hl-green", "hl-pink");
+    if (colorClass) row.classList.add(colorClass);
+  }
+  closeActionBar();
+}
+
+function saveBookmark() {
+  if (!state.selectedVerse) return;
+  const book = getBook(state.bookId);
+  const bm = {
+    bookId: state.bookId,
+    chapter: state.chapter,
+    verse: state.selectedVerse,
+    ref: `${book.name} ${state.chapter}:${state.selectedVerse}`,
+    text: state.selectedVerseText
+  };
+  state.bookmarks.unshift(bm);
+  localStorage.setItem("bm_bm", JSON.stringify(state.bookmarks));
+  closeActionBar();
+  alert(`Segnalibro salvato: ${bm.ref}`);
+}
+
+function showSearchView() {
+  closeActionBar();
+  setActiveTab("tabSearch");
+  const main = document.getElementById("mainContainer");
+  main.innerHTML = `
+    <div class="search-box">
+      <input type="text" id="searchInput" class="search-input" placeholder="Cerca parola..." onkeydown="if(event.key==='Enter') executeSearch()">
+      <button class="search-btn" onclick="executeSearch()">Cerca</button>
+    </div>
+    <div id="searchResults"><div class="loader">Inserisci una parola da cercare.</div></div>
+  `;
+}
+
+async function executeSearch() {
+  const query = document.getElementById("searchInput").value.trim().toLowerCase();
+  if (!query) return;
+  const resDiv = document.getElementById("searchResults");
+  resDiv.innerHTML = `<div class="loader">Ricerca di "<b>${query}</b>"...</div>`;
+
+  try {
+    let fullBible = await getOfflineBible(state.trans1);
+    if (!fullBible && state.trans1.startsWith("gb:")) {
+      const code = state.trans1.split(":")[1];
+      const res = await fetch(`https://api.getbible.net/v2/${code}.json`);
+      if (res.ok) {
+        fullBible = await res.json();
+        await saveOfflineBible(state.trans1, fullBible);
+      }
+    }
+
+    if (fullBible && fullBible.books) {
+      let matches = [];
+      for (const b of fullBible.books) {
+        const bMeta = getBook(Number(b.nr));
+        for (const c of b.chapters) {
+          for (const v of c.verses) {
+            if (v.text && v.text.toLowerCase().includes(query)) {
+              matches.push({ bookId: Number(b.nr), bookName: bMeta.name, ch: c.chapter, v: v.verse, text: v.text });
+              if (matches.length >= 100) break;
+            }
+          }
+          if (matches.length >= 100) break;
+        }
+        if (matches.length >= 100) break;
+      }
+      if (!matches.length) {
+        resDiv.innerHTML = `<div class="loader">Nessun risultato trovato.</div>`;
+        return;
+      }
+      resDiv.innerHTML = `<div style="margin-bottom:10px;font-size:13px;color:var(--text-muted);">Risultati trovati:</div>` +
+        matches.map(m => `
+          <div class="result-card" onclick="openRef(${m.bookId},${m.ch})">
+            <div class="result-ref">${m.bookName} ${m.ch}:${m.v}</div>
+            <div>${m.text}</div>
+          </div>
+        `).join("");
+    } else {
+      resDiv.innerHTML = `<div class="loader">Usa la scheda ⬇️ Traduzioni per scaricare la Bibbia e abilitare la ricerca.</div>`;
+    }
+  } catch (e) {
+    resDiv.innerHTML = `<div class="loader">Errore durante la ricerca.</div>`;
+  }
+}
+
+function showSavedView() {
+  closeActionBar();
+  setActiveTab("tabSaved");
+  const main = document.getElementById("mainContainer");
+  if (!state.bookmarks.length) {
+    main.innerHTML = `<div class="loader">Nessun segnalibro salvato.</div>`;
+    return;
+  }
+  main.innerHTML = `<div class="section-title">I tuoi Segnalibri (${state.bookmarks.length})</div>` +
+    state.bookmarks.map((b, idx) => `
+      <div class="result-card" onclick="openRef(${b.bookId},${b.chapter})">
+        <div class="result-ref" style="display:flex;justify-content:space-between;">
+          <span>🔖 ${b.ref}</span>
+          <span onclick="event.stopPropagation();deleteBookmark(${idx})" style="color:#e53935;">Elimina</span>
+        </div>
+        <div>${b.text}</div>
+      </div>
+    `).join("");
+}
+
+function deleteBookmark(idx) {
+  state.bookmarks.splice(idx, 1);
+  localStorage.setItem("bm_bm", JSON.stringify(state.bookmarks));
+  showSavedView();
+}
+
+async function showCatalogView() {
+  closeActionBar();
+  setActiveTab("tabCatalog");
+  const main = document.getElementById("mainContainer");
+  main.innerHTML = `<div class="loader">Caricamento catalogo...</div>`;
+
+  try {
+    if (!state.fullCatalog) {
+      const res = await fetch("https://api.getbible.net/v2/translations.json");
+      state.fullCatalog = await res.json();
+    }
+    const entries = Object.values(state.fullCatalog);
+    main.innerHTML = `
+      <div class="section-title">Salva Offline</div>
+      <div class="result-card" onclick="downloadCurrentOffline()">
+        <div class="result-ref">💾 Salva intera Bibbia attiva</div>
+        <div id="dlStatus">Tocca per scaricare tutti i 66 libri offline.</div>
+      </div>
+      <div class="section-title">Catalogo Mondiale (${entries.length} Bibbie)</div>
+      <div class="search-box">
+        <input type="text" id="catFilter" class="search-input" placeholder="Filtra per lingua (es. Italian, Spanish...)" oninput="filterCatalog()">
+      </div>
+      <div id="catalogList"></div>
+    `;
+    renderCatalogList(entries);
+  } catch(e) {
+    main.innerHTML = `<div class="loader">Impossibile caricare il catalogo.</div>`;
+  }
+}
+
+function renderCatalogList(list) {
+  const container = document.getElementById("catalogList");
+  if (!container) return;
+  container.innerHTML = list.slice(0, 80).map(t => `
+    <div class="result-card" style="display:flex;justify-content:space-between;align-items:center;" onclick="addTranslationFromCatalog('${t.abbreviation}', \`${(t.language + ': ' + t.translation).replace(/`/g, "'")}\`)">
+      <div>
+        <div class="result-ref">${t.language} — ${t.translation}</div>
+        <div style="font-size:12px;color:var(--text-muted);">Codice: ${t.abbreviation}</div>
+      </div>
+      <span class="badge">+ Aggiungi</span>
+    </div>
+  `).join("");
+}
+
+function filterCatalog() {
+  const q = document.getElementById("catFilter").value.toLowerCase();
+  const entries = Object.values(state.fullCatalog || {});
+  const filtered = entries.filter(t =>
+    (t.language && t.language.toLowerCase().includes(q)) ||
+    (t.translation && t.translation.toLowerCase().includes(q)) ||
+    (t.abbreviation && t.abbreviation.toLowerCase().includes(q))
+  );
+  renderCatalogList(filtered);
+}
+
+function addTranslationFromCatalog(abbr, label) {
+  const newId = `gb:${abbr}`;
+  if (!DEFAULT_TRANSLATIONS.some(t => t.id === newId) && !state.customTrans.some(t => t.id === newId)) {
+    state.customTrans.push({ id: newId, name: label });
+    localStorage.setItem("bm_custom_trans", JSON.stringify(state.customTrans));
+  }
+  state.trans1 = newId;
+  populateSelects();
+  alert(`Traduzione attivata: ${label}`);
+  loadChapterView();
+}
+
+async function downloadCurrentOffline() {
+  const statusEl = document.getElementById("dlStatus");
+  if (!state.trans1.startsWith("gb:")) {
+    statusEl.innerHTML = "Disponibile in streaming.";
+    return;
+  }
+  const code = state.trans1.split(":")[1];
+  statusEl.innerHTML = "⏳ Scaricamento in corso...";
+  try {
+    const res = await fetch(`https://api.getbible.net/v2/${code}.json`);
+    const data = await res.json();
+    await saveOfflineBible(state.trans1, data);
+    statusEl.innerHTML = "✅ <b>Completato!</b> Salvata offline.";
+  } catch(e) {
+    statusEl.innerHTML = "❌ Errore nello scaricamento.";
+  }
+}
+
+function openRef(bookId, chapter) {
+  state.bookId = bookId;
+  state.chapter = chapter;
+  loadChapterView();
+}
+
+function changeFontSize(delta) {
+  state.fontSize = Math.min(28, Math.max(14, state.fontSize + delta));
+  document.documentElement.style.setProperty("--font-size-verse", state.fontSize + "px");
+}
+
+function toggleDarkMode() {
+  document.body.classList.toggle("dark-mode");
+}
+
+// AVVIO CON SPLASH SCREEN BM
+populateSelects();
+loadChapterView().then(() => {
+  setTimeout(() => {
+    const splash = document.getElementById("splashScreen");
+    if(splash) {
+      splash.style.opacity = "0";
+      setTimeout(() => splash.remove(), 400);
+    }
+  }, 600);
+});
+</script>
+</body>
+</html>
