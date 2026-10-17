@@ -1,10 +1,12 @@
 {
-  "name": "Bibbia Multilingue",
+  "name": "Bibbia Multilingue BM",
   "short_name": "BM Bibbia",
+  "description": "Applicazione biblica multilingue avanzata con 110+ traduzioni, modalità parallela, appunti di studio e funzionamento offline completo.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0d47a1",
   "theme_color": "#0d47a1",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/3004/3004458.png",
