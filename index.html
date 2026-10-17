@@ -28,7 +28,6 @@
       --cat-3: #0288d1;
       --cat-4: #0097a7;
     }
-
     body.dark-mode {
       --bg-main: #0b192c;
       --bg-card: #162a45;
@@ -40,18 +39,12 @@
       --border-color: #233554;
       --verse-hover: #1e3a5f;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bg-main);
-      color: var(--text-main);
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
+      background-color: var(--bg-main); color: var(--text-main);
+      display: flex; flex-direction: column; height: 100vh; overflow: hidden;
     }
-
     #splashScreen {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background-color: #ffffff; display: flex; justify-content: center; align-items: center;
@@ -63,7 +56,6 @@
       box-shadow: 0 10px 25px rgba(13, 71, 161, 0.3);
     }
     .splash-text { color: #ffffff; font-size: 42px; font-weight: 900; font-family: serif; }
-
     header {
       background: linear-gradient(135deg, var(--primary-dark), var(--primary-main));
       color: #fff; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;
@@ -76,7 +68,6 @@
     }
     .header-controls { display: flex; align-items: center; gap: 4px; }
     .icon-btn { background: transparent; border: none; color: #fff; padding: 7px; border-radius: 6px; cursor: pointer; font-size: 16px; }
-
     .trans-bar {
       background: var(--bg-card); border-bottom: 1px solid var(--border-color);
       padding: 8px 12px; display: flex; gap: 6px; align-items: center; flex-shrink: 0; flex-wrap: wrap;
@@ -90,18 +81,13 @@
       border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;
     }
     .parallel-toggle.off { background: var(--bg-main); color: var(--text-muted); border: 1px solid var(--border-color); }
-
     main { flex: 1; overflow-y: auto; padding: 14px; }
-
     .section-title {
       font-size: 13px; text-transform: uppercase; letter-spacing: 0.8px;
       color: var(--primary-light); font-weight: 800; margin: 16px 0 8px 0;
       border-bottom: 2px solid var(--primary-light); padding-bottom: 4px;
     }
-    .section-title:first-child { margin-top: 2px; }
-    .books-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); gap: 5px; margin-bottom: 16px;
-    }
+    .books-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); gap: 5px; margin-bottom: 16px; }
     .book-tile {
       color: #fff; border: none; border-radius: 4px; height: 48px; padding: 6px;
       display: flex; align-items: center; justify-content: flex-start; cursor: pointer; font-weight: 700; font-size: 14.5px;
@@ -110,16 +96,12 @@
     .book-tile.cat-2 { background-color: var(--cat-2); }
     .book-tile.cat-3 { background-color: var(--cat-3); }
     .book-tile.cat-4 { background-color: var(--cat-4); }
-
-    .chapters-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: 7px; margin-top: 12px;
-    }
+    .chapters-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: 7px; margin-top: 12px; }
     .chapter-tile {
       background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color);
       border-radius: 6px; height: 48px; font-size: 16px; font-weight: 700; cursor: pointer;
     }
     .chapter-tile.current { background: var(--primary-main); color: #fff; border-color: var(--primary-main); }
-
     .chapter-header {
       display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border-color);
     }
@@ -128,31 +110,24 @@
       background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main);
       padding: 6px 12px; border-radius: 6px; font-weight: 600; cursor: pointer;
     }
-
-    .verse-row {
-      padding: 8px 6px; border-radius: 6px; line-height: 1.58; font-size: var(--font-size-verse); cursor: pointer; margin-bottom: 3px;
-    }
+    .verse-row { padding: 8px 6px; border-radius: 6px; line-height: 1.58; font-size: var(--font-size-verse); cursor: pointer; margin-bottom: 3px; }
     .verse-row:hover { background: var(--verse-hover); }
     .verse-num { font-weight: 800; color: var(--primary-light); font-size: 0.78em; vertical-align: super; margin-right: 5px; }
-
     .parallel-row {
       display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px 4px;
       border-bottom: 1px solid var(--border-color); font-size: var(--font-size-verse); line-height: 1.52; cursor: pointer;
     }
     .parallel-col + .parallel-col { border-left: 2px solid var(--primary-light); padding-left: 10px; }
-
     .hl-yellow { background-color: rgba(255, 235, 59, 0.38) !important; }
     .hl-blue   { background-color: rgba(3, 169, 244, 0.32) !important; }
     .hl-green  { background-color: rgba(76, 175, 80, 0.32) !important; }
     .hl-pink   { background-color: rgba(233, 30, 99, 0.28) !important; }
-
     .verse-action-bar {
       position: fixed; bottom: 62px; left: 50%; transform: translateX(-50%);
       background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: 0 4px 16px rgba(0,0,0,0.3);
       border-radius: 30px; padding: 8px 14px; display: none; align-items: center; gap: 10px; z-index: 200;
     }
     .color-dot { width: 25px; height: 25px; border-radius: 50%; border: 2px solid rgba(0,0,0,0.2); cursor: pointer; }
-
     nav.bottom-nav {
       background: var(--bg-card); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; padding: 6px 0; flex-shrink: 0;
     }
@@ -162,29 +137,17 @@
     }
     .tab-btn.active { color: var(--primary-light); font-weight: 800; }
     .tab-icon { font-size: 17px; }
-
-    .result-card {
-      background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 9px; cursor: pointer;
-    }
+    .result-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 9px; cursor: pointer; }
     .result-ref { font-weight: 700; color: var(--primary-light); margin-bottom: 4px; font-size: 14px; }
     .loader { text-align: center; padding: 28px 14px; color: var(--text-muted); line-height: 1.5; }
-    .badge-btn {
-      background: var(--primary-main); color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 12px;
-    }
+    .badge-btn { background: var(--primary-main); color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 12px; }
     .badge-btn.downloaded { background: #388e3c; }
-    
-    .note-textarea {
-      width: 100%; height: 120px; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);
-      background: var(--bg-card); color: var(--text-main); font-size: 15px; margin-bottom: 10px; resize: vertical;
-    }
   </style>
 </head>
 <body>
-
   <div id="splashScreen">
     <div class="splash-box"><span class="splash-text">BM</span></div>
   </div>
-
   <header>
     <div>
       <button class="book-selector-btn" onclick="showBooksView()">
@@ -197,15 +160,12 @@
       <button class="icon-btn" onclick="toggleDarkMode()">🌙</button>
     </div>
   </header>
-
   <div class="trans-bar">
     <select id="trans1" class="trans-select" onchange="onTranslationChange()"></select>
     <button id="parallelBtn" class="parallel-toggle off" onclick="toggleParallel()">⚖️ Parallelo: OFF</button>
     <select id="trans2" class="trans-select" style="display:none;" onchange="onTranslationChange()"></select>
   </div>
-
   <main id="mainContainer"></main>
-
   <div id="verseActionBar" class="verse-action-bar">
     <div class="color-dot" style="background:#ffeb3b;" onclick="applyHighlight('hl-yellow')"></div>
     <div class="color-dot" style="background:#03a9f4;" onclick="applyHighlight('hl-blue')"></div>
@@ -216,28 +176,14 @@
     <button class="icon-btn" style="color:#ffb300;" onclick="openNoteModalForVerse()">📝</button>
     <button class="icon-btn" style="color:var(--text-muted);" onclick="closeActionBar()">✕</button>
   </div>
-
   <nav class="bottom-nav">
-    <button class="tab-btn active" id="tabRead" onclick="loadChapterView()">
-      <span class="tab-icon">📖</span><span>Lettura</span>
-    </button>
-    <button class="tab-btn" id="tabBooks" onclick="showBooksView()">
-      <span class="tab-icon">🟦</span><span>Libri</span>
-    </button>
-    <button class="tab-btn" id="tabSearch" onclick="showSearchView()">
-      <span class="tab-icon">🔍</span><span>Cerca</span>
-    </button>
-    <button class="tab-btn" id="tabSaved" onclick="showSavedView()">
-      <span class="tab-icon">🔖</span><span>Preferiti</span>
-    </button>
-    <button class="tab-btn" id="tabNotes" onclick="showNotesView()">
-      <span class="tab-icon">📝</span><span>Appunti</span>
-    </button>
-    <button class="tab-btn" id="tabCatalog" onclick="showCatalogView()">
-      <span class="tab-icon">⬇️</span><span>Gestione</span>
-    </button>
-  </nav>
-  <script>
+    <button class="tab-btn active" id="tabRead" onclick="loadChapterView()"><span class="tab-icon">📖</span><span>Lettura</span></button>
+    <button class="tab-btn" id="tabBooks" onclick="showBooksView()"><span class="tab-icon">🟦</span><span>Libri</span></button>
+    <button class="tab-btn" id="tabSearch" onclick="showSearchView()"><span class="tab-icon">🔍</span><span>Cerca</span></button>
+    <button class="tab-btn" id="tabSaved" onclick="showSavedView()"><span class="tab-icon">🔖</span><span>Preferiti</span></button>
+    <button class="tab-btn" id="tabNotes" onclick="showNotesView()"><span class="tab-icon">📝</span><span>Appunti</span></button>
+    <button class="tab-btn" id="tabCatalog" onclick="showCatalogView()"><span class="tab-icon">⬇️</span><span>Gestione</span></button>
+  </nav<script>
 const BIBLE_BOOKS = [
   { id: 1, name: "Genesi", abbr: "Gen", ch: 50, sec: "OT", cat: 1 },
   { id: 2, name: "Esodo", abbr: "Eso", ch: 40, sec: "OT", cat: 1 },
@@ -307,7 +253,6 @@ const BIBLE_BOOKS = [
   { id: 66, name: "Rivelazione", abbr: "Riv", ch: 22, sec: "NT", cat: 4 }
 ];
 
-// Elenco ufficiale delle versioni gestite via GetBible v2 + API stabili
 const OFFICIAL_BIBLES = [
   { id: "gb:riveduta", name: "🇮🇹 Riveduta 1927 (Luzzi)", lang: "Italiano" },
   { id: "gb:giovanni", name: "🇮🇹 Giovanni Diodati (1649)", lang: "Italiano" },
@@ -325,23 +270,17 @@ const OFFICIAL_BIBLES = [
 ];
 
 let state = {
-  bookId: 1,
-  chapter: 1,
-  trans1: "gb:riveduta",
-  trans2: "gb:giovanni",
-  parallel: false,
-  fontSize: 18,
-  selectedVerse: null,
-  selectedVerseText: "",
+  bookId: 1, chapter: 1, trans1: "gb:riveduta", trans2: "gb:giovanni", parallel: false, fontSize: 18,
+  selectedVerse: null, selectedVerseText: "",
   downloadedBibles: JSON.parse(localStorage.getItem("bm_down_bibles") || '["gb:riveduta", "gb:giovanni", "gb:kjv"]'),
   highlights: JSON.parse(localStorage.getItem("bm_hl") || "{}"),
   bookmarks: JSON.parse(localStorage.getItem("bm_bm") || "[]"),
   notes: JSON.parse(localStorage.getItem("bm_notes") || "[]")
 };
-
-function openDB() {
+    >
+  function openDB() {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open("BM_OfflineDB", 3);
+    const req = indexedDB.open("BM_OfflineDB", 4);
     req.onupgradeneeded = e => e.target.result.createObjectStore("bibles");
     req.onsuccess = e => resolve(e.target.result);
     req.onerror = e => reject(e);
@@ -384,8 +323,7 @@ function populateSelects() {
   const s1 = document.getElementById("trans1");
   const s2 = document.getElementById("trans2");
   const html = activeBibles.map(t => `<option value="${t.id}">${t.name}</option>`).join("");
-  s1.innerHTML = html;
-  s2.innerHTML = html;
+  s1.innerHTML = html; s2.innerHTML = html;
   if (activeBibles.some(b => b.id === state.trans1)) s1.value = state.trans1;
   else if (activeBibles.length > 0) state.trans1 = activeBibles[0].id;
   if (activeBibles.some(b => b.id === state.trans2)) s2.value = state.trans2;
@@ -396,33 +334,24 @@ function setActiveTab(tabId) {
   const el = document.getElementById(tabId);
   if (el) el.classList.add("active");
 }
-
-function getBook(id) {
-  return BIBLE_BOOKS.find(b => b.id === id) || BIBLE_BOOKS[0];
-}
+function getBook(id) { return BIBLE_BOOKS.find(b => b.id === id) || BIBLE_BOOKS[0]; }
 
 function showBooksView() {
-  closeActionBar();
-  setActiveTab("tabBooks");
+  closeActionBar(); setActiveTab("tabBooks");
   const main = document.getElementById("mainContainer");
   const ot = BIBLE_BOOKS.filter(b => b.sec === "OT");
   const nt = BIBLE_BOOKS.filter(b => b.sec === "NT");
-
   main.innerHTML = `
     <div class="section-title">Scritture Ebraico-Aramaiche (39)</div>
-    <div class="books-grid">
-      ${ot.map(b => `<button class="book-tile cat-${b.cat}" onclick="showChaptersView(${b.id})">${b.abbr}</button>`).join("")}
-    </div>
+    <div class="books-grid">${ot.map(b => `<button class="book-tile cat-${b.cat}" onclick="showChaptersView(${b.id})">${b.abbr}</button>`).join("")}</div>
     <div class="section-title">Scritture Greche Cristiane (27)</div>
-    <div class="books-grid">
-      ${nt.map(b => `<button class="book-tile cat-${b.cat}" onclick="showChaptersView(${b.id})">${b.abbr}</button>`).join("")}
-    </div>
+    <div class="books-grid">${nt.map(b => `<button class="book-tile cat-${b.cat}" onclick="showChaptersView(${b.id})">${b.abbr}</button>`).join("")}</div>
   `;
   main.scrollTop = 0;
 }
-    function showChaptersView(bookId) {
-  state.bookId = bookId;
-  const book = getBook(bookId);
+
+function showChaptersView(bookId) {
+  state.bookId = bookId; const book = getBook(bookId);
   if (book.ch === 1) { state.chapter = 1; loadChapterView(); return; }
   const main = document.getElementById("mainContainer");
   let btns = "";
@@ -431,19 +360,12 @@ function showBooksView() {
     btns += `<button class="chapter-tile ${isCurr}" onclick="selectChapter(${i})">${i}</button>`;
   }
   main.innerHTML = `
-    <div class="chapter-header">
-      <div class="chapter-title">${book.name} — Capitoli</div>
-      <button class="nav-btn" onclick="showBooksView()">← Libri</button>
-    </div>
+    <div class="chapter-header"><div class="chapter-title">${book.name} — Capitoli</div><button class="nav-btn" onclick="showBooksView()">← Libri</button></div>
     <div class="chapters-grid">${btns}</div>
   `;
   main.scrollTop = 0;
 }
-
-function selectChapter(ch) {
-  state.chapter = ch;
-  loadChapterView();
-}
+function selectChapter(ch) { state.chapter = ch; loadChapterView(); }
 
 async function fetchChapterData(transId, bookId, chapter) {
   const fullOffline = await getOfflineBible(transId);
@@ -454,154 +376,99 @@ async function fetchChapterData(transId, bookId, chapter) {
       if (cObj && cObj.verses) return cObj.verses;
     }
   }
-
   const cacheKey = `bm_ch_${transId}_${bookId}_${chapter}`;
   const cached = localStorage.getItem(cacheKey);
-  if (cached) {
-    const parsed = JSON.parse(cached);
-    if (parsed && parsed.length > 0) return parsed;
-  }
-
+  if (cached) { const parsed = JSON.parse(cached); if (parsed && parsed.length > 0) return parsed; }
   const code = transId.split(":")[1];
-  const url = `https://api.getbible.net/v2/${code}/${bookId}/${chapter}.json`;
-  const res = await fetch(url);
+  const res = await fetch(`https://api.getbible.net/v2/${code}/${bookId}/${chapter}.json`);
   if (!res.ok) throw new Error("Capitolo non disponibile");
   const data = await res.json();
   const verses = (data.verses || []).map(v => ({ verse: v.verse, text: v.text }));
-
-  if (verses.length > 0) {
-    try { localStorage.setItem(cacheKey, JSON.stringify(verses)); } catch(e) {}
-  }
+  if (verses.length > 0) { try { localStorage.setItem(cacheKey, JSON.stringify(verses)); } catch(e) {} }
   return verses;
 }
 
 async function loadChapterView() {
-  closeActionBar();
-  setActiveTab("tabRead");
+  closeActionBar(); setActiveTab("tabRead");
   const book = getBook(state.bookId);
   document.getElementById("currentRefLabel").textContent = `${book.name} ${state.chapter}`;
-
   const main = document.getElementById("mainContainer");
   main.innerHTML = `<div class="loader">Caricamento di <b>${book.name} ${state.chapter}</b>...</div>`;
-
   try {
     const data1 = await fetchChapterData(state.trans1, state.bookId, state.chapter);
     let data2 = [];
-    if (state.parallel) {
-      try { data2 = await fetchChapterData(state.trans2, state.bookId, state.chapter); } catch(e) { data2 = []; }
-    }
-
+    if (state.parallel) { try { data2 = await fetchChapterData(state.trans2, state.bookId, state.chapter); } catch(e) { data2 = []; } }
     let versesHtml = "";
     if (!state.parallel) {
       versesHtml = data1.map(v => {
         const key = `${state.bookId}_${state.chapter}_${v.verse}`;
         const hlClass = state.highlights[key] || "";
         const cleanText = (v.text || "").replace(/<[^>]*>?/gm, "").replace(/"/g, "&quot;");
-        return `
-          <div class="verse-row ${hlClass}" id="v_${v.verse}" data-text="${cleanText}" onclick="onVerseClick(${v.verse}, this.getAttribute('data-text'))">
-            <span class="verse-num">${v.verse}</span><span>${v.text}</span>
-          </div>
-        `;
+        return `<div class="verse-row ${hlClass}" id="v_${v.verse}" data-text="${cleanText}" onclick="onVerseClick(${v.verse}, this.getAttribute('data-text'))"><span class="verse-num">${v.verse}</span><span>${v.text}</span></div>`;
       }).join("");
     } else {
-      const map2 = {};
-      data2.forEach(v => map2[v.verse] = v.text);
+      const map2 = {}; data2.forEach(v => map2[v.verse] = v.text);
       versesHtml = data1.map(v => {
         const key = `${state.bookId}_${state.chapter}_${v.verse}`;
         const hlClass = state.highlights[key] || "";
         const cleanText = (v.text || "").replace(/<[^>]*>?/gm, "").replace(/"/g, "&quot;");
         const text2 = map2[v.verse] || "—";
-        return `
-          <div class="parallel-row ${hlClass}" id="v_${v.verse}" data-text="${cleanText}" onclick="onVerseClick(${v.verse}, this.getAttribute('data-text'))">
-            <div class="parallel-col"><span class="verse-num">${v.verse}</span>${v.text}</div>
-            <div class="parallel-col"><span class="verse-num">${v.verse}</span>${text2}</div>
-          </div>
-        `;
+        return `<div class="parallel-row ${hlClass}" id="v_${v.verse}" data-text="${cleanText}" onclick="onVerseClick(${v.verse}, this.getAttribute('data-text'))"><div class="parallel-col"><span class="verse-num">${v.verse}</span>${v.text}</div><div class="parallel-col"><span class="verse-num">${v.verse}</span>${text2}</div></div>`;
       }).join("");
     }
-
     main.innerHTML = `
-      <div class="chapter-header">
-        <div class="chapter-title">${book.name} ${state.chapter}</div>
-        <div class="chapter-nav-btns">
-          <button class="nav-btn" onclick="prevChapter()">◀ Prec</button>
-          <button class="nav-btn" onclick="nextChapter()">Succ ▶</button>
-        </div>
-      </div>
+      <div class="chapter-header"><div class="chapter-title">${book.name} ${state.chapter}</div><div class="chapter-nav-btns"><button class="nav-btn" onclick="prevChapter()">◀ Prec</button><button class="nav-btn" onclick="nextChapter()">Succ ▶</button></div></div>
       <div>${versesHtml}</div>
     `;
     main.scrollTop = 0;
   } catch (err) {
-    main.innerHTML = `<div class="loader">Capitolo non disponibile in questa versione.<br><br><button class="nav-btn" onclick="showBooksView()">Scegli Libro</button></div>`;
+    main.innerHTML = `<div class="loader">Capitolo non disponibile.<br><br><button class="nav-btn" onclick="showBooksView()">Scegli Libro</button></div>`;
   }
-}
-
-function prevChapter() {
+    }
+    function prevChapter() {
   if (state.chapter > 1) state.chapter--;
   else if (state.bookId > 1) { state.bookId--; state.chapter = getBook(state.bookId).ch; }
   loadChapterView();
 }
-
 function nextChapter() {
   const book = getBook(state.bookId);
   if (state.chapter < book.ch) state.chapter++;
   else if (state.bookId < 66) { state.bookId++; state.chapter = 1; }
   loadChapterView();
 }
-
 function onTranslationChange() {
   state.trans1 = document.getElementById("trans1").value;
   state.trans2 = document.getElementById("trans2").value;
   loadChapterView();
 }
-
 function toggleParallel() {
   state.parallel = !state.parallel;
-  const btn = document.getElementById("parallelBtn");
-  const sel2 = document.getElementById("trans2");
-  if (state.parallel) {
-    btn.textContent = "⚖️ Parallelo: ON"; btn.classList.remove("off"); sel2.style.display = "block";
-  } else {
-    btn.textContent = "⚖️ Parallelo: OFF"; btn.classList.add("off"); sel2.style.display = "none";
-  }
+  const btn = document.getElementById("parallelBtn"), sel2 = document.getElementById("trans2");
+  if (state.parallel) { btn.textContent = "⚖️ Parallelo: ON"; btn.classList.remove("off"); sel2.style.display = "block"; }
+  else { btn.textContent = "⚖️ Parallelo: OFF"; btn.classList.add("off"); sel2.style.display = "none"; }
   loadChapterView();
 }
 
-function onVerseClick(verseNum, text) {
-  state.selectedVerse = verseNum;
-  state.selectedVerseText = text;
-  document.getElementById("verseActionBar").style.display = "flex";
-}
-
-function closeActionBar() {
-  document.getElementById("verseActionBar").style.display = "none";
-  state.selectedVerse = null;
-}
+function onVerseClick(verseNum, text) { state.selectedVerse = verseNum; state.selectedVerseText = text; document.getElementById("verseActionBar").style.display = "flex"; }
+function closeActionBar() { document.getElementById("verseActionBar").style.display = "none"; state.selectedVerse = null; }
 
 function applyHighlight(colorClass) {
   if (!state.selectedVerse) return;
   const key = `${state.bookId}_${state.chapter}_${state.selectedVerse}`;
-  if (colorClass) state.highlights[key] = colorClass;
-  else delete state.highlights[key];
+  if (colorClass) state.highlights[key] = colorClass; else delete state.highlights[key];
   localStorage.setItem("bm_hl", JSON.stringify(state.highlights));
   const row = document.getElementById(`v_${state.selectedVerse}`);
-  if (row) {
-    row.classList.remove("hl-yellow", "hl-blue", "hl-green", "hl-pink");
-    if (colorClass) row.classList.add(colorClass);
-  }
+  if (row) { row.classList.remove("hl-yellow", "hl-blue", "hl-green", "hl-pink"); if (colorClass) row.classList.add(colorClass); }
   closeActionBar();
 }
-
 function saveBookmark() {
   if (!state.selectedVerse) return;
   const book = getBook(state.bookId);
   state.bookmarks.unshift({ bookId: state.bookId, chapter: state.chapter, verse: state.selectedVerse, ref: `${book.name} ${state.chapter}:${state.selectedVerse}`, text: state.selectedVerseText });
   localStorage.setItem("bm_bm", JSON.stringify(state.bookmarks));
-  closeActionBar();
-  alert("Preferito salvato!");
+  closeActionBar(); alert("Preferito salvato!");
 }
 
-// GESTIONE APPUNTI / NOTE
 function openNoteModalForVerse() {
   if (!state.selectedVerse) return;
   const book = getBook(state.bookId);
@@ -616,76 +483,37 @@ function openNoteModalForVerse() {
 }
 
 function showNotesView() {
-  closeActionBar();
-  setActiveTab("tabNotes");
+  closeActionBar(); setActiveTab("tabNotes");
   const main = document.getElementById("mainContainer");
   if (!state.notes.length) {
     main.innerHTML = `<div class="loader">Nessun appunto salvato.<br><br>Tocca un versetto e premi l'icona 📝 per aggiungere una nota di studio.</div>`;
     return;
   }
   main.innerHTML = `<div class="section-title">I tuoi Appunti di Studio (${state.notes.length})</div>` +
-    state.notes.map((n, idx) => `
-      <div class="result-card">
-        <div class="result-ref" style="display:flex;justify-content:space-between;">
-          <span>📝 ${n.ref}</span>
-          <span onclick="deleteNote(${idx})" style="color:#e53935;cursor:pointer;">Elimina</span>
-        </div>
-        <div style="margin-top:6px;line-height:1.4;">${n.text}</div>
-      </div>
-    `).join("");
+    state.notes.map((n, idx) => `<div class="result-card"><div class="result-ref" style="display:flex;justify-content:space-between;"><span>📝 ${n.ref}</span><span onclick="deleteNote(${idx})" style="color:#e53935;cursor:pointer;">Elimina</span></div><div style="margin-top:6px;line-height:1.4;">${n.text}</div></div>`).join("");
 }
+function deleteNote(idx) { state.notes.splice(idx, 1); localStorage.setItem("bm_notes", JSON.stringify(state.notes)); showNotesView(); }
 
-function deleteNote(idx) {
-  state.notes.splice(idx, 1);
-  localStorage.setItem("bm_notes", JSON.stringify(state.notes));
-  showNotesView();
-}
-
-// CENTRO DOWNLOAD (STILE JW LIBRARY / MY SWORD)
 function showCatalogView() {
-  closeActionBar();
-  setActiveTab("tabCatalog");
+  closeActionBar(); setActiveTab("tabCatalog");
   const main = document.getElementById("mainContainer");
-  main.innerHTML = `
-    <div class="section-title">Centro Download Traduzioni</div>
-    <div style="font-size:13px;color:var-text-muted;margin-bottom:12px;">Gestisci le versioni della Bibbia presenti sul tuo dispositivo. Clicca su "Scarica" per averla offline o "Rimuovi" per liberare spazio.</div>
-    <div id="catalogList"></div>
-  `;
+  main.innerHTML = `<div class="section-title">Centro Download Traduzioni</div><div style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">Gestisci le versioni della Bibbia. Clicca su "Scarica" per averla offline o "Rimuovi" per liberare spazio.</div><div id="catalogList"></div>`;
   renderCatalogList();
 }
-
 function renderCatalogList() {
-  const container = document.getElementById("catalogList");
-  if (!container) return;
+  const container = document.getElementById("catalogList"); if (!container) return;
   container.innerHTML = OFFICIAL_BIBLES.map(b => {
     const isDown = state.downloadedBibles.includes(b.id);
-    return `
-      <div class="result-card" style="display:flex;justify-content:space-between;align-items:center;">
-        <div>
-          <div class="result-ref">${b.name}</div>
-          <div style="font-size:12px;color:var(--text-muted);">Lingua: ${b.lang}</div>
-        </div>
-        <button class="badge-btn ${isDown ? 'downloaded' : ''}" onclick="toggleDownload('${b.id}')">
-          ${isDown ? '✔ Scaricata' : '⬇ Scarica'}
-        </button>
-      </div>
-    `;
+    return `<div class="result-card" style="display:flex;justify-content:space-between;align-items:center;"><div><div class="result-ref">${b.name}</div><div style="font-size:12px;color:var(--text-muted);">Lingua: ${b.lang}</div></div><button class="badge-btn ${isDown ? 'downloaded' : ''}" onclick="toggleDownload('${b.id}')">${isDown ? '✔ Scaricata' : '⬇ Scarica'}</button></div>`;
   }).join("");
 }
-
 async function toggleDownload(id) {
-  const statusEl = document.getElementById("catalogList");
   if (state.downloadedBibles.includes(id)) {
-    if (state.downloadedBibles.length <= 1) {
-      alert("Devi mantenere almeno una traduzione attiva!");
-      return;
-    }
+    if (state.downloadedBibles.length <= 1) { alert("Devi mantenere almeno una traduzione attiva!"); return; }
     state.downloadedBibles = state.downloadedBibles.filter(item => item !== id);
     await removeOfflineBible(id);
     localStorage.setItem("bm_down_bibles", JSON.stringify(state.downloadedBibles));
-    populateSelects();
-    renderCatalogList();
-    alert("Traduzione rimossa.");
+    populateSelects(); renderCatalogList(); alert("Traduzione rimossa.");
   } else {
     const code = id.split(":")[1];
     alert("Scaricamento di tutti i 66 libri in corso... attendi qualche secondo.");
@@ -695,45 +523,28 @@ async function toggleDownload(id) {
       await saveOfflineBible(id, data);
       state.downloadedBibles.push(id);
       localStorage.setItem("bm_down_bibles", JSON.stringify(state.downloadedBibles));
-      populateSelects();
-      renderCatalogList();
-      alert("Traduzione scaricata e pronta offline!");
-    } catch(e) {
-      alert("Errore durante il download. Verifica la connessione.");
-    }
+      populateSelects(); renderCatalogList(); alert("Traduzione scaricata e pronta offline!");
+    } catch(e) { alert("Errore durante il download."); }
   }
 }
 
 function showSearchView() {
-  closeActionBar();
-  setActiveTab("tabSearch");
+  closeActionBar(); setActiveTab("tabSearch");
   const main = document.getElementById("mainContainer");
-  main.innerHTML = `
-    <div class="search-box">
-      <input type="text" id="searchInput" class="search-input" placeholder="Cerca parola..." onkeydown="if(event.key==='Enter') executeSearch()">
-      <button class="search-btn" onclick="executeSearch()">Cerca</button>
-    </div>
-    <div id="searchResults"><div class="loader">Inserisci una parola da cercare nella Bibbia attiva.</div></div>
-  `;
+  main.innerHTML = `<div class="search-box"><input type="text" id="searchInput" class="search-input" placeholder="Cerca parola..." onkeydown="if(event.key==='Enter') executeSearch()"><button class="search-btn" onclick="executeSearch()">Cerca</button></div><div id="searchResults"><div class="loader">Inserisci una parola da cercare nella Bibbia attiva.</div></div>`;
 }
-
 async function executeSearch() {
   const query = document.getElementById("searchInput").value.trim().toLowerCase();
   if (!query) return;
   const resDiv = document.getElementById("searchResults");
   resDiv.innerHTML = `<div class="loader">Ricerca di "<b>${query}</b>" in corso...</div>`;
-
   try {
     let fullBible = await getOfflineBible(state.trans1);
     if (!fullBible) {
       const code = state.trans1.split(":")[1];
       const res = await fetch(`https://api.getbible.net/v2/${code}.json`);
-      if (res.ok) {
-        fullBible = await res.json();
-        await saveOfflineBible(state.trans1, fullBible);
-      }
+      if (res.ok) { fullBible = await res.json(); await saveOfflineBible(state.trans1, fullBible); }
     }
-
     if (fullBible && fullBible.books) {
       let matches = [];
       for (const b of fullBible.books) {
@@ -741,7 +552,7 @@ async function executeSearch() {
         for (const c of b.chapters) {
           for (const v of c.verses) {
             if (v.text && v.text.toLowerCase().includes(query)) {
-              matches.push({ bookId: Number(v.nr), bookName: bMeta.name, ch: c.chapter, v: v.verse, text: v.text });
+              matches.push({ bookId: Number(b.nr), bookName: bMeta.name, ch: c.chapter, v: v.verse, text: v.text });
               if (matches.length >= 80) break;
             }
           }
@@ -749,75 +560,34 @@ async function executeSearch() {
         }
         if (matches.length >= 80) break;
       }
-      if (!matches.length) {
-        resDiv.innerHTML = `<div class="loader">Nessun risultato trovato per "${query}".</div>`;
-        return;
-      }
+      if (!matches.length) { resDiv.innerHTML = `<div class="loader">Nessun risultato trovato per "${query}".</div>`; return; }
       resDiv.innerHTML = `<div style="margin-bottom:10px;font-size:13px;color:var(--text-muted);">Risultati trovati:</div>` +
-        matches.map(m => `
-          <div class="result-card" onclick="openRef(${m.bookId}, ${m.ch})">
-            <div class="result-ref">${m.bookName} ${m.ch}:${m.v}</div>
-            <div>${m.text}</div>
-          </div>
-        `).join("");
-    } else {
-      resDiv.innerHTML = `<div class="loader">Impossibile completare la ricerca.</div>`;
-    }
-  } catch (e) {
-    resDiv.innerHTML = `<div class="loader">Errore durante la ricerca.</div>`;
-  }
+        matches.map(m => `<div class="result-card" onclick="openRef(${m.bookId}, ${m.ch})"><div class="result-ref">${m.bookName} ${m.ch}:${m.v}</div><div>${m.text}</div></div>`).join("");
+    } else { resDiv.innerHTML = `<div class="loader">Impossibile completare la ricerca.</div>`; }
+  } catch (e) { resDiv.innerHTML = `<div class="loader">Errore durante la ricerca.</div>`; }
 }
 
 function showSavedView() {
-  closeActionBar();
-  setActiveTab("tabSaved");
+  closeActionBar(); setActiveTab("tabSaved");
   const main = document.getElementById("mainContainer");
-  if (!state.bookmarks.length) {
-    main.innerHTML = `<div class="loader">Nessun preferito salvato.</div>`;
-    return;
-  }
+  if (!state.bookmarks.length) { main.innerHTML = `<div class="loader">Nessun preferito salvato.</div>`; return; }
   main.innerHTML = `<div class="section-title">I tuoi Preferiti (${state.bookmarks.length})</div>` +
-    state.bookmarks.map((b, idx) => `
-      <div class="result-card" onclick="openRef(${b.bookId}, ${b.chapter})">
-        <div class="result-ref" style="display:flex;justify-content:space-between;">
-          <span>🔖 ${b.ref}</span>
-          <span onclick="event.stopPropagation();deleteBookmark(${idx})" style="color:#e53935;">Elimina</span>
-        </div>
-        <div>${b.text}</div>
-      </div>
-    `).join("");
+    state.bookmarks.map((b, idx) => `<div class="result-card" onclick="openRef(${b.bookId}, ${b.chapter})"><div class="result-ref" style="display:flex;justify-content:space-between;"><span>🔖 ${b.ref}</span><span onclick="event.stopPropagation();deleteBookmark(${idx})" style="color:#e53935;">Elimina</span></div><div>${b.text}</div></div>`).join("");
 }
-
-function deleteBookmark(idx) {
-  state.bookmarks.splice(idx, 1);
-  localStorage.setItem("bm_bm", JSON.stringify(state.bookmarks));
-  showSavedView();
-}
-
-function openRef(bookId, chapter) {
-  state.bookId = bookId;
-  state.chapter = chapter;
-  loadChapterView();
-}
+function deleteBookmark(idx) { state.bookmarks.splice(idx, 1); localStorage.setItem("bm_bm", JSON.stringify(state.bookmarks)); showSavedView(); }
+function openRef(bookId, chapter) { state.bookId = bookId; state.chapter = chapter; loadChapterView(); }
 
 function changeFontSize(delta) {
   state.fontSize = Math.min(28, Math.max(14, state.fontSize + delta));
   document.documentElement.style.setProperty("--font-size-verse", state.fontSize + "px");
 }
+function toggleDarkMode() { document.body.classList.toggle("dark-mode"); }
 
-function toggleDarkMode() {
-  document.body.classList.toggle("dark-mode");
-}
-
-// AVVIO
 populateSelects();
 loadChapterView().then(() => {
   setTimeout(() => {
     const splash = document.getElementById("splashScreen");
-    if(splash) {
-      splash.style.opacity = "0";
-      setTimeout(() => splash.remove(), 400);
-    }
+    if(splash) { splash.style.opacity = "0"; setTimeout(() => splash.remove(), 400); }
   }, 600);
 });
 </script>
