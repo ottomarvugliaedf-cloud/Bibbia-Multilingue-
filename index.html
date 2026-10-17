@@ -7,10 +7,10 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Bibbia Multilingue</title>
+  <title>Bibbia Multilingue (BM)</title>
   <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3004/3004458.png">
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3004/3004458.png">
-  <link rel="manifest" href='data:application/manifest+json,{"name":"Bibbia Multilingue","short_name":"Bibbia BM","start_url":".","display":"standalone","background_color":"#0d47a1","theme_color":"#0d47a1","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3004/3004458.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}'>
+  <link rel="manifest" href='data:application/manifest+json,{"name":"Bibbia Multilingue","short_name":"BM Bibbia","start_url":".","display":"standalone","background_color":"#0d47a1","theme_color":"#0d47a1","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3004/3004458.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}'>
   <style>
     :root {
       --bg-main: #f0f6fc;
@@ -27,6 +27,8 @@
       --cat-2: #1565c0;
       --cat-3: #0288d1;
       --cat-4: #0097a7;
+      --success: #2e7d32;
+      --danger: #d32f2f;
     }
 
     body.dark-mode {
@@ -57,26 +59,36 @@
       top: 0; left: 0; width: 100%; height: 100%;
       background-color: #ffffff;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
       z-index: 9999;
       transition: opacity 0.4s ease;
     }
     .splash-box {
-      width: 110px; height: 110px;
+      width: 115px; height: 115px;
       background: linear-gradient(135deg, #0d47a1, #1565c0);
-      border-radius: 18px;
+      border-radius: 20px;
       display: flex;
       justify-content: center;
       align-items: center;
-      box-shadow: 0 10px 25px rgba(13, 71, 161, 0.3);
+      box-shadow: 0 12px 28px rgba(13, 71, 161, 0.35);
+      border: 2px solid rgba(255,255,255,0.2);
     }
     .splash-text {
       color: #ffffff;
-      font-size: 42px;
+      font-size: 44px;
       font-weight: 900;
       letter-spacing: 2px;
-      font-family: serif;
+      font-family: Georgia, serif;
+    }
+    .splash-sub {
+      margin-top: 14px;
+      color: #0d47a1;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
     }
 
     header {
@@ -114,6 +126,7 @@
       font-size: 16px;
       font-weight: 600;
     }
+    .icon-btn:active { background: rgba(255,255,255,0.2); }
         .trans-bar {
       background: var(--bg-card);
       border-bottom: 1px solid var(--border-color);
@@ -156,6 +169,7 @@
       flex: 1;
       overflow-y: auto;
       padding: 14px;
+      padding-bottom: 40px;
     }
 
     .section-title {
@@ -163,10 +177,13 @@
       text-transform: uppercase;
       letter-spacing: 0.7px;
       color: var(--primary-light);
-      font-weight: 700;
+      font-weight: 800;
       margin: 16px 0 8px 0;
       border-bottom: 2px solid var(--primary-light);
       padding-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
     .section-title:first-child { margin-top: 2px; }
     .books-grid {
@@ -235,6 +252,7 @@
       border-radius: 6px;
       font-weight: 600;
       cursor: pointer;
+      font-size: 13px;
     }
 
     .verse-row {
@@ -244,6 +262,7 @@
       font-size: var(--font-size-verse);
       cursor: pointer;
       margin-bottom: 3px;
+      position: relative;
     }
     .verse-row:hover { background: var(--verse-hover); }
     .verse-num {
@@ -252,6 +271,11 @@
       font-size: 0.78em;
       vertical-align: super;
       margin-right: 5px;
+    }
+    .verse-note-ind {
+      font-size: 0.75em;
+      margin-left: 6px;
+      vertical-align: super;
     }
 
     .parallel-row {
@@ -268,32 +292,37 @@
       border-left: 2px solid var(--primary-light);
       padding-left: 10px;
     }
-        .hl-yellow { background-color: rgba(255, 235, 59, 0.38) !important; }
+
+    .hl-yellow { background-color: rgba(255, 235, 59, 0.38) !important; }
     .hl-blue   { background-color: rgba(3, 169, 244, 0.32) !important; }
     .hl-green  { background-color: rgba(76, 175, 80, 0.32) !important; }
     .hl-pink   { background-color: rgba(233, 30, 99, 0.28) !important; }
+    .hl-purple { background-color: rgba(156, 39, 176, 0.28) !important; }
 
     .verse-action-bar {
       position: fixed;
-      bottom: 62px;
+      bottom: 64px;
       left: 50%;
       transform: translateX(-50%);
       background: var(--bg-card);
       border: 1px solid var(--border-color);
-      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.35);
       border-radius: 30px;
       padding: 8px 14px;
       display: none;
       align-items: center;
-      gap: 10px;
+      gap: 9px;
       z-index: 200;
+      max-width: 96vw;
+      overflow-x: auto;
     }
     .color-dot {
-      width: 25px;
-      height: 25px;
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
       border: 2px solid rgba(0,0,0,0.2);
       cursor: pointer;
+      flex-shrink: 0;
     }
 
     nav.bottom-nav {
@@ -303,38 +332,40 @@
       justify-content: space-around;
       padding: 6px 0;
       flex-shrink: 0;
+      z-index: 150;
     }
     .tab-btn {
       background: none;
       border: none;
       color: var(--text-muted);
-      font-size: 11.5px;
+      font-size: 11px;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 2px;
       cursor: pointer;
-      padding: 4px 8px;
+      padding: 4px 6px;
       font-weight: 600;
     }
     .tab-btn.active { color: var(--primary-light); font-weight: 800; }
     .tab-icon { font-size: 18px; }
 
-    .search-box { display: flex; gap: 8px; margin-bottom: 14px; }
+    .search-box { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
     .search-input {
       flex: 1;
+      min-width: 180px;
       padding: 10px 12px;
       border-radius: 8px;
       border: 1px solid var(--border-color);
       background: var(--bg-card);
       color: var(--text-main);
-      font-size: 15px;
+      font-size: 14.5px;
     }
     .search-btn {
       background: var(--primary-main);
       color: #fff;
       border: none;
-      padding: 0 16px;
+      padding: 10px 16px;
       border-radius: 8px;
       font-weight: 700;
       cursor: pointer;
@@ -351,15 +382,52 @@
     .loader { text-align: center; padding: 28px 14px; color: var(--text-muted); line-height: 1.5; }
     .badge-btn {
       font-size: 12px;
-      padding: 6px 12px;
+      padding: 7px 12px;
       border-radius: 6px;
       background: var(--primary-main);
       color: #fff;
       font-weight: 700;
       border: none;
       cursor: pointer;
+      white-space: nowrap;
     }
-    .badge-btn.downloaded { background: #388e3c; }
+    .badge-btn.downloaded { background: var(--success); }
+    .badge-btn.downloading { background: #f57c00; opacity: 0.85; }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 16px;
+    }
+    .modal-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 440px;
+      padding: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+    .modal-title { font-size: 17px; font-weight: 800; color: var(--primary-light); margin-bottom: 8px; }
+    .modal-textarea {
+      width: 100%;
+      height: 130px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-main);
+      color: var(--text-main);
+      font-size: 15px;
+      font-family: inherit;
+      resize: vertical;
+      margin-bottom: 12px;
+    }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
   </style>
 </head>
 <body>
@@ -368,6 +436,7 @@
     <div class="splash-box">
       <span class="splash-text">BM</span>
     </div>
+    <div class="splash-sub">Bibbia Multilingue</div>
   </div>
 
   <header>
@@ -378,9 +447,9 @@
       </button>
     </div>
     <div class="header-controls">
-      <button class="icon-btn" onclick="changeFontSize(-2)">A-</button>
-      <button class="icon-btn" onclick="changeFontSize(2)">A+</button>
-      <button class="icon-btn" onclick="toggleDarkMode()">🌙</button>
+      <button class="icon-btn" title="Riduci testo" onclick="changeFontSize(-2)">A-</button>
+      <button class="icon-btn" title="Ingrandisci testo" onclick="changeFontSize(2)">A+</button>
+      <button class="icon-btn" title="Tema Scuro/Chiaro" onclick="toggleDarkMode()">🌙</button>
     </div>
   </header>
 
@@ -392,17 +461,34 @@
 
   <main id="mainContainer"></main>
 
+  <!-- Barra Azioni Versetto -->
   <div id="verseActionBar" class="verse-action-bar">
     <div class="color-dot" style="background:#ffeb3b;" onclick="applyHighlight('hl-yellow')"></div>
     <div class="color-dot" style="background:#03a9f4;" onclick="applyHighlight('hl-blue')"></div>
     <div class="color-dot" style="background:#4caf50;" onclick="applyHighlight('hl-green')"></div>
     <div class="color-dot" style="background:#e91e63;" onclick="applyHighlight('hl-pink')"></div>
-    <button class="icon-btn" style="color:var(--text-main);" onclick="applyHighlight('')">🚫</button>
-    <button class="icon-btn" style="color:var(--primary-light);" onclick="saveBookmark()">🔖</button>
-    <button class="icon-btn" style="color:#ffb300;" onclick="openNoteModalForVerse()">📝</button>
-    <button class="icon-btn" style="color:var(--text-muted);" onclick="closeActionBar()">✕</button>
+    <div class="color-dot" style="background:#9c27b0;" onclick="applyHighlight('hl-purple')"></div>
+    <button class="icon-btn" style="color:var(--text-main);" title="Rimuovi colore" onclick="applyHighlight('')">🚫</button>
+    <button class="icon-btn" style="color:var(--text-main);" title="Copia versetto" onclick="copySelectedVerse()">📋</button>
+    <button class="icon-btn" style="color:var(--primary-light);" title="Salva Preferito" onclick="saveBookmark()">🔖</button>
+    <button class="icon-btn" style="color:#ffb300;" title="Aggiungi Appunto" onclick="openNoteModalForVerse()">📝</button>
+    <button class="icon-btn" style="color:var(--text-muted);" title="Chiudi" onclick="closeActionBar()">✕</button>
   </div>
 
+  <!-- Finestra Modale per Appunti di Studio -->
+  <div id="noteModal" class="modal-overlay">
+    <div class="modal-card">
+      <div id="noteModalTitle" class="modal-title">Appunto per Genesi 1:1</div>
+      <div id="noteModalVersePreview" style="font-size:12.5px; color:var(--text-muted); margin-bottom:10px; font-style:italic; max-height:60px; overflow-y:auto;"></div>
+      <textarea id="noteModalInput" class="modal-textarea" placeholder="Scrivi qui le tue riflessioni, riferimenti incrociati o note di studio..."></textarea>
+      <div class="modal-actions">
+        <button class="nav-btn" onclick="closeNoteModal()">Annulla</button>
+        <button class="search-btn" onclick="saveNoteFromModal()">💾 Salva Appunto</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra Navigazione Inferiore a 6 Schede -->
   <nav class="bottom-nav">
     <button class="tab-btn active" id="tabRead" onclick="loadChapterView()">
       <span class="tab-icon">📖</span><span>Lettura</span>
@@ -423,7 +509,8 @@
       <span class="tab-icon">⬇️</span><span>Gestione</span>
     </button>
   </nav>
-  <script>
+
+<script>
 const BIBLE_BOOKS = [
   { id: 1,  name: "Genesi", abbr: "Gen", ch: 50, sec: "OT", cat: 1 },
   { id: 2,  name: "Esodo", abbr: "Eso", ch: 40, sec: "OT", cat: 1 },
@@ -492,33 +579,99 @@ const BIBLE_BOOKS = [
   { id: 65, name: "Giuda", abbr: "Gda", ch: 1, sec: "NT", cat: 4 },
   { id: 66, name: "Rivelazione", abbr: "Riv", ch: 22, sec: "NT", cat: 4 }
 ];
-
-let allScrollmapperBibles = [];
+  // Catalogo Ufficiale Pre-Mappato (GetBible v2 + edizioni storiche e lingue originali)
 const DEFAULT_BIBLES = [
   { id: "gb:riveduta", name: "🇮🇹 Riveduta 1927 (Luzzi)", lang: "Italiano" },
   { id: "gb:giovanni", name: "🇮🇹 Giovanni Diodati (1649)", lang: "Italiano" },
-  { id: "gb:kjv",      name: "🇬🇧 King James Version (GetBible)", lang: "Inglese" },
-  { id: "sm:KJV",      name: "🌐 King James (Scrollmapper Global)", lang: "Mondiale" },
-  { id: "sm:SpaRV",    name: "🌐 Reina Valera (Spagnolo Global)", lang: "Mondiale" },
-  { id: "sm:GerElb1905", name: "🌐 Elberfelder (Tedesco Global)", lang: "Mondiale" }
+  { id: "gb:kjv", name: "🇬🇧 King James Version (KJV)", lang: "Inglese" },
+  { id: "gb:akjv", name: "🇬🇧 Authorized King James (AKJV)", lang: "Inglese" },
+  { id: "gb:web", name: "🇬🇧 World English Bible (WEB)", lang: "Inglese" },
+  { id: "gb:asv", name: "🇬🇧 American Standard Version (ASV)", lang: "Inglese" },
+  { id: "gb:ylt", name: "🇬🇧 Young's Literal Translation (YLT)", lang: "Inglese" },
+  { id: "gb:darby", name: "🇬🇧 Darby English Translation", lang: "Inglese" },
+  { id: "gb:douayrheims", name: "🇬🇧 Douay-Rheims Bible", lang: "Inglese" },
+  { id: "gb:wb", name: "🇬🇧 Webster's Bible (1833)", lang: "Inglese" },
+  { id: "gb:weymouth", name: "🇬🇧 Weymouth New Testament", lang: "Inglese" },
+  { id: "gb:bbe", name: "🇬🇧 Bible in Basic English (BBE)", lang: "Inglese" },
+  { id: "gb:tyndale", name: "🇬🇧 William Tyndale Bible (1526)", lang: "Inglese" },
+  { id: "gb:geneva", name: "🇬🇧 Geneva Bible (1599)", lang: "Inglese" },
+  { id: "gb:bishops", name: "🇬🇧 Bishops' Bible (1568)", lang: "Inglese" },
+  { id: "gb:coverdale", name: "🇬🇧 Coverdale Bible (1535)", lang: "Inglese" },
+  { id: "gb:valera", name: "🇪🇸 Reina Valera (1909)", lang: "Spagnolo" },
+  { id: "gb:rv1858", name: "🇪🇸 Reina Valera NT (1858)", lang: "Spagnolo" },
+  { id: "gb:sse", name: "🇪🇸 Sagradas Escrituras (1569)", lang: "Spagnolo" },
+  { id: "gb:luther1912", name: "🇩🇪 Lutherbibel (1912)", lang: "Tedesco" },
+  { id: "gb:luther1545", name: "🇩🇪 Martin Luther Bibel (1545)", lang: "Tedesco" },
+  { id: "gb:elberfelder", name: "🇩🇪 Elberfelder Bibel (1871)", lang: "Tedesco" },
+  { id: "gb:elberfelder1905", name: "🇩🇪 Elberfelder Bibel (1905)", lang: "Tedesco" },
+  { id: "gb:schlachter", name: "🇩🇪 Schlachter Bibel (1951)", lang: "Tedesco" },
+  { id: "gb:martin", name: "🇫🇷 David Martin (1744)", lang: "Francese" },
+  { id: "gb:ostervald", name: "🇫🇷 Ostervald (1996)", lang: "Francese" },
+  { id: "gb:darbyfr", name: "🇫🇷 Darby Français", lang: "Francese" },
+  { id: "gb:almeida", name: "🇧🇷 João Ferreira de Almeida", lang: "Portoghese" },
+  { id: "gb:ivre", name: "🇧🇷 Almeida Revista e Corrigida", lang: "Portoghese" },
+  { id: "gb:synodal", name: "🇷🇺 Russian Synodal (1876)", lang: "Russo" },
+  { id: "gb:makarij", name: "🇷🇺 Pentateuco di Makarij", lang: "Russo" },
+  { id: "gb:cornilescu", name: "🇷🇴 Dumitru Cornilescu", lang: "Rumeno" },
+  { id: "gb:statenvertaling", name: "🇳🇱 Statenvertaling (1637)", lang: "Olandese" },
+  { id: "gb:svd", name: "🇸🇦 Smith & Van Dyke Arabic", lang: "Arabo" },
+  { id: "gb:cuv", name: "🇨🇳 Chinese Union Version", lang: "Cinese" },
+  { id: "gb:korean", name: "🇰🇷 Korean Revised Version", lang: "Coreano" },
+  { id: "gb:kougo", name: "🇯🇵 Japanese Kougo-yaku", lang: "Giapponese" },
+  { id: "gb:swahili", name: "🇰🇪 Swahili Union Version", lang: "Swahili" },
+  { id: "gb:esperanto", name: "🌍 Bibbia in Esperanto (Zamenhof)", lang: "Esperanto" },
+  { id: "gb:vulgate", name: "🏛️ Biblia Sacra Vulgata", lang: "Latino" },
+  { id: "gb:textusreceptus", name: "📜 Greco NT (Textus Receptus)", lang: "Originale Greco" },
+  { id: "gb:lxx", name: "📜 Settanta LXX (Antico Test. Greco)", lang: "Originale Greco" },
+  { id: "gb:tischendorf", name: "📜 Greco NT (Tischendorf 8th)", lang: "Originale Greco" },
+  { id: "gb:byzantine", name: "📜 Greco NT ( Maggioritario Bizantino)", lang: "Originale Greco" },
+  { id: "gb:westcott", name: "📜 Greco NT (Westcott-Hort)", lang: "Originale Greco" },
+  { id: "gb:codex", name: "📜 Ebraico (Westminster Leningrad)", lang: "Originale Ebraico" },
+  { id: "gb:aleppo", name: "📜 Ebraico (Aleppo Codex)", lang: "Originale Ebraico" },
+  { id: "gb:bhs", name: "📜 Ebraico Masoretico (BHS)", lang: "Originale Ebraico" }
 ];
 
+// Fallback esteso per Scrollmapper (oltre alle 80+ caricate dinamicamente da GitHub)
+const FALLBACK_SCROLLMAPPER = [
+  "KJV", "ASV", "YLT", "BBE", "Darby", "Webster", "Weymouth", "SpaRV", "SpaRVG",
+  "GerElb1871", "GerElb1905", "GerLut1545", "GerSch", "FreSegond", "FreMartin",
+  "FreCrampon", "PorAlmeida", "ItaRiveduta", "ItaDiodati", "RusSynodal", "Vulgate",
+  "GreVamvas", "HebModern", "AraSVD", "ChiUn", "KorRV", "JpnKougo", "FinBiblia",
+  "Swe1917", "NorDet", "Dan1871", "CzeBKR", "PolGdanska", "HunKaroli", "RomCornilescu",
+  "BulVeren", "UkrOgienko", "Viet1934", "TagAngBiblia", "IndTB", "Afr1953", "Alb", "ArmEastern"
+];
+
+let allScrollmapperBibles = [];
+
 let state = {
-  bookId: 1, chapter: 1, trans1: "gb:riveduta", trans2: "gb:giovanni", parallel: false, fontSize: 18,
-  selectedVerse: null, selectedVerseText: "",
-  downloadedBibles: JSON.parse(localStorage.getItem("bm_down_bibles") || '["gb:riveduta", "gb:giovanni", "sm:KJV"]'),
+  bookId: 1,
+  chapter: 1,
+  trans1: "gb:riveduta",
+  trans2: "gb:giovanni",
+  parallel: false,
+  fontSize: 18,
+  selectedVerse: null,
+  selectedVerseText: "",
+  downloadedBibles: JSON.parse(localStorage.getItem("bm_down_bibles") || '["gb:riveduta", "gb:giovanni", "gb:kjv", "gb:textusreceptus", "gb:codex"]'),
   highlights: JSON.parse(localStorage.getItem("bm_hl") || "{}"),
   bookmarks: JSON.parse(localStorage.getItem("bm_bm") || "[]"),
   notes: JSON.parse(localStorage.getItem("bm_notes") || "[]")
 };
-    function openDB() {
+
+function openDB() {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open("BM_OfflineDB", 6);
-    req.onupgradeneeded = e => e.target.result.createObjectStore("bibles");
+    const req = indexedDB.open("BM_OfflineDB", 7);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains("bibles")) {
+        db.createObjectStore("bibles");
+      }
+    };
     req.onsuccess = e => resolve(e.target.result);
     req.onerror = e => reject(e);
   });
 }
+
 async function getOfflineBible(id) {
   try {
     const db = await openDB();
@@ -530,6 +683,7 @@ async function getOfflineBible(id) {
     });
   } catch(e) { return null; }
 }
+
 async function saveOfflineBible(id, data) {
   const db = await openDB();
   return new Promise((res, rej) => {
@@ -539,6 +693,7 @@ async function saveOfflineBible(id, data) {
     tx.onerror = e => rej(e);
   });
 }
+
 async function removeOfflineBible(id) {
   try {
     const db = await openDB();
@@ -549,42 +704,56 @@ async function removeOfflineBible(id) {
       tx.onerror = e => rej(e);
     });
   } catch(e) {}
-}
-
-async function loadScrollmapperCatalog() {
+   }
+  async function loadScrollmapperCatalog() {
   if (allScrollmapperBibles.length > 0) return allScrollmapperBibles;
   try {
     const res = await fetch("https://api.github.com/repos/scrollmapper/bible_databases/contents/formats/json");
+    if (!res.ok) throw new Error("Fallback");
     const files = await res.json();
     allScrollmapperBibles = files
-      .filter(f => f.name.endsWith(".json"))
+      .filter(f => f.name && f.name.endsWith(".json"))
       .map(f => {
         let code = f.name.replace(".json", "");
-        return { id: `sm:${code}`, name: `${code} (Scrollmapper Global)`, lang: "Mondiale / Storica", url: f.download_url };
+        return {
+          id: `sm:${code}`,
+          name: `🌐 ${code} (Edizione Globale Scrollmapper)`,
+          lang: "Archivio Mondiale Scrollmapper",
+          url: f.download_url
+        };
       });
   } catch(e) {
-    allScrollmapperBibles = [
-      { id: "sm:KJV", name: "King James Version (Global)", lang: "Inglese", url: "https://raw.githubusercontent.com/scrollmapper/bible_databases/master/formats/json/KJV.json" },
-      { id: "sm:ASV", name: "American Standard Version", lang: "Inglese", url: "https://raw.githubusercontent.com/scrollmapper/bible_databases/master/formats/json/ASV.json" },
-      { id: "sm:SpaRV", name: "Reina Valera Spagnola", lang: "Spagnolo", url: "https://raw.githubusercontent.com/scrollmapper/bible_databases/master/formats/json/SpaRV.json" }
-    ];
+    allScrollmapperBibles = FALLBACK_SCROLLMAPPER.map(code => ({
+      id: `sm:${code}`,
+      name: `🌐 ${code} (Edizione Globale Scrollmapper)`,
+      lang: "Archivio Mondiale Scrollmapper",
+      url: `https://raw.githubusercontent.com/scrollmapper/bible_databases/master/formats/json/${code}.json`
+    }));
   }
   return allScrollmapperBibles;
 }
 
+function getAllCatalogBibles() {
+  return [...DEFAULT_BIBLES, ...allScrollmapperBibles];
+}
+
 async function populateSelects() {
   await loadScrollmapperCatalog();
-  let allAvailable = [...DEFAULT_BIBLES, ...allScrollmapperBibles];
+  const allAvailable = getAllCatalogBibles();
   let activeList = allAvailable.filter(b => state.downloadedBibles.includes(b.id));
-  if (activeList.length === 0) activeList = DEFAULT_BIBLES;
+  if (activeList.length === 0) activeList = DEFAULT_BIBLES.slice(0, 3);
 
   const s1 = document.getElementById("trans1");
   const s2 = document.getElementById("trans2");
   const html = activeList.map(t => `<option value="${t.id}">${t.name}</option>`).join("");
-  s1.innerHTML = html; s2.innerHTML = html;
+  s1.innerHTML = html;
+  s2.innerHTML = html;
+
   if (activeList.some(b => b.id === state.trans1)) s1.value = state.trans1;
-  else if (activeList.length > 0) state.trans1 = activeList[0].id;
+  else if (activeList.length > 0) { state.trans1 = activeList[0].id; s1.value = state.trans1; }
+
   if (activeList.some(b => b.id === state.trans2)) s2.value = state.trans2;
+  else if (activeList.length > 1) { state.trans2 = activeList[1].id; s2.value = state.trans2; }
 }
 
 function setActiveTab(tabId) {
@@ -592,24 +761,29 @@ function setActiveTab(tabId) {
   const el = document.getElementById(tabId);
   if (el) el.classList.add("active");
 }
-function getBook(id) { return BIBLE_BOOKS.find(b => b.id === id) || BIBLE_BOOKS[0]; }
+
+function getBook(id) {
+  return BIBLE_BOOKS.find(b => b.id === Number(id)) || BIBLE_BOOKS[0];
+}
 
 function showBooksView() {
-  closeActionBar(); setActiveTab("tabBooks");
+  closeActionBar();
+  setActiveTab("tabBooks");
   const main = document.getElementById("mainContainer");
   const ot = BIBLE_BOOKS.filter(b => b.sec === "OT");
   const nt = BIBLE_BOOKS.filter(b => b.sec === "NT");
   main.innerHTML = `
-    <div class="section-title">Scritture Ebraico-Aramaiche (39)</div>
+    <div class="section-title"><span>Scritture Ebraico-Aramaiche</span><span>39 Libri</span></div>
     <div class="books-grid">${ot.map(b => `<button class="book-tile cat-${b.cat}" onclick="showChaptersView(${b.id})">${b.abbr}</button>`).join("")}</div>
-    <div class="section-title">Scritture Greche Cristiane (27)</div>
+    <div class="section-title"><span>Scritture Greche Cristiane</span><span>27 Libri</span></div>
     <div class="books-grid">${nt.map(b => `<button class="book-tile cat-${b.cat}" onclick="showChaptersView(${b.id})">${b.abbr}</button>`).join("")}</div>
   `;
   main.scrollTop = 0;
 }
 
 function showChaptersView(bookId) {
-  state.bookId = bookId; const book = getBook(bookId);
+  state.bookId = bookId;
+  const book = getBook(bookId);
   if (book.ch === 1) { state.chapter = 1; loadChapterView(); return; }
   const main = document.getElementById("mainContainer");
   let btns = "";
@@ -618,32 +792,52 @@ function showChaptersView(bookId) {
     btns += `<button class="chapter-tile ${isCurr}" onclick="selectChapter(${i})">${i}</button>`;
   }
   main.innerHTML = `
-    <div class="chapter-header"><div class="chapter-title">${book.name} — Capitoli</div><button class="nav-btn" onclick="showBooksView()">← Libri</button></div>
+    <div class="chapter-header">
+      <div class="chapter-title">${book.name} — Capitoli</div>
+      <button class="nav-btn" onclick="showBooksView()">← Tutti i Libri</button>
+    </div>
     <div class="chapters-grid">${btns}</div>
   `;
   main.scrollTop = 0;
 }
-function selectChapter(ch) { state.chapter = ch; loadChapterView(); }
+
+function selectChapter(ch) {
+  state.chapter = ch;
+  loadChapterView();
+}
+
+function extractScrollmapperVerses(data, bookId, chapter) {
+  if (!data) return [];
+  if (Array.isArray(data)) {
+    return data
+      .filter(v => Number(v.book) === Number(bookId) && Number(v.chapter) === Number(chapter))
+      .map(v => ({ verse: Number(v.verse), text: v.text }));
+  }
+  if (data.books && Array.isArray(data.books)) {
+    const bObj = data.books.find((b, idx) => Number(b.nr || b.book || (idx + 1)) === Number(bookId));
+    if (bObj && bObj.chapters) {
+      const cObj = bObj.chapters.find((c, idx) => Number(c.chapter || (idx + 1)) === Number(chapter));
+      if (cObj && cObj.verses) return cObj.verses.map(v => ({ verse: Number(v.verse), text: v.text }));
+    }
+  }
+  return [];
+}
 
 async function fetchChapterData(transId, bookId, chapter) {
   const fullOffline = await getOfflineBible(transId);
   if (fullOffline) {
-    if (fullOffline.books) {
-      const bObj = fullOffline.books.find(b => Number(b.nr) === Number(bookId));
-      if (bObj && bObj.chapters) {
-        const cObj = bObj.chapters.find(c => Number(c.chapter) === Number(chapter));
-        if (cObj && cObj.verses) return cObj.verses;
-      }
-    } else if (Array.isArray(fullOffline)) {
-      return fullOffline
-        .filter(v => Number(v.book) === Number(bookId) && Number(v.chapter) === Number(chapter))
-        .map(v => ({ verse: Number(v.verse), text: v.text }));
-    }
+    const extracted = extractScrollmapperVerses(fullOffline, bookId, chapter);
+    if (extracted.length > 0) return extracted;
   }
 
   const cacheKey = `bm_ch_${transId}_${bookId}_${chapter}`;
   const cached = localStorage.getItem(cacheKey);
-  if (cached) { const parsed = JSON.parse(cached); if (parsed && parsed.length > 0) return parsed; }
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached);
+      if (parsed && parsed.length > 0) return parsed;
+    } catch(e) {}
+  }
 
   const [provider, code] = transId.includes(":") ? transId.split(":") : ["gb", transId];
   let verses = [];
@@ -651,272 +845,288 @@ async function fetchChapterData(transId, bookId, chapter) {
   if (provider === "sm") {
     await loadScrollmapperCatalog();
     const item = allScrollmapperBibles.find(b => b.id === transId);
-    if (item && item.url) {
-      const res = await fetch(item.url);
-      const data = await res.json();
-      await saveOfflineBible(transId, data);
-      verses = data
-        .filter(v => Number(v.book) === Number(bookId) && Number(v.chapter) === Number(chapter))
-        .map(v => ({ verse: Number(v.verse), text: v.text }));
-    }
+    const url = item ? item.url : `https://raw.githubusercontent.com/scrollmapper/bible_databases/master/formats/json/${code}.json`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Capitolo non disponibile");
+    const data = await res.json();
+    await saveOfflineBible(transId, data);
+    verses = extractScrollmapperVerses(data, bookId, chapter);
   } else {
     const res = await fetch(`https://api.getbible.net/v2/${code}/${bookId}/${chapter}.json`);
     if (!res.ok) throw new Error("Capitolo non disponibile");
     const data = await res.json();
-    verses = (data.verses || []).map(v => ({ verse: v.verse, text: v.text }));
+    verses = (data.verses || []).map(v => ({ verse: Number(v.verse), text: v.text }));
   }
 
-  if (verses.length > 0) { try { localStorage.setItem(cacheKey, JSON.stringify(verses)); } catch(e) {} }
+  if (verses.length > 0) {
+    try { localStorage.setItem(cacheKey, JSON.stringify(verses)); } catch(e) {}
+  }
   return verses;
-}
-
-async function loadChapterView() {
-  closeActionBar(); setActiveTab("tabRead");
+          }
+  async function loadChapterView() {
+  closeActionBar();
+  setActiveTab("tabRead");
   const book = getBook(state.bookId);
   document.getElementById("currentRefLabel").textContent = `${book.name} ${state.chapter}`;
   const main = document.getElementById("mainContainer");
   main.innerHTML = `<div class="loader">Caricamento di <b>${book.name} ${state.chapter}</b>...</div>`;
+
   try {
     const data1 = await fetchChapterData(state.trans1, state.bookId, state.chapter);
     let data2 = [];
-    if (state.parallel) { try { data2 = await fetchChapterData(state.trans2, state.bookId, state.chapter); } catch(e) { data2 = []; } }
+    if (state.parallel) {
+      try { data2 = await fetchChapterData(state.trans2, state.bookId, state.chapter); } catch(e) { data2 = []; }
+    }
+
     let versesHtml = "";
     if (!state.parallel) {
       versesHtml = data1.map(v => {
         const key = `${state.bookId}_${state.chapter}_${v.verse}`;
         const hlClass = state.highlights[key] || "";
+        const refStr = `${book.name} ${state.chapter}:${v.verse}`;
+        const hasNote = state.notes.some(n => n.ref === refStr);
+        const noteBadge = hasNote ? `<span class="verse-note-ind" title="Contiene un appunto">📝</span>` : "";
         const cleanText = (v.text || "").replace(/<[^>]*>?/gm, "").replace(/"/g, "&quot;");
-        return `<div class="verse-row ${hlClass}" id="v_${v.verse}" data-text="${cleanText}" onclick="onVerseClick(${v.verse}, this.getAttribute('data-text'))"><span class="verse-num">${v.verse}</span><span>${v.text}</span></div>`;
+        return `
+          <div class="verse-row ${hlClass}" id="v_${v.verse}" data-text="${cleanText}" onclick="onVerseClick(${v.verse}, this.getAttribute('data-text'))">
+            <span class="verse-num">${v.verse}</span><span>${v.text}</span>${noteBadge}
+          </div>`;
       }).join("");
     } else {
-      const map2 = {}; data2.forEach(v => map2[v.verse] = v.text);
+      const map2 = {};
+      data2.forEach(v => map2[v.verse] = v.text);
       versesHtml = data1.map(v => {
         const key = `${state.bookId}_${state.chapter}_${v.verse}`;
         const hlClass = state.highlights[key] || "";
         const cleanText = (v.text || "").replace(/<[^>]*>?/gm, "").replace(/"/g, "&quot;");
         const text2 = map2[v.verse] || "—";
-        return `<div class="parallel-row ${hlClass}" id="v_${v.verse}" data-text="${cleanText}" onclick="onVerseClick(${v.verse}, this.getAttribute('data-text'))"><div class="parallel-col"><span class="verse-num">${v.verse}</span>${v.text}</div><div class="parallel-col"><span class="verse-num">${v.verse}</span>${text2}</div></div>`;
+        return `
+          <div class="parallel-row ${hlClass}" id="v_${v.verse}" data-text="${cleanText}" onclick="onVerseClick(${v.verse}, this.getAttribute('data-text'))">
+            <div class="parallel-col"><span class="verse-num">${v.verse}</span>${v.text}</div>
+            <div class="parallel-col"><span class="verse-num">${v.verse}</span>${text2}</div>
+          </div>`;
       }).join("");
     }
+
     main.innerHTML = `
-      <div class="chapter-header"><div class="chapter-title">${book.name} ${state.chapter}</div><div class="chapter-nav-btns"><button class="nav-btn" onclick="prevChapter()">◀ Prec</button><button class="nav-btn" onclick="nextChapter()">Succ ▶</button></div></div>
+      <div class="chapter-header">
+        <div class="chapter-title" onclick="showChaptersView(${state.bookId})" style="cursor:pointer;">${book.name} ${state.chapter} ▾</div>
+        <div class="chapter-nav-btns">
+          <button class="nav-btn" onclick="prevChapter()">◀ Prec</button>
+          <button class="nav-btn" onclick="nextChapter()">Succ ▶</button>
+        </div>
+      </div>
       <div>${versesHtml}</div>
+      <div style="display:flex; justify-content:space-between; margin-top:20px; padding-top:12px; border-top:1px solid var(--border-color);">
+        <button class="nav-btn" onclick="prevChapter()">◀ Capitolo Precedente</button>
+        <button class="nav-btn" onclick="nextChapter()">Capitolo Successivo ▶</button>
+      </div>
     `;
     main.scrollTop = 0;
   } catch (err) {
-    main.innerHTML = `<div class="loader">Capitolo non disponibile in questa versione.<br><br><button class="nav-btn" onclick="showBooksView()">Scegli Libro</button></div>`;
+    main.innerHTML = `<div class="loader">Questo capitolo non è presente in questa traduzione (es. versione solo Nuovo o Antico Testamento).<br><br><button class="nav-btn" onclick="showBooksView()">Scegli un altro Libro</button></div>`;
   }
 }
-    function prevChapter() {
+
+function prevChapter() {
   if (state.chapter > 1) state.chapter--;
   else if (state.bookId > 1) { state.bookId--; state.chapter = getBook(state.bookId).ch; }
   loadChapterView();
 }
+
 function nextChapter() {
   const book = getBook(state.bookId);
   if (state.chapter < book.ch) state.chapter++;
   else if (state.bookId < 66) { state.bookId++; state.chapter = 1; }
   loadChapterView();
 }
+
 function onTranslationChange() {
   state.trans1 = document.getElementById("trans1").value;
   state.trans2 = document.getElementById("trans2").value;
   loadChapterView();
 }
+
 function toggleParallel() {
   state.parallel = !state.parallel;
-  const btn = document.getElementById("parallelBtn"), sel2 = document.getElementById("trans2");
-  if (state.parallel) { btn.textContent = "⚖️ Parallelo: ON"; btn.classList.remove("off"); sel2.style.display = "block"; }
-  else { btn.textContent = "⚖️ Parallelo: OFF"; btn.classList.add("off"); sel2.style.display = "none"; }
+  const btn = document.getElementById("parallelBtn");
+  const sel2 = document.getElementById("trans2");
+  if (state.parallel) {
+    btn.textContent = "⚖️ Parallelo: ON";
+    btn.classList.remove("off");
+    sel2.style.display = "block";
+  } else {
+    btn.textContent = "⚖️ Parallelo: OFF";
+    btn.classList.add("off");
+    sel2.style.display = "none";
+  }
   loadChapterView();
 }
 
-function onVerseClick(verseNum, text) { state.selectedVerse = verseNum; state.selectedVerseText = text; document.getElementById("verseActionBar").style.display = "flex"; }
-function closeActionBar() { document.getElementById("verseActionBar").style.display = "none"; state.selectedVerse = null; }
+function onVerseClick(verseNum, text) {
+  state.selectedVerse = verseNum;
+  state.selectedVerseText = text;
+  document.getElementById("verseActionBar").style.display = "flex";
+}
+
+function closeActionBar() {
+  document.getElementById("verseActionBar").style.display = "none";
+  state.selectedVerse = null;
+}
 
 function applyHighlight(colorClass) {
   if (!state.selectedVerse) return;
   const key = `${state.bookId}_${state.chapter}_${state.selectedVerse}`;
-  if (colorClass) state.highlights[key] = colorClass; else delete state.highlights[key];
+  if (colorClass) state.highlights[key] = colorClass;
+  else delete state.highlights[key];
   localStorage.setItem("bm_hl", JSON.stringify(state.highlights));
   const row = document.getElementById(`v_${state.selectedVerse}`);
-  if (row) { row.classList.remove("hl-yellow", "hl-blue", "hl-green", "hl-pink"); if (colorClass) row.classList.add(colorClass); }
+  if (row) {
+    row.classList.remove("hl-yellow", "hl-blue", "hl-green", "hl-pink", "hl-purple");
+    if (colorClass) row.classList.add(colorClass);
+  }
   closeActionBar();
 }
+
+function copySelectedVerse() {
+  if (!state.selectedVerse) return;
+  const book = getBook(state.bookId);
+  const fullCopy = `${book.name} ${state.chapter}:${state.selectedVerse} — "${state.selectedVerseText}"`;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(fullCopy).then(() => alert("Versetto copiato negli appunti!"));
+  } else {
+    prompt("Copia il versetto:", fullCopy);
+  }
+  closeActionBar();
+}
+
 function saveBookmark() {
   if (!state.selectedVerse) return;
   const book = getBook(state.bookId);
-  state.bookmarks.unshift({ bookId: state.bookId, chapter: state.chapter, verse: state.selectedVerse, ref: `${book.name} ${state.chapter}:${state.selectedVerse}`, text: state.selectedVerseText });
+  const ref = `${book.name} ${state.chapter}:${state.selectedVerse}`;
+  state.bookmarks.unshift({
+    bookId: state.bookId,
+    chapter: state.chapter,
+    verse: state.selectedVerse,
+    ref: ref,
+    text: state.selectedVerseText,
+    date: new Date().toLocaleDateString("it-IT")
+  });
   localStorage.setItem("bm_bm", JSON.stringify(state.bookmarks));
-  closeActionBar(); alert("Preferito salvato!");
+  closeActionBar();
+  alert("🔖 Preferito salvato in " + ref);
 }
 
+// GESTIONE MODALE APPUNTI DI STUDIO
 function openNoteModalForVerse() {
   if (!state.selectedVerse) return;
   const book = getBook(state.bookId);
   const ref = `${book.name} ${state.chapter}:${state.selectedVerse}`;
-  const text = prompt(`Scrivi un appunto per ${ref}:`, "");
-  if (text !== null && text.trim() !== "") {
-    state.notes.unshift({ id: Date.now(), ref, text: text.trim() });
-    localStorage.setItem("bm_notes", JSON.stringify(state.notes));
-    alert("Appunto salvato con successo!");
-  }
+  const existing = state.notes.find(n => n.ref === ref);
+
+  document.getElementById("noteModalTitle").textContent = `📝 Appunto: ${ref}`;
+  document.getElementById("noteModalVersePreview").textContent = `"${state.selectedVerseText}"`;
+  document.getElementById("noteModalInput").value = existing ? existing.text : "";
+  document.getElementById("noteModal").style.display = "flex";
+}
+
+function closeNoteModal() {
+  document.getElementById("noteModal").style.display = "none";
   closeActionBar();
 }
 
-function showNotesView() {
-  closeActionBar(); setActiveTab("tabNotes");
+function saveNoteFromModal() {
+  const text = document.getElementById("noteModalInput").value.trim();
+  const book = getBook(state.bookId);
+  const ref = `${book.name} ${state.chapter}:${state.selectedVerse}`;
+
+  if (text !== "") {
+    const existingIdx = state.notes.findIndex(n => n.ref === ref);
+    const noteObj = {
+      id: Date.now(),
+      bookId: state.bookId,
+      chapter: state.chapter,
+      verse: state.selectedVerse,
+      ref: ref,
+      verseText: state.selectedVerseText,
+      text: text,
+      date: new Date().toLocaleDateString("it-IT")
+    };
+    if (existingIdx > -1) state.notes[existingIdx] = noteObj;
+    else state.notes.unshift(noteObj);
+    localStorage.setItem("bm_notes", JSON.stringify(state.notes));
+  }
+  closeNoteModal();
+  loadChapterView();
+      }
+  function showNotesView() {
+  closeActionBar();
+  setActiveTab("tabNotes");
   const main = document.getElementById("mainContainer");
+
+  const backupHeader = `
+    <div style="display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
+      <button class="nav-btn" onclick="exportUserData()">📤 Esporta Backup Dati</button>
+      <button class="nav-btn" onclick="importUserData()">📥 Importa Backup</button>
+    </div>
+  `;
+
   if (!state.notes.length) {
-    main.innerHTML = `<div class="loader">Nessun appunto salvato.<br><br>Tocca un versetto e premi l'icona 📝 per aggiungere una nota di studio.</div>`;
+    main.innerHTML = backupHeader + `<div class="loader">Nessun appunto di studio salvato.<br><br>Durante la lettura, tocca qualsiasi versetto e premi l'icona 📝 per aggiungere le tue riflessioni personali.</div>`;
     return;
   }
-  main.innerHTML = `<div class="section-title">I tuoi Appunti di Studio (${state.notes.length})</div>` +
-    state.notes.map((n, idx) => `<div class="result-card"><div class="result-ref" style="display:flex;justify-content:space-between;"><span>📝 ${n.ref}</span><span onclick="deleteNote(${idx})" style="color:#e53935;cursor:pointer;">Elimina</span></div><div style="margin-top:6px;line-height:1.4;">${n.text}</div></div>`).join("");
-}
-function deleteNote(idx) { state.notes.splice(idx, 1); localStorage.setItem("bm_notes", JSON.stringify(state.notes)); showNotesView(); }
 
-async function showCatalogView() {
-  closeActionBar(); setActiveTab("tabCatalog");
-  const main = document.getElementById("mainContainer");
-  main.innerHTML = `<div class="section-title">Centro Download Globale (100+ Versioni)</div><div style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">Caricamento archivio mondiale in corso...</div>`;
+  main.innerHTML = backupHeader +
+    `<div class="section-title"><span>I tuoi Appunti di Studio</span><span>${state.notes.length} note</span></div>` +
+    state.notes.map((n, idx) => `
+      <div class="result-card" onclick="openRef(${n.bookId || 1}, ${n.chapter || 1})">
+        <div class="result-ref" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>📝 ${n.ref} <small style="color:var(--text-muted);font-weight:normal;">(${n.date || 'Studio'})</small></span>
+          <span onclick="event.stopPropagation();deleteNote(${idx})" style="color:var(--danger);cursor:pointer;font-size:13px;">🗑 Elimina</span>
+        </div>
+        ${n.verseText ? `<div style="font-size:12.5px;color:var(--text-muted);font-style:italic;margin:4px 0 8px 0;border-left:2px solid var(--border-color);padding-left:8px;">"${n.verseText}"</div>` : ""}
+        <div style="margin-top:4px;line-height:1.5;white-space:pre-wrap;">${n.text}</div>
+      </div>`).join("");
+}
+
+function deleteNote(idx) {
+  if (!confirm("Vuoi davvero eliminare questo appunto?")) return;
+  state.notes.splice(idx, 1);
+  localStorage.setItem("bm_notes", JSON.stringify(state.notes));
+  showNotesView();
+}
+
+function exportUserData() {
+  const backup = {
+    highlights: state.highlights,
+    bookmarks: state.bookmarks,
+    notes: state.notes,
+    downloadedBibles: state.downloadedBibles
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `BM_Backup_Studio_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+
+function importUserData() {
+  const inp = document.createElement("input");
+  inp.type = "file";
+  inp.accept = ".json";
+  inp.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (data.notes) { state.notes = data.notes; localStorage.setItem("bm_notes", JSON.stringify(state.notes)); }
+        if (data.bookmarks) { state.bookmarks = data.bookmarks; localStorage.setItem("bm_bm", JSON.stringify(state.bookmarks)); }
+        if (data.highlights) { state.highlights = data.highlights; localStorage.setItem("bm_hl", JSON.stringify(state.highlights)); }
+        alert("Backup ripristinato con successo!");
+        showNotesView();
+      } catch(err) { alert("File di backup non valido."); }
+    };
+
   
-  await loadScrollmapperCatalog();
-  let allBibles = [...DEFAULT_BIBLES, ...allScrollmapperBibles];
-
-  main.innerHTML = `
-    <div class="section-title">Centro Download Traduzioni (${allBibles.length} versioni)</div>
-    <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">Scegli quale versione scaricare o attivare offline sul tuo dispositivo.</div>
-    <div style="margin-bottom:12px;"><input type="text" id="catFilter" class="search-input" placeholder="Cerca lingua o versione..." oninput="filterCatalogList()"></div>
-    <div id="catalogList"></div>
-  `;
-  renderCatalogItems(allBibles);
-}
-
-function renderCatalogItems(list) {
-  const container = document.getElementById("catalogList"); if (!container) return;
-  container.innerHTML = list.map(b => {
-    const isDown = state.downloadedBibles.includes(b.id);
-    return `<div class="result-card" style="display:flex;justify-content:space-between;align-items:center;"><div><div class="result-ref">${b.name}</div><div style="font-size:12px;color:var(--text-muted);">Gruppo: ${b.lang}</div></div><button class="badge-btn ${isDown ? 'downloaded' : ''}" onclick="toggleDownload('${b.id}')">${isDown ? '✔ Attiva' : '⬇ Scarica'}</button></div>`;
-  }).join("");
-}
-
-function filterCatalogList() {
-  const q = document.getElementById("catFilter").value.toLowerCase();
-  let allBibles = [...DEFAULT_BIBLES, ...allScrollmapperBibles];
-  const filtered = allBibles.filter(b => b.name.toLowerCase().includes(q) || b.lang.toLowerCase().includes(q));
-  renderCatalogItems(filtered);
-}
-
-async function toggleDownload(id) {
-  if (state.downloadedBibles.includes(id)) {
-    if (state.downloadedBibles.length <= 1) { alert("Devi mantenere almeno una traduzione attiva!"); return; }
-    state.downloadedBibles = state.downloadedBibles.filter(item => item !== id);
-    await removeOfflineBible(id);
-    localStorage.setItem("bm_down_bibles", JSON.stringify(state.downloadedBibles));
-    populateSelects(); showCatalogView(); alert("Traduzione rimossa.");
-  } else {
-    alert("Scaricamento della traduzione in corso... attendi qualche secondo.");
-    try {
-      if (id.startsWith("sm:")) {
-        await loadScrollmapperCatalog();
-        const item = allScrollmapperBibles.find(b => b.id === id);
-        if (item && item.url) {
-          const res = await fetch(item.url);
-          const data = await res.json();
-          await saveOfflineBible(id, data);
-        }
-      } else {
-        const code = id.split(":")[1];
-        const res = await fetch(`https://api.getbible.net/v2/${code}.json`);
-        const data = await res.json();
-        await saveOfflineBible(id, data);
-      }
-      state.downloadedBibles.push(id);
-      localStorage.setItem("bm_down_bibles", JSON.stringify(state.downloadedBibles));
-      populateSelects(); showCatalogView(); alert("Traduzione scaricata e attivata con successo!");
-    } catch(e) { alert("Errore durante il download."); }
-  }
-}
-
-function showSearchView() {
-  closeActionBar(); setActiveTab("tabSearch");
-  const main = document.getElementById("mainContainer");
-  main.innerHTML = `<div style="display:flex;gap:8px;margin-bottom:14px;"><input type="text" id="searchInput" class="search-input" placeholder="Cerca parola..." onkeydown="if(event.key==='Enter') executeSearch()"><button class="badge-btn" onclick="executeSearch()">Cerca</button></div><div id="searchResults"><div class="loader">Inserisci una parola da cercare nella Bibbia attiva.</div></div>`;
-}
-async function executeSearch() {
-  const query = document.getElementById("searchInput").value.trim().toLowerCase();
-  if (!query) return;
-  const resDiv = document.getElementById("searchResults");
-  resDiv.innerHTML = `<div class="loader">Ricerca di "<b>${query}</b>" in corso...</div>`;
-  try {
-    let fullBible = await getOfflineBible(state.trans1);
-    if (!fullBible) {
-      const [provider, code] = state.trans1.includes(":") ? state.trans1.split(":") : ["gb", state.trans1];
-      if (provider === "sm") {
-        await loadScrollmapperCatalog();
-        const item = allScrollmapperBibles.find(b => b.id === state.trans1);
-        if (item) { const res = await fetch(item.url); fullBible = await res.json(); await saveOfflineBible(state.trans1, fullBible); }
-      } else {
-        const res = await fetch(`https://api.getbible.net/v2/${code}.json`);
-        if (res.ok) { fullBible = await res.json(); await saveOfflineBible(state.trans1, fullBible); }
-      }
-    }
-    if (fullBible) {
-      let matches = [];
-      if (fullBible.books) {
-        for (const b of fullBible.books) {
-          const bMeta = getBook(Number(b.nr));
-          for (const c of b.chapters) {
-            for (const v of c.verses) {
-              if (v.text && v.text.toLowerCase().includes(query)) {
-                matches.push({ bookId: Number(b.nr), bookName: bMeta.name, ch: c.chapter, v: v.verse, text: v.text });
-                if (matches.length >= 80) break;
-              }
-            }
-            if (matches.length >= 80) break;
-          }
-          if (matches.length >= 80) break;
-        }
-      } else if (Array.isArray(fullBible)) {
-        for (const v of fullBible) {
-          if (v.text && v.text.toLowerCase().includes(query)) {
-            const bMeta = getBook(Number(v.book));
-            matches.push({ bookId: Number(v.book), bookName: bMeta.name, ch: v.chapter, v: v.verse, text: v.text });
-            if (matches.length >= 80) break;
-          }
-        }
-      }
-      if (!matches.length) { resDiv.innerHTML = `<div class="loader">Nessun risultato trovato per "${query}".</div>`; return; }
-      resDiv.innerHTML = `<div style="margin-bottom:10px;font-size:13px;color:var(--text-muted);">Risultati trovati:</div>` +
-        matches.map(m => `<div class="result-card" onclick="openRef(${m.bookId}, ${m.ch})"><div class="result-ref">${m.bookName} ${m.ch}:${m.v}</div><div>${m.text}</div></div>`).join("");
-    } else { resDiv.innerHTML = `<div class="loader">Impossibile completare la ricerca.</div>`; }
-  } catch (e) { resDiv.innerHTML = `<div class="loader">Errore durante la ricerca.</div>`; }
-}
-
-function showSavedView() {
-  closeActionBar(); setActiveTab("tabSaved");
-  const main = document.getElementById("mainContainer");
-  if (!state.bookmarks.length) { main.innerHTML = `<div class="loader">Nessun preferito salvato.</div>`; return; }
-  main.innerHTML = `<div class="section-title">I tuoi Preferiti (${state.bookmarks.length})</div>` +
-    state.bookmarks.map((b, idx) => `<div class="result-card" onclick="openRef(${b.bookId}, ${b.chapter})"><div class="result-ref" style="display:flex;justify-content:space-between;"><span>🔖 ${b.ref}</span><span onclick="event.stopPropagation();deleteBookmark(${idx})" style="color:#e53935;">Elimina</span></div><div>${b.text}</div></div>`).join("");
-}
-function deleteBookmark(idx) { state.bookmarks.splice(idx, 1); localStorage.setItem("bm_bm", JSON.stringify(state.bookmarks)); showSavedView(); }
-function openRef(bookId, chapter) { state.bookId = bookId; state.chapter = chapter; loadChapterView(); }
-
-function changeFontSize(delta) {
-  state.fontSize = Math.min(28, Math.max(14, state.fontSize + delta));
-  document.documentElement.style.setProperty("--font-size-verse", state.fontSize + "px");
-}
-function toggleDarkMode() { document.body.classList.toggle("dark-mode"); }
-
-populateSelects();
-loadChapterView().then(() => {
-  setTimeout(() => {
-    const splash = document.getElementById("splashScreen");
-    if(splash) { splash.style.opacity = "0"; setTimeout(() => splash.remove(), 400); }
-  }, 600);
-});
-</script>
-</body>
-</html>
