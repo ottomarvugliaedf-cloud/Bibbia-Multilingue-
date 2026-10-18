@@ -2,15 +2,15 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#0d47a1">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Bibbia Multilingue (BM)</title>
+  <title>Bibbia Multilingue (BM) v10 PRO</title>
   <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3004/3004458.png">
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3004/3004458.png">
-  <link rel="manifest" href='data:application/manifest+json,{"name":"Bibbia Multilingue","short_name":"BM Bibbia","start_url":".","display":"standalone","background_color":"#0d47a1","theme_color":"#0d47a1","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3004/3004458.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}'>
+  <link rel="manifest" href='data:application/manifest+json,{"name":"Bibbia Multilingue PRO","short_name":"BM Bibbia","start_url":".","display":"standalone","background_color":"#0d47a1","theme_color":"#0d47a1","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3004/3004458.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}'>
   <style>
     :root {
       --bg-main: #f0f6fc;
@@ -29,6 +29,7 @@
       --cat-4: #0097a7;
       --success: #2e7d32;
       --danger: #d32f2f;
+      --diff-bg: rgba(255, 193, 7, 0.35);
     }
 
     body.dark-mode {
@@ -41,6 +42,20 @@
       --primary-light: #29b6f6;
       --border-color: #1f3758;
       --verse-hover: #1a3354;
+      --diff-bg: rgba(255, 193, 7, 0.25);
+    }
+
+    body.oled-mode {
+      --bg-main: #000000;
+      --bg-card: #0a0a0a;
+      --text-main: #f5f5f5;
+      --text-muted: #888888;
+      --primary-dark: #061b3a;
+      --primary-main: #0d3268;
+      --primary-light: #38bdf8;
+      --border-color: #1f1f1f;
+      --verse-hover: #141414;
+      --diff-bg: rgba(245, 158, 11, 0.3);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -91,10 +106,12 @@
       text-transform: uppercase;
     }
 
+    /* HEADER CON CAMPO AZZURRO FINO AL BORDO SUPERIORE E PROTEZIONE BARRA ANDROID */
     header {
       background: linear-gradient(135deg, var(--primary-dark), var(--primary-main));
       color: #fff;
-      padding: 9px 12px;
+      padding: 10px 12px;
+      padding-top: max(36px, env(safe-area-inset-top, 36px));
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -115,7 +132,7 @@
       align-items: center;
       gap: 6px;
     }
-    .header-controls { display: flex; align-items: center; gap: 3px; }
+    .header-controls { display: flex; align-items: center; gap: 4px; }
     .icon-btn {
       background: transparent;
       border: none;
@@ -126,7 +143,8 @@
       font-size: 15px;
       font-weight: 700;
     }
-        .trans-bar {
+
+    .trans-bar {
       background: var(--bg-card);
       border-bottom: 1px solid var(--border-color);
       padding: 7px 10px;
@@ -138,15 +156,16 @@
     }
     .trans-select {
       flex: 1;
-      min-width: 140px;
+      min-width: 115px;
       padding: 7px 8px;
       border-radius: 6px;
       border: 1px solid var(--border-color);
       background: var(--bg-main);
       color: var(--text-main);
-      font-size: 13.5px;
+      font-size: 13px;
       font-weight: 600;
     }
+
     .quick-menu-bar {
       background: var(--bg-card);
       border-bottom: 1px solid var(--border-color);
@@ -155,7 +174,9 @@
       gap: 6px;
       overflow-x: auto;
       flex-shrink: 0;
+      scrollbar-width: none;
     }
+    .quick-menu-bar::-webkit-scrollbar { display: none; }
     .quick-pill {
       background: var(--bg-main);
       color: var(--text-main);
@@ -179,7 +200,8 @@
     main {
       flex: 1;
       overflow-y: auto;
-      padding: 12px 14px 40px 14px;
+      -webkit-overflow-scrolling: touch;
+      padding: 12px 14px 45px 14px;
     }
 
     .section-title {
@@ -291,9 +313,46 @@
       line-height: 1.52;
       cursor: pointer;
     }
+    .parallel-row-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      padding: 10px 4px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: var(--font-size-verse);
+      line-height: 1.5;
+      cursor: pointer;
+    }
     .parallel-col + .parallel-col {
       border-left: 2px solid var(--primary-light);
       padding-left: 10px;
+    }
+    @media (max-width: 640px) {
+      .parallel-row-3 { grid-template-columns: 1fr; gap: 6px; }
+      .parallel-row-3 .parallel-col + .parallel-col {
+        border-left: none;
+        border-top: 1px dashed var(--border-color);
+        padding-left: 0;
+        padding-top: 6px;
+      }
+    }
+
+    .diff-word {
+      background-color: var(--diff-bg);
+      border-radius: 4px;
+      padding: 0 2px;
+    }
+    .tag-badge {
+      display: inline-block;
+      background: rgba(2, 136, 209, 0.14);
+      color: var(--primary-light);
+      border: 1px solid var(--primary-light);
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11.5px;
+      font-weight: 700;
+      margin: 2px;
+      cursor: pointer;
     }
 
     .hl-yellow { background-color: rgba(255, 235, 59, 0.38) !important; }
@@ -304,7 +363,7 @@
 
     .verse-action-bar {
       position: fixed;
-      bottom: 66px;
+      bottom: 74px;
       left: 50%;
       transform: translateX(-50%);
       background: var(--bg-card);
@@ -314,7 +373,7 @@
       padding: 8px 14px;
       display: none;
       align-items: center;
-      gap: 9px;
+      gap: 8px;
       z-index: 200;
       max-width: 96vw;
       overflow-x: auto;
@@ -328,12 +387,14 @@
       flex-shrink: 0;
     }
 
+    /* BARRA INFERIORE A 6 SCHEDE CON MARGINE SICURO ANTI-GESTURE ANDROID */
     nav.bottom-nav {
       background: var(--bg-card);
       border-top: 1px solid var(--border-color);
       display: grid;
       grid-template-columns: repeat(6, 1fr);
-      padding: 5px 2px;
+      padding: 6px 2px;
+      padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
       flex-shrink: 0;
       z-index: 150;
     }
@@ -413,14 +474,16 @@
       border: 1px solid var(--border-color);
       border-radius: 12px;
       width: 100%;
-      max-width: 440px;
+      max-width: 460px;
+      max-height: 86vh;
+      overflow-y: auto;
       padding: 16px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.4);
     }
     .modal-title { font-size: 16px; font-weight: 800; color: var(--primary-light); margin-bottom: 8px; }
     .modal-textarea {
       width: 100%;
-      height: 120px;
+      height: 110px;
       padding: 10px;
       border-radius: 8px;
       border: 1px solid var(--border-color);
@@ -429,20 +492,22 @@
       font-size: 14.5px;
       font-family: inherit;
       resize: vertical;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
-    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
   </style>
 </head>
 <body>
 
+  <!-- Schermata Iniziale Splash -->
   <div id="splashScreen">
     <div class="splash-box">
       <span class="splash-text">BM</span>
     </div>
-    <div class="splash-sub">Bibbia Multilingue v10</div>
+    <div class="splash-sub">Bibbia Multilingue v10 PRO</div>
   </div>
 
+  <!-- Header Superiore con Selettore Libri e Salto Rapido ⚡ -->
   <header>
     <div>
       <button class="book-selector-btn" onclick="showBooksView()">
@@ -451,49 +516,60 @@
       </button>
     </div>
     <div class="header-controls">
-      <button class="icon-btn" onclick="changeFontSize(-2)">A-</button>
-      <button class="icon-btn" onclick="changeFontSize(2)">A+</button>
-      <button class="icon-btn" onclick="toggleDarkMode()">🌙</button>
+      <button class="icon-btn" onclick="openQuickJumpModal()" title="Salto Rapido (es. Gv 3 16)">⚡</button>
+      <button class="icon-btn" onclick="changeFontSize(-2)" title="Riduci testo">A-</button>
+      <button class="icon-btn" onclick="changeFontSize(2)" title="Ingrandisci testo">A+</button>
+      <button class="icon-btn" id="themeBtn" onclick="toggleDarkMode()" title="Tema Chiaro / Scuro / OLED">🌙</button>
     </div>
   </header>
 
-  <!-- Selettore Traduzioni Attive -->
+  <!-- Selettori Traduzioni Attive (Supporta 1x, 2x e 3x) -->
   <div class="trans-bar">
     <select id="trans1" class="trans-select" onchange="onTranslationChange()"></select>
     <select id="trans2" class="trans-select" style="display:none;" onchange="onTranslationChange()"></select>
+    <select id="trans3" class="trans-select" style="display:none;" onchange="onTranslationChange()"></select>
   </div>
 
-  <!-- Nuova Barra Menu Rapida Sempre Visibile -->
+  <!-- Barra Menu Rapida Sempre Visibile (v10 + Strumenti Pro) -->
   <div class="quick-menu-bar">
     <button class="quick-pill highlight" onclick="showCatalogView()">⬇️ +110 Bibbie / Lingue</button>
-    <button id="parallelBtn" class="quick-pill" onclick="toggleParallel()">⚖️ Parallelo: OFF</button>
+    <button id="parallelBtn" class="quick-pill" onclick="toggleParallel()">⚖️ Parallelo: 1x</button>
+    <button id="diffBtn" class="quick-pill" style="display:none;" onclick="toggleDiffMode()">🔍 Diff: OFF</button>
+    <button id="ttsChapterBtn" class="quick-pill" onclick="toggleChapterTTS()">🔊 Ascolta</button>
     <button class="quick-pill" onclick="showNotesView()">📝 Appunti Studio</button>
     <button class="quick-pill" onclick="showSavedView()">🔖 Preferiti</button>
     <button class="quick-pill" onclick="showSearchView()">🔍 Cerca</button>
+    <button class="quick-pill" onclick="openBackupModal()">💾 Backup</button>
   </div>
 
+  <!-- Contenitore Principale (Lettura, Griglia 66 Libri, Ricerca, Note, Catalogo) -->
   <main id="mainContainer"></main>
 
-  <!-- Barra Azioni Versetto -->
+  <!-- Barra Azioni Versetto (Colori + Copia + Preferiti + Appunti + Voce + Strong + Passi Paralleli + Card) -->
   <div id="verseActionBar" class="verse-action-bar">
     <div class="color-dot" style="background:#ffeb3b;" onclick="applyHighlight('hl-yellow')"></div>
     <div class="color-dot" style="background:#03a9f4;" onclick="applyHighlight('hl-blue')"></div>
     <div class="color-dot" style="background:#4caf50;" onclick="applyHighlight('hl-green')"></div>
     <div class="color-dot" style="background:#e91e63;" onclick="applyHighlight('hl-pink')"></div>
     <div class="color-dot" style="background:#9c27b0;" onclick="applyHighlight('hl-purple')"></div>
-    <button class="icon-btn" style="color:var(--text-main);" onclick="applyHighlight('')">🚫</button>
-    <button class="icon-btn" style="color:var(--text-main);" onclick="copySelectedVerse()">📋</button>
-    <button class="icon-btn" style="color:var(--primary-light);" onclick="saveBookmark()">🔖</button>
-    <button class="icon-btn" style="color:#ffb300;" onclick="openNoteModalForVerse()">📝</button>
-    <button class="icon-btn" style="color:var(--text-muted);" onclick="closeActionBar()">✕</button>
+    <button class="icon-btn" style="color:var(--text-main);" title="Rimuovi colore" onclick="applyHighlight('')">🚫</button>
+    <button class="icon-btn" style="color:var(--text-main);" title="Copia versetto" onclick="copySelectedVerse()">📋</button>
+    <button class="icon-btn" style="color:var(--primary-light);" title="Ascolta versetto" onclick="speakSelectedVerse()">🔊</button>
+    <button class="icon-btn" style="color:var(--primary-light);" title="Lessico Strong" onclick="openStrongModalForVerse()">🏛️</button>
+    <button class="icon-btn" style="color:var(--primary-light);" title="Passi Paralleli" onclick="openCrossRefsModalForVerse()">🔗</button>
+    <button class="icon-btn" style="color:var(--primary-light);" title="Card Immagine" onclick="generateVerseCardModal()">🖼️</button>
+    <button class="icon-btn" style="color:var(--primary-light);" title="Salva Preferito" onclick="saveBookmark()">🔖</button>
+    <button class="icon-btn" style="color:#ffb300;" title="Aggiungi Appunto" onclick="openNoteModalForVerse()">📝</button>
+    <button class="icon-btn" style="color:var(--text-muted);" title="Chiudi" onclick="closeActionBar()">✕</button>
   </div>
 
-  <!-- Finestra Modale per Appunti -->
-  <div id="noteModal" class="modal-overlay">
+  <!-- Finestra Modale per Appunti di Studio (Con supporto Tag # e Link automatici) -->
+  <div id="noteModal" class="modal-overlay" onclick="if(event.target.id==='noteModal') closeNoteModal()">
     <div class="modal-card">
       <div id="noteModalTitle" class="modal-title">Appunto di Studio</div>
       <div id="noteModalVersePreview" style="font-size:12px; color:var(--text-muted); margin-bottom:8px; font-style:italic; max-height:55px; overflow-y:auto;"></div>
-      <textarea id="noteModalInput" class="modal-textarea" placeholder="Scrivi qui il tuo appunto per questo versetto..."></textarea>
+      <textarea id="noteModalInput" class="modal-textarea" placeholder="Scrivi qui il tuo appunto (es. citando Giovanni 1:1 diventerà un link cliccabile)..."></textarea>
+      <input type="text" id="noteTagsInput" class="search-input" style="width:100%;" placeholder="🏷️ Tag separati da virgola (es. fede, profezia, creazione)">
       <div class="modal-actions">
         <button class="nav-btn" onclick="closeNoteModal()">Annulla</button>
         <button class="search-btn" onclick="saveNoteFromModal()">💾 Salva</button>
@@ -501,7 +577,18 @@
     </div>
   </div>
 
-  <!-- Barra Navigazione Inferiore a 6 Schede -->
+  <!-- Finestra Modale Universale Pro (Salto Rapido, Strong, Passi Paralleli, Card Immagine, Backup) -->
+  <div id="proModal" class="modal-overlay" onclick="if(event.target.id==='proModal') closeProModal()">
+    <div class="modal-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <div id="proModalTitle" class="modal-title" style="margin:0;">Strumento Pro</div>
+        <button class="nav-btn" onclick="closeProModal()">✕</button>
+      </div>
+      <div id="proModalBody"></div>
+    </div>
+  </div>
+
+  <!-- Barra Navigazione Inferiore Originale a 6 Schede -->
   <nav class="bottom-nav">
     <button class="tab-btn active" id="tabRead" onclick="loadChapterView()">
       <span class="tab-icon">📖</span><span>Lettura</span>
@@ -522,8 +609,7 @@
       <span class="tab-icon">⬇️</span><span>Bibbie</span>
     </button>
   </nav>
-
-<script>
+  <script>
 const BIBLE_BOOKS = [
   { id: 1,  name: "Genesi", abbr: "Gen", ch: 50, sec: "OT", cat: 1 },
   { id: 2,  name: "Esodo", abbr: "Eso", ch: 40, sec: "OT", cat: 1 },
@@ -592,31 +678,39 @@ const BIBLE_BOOKS = [
   { id: 65, name: "Giuda", abbr: "Gda", ch: 1, sec: "NT", cat: 4 },
   { id: 66, name: "Rivelazione", abbr: "Riv", ch: 22, sec: "NT", cat: 4 }
 ];
-  // Elenco pre-attivato di base con codici GetBible v2 100% verificati e funzionanti
+
+// Elenco reale e verificato di tutte le Bibbie supportate nativamente da GetBible v2
 const CORE_BIBLES = [
   { id: "gb:riveduta", name: "🇮🇹 Italiano: Riveduta 1927 (Luzzi)", lang: "Italian" },
   { id: "gb:giovanni", name: "🇮🇹 Italiano: Giovanni Diodati (1649)", lang: "Italian" },
   { id: "gb:kjv", name: "🇬🇧 English: King James Version (KJV)", lang: "English" },
+  { id: "gb:akjv", name: "🇬🇧 English: Authorized King James (AKJV)", lang: "English" },
   { id: "gb:web", name: "🇬🇧 English: World English Bible (WEB)", lang: "English" },
-  { id: "gb:asv", name: "🇬🇧 English: American Standard (ASV)", lang: "English" },
-  { id: "gb:ylt", name: "🇬🇧 English: Young's Literal (YLT)", lang: "English" },
-  { id: "gb:bbe", name: "🇬🇧 English: Basic English (BBE)", lang: "English" },
+  { id: "gb:asv", name: "🇬🇧 English: American Standard (ASV 1901)", lang: "English" },
+  { id: "gb:ylt", name: "🇬🇧 English: Young's Literal Translation (YLT)", lang: "English" },
+  { id: "gb:bbe", name: "🇬🇧 English: Bible in Basic English (BBE)", lang: "English" },
   { id: "gb:darby", name: "🇬🇧 English: Darby Translation", lang: "English" },
+  { id: "gb:douayrheims", name: "🇬🇧 English: Douay-Rheims", lang: "English" },
+  { id: "gb:wb", name: "🇬🇧 English: Webster's Bible (1833)", lang: "English" },
   { id: "gb:valera", name: "🇪🇸 Español: Reina Valera (1909)", lang: "Spanish" },
-  { id: "gb:sagradas", name: "🇪🇸 Español: Sagradas Escrituras", lang: "Spanish" },
+  { id: "gb:sagradas", name: "🇪🇸 Español: Sagradas Escrituras (1569)", lang: "Spanish" },
+  { id: "gb:rvg", name: "🇪🇸 Español: Reina Valera Gómez", lang: "Spanish" },
   { id: "gb:luther1912", name: "🇩🇪 Deutsch: Lutherbibel (1912)", lang: "German" },
+  { id: "gb:luther1545", name: "🇩🇪 Deutsch: Lutherbibel (1545)", lang: "German" },
   { id: "gb:schlachter", name: "🇩🇪 Deutsch: Schlachter (1951)", lang: "German" },
   { id: "gb:elberfelder", name: "🇩🇪 Deutsch: Elberfelder (1871)", lang: "German" },
-  { id: "gb:luther1545", name: "🇩🇪 Deutsch: Luther (1545)", lang: "German" },
+  { id: "gb:elberfelder1905", name: "🇩🇪 Deutsch: Elberfelder (1905)", lang: "German" },
   { id: "gb:ls1910", name: "🇫🇷 Français: Louis Segond (1910)", lang: "French" },
   { id: "gb:martin", name: "🇫🇷 Français: David Martin (1744)", lang: "French" },
-  { id: "gb:ostervald", name: "🇫🇷 Français: Ostervald", lang: "French" },
+  { id: "gb:ostervald", name: "🇫🇷 Français: Ostervald (1996)", lang: "French" },
   { id: "gb:almeida", name: "🇧🇷 Português: João Ferreira de Almeida", lang: "Portuguese" },
   { id: "gb:synodal", name: "🇷🇺 Русский: Synodal Translation", lang: "Russian" },
+  { id: "gb:makarij", name: "🇷🇺 Русский: Pentateuco di Makarij", lang: "Russian" },
   { id: "gb:cornilescu", name: "🇷🇴 Română: Dumitru Cornilescu", lang: "Romanian" },
   { id: "gb:statenvertaling", name: "🇳🇱 Nederlands: Statenvertaling", lang: "Dutch" },
   { id: "gb:svd", name: "🇸🇦 العربية: Smith & Van Dyke", lang: "Arabic" },
   { id: "gb:cns", name: "🇨🇳 中文: Chinese Union Simplified", lang: "Chinese" },
+  { id: "gb:cnt", name: "🇹🇼 中文: Chinese Union Traditional", lang: "Chinese" },
   { id: "gb:korean", name: "🇰🇷 한국어: Korean Revised Version", lang: "Korean" },
   { id: "gb:kougo", name: "🇯🇵 日本語: Kougo-yaku", lang: "Japanese" },
   { id: "gb:vulgate", name: "🏛️ Latina: Biblia Sacra Vulgata", lang: "Latin" },
@@ -625,30 +719,71 @@ const CORE_BIBLES = [
   { id: "gb:lxx", name: "📜 Greco AT: Settanta (LXX)", lang: "Greek" },
   { id: "gb:tischendorf", name: "📜 Greco NT: Tischendorf 8th", lang: "Greek" },
   { id: "gb:westcott", name: "📜 Greco NT: Westcott-Hort", lang: "Greek" },
+  { id: "gb:byzantine", name: "📜 Greco NT: Testo Bizantino Maggioritario", lang: "Greek" },
   { id: "gb:wlc", name: "📜 Ebraico AT: Westminster Leningrad (WLC)", lang: "Hebrew" },
-  { id: "gb:aleppo", name: "📜 Ebraico AT: Aleppo Codex", lang: "Hebrew" }
+  { id: "gb:aleppo", name: "📜 Ebraico AT: Aleppo Codex", lang: "Hebrew" },
+  { id: "gb:peshitta", name: "📜 Aramaico/Siriaco: Peshitta", lang: "Syriac" },
+  { id: "gb:ukrainian", name: "🇺🇦 Українська: Bibbia Ucraina (Ogienko)", lang: "Ukrainian" },
+  { id: "gb:bulgarian", name: "🇧🇬 Български: Bibbia Bulgara (1940)", lang: "Bulgarian" },
+  { id: "gb:hungarian", name: "🇭🇺 Magyar: Károli Gáspár", lang: "Hungarian" },
+  { id: "gb:polish", name: "🇵🇱 Polski: Biblia Gdańska", lang: "Polish" },
+  { id: "gb:czech", name: "🇨🇿 Čeština: Bible Kralická", lang: "Czech" },
+  { id: "gb:swedish", name: "🇸🇪 Svenska: Karl XII (1917)", lang: "Swedish" },
+  { id: "gb:finnish", name: "🇫🇮 Suomi: Pyhä Raamattu", lang: "Finnish" },
+  { id: "gb:danish", name: "🇩🇰 Dansk: Bibelen på Dansk", lang: "Danish" },
+  { id: "gb:norwegian", name: "🇳🇴 Norsk: Det Norsk Bibelselskap", lang: "Norwegian" },
+  { id: "gb:turkish", name: "🇹🇷 Türkçe: Kutsal Kitap", lang: "Turkish" },
+  { id: "gb:swahili", name: "🇰🇪 Kiswahili: Biblia Takatifu", lang: "Swahili" },
+  { id: "gb:tagalog", name: "🇵🇭 Tagalog: Ang Dating Biblia", lang: "Tagalog" },
+  { id: "gb:vietnamese", name: "🇻🇳 Tiếng Việt: Bibbia Vietnamita (1934)", lang: "Vietnamese" }
 ];
 
-let dynamicCatalog = [...CORE_BIBLES];
+const PRO_STRONG_DICT = {
+  "principio": { code: "H7225 / G746", orig: "רֵאשִׁית (reshith) / ἀρχή (archē)", def: "Inizio, origine, primizia, fondamento temporale o rango." },
+  "dio": { code: "H430 / G2316", orig: "אֱלֹהִים (Elohim) / θεός (Theos)", def: "L'Essere Supremo, Creatore onnipotente e sovrano." },
+  "iddio": { code: "H430", orig: "אֱלֹהִים (Elohim)", def: "Plurale di maestà indicante la pienezza della potenza divina creatrice." },
+  "signore": { code: "H3068 / G2962", orig: "יְהוָה (YHWH) / κύριος (Kyrios)", def: "Il Nome divino personale (Tetragramma) / Sovrano legittimo." },
+  "eterno": { code: "H3068", orig: "יְהוָה (YHWH)", def: "Colui che fa divenire, l'Iddio vivente ed eterno." },
+  "creò": { code: "H1254", orig: "בָּרָא (bara')", def: "Creare, plasmare qualcosa di nuovo (usato esclusivamente con Dio come soggetto)." },
+  "terra": { code: "H776 / G1093", orig: "אֶרֶץ ('erets) / γῆ (gē)", def: "Terra ferma, suolo, regione abitata, pianeta." },
+  "luce": { code: "H216 / G5457", orig: "אוֹר ('owr) / φῶς (phōs)", def: "Luce fisica, splendore, illuminazione e verità spirituale." },
+  "parola": { code: "G3056 / H1697", orig: "λόγος (Logos) / דָּבָר (dabar)", def: "Parola espressa, pensiero divino, messaggio, il Verbo." },
+  "spirito": { code: "H7307 / G4151", orig: "רוּחַ (ruach) / πνεῦμα (pneuma)", def: "Soffio, vento, alito vitale, forza attiva invisibile." },
+  "vita": { code: "G2222 / H2416", orig: "ζωή (zōē) / חַי (chay)", def: "Vita in senso assoluto, pienezza di vitalità fisica e spirituale." },
+  "fede": { code: "G4102", orig: "πίστις (pistis)", def: "Certezza, solida fiducia e convinzione basata su prove." },
+  "amore": { code: "G26 / H160", orig: "ἀγάπη (agapē) / אַהֲבָה (ahavah)", def: "Amore altruistico guidato da principi elevati (Agape)." },
+  "pastore": { code: "H7462 / G4166", orig: "רָעָה (ra'ah) / ποιμήν (poimēn)", def: "Colui che pasce, guida, protegge e nutre il gregge." },
+  "anima": { code: "H5315 / G5590", orig: "נֶפֶשׁ (nephesh) / ψυχή (psychē)", def: "Essere vivente, persona, respiro vitale, la vita stessa." }
+};
+
+const PRO_CROSS_REFS = {
+  "1_1_1": ["Giovanni 1:1", "Ebrei 11:3", "Salmi 33:6", "Isaia 45:18", "Rivelazione 4:11"],
+  "1_1_2": ["Salmi 104:30", "Geremia 4:23"],
+  "1_1_3": ["2 Corinti 4:6", "Salmi 33:9", "Giovanni 1:5"],
+  "19_23_1": ["Giovanni 10:11", "Isaia 40:11", "Ezechiele 34:11", "1 Pietro 2:25"],
+  "43_1_1": ["Genesi 1:1", "1 Giovanni 1:1", "Rivelazione 19:13"],
+  "43_3_16": ["Romani 5:8", "1 Giovanni 4:9", "Efesini 2:4"]
+};
+    let dynamicCatalog = [...CORE_BIBLES];
 let catalogLoaded = false;
 
-// Nuova chiave v10: ignora la vecchia memoria bloccata e carica subito 12 versioni multilingue nel menù!
-const DEFAULT_ACTIVE_IDS = [
-  "gb:riveduta", "gb:giovanni", "gb:kjv", "gb:web", "gb:valera",
-  "gb:luther1912", "gb:schlachter", "gb:ls1910", "gb:almeida",
-  "gb:vulgate", "gb:textusreceptus", "gb:wlc"
-];
+// Attiva immediatamente tutte le Bibbie reali nel menu a tendina
+const DEFAULT_ACTIVE_IDS = CORE_BIBLES.map(b => b.id);
 
 let state = {
   bookId: 1,
   chapter: 1,
-  trans1: "gb:riveduta",
-  trans2: "gb:kjv",
-  parallel: false,
+  trans1: localStorage.getItem("bm_trans1") || "gb:riveduta",
+  trans2: localStorage.getItem("bm_trans2") || "gb:kjv",
+  trans3: localStorage.getItem("bm_trans3") || "gb:valera",
+  parallelCount: 1,
+  diffMode: false,
+  themeMode: localStorage.getItem("bm_theme") || "light",
   fontSize: 18,
   selectedVerse: null,
   selectedVerseText: "",
-  downloadedBibles: JSON.parse(localStorage.getItem("bm_v10_bibles") || JSON.stringify(DEFAULT_ACTIVE_IDS)),
+  activeTagFilter: null,
+  downloadedBibles: JSON.parse(localStorage.getItem("bm_v10_pro_bibles") || JSON.stringify(DEFAULT_ACTIVE_IDS)),
   highlights: JSON.parse(localStorage.getItem("bm_hl") || "{}"),
   bookmarks: JSON.parse(localStorage.getItem("bm_bm") || "[]"),
   notes: JSON.parse(localStorage.getItem("bm_notes") || "[]")
@@ -702,7 +837,6 @@ async function removeOfflineBible(id) {
   } catch(e) {}
 }
 
-// Carica l'intero indice ufficiale di oltre 110+ Bibbie da GetBible v2
 async function loadFullGlobalCatalog() {
   if (catalogLoaded) return dynamicCatalog;
   try {
@@ -728,27 +862,33 @@ async function loadFullGlobalCatalog() {
     }
   } catch(e) {}
   return dynamicCatalog;
-   }
-  async function populateSelects() {
+}
+
+async function populateSelects() {
   await loadFullGlobalCatalog();
   let activeList = dynamicCatalog.filter(b => state.downloadedBibles.includes(b.id));
   if (activeList.length < 2) {
     state.downloadedBibles = [...DEFAULT_ACTIVE_IDS];
-    localStorage.setItem("bm_v10_bibles", JSON.stringify(state.downloadedBibles));
+    localStorage.setItem("bm_v10_pro_bibles", JSON.stringify(state.downloadedBibles));
     activeList = dynamicCatalog.filter(b => state.downloadedBibles.includes(b.id));
   }
 
   const s1 = document.getElementById("trans1");
   const s2 = document.getElementById("trans2");
+  const s3 = document.getElementById("trans3");
   const html = activeList.map(t => `<option value="${t.id}">${t.name}</option>`).join("");
   s1.innerHTML = html;
   s2.innerHTML = html;
+  s3.innerHTML = html;
 
   if (activeList.some(b => b.id === state.trans1)) s1.value = state.trans1;
   else { state.trans1 = activeList[0].id; s1.value = state.trans1; }
 
   if (activeList.some(b => b.id === state.trans2)) s2.value = state.trans2;
   else { state.trans2 = (activeList[1] || activeList[0]).id; s2.value = state.trans2; }
+
+  if (activeList.some(b => b.id === state.trans3)) s3.value = state.trans3;
+  else { state.trans3 = (activeList[2] || activeList[0]).id; s3.value = state.trans3; }
 }
 
 function setActiveTab(tabId) {
@@ -799,9 +939,8 @@ function showChaptersView(bookId) {
 function selectChapter(ch) {
   state.chapter = ch;
   loadChapterView();
-  }
-
-  async function fetchChapterData(transId, bookId, chapter) {
+}
+    async function fetchChapterData(transId, bookId, chapter) {
   const fullOffline = await getOfflineBible(transId);
   if (fullOffline && fullOffline.books) {
     const bObj = fullOffline.books.find(b => Number(b.nr) === Number(bookId));
@@ -832,6 +971,16 @@ function selectChapter(ch) {
   return verses;
 }
 
+function highlightDiffText(baseStr, targetStr) {
+  if (!state.diffMode || !baseStr || !targetStr) return targetStr;
+  const cleanBase = new Set(baseStr.toLowerCase().replace(/[.,;:!?"'«»()]/g, "").split(/\s+/));
+  return targetStr.split(/(\s+)/).map(tok => {
+    const w = tok.toLowerCase().replace(/[.,;:!?"'«»()]/g, "");
+    if (w.length > 2 && !cleanBase.has(w)) return `<span class="diff-word">${tok}</span>`;
+    return tok;
+  }).join("");
+}
+
 async function loadChapterView() {
   closeActionBar();
   setActiveTab("tabRead");
@@ -842,37 +991,59 @@ async function loadChapterView() {
 
   try {
     const data1 = await fetchChapterData(state.trans1, state.bookId, state.chapter);
-    let data2 = [];
-    if (state.parallel) {
+    let data2 = [], data3 = [];
+    if (state.parallelCount >= 2) {
       try { data2 = await fetchChapterData(state.trans2, state.bookId, state.chapter); } catch(e) { data2 = []; }
+    }
+    if (state.parallelCount === 3) {
+      try { data3 = await fetchChapterData(state.trans3, state.bookId, state.chapter); } catch(e) { data3 = []; }
     }
 
     let versesHtml = "";
-    if (!state.parallel) {
+    if (state.parallelCount === 1) {
       versesHtml = data1.map(v => {
         const key = `${state.bookId}_${state.chapter}_${v.verse}`;
         const hlClass = state.highlights[key] || "";
         const refStr = `${book.name} ${state.chapter}:${v.verse}`;
         const hasNote = state.notes.some(n => n.ref === refStr);
-        const noteBadge = hasNote ? ` <span title="Appunto presente">📝</span>` : "";
+        const hasCross = PRO_CROSS_REFS[key];
+        const badges = (hasNote ? ` <span title="Appunto presente">📝</span>` : "") +
+                       (hasCross ? ` <span title="Passi Paralleli disponibili">🔗</span>` : "");
         const cleanText = (v.text || "").replace(/<[^>]*>?/gm, "").replace(/"/g, "&quot;");
         return `
           <div class="verse-row ${hlClass}" id="v_${v.verse}" data-text="${cleanText}" onclick="onVerseClick(${v.verse}, this.getAttribute('data-text'))">
-            <span class="verse-num">${v.verse}</span><span>${v.text}</span>${noteBadge}
+            <span class="verse-num">${v.verse}</span><span>${v.text}</span>${badges}
           </div>`;
       }).join("");
-    } else {
+    } else if (state.parallelCount === 2) {
       const map2 = {};
       data2.forEach(v => map2[v.verse] = v.text);
       versesHtml = data1.map(v => {
         const key = `${state.bookId}_${state.chapter}_${v.verse}`;
         const hlClass = state.highlights[key] || "";
         const cleanText = (v.text || "").replace(/<[^>]*>?/gm, "").replace(/"/g, "&quot;");
-        const text2 = map2[v.verse] || "—";
+        const text2 = highlightDiffText(v.text, map2[v.verse] || "—");
         return `
           <div class="parallel-row ${hlClass}" id="v_${v.verse}" data-text="${cleanText}" onclick="onVerseClick(${v.verse}, this.getAttribute('data-text'))">
             <div class="parallel-col"><span class="verse-num">${v.verse}</span>${v.text}</div>
             <div class="parallel-col"><span class="verse-num">${v.verse}</span>${text2}</div>
+          </div>`;
+      }).join("");
+    } else {
+      const map2 = {}, map3 = {};
+      data2.forEach(v => map2[v.verse] = v.text);
+      data3.forEach(v => map3[v.verse] = v.text);
+      versesHtml = data1.map(v => {
+        const key = `${state.bookId}_${state.chapter}_${v.verse}`;
+        const hlClass = state.highlights[key] || "";
+        const cleanText = (v.text || "").replace(/<[^>]*>?/gm, "").replace(/"/g, "&quot;");
+        const text2 = highlightDiffText(v.text, map2[v.verse] || "—");
+        const text3 = highlightDiffText(v.text, map3[v.verse] || "—");
+        return `
+          <div class="parallel-row-3 ${hlClass}" id="v_${v.verse}" data-text="${cleanText}" onclick="onVerseClick(${v.verse}, this.getAttribute('data-text'))">
+            <div class="parallel-col"><span class="verse-num">${v.verse}</span>${v.text}</div>
+            <div class="parallel-col"><span class="verse-num">${v.verse}</span>${text2}</div>
+            <div class="parallel-col"><span class="verse-num">${v.verse}</span>${text3}</div>
           </div>`;
       }).join("");
     }
@@ -901,8 +1072,9 @@ async function loadChapterView() {
         <button class="nav-btn" onclick="showBooksView()">Scegli Libro</button>
       </div>`;
   }
-                     }
-  function prevChapter() {
+}
+
+function prevChapter() {
   if (state.chapter > 1) state.chapter--;
   else if (state.bookId > 1) { state.bookId--; state.chapter = getBook(state.bookId).ch; }
   loadChapterView();
@@ -918,26 +1090,50 @@ function nextChapter() {
 function onTranslationChange() {
   state.trans1 = document.getElementById("trans1").value;
   state.trans2 = document.getElementById("trans2").value;
+  state.trans3 = document.getElementById("trans3").value;
+  localStorage.setItem("bm_trans1", state.trans1);
+  localStorage.setItem("bm_trans2", state.trans2);
+  localStorage.setItem("bm_trans3", state.trans3);
   loadChapterView();
 }
 
 function toggleParallel() {
-  state.parallel = !state.parallel;
+  state.parallelCount = (state.parallelCount % 3) + 1;
   const btn = document.getElementById("parallelBtn");
+  const diffBtn = document.getElementById("diffBtn");
   const sel2 = document.getElementById("trans2");
-  if (state.parallel) {
-    btn.textContent = "⚖️ Parallelo: ON";
-    btn.classList.add("highlight");
-    sel2.style.display = "block";
-  } else {
-    btn.textContent = "⚖️ Parallelo: OFF";
+  const sel3 = document.getElementById("trans3");
+
+  if (state.parallelCount === 1) {
+    btn.textContent = "⚖️ Parallelo: 1x";
     btn.classList.remove("highlight");
     sel2.style.display = "none";
+    sel3.style.display = "none";
+    diffBtn.style.display = "none";
+  } else if (state.parallelCount === 2) {
+    btn.textContent = "⚖️ Parallelo: 2x";
+    btn.classList.add("highlight");
+    sel2.style.display = "block";
+    sel3.style.display = "none";
+    diffBtn.style.display = "inline-flex";
+  } else {
+    btn.textContent = "⚖️ Parallelo: 3x";
+    btn.classList.add("highlight");
+    sel2.style.display = "block";
+    sel3.style.display = "block";
+    diffBtn.style.display = "inline-flex";
   }
   loadChapterView();
 }
 
-function onVerseClick(verseNum, text) {
+function toggleDiffMode() {
+  state.diffMode = !state.diffMode;
+  const btn = document.getElementById("diffBtn");
+  btn.textContent = state.diffMode ? "🔍 Diff: ON" : "🔍 Diff: OFF";
+  btn.classList.toggle("highlight", state.diffMode);
+  loadChapterView();
+}
+    function onVerseClick(verseNum, text) {
   state.selectedVerse = verseNum;
   state.selectedVerseText = text;
   document.getElementById("verseActionBar").style.display = "flex";
@@ -999,6 +1195,7 @@ function openNoteModalForVerse() {
   document.getElementById("noteModalTitle").textContent = `📝 Appunto: ${ref}`;
   document.getElementById("noteModalVersePreview").textContent = `"${state.selectedVerseText}"`;
   document.getElementById("noteModalInput").value = existing ? existing.text : "";
+  document.getElementById("noteTagsInput").value = (existing && existing.tags) ? existing.tags.join(", ") : "";
   document.getElementById("noteModal").style.display = "flex";
 }
 
@@ -1009,10 +1206,12 @@ function closeNoteModal() {
 
 function saveNoteFromModal() {
   const text = document.getElementById("noteModalInput").value.trim();
+  const rawTags = document.getElementById("noteTagsInput").value || "";
+  const tags = rawTags.split(",").map(t => t.trim().replace(/^#/, "")).filter(Boolean);
   const book = getBook(state.bookId);
   const ref = `${book.name} ${state.chapter}:${state.selectedVerse}`;
 
-  if (text !== "") {
+  if (text !== "" || tags.length > 0) {
     const existingIdx = state.notes.findIndex(n => n.ref === ref);
     const noteObj = {
       id: Date.now(),
@@ -1022,6 +1221,7 @@ function saveNoteFromModal() {
       ref: ref,
       verseText: state.selectedVerseText,
       text: text,
+      tags: tags,
       date: new Date().toLocaleDateString("it-IT")
     };
     if (existingIdx > -1) state.notes[existingIdx] = noteObj;
@@ -1032,25 +1232,48 @@ function saveNoteFromModal() {
   loadChapterView();
 }
 
+function formatNoteLinks(txt) {
+  if (!txt) return "";
+  return txt.replace(/([1-3]?\s?[A-Za-zÀ-ÿ]+)\s+(\d+)(?::(\d+))?/g, (m) => {
+    return `<span class="tag-badge" onclick="event.stopPropagation(); jumpToRefString('${m.replace(/'/g, "")}')">🔗 ${m}</span>`;
+  });
+}
+
 function showNotesView() {
   closeActionBar();
   setActiveTab("tabNotes");
   const main = document.getElementById("mainContainer");
 
   if (!state.notes.length) {
-    main.innerHTML = `<div class="loader">Nessun appunto di studio salvato.<br><br>Durante la lettura, tocca un versetto qualsiasi e premi l'icona 📝 per aggiungere una nota personale.</div>`;
+    main.innerHTML = `<div class="loader">Nessun appunto di studio salvato.<br><br>Durante la lettura, tocca un versetto qualsiasi e premi l'icona 📝 per aggiungere una nota personale con Tag #.</div>`;
     return;
   }
 
-  main.innerHTML = `<div class="section-title"><span>I tuoi Appunti di Studio</span><span>${state.notes.length} note</span></div>` +
-    state.notes.map((n, idx) => `
+  const allTags = new Set();
+  state.notes.forEach(n => (n.tags || []).forEach(t => allTags.add(t)));
+  const filtered = state.activeTagFilter
+    ? state.notes.filter(n => (n.tags || []).includes(state.activeTagFilter))
+    : state.notes;
+
+  let tagBar = `<div style="margin-bottom:12px; display:flex; flex-wrap:wrap; gap:4px;">
+    <span class="tag-badge" style="${!state.activeTagFilter ? 'background:var(--primary-main);color:#fff;' : ''}" onclick="state.activeTagFilter=null; showNotesView();">Tutti (${state.notes.length})</span>`;
+  allTags.forEach(t => {
+    const act = state.activeTagFilter === t;
+    tagBar += `<span class="tag-badge" style="${act ? 'background:var(--primary-main);color:#fff;' : ''}" onclick="state.activeTagFilter='${t}'; showNotesView();">#${t}</span>`;
+  });
+  tagBar += `</div>`;
+
+  main.innerHTML = `<div class="section-title"><span>I tuoi Appunti di Studio</span><span>${filtered.length} note</span></div>` +
+    tagBar +
+    filtered.map((n, idx) => `
       <div class="result-card" onclick="openRef(${n.bookId || 1}, ${n.chapter || 1})">
         <div class="result-ref" style="display:flex;justify-content:space-between;align-items:center;">
           <span>📝 ${n.ref} <small style="color:var(--text-muted);font-weight:normal;">(${n.date || ''})</small></span>
           <span onclick="event.stopPropagation();deleteNote(${idx})" style="color:var(--danger);cursor:pointer;font-size:13px;">🗑 Elimina</span>
         </div>
         ${n.verseText ? `<div style="font-size:12px;color:var(--text-muted);font-style:italic;margin:4px 0 8px 0;border-left:2px solid var(--border-color);padding-left:8px;">"${n.verseText}"</div>` : ""}
-        <div style="margin-top:4px;line-height:1.5;white-space:pre-wrap;">${n.text}</div>
+        <div style="margin-top:4px;line-height:1.5;white-space:pre-wrap;">${formatNoteLinks(n.text)}</div>
+        ${(n.tags && n.tags.length) ? `<div style="margin-top:6px;">${n.tags.map(t => `<span class="tag-badge">#${t}</span>`).join("")}</div>` : ""}
       </div>`).join("");
 }
 
@@ -1075,7 +1298,7 @@ async function showCatalogView() {
       <span>${dynamicCatalog.length} Bibbie</span>
     </div>
     <div style="font-size:13px;color:var(--text-muted);margin-bottom:10px;line-height:1.4;">
-      Tocca <b>⬇ Scarica / Attiva</b> per aggiungere qualsiasi versione al menu a tendina in alto e salvarla per l'uso offline.
+      Tocca <b>⬇ Scarica / Attiva</b> per aggiungere qualsiasi versione ai menu a tendina in alto e salvarla per l'uso offline.
     </div>
     <div class="search-box">
       <input type="text" id="catFilter" class="search-input" placeholder="🔍 Cerca lingua o versione (es. English, Greek, Luther)..." oninput="filterCatalogList()">
@@ -1154,20 +1377,39 @@ function showSearchView() {
   setActiveTab("tabSearch");
   const main = document.getElementById("mainContainer");
   main.innerHTML = `
-    <div class="section-title"><span>Ricerca nei 66 Libri</span></div>
+    <div class="section-title"><span>Ricerca Avanzata nei 66 Libri</span></div>
     <div class="search-box">
-      <input type="text" id="searchInput" class="search-input" placeholder="Cerca parola o frase..." onkeydown="if(event.key==='Enter') executeSearch()">
+      <input type="text" id="searchInput" class="search-input" placeholder="Parola o operatori (es. fede AND opere, luce NOT tenebre)..." onkeydown="if(event.key==='Enter') executeSearch()">
+      <select id="searchScope" class="trans-select" style="max-width:195px;">
+        <option value="all">Tutta la Bibbia (66)</option>
+        <option value="ot">Scritture Ebraico-Aramaiche</option>
+        <option value="nt">Scritture Greche Cristiane</option>
+        <option value="pent">Pentateuco (Gen-Deu)</option>
+        <option value="gosp">Vangeli e Atti</option>
+      </select>
       <button class="search-btn" onclick="executeSearch()">Cerca</button>
     </div>
-    <div id="searchResults"><div class="loader">Inserisci una parola da cercare nella traduzione selezionata.</div></div>
+    <div id="searchResults"><div class="loader">Inserisci una parola o usa <b>AND</b>, <b>OR</b>, <b>NOT</b> nella traduzione attiva.</div></div>
   `;
 }
 
 async function executeSearch() {
-  const query = document.getElementById("searchInput").value.trim().toLowerCase();
-  if (!query) return;
+  const rawQuery = document.getElementById("searchInput").value.trim();
+  const scope = document.getElementById("searchScope")?.value || "all";
+  if (!rawQuery) return;
   const resDiv = document.getElementById("searchResults");
-  resDiv.innerHTML = `<div class="loader">Ricerca di "<b>${query}</b>" in tutti i libri in corso...</div>`;
+  resDiv.innerHTML = `<div class="loader">Ricerca di "<b>${rawQuery}</b>" in corso...</div>`;
+
+  const matchLogic = (txt, q) => {
+    const low = txt.toLowerCase();
+    if (q.includes(" AND ")) return q.split(" AND ").every(p => low.includes(p.trim().toLowerCase()));
+    if (q.includes(" OR ")) return q.split(" OR ").some(p => low.includes(p.trim().toLowerCase()));
+    if (q.includes(" NOT ")) {
+      const [inc, exc] = q.split(" NOT ");
+      return low.includes(inc.trim().toLowerCase()) && !low.includes(exc.trim().toLowerCase());
+    }
+    return low.includes(q.toLowerCase());
+  };
 
   try {
     let fullBible = await getOfflineBible(state.trans1);
@@ -1182,20 +1424,26 @@ async function executeSearch() {
     if (fullBible && fullBible.books) {
       let matches = [];
       for (const b of fullBible.books) {
-        const bMeta = getBook(Number(b.nr));
+        const bNum = Number(b.nr);
+        if (scope === "ot" && bNum >= 40) continue;
+        if (scope === "nt" && bNum < 40) continue;
+        if (scope === "pent" && bNum > 5) continue;
+        if (scope === "gosp" && (bNum < 40 || bNum > 44)) continue;
+
+        const bMeta = getBook(bNum);
         for (const c of (b.chapters || [])) {
           for (const v of (c.verses || [])) {
-            if (v.text && v.text.toLowerCase().includes(query)) {
-              matches.push({ bookId: Number(b.nr), bookName: bMeta.name, ch: c.chapter, v: v.verse, text: v.text });
-              if (matches.length >= 100) break;
+            if (v.text && matchLogic(v.text, rawQuery)) {
+              matches.push({ bookId: bNum, bookName: bMeta.name, ch: c.chapter, v: v.verse, text: v.text });
+              if (matches.length >= 120) break;
             }
           }
-          if (matches.length >= 100) break;
+          if (matches.length >= 120) break;
         }
-        if (matches.length >= 100) break;
+        if (matches.length >= 120) break;
       }
       if (!matches.length) {
-        resDiv.innerHTML = `<div class="loader">Nessun risultato trovato per "<b>${query}</b>".</div>`;
+        resDiv.innerHTML = `<div class="loader">Nessun risultato trovato per "<b>${rawQuery}</b>".</div>`;
         return;
       }
       resDiv.innerHTML = `<div style="margin-bottom:10px;font-size:13px;color:var(--text-muted);">Trovati <b>${matches.length}</b> risultati:</div>` +
@@ -1210,9 +1458,8 @@ async function executeSearch() {
   } catch (e) {
     resDiv.innerHTML = `<div class="loader">Errore durante la ricerca.</div>`;
   }
-}
-
-function showSavedView() {
+    }
+    function showSavedView() {
   closeActionBar();
   setActiveTab("tabSaved");
   const main = document.getElementById("mainContainer");
@@ -1249,26 +1496,270 @@ function changeFontSize(delta) {
 }
 
 function toggleDarkMode() {
-  document.body.classList.toggle("dark-mode");
+  const order = ["light", "dark", "oled"];
+  state.themeMode = order[(order.indexOf(state.themeMode) + 1) % 3];
+  localStorage.setItem("bm_theme", state.themeMode);
+  applySavedTheme();
 }
 
-populateSelects().then(() => {
-  loadChapterView().then(() => {
-    setTimeout(() => {
-      const splash = document.getElementById("splashScreen");
-      if (splash) {
-        splash.style.opacity = "0";
-        setTimeout(() => splash.remove(), 400);
+function applySavedTheme() {
+  document.body.classList.remove("dark-mode", "oled-mode");
+  if (state.themeMode === "dark") document.body.classList.add("dark-mode");
+  if (state.themeMode === "oled") document.body.classList.add("dark-mode", "oled-mode");
+  const btn = document.getElementById("themeBtn");
+  if (btn) {
+    btn.textContent = state.themeMode === "light" ? "☀️" : (state.themeMode === "dark" ? "🌙" : "🖤");
+  }
+}
+
+function closeProModal() {
+  document.getElementById("proModal").style.display = "none";
+}
+
+function openQuickJumpModal() {
+  document.getElementById("proModalTitle").textContent = "⚡ Salto Rapido al Passaggio";
+  document.getElementById("proModalBody").innerHTML = `
+    <div style="font-size:13px; color:var(--text-muted); margin-bottom:10px;">
+      Digita nome o abbreviazione del libro seguito da capitolo e versetto (es. <b>Gv 3 16</b>, <b>Sal 23</b>, <b>Rom 8:28</b>):
+    </div>
+    <input type="text" id="quickJumpInput" class="search-input" style="width:100%; margin-bottom:12px;" placeholder="Es. Gv 3 16" onkeydown="if(event.key==='Enter') runQuickJump()">
+    <button class="search-btn" style="width:100%;" onclick="runQuickJump()">Vai Subito</button>
+  `;
+  document.getElementById("proModal").style.display = "flex";
+  setTimeout(() => document.getElementById("quickJumpInput")?.focus(), 100);
+}
+
+function runQuickJump() {
+  const raw = document.getElementById("quickJumpInput")?.value || "";
+  jumpToRefString(raw);
+  closeProModal();
+}
+
+function jumpToRefString(str) {
+  const cleaned = str.trim().replace(/[:.]/g, " ");
+  const m = cleaned.match(/^([1-3]?\s?[a-zA-ZÀ-ÿ]+)\s*(\d+)?(?:\s+(\d+))?/);
+  if (!m) return;
+  const qBook = m[1].toLowerCase().replace(/\s+/g, "");
+  const ch = parseInt(m[2] || "1");
+  const v = parseInt(m[3] || "0");
+
+  const found = BIBLE_BOOKS.find(b =>
+    b.name.toLowerCase().replace(/\s+/g, "").startsWith(qBook) ||
+    b.abbr.toLowerCase() === qBook
+  );
+  if (found) {
+    state.bookId = found.id;
+    state.chapter = Math.min(found.ch, Math.max(1, ch));
+    closeProModal();
+    loadChapterView().then(() => {
+      if (v > 0) {
+        setTimeout(() => {
+          const vEl = document.getElementById(`v_${v}`);
+          if (vEl) {
+            vEl.scrollIntoView({ behavior: "smooth", block: "center" });
+            vEl.style.outline = "2px solid var(--primary-light)";
+            setTimeout(() => vEl.style.outline = "none", 2500);
+          }
+        }, 300);
       }
-    }, 600);
-  });
-});
-</script><script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW error:', err));
     });
   }
+}
+
+function toggleChapterTTS() {
+  if (!("speechSynthesis" in window)) return alert("Sintesi vocale non supportata su questo dispositivo.");
+  const btn = document.getElementById("ttsChapterBtn");
+  if (window.speechSynthesis.speaking) {
+    window.speechSynthesis.cancel();
+    if (btn) btn.innerHTML = "🔊 Ascolta";
+    return;
+  }
+  const rows = [...document.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3")];
+  const fullText = rows.map(r => r.getAttribute("data-text") || "").join(" ");
+  if (!fullText) return;
+  const utter = new SpeechSynthesisUtterance(fullText);
+  utter.lang = (state.trans1.includes("riveduta") || state.trans1.includes("giovanni")) ? "it-IT" : "en-US";
+  utter.onend = () => { if (btn) btn.innerHTML = "🔊 Ascolta"; };
+  if (btn) btn.innerHTML = "⏹️ Ferma";
+  window.speechSynthesis.speak(utter);
+}
+
+function speakSelectedVerse() {
+  if (!("speechSynthesis" in window) || !state.selectedVerseText) return;
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(state.selectedVerseText);
+  utter.lang = (state.trans1.includes("riveduta") || state.trans1.includes("giovanni")) ? "it-IT" : "en-US";
+  window.speechSynthesis.speak(utter);
+}
+
+function openStrongModalForVerse() {
+  const book = getBook(state.bookId);
+  const text = (state.selectedVerseText || "").toLowerCase();
+  const matches = [];
+  Object.keys(PRO_STRONG_DICT).forEach(k => {
+    if (text.includes(k)) {
+      const d = PRO_STRONG_DICT[k];
+      matches.push(`
+        <div class="result-card" style="cursor:default;">
+          <div class="result-ref">${k.toUpperCase()} — <span class="tag-badge">${d.code}</span></div>
+          <div style="font-weight:700; margin:4px 0;">${d.orig}</div>
+          <div style="font-size:13.5px;">${d.def}</div>
+        </div>
+      `);
+    }
+  });
+  document.getElementById("proModalTitle").textContent = `🏛️ Lessico Strong (${book.name} ${state.chapter}:${state.selectedVerse})`;
+  document.getElementById("proModalBody").innerHTML = matches.length
+    ? matches.join("")
+    : `<div class="loader">Versetto: "${state.selectedVerseText}"<br><br>Radici chiave Strong presenti per termini biblici primari (es. Dio, Signore, Principio, Luce, Parola, Spirito, Vita, Fede, Amore, Pastore, Anima).</div>`;
+  document.getElementById("proModal").style.display = "flex";
+}
+
+function openCrossRefsModalForVerse() {
+  const book = getBook(state.bookId);
+  const key = `${state.bookId}_${state.chapter}_${state.selectedVerse}`;
+  const refs = PRO_CROSS_REFS[key] || ["Salmi 119:105", "Romani 15:4", "2 Timoteo 3:16"];
+  document.getElementById("proModalTitle").textContent = `🔗 Passi Paralleli (${book.name} ${state.chapter}:${state.selectedVerse})`;
+  document.getElementById("proModalBody").innerHTML = `
+    <div style="margin-bottom:10px; font-size:13px; color:var(--text-muted);">Tocca un riferimento per aprire subito il passo corrispondente:</div>
+    <div style="display:flex; flex-wrap:wrap; gap:6px;">
+      ${refs.map(r => `<span class="tag-badge" style="font-size:14px; padding:6px 12px;" onclick="jumpToRefString('${r}')">📖 ${r}</span>`).join("")}
+    </div>
+  `;
+  document.getElementById("proModal").style.display = "flex";
+}
+
+function generateVerseCardModal() {
+  const book = getBook(state.bookId);
+  const ref = `${book.name} ${state.chapter}:${state.selectedVerse}`;
+  const text = `"${state.selectedVerseText}"`;
+
+  document.getElementById("proModalTitle").textContent = "🖼️ Card Immagine Versetto";
+  document.getElementById("proModalBody").innerHTML = `
+    <div style="text-align:center;">
+      <canvas id="verseCanvas" width="1080" height="1080" style="width:100%; max-width:320px; border-radius:12px; margin-bottom:12px; box-shadow:0 6px 18px rgba(0,0,0,0.3);"></canvas>
+      <button class="search-btn" style="width:100%;" onclick="downloadCanvasCard()">💾 Scarica Immagine PNG</button>
+    </div>
+  `;
+  document.getElementById("proModal").style.display = "flex";
+
+  const canvas = document.getElementById("verseCanvas");
+  const ctx = canvas.getContext("2d");
+  const grad = ctx.createLinearGradient(0, 0, 1080, 1080);
+  grad.addColorStop(0, "#0a367e");
+  grad.addColorStop(1, "#0288d1");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 1080, 1080);
+
+  ctx.strokeStyle = "rgba(255,255,255,0.25)";
+  ctx.lineWidth = 5;
+  ctx.strokeRect(60, 60, 960, 960);
+
+  ctx.fillStyle = "rgba(255,255,255,0.85)";
+  ctx.font = "bold 32px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("BIBBIA MULTILINGUE (BM)", 540, 140);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "italic 42px Georgia, serif";
+  const words = text.split(" ");
+  let line = "", lines = [];
+  words.forEach(w => {
+    const test = line + w + " ";
+    if (ctx.measureText(test).width > 840) { lines.push(line.trim()); line = w + " "; }
+    else line = test;
+  });
+  lines.push(line.trim());
+
+  let y = 540 - (lines.length * 30);
+  lines.forEach(l => { ctx.fillText(l, 540, y); y += 62; });
+
+  ctx.fillStyle = "#ffeb3b";
+  ctx.font = "bold 40px sans-serif";
+  ctx.fillText(ref, 540, y + 60);
+}
+
+function downloadCanvasCard() {
+  const canvas = document.getElementById("verseCanvas");
+  const a = document.createElement("a");
+  a.href = canvas.toDataURL("image/png");
+  a.download = `BM_Versetto_${Date.now()}.png`;
+  a.click();
+}
+
+function openBackupModal() {
+  document.getElementById("proModalTitle").textContent = "💾 Backup & Ripristino Dati Studio";
+  document.getElementById("proModalBody").innerHTML = `
+    <p style="font-size:13.5px; color:var(--text-muted); margin-bottom:14px; line-height:1.5;">
+      Esporta in un file sicuro tutti i tuoi <b>Appunti, Tag, Preferiti ed Evidenziatori</b> oppure ripristinali su qualsiasi dispositivo.
+    </p>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <button class="search-btn" onclick="exportBackupJson()">📤 Esporta File di Backup (.json)</button>
+      <label class="nav-btn" style="text-align:center; padding:10px; cursor:pointer;">
+        📥 Importa File di Backup (.json)
+        <input type="file" accept=".json" style="display:none;" onchange="importBackupJson(event)">
+      </label>
+    </div>
+  `;
+  document.getElementById("proModal").style.display = "flex";
+}
+
+function exportBackupJson() {
+  const data = {
+    app: "BibbiaMultilingue_v10_Pro",
+    date: new Date().toISOString(),
+    highlights: state.highlights,
+    bookmarks: state.bookmarks,
+    notes: state.notes
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `BM_Backup_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+
+async function importBackupJson(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const parsed = JSON.parse(await file.text());
+    if (parsed.highlights) { state.highlights = parsed.highlights; localStorage.setItem("bm_hl", JSON.stringify(state.highlights)); }
+    if (parsed.bookmarks) { state.bookmarks = parsed.bookmarks; localStorage.setItem("bm_bm", JSON.stringify(state.bookmarks)); }
+    if (parsed.notes) { state.notes = parsed.notes; localStorage.setItem("bm_notes", JSON.stringify(state.notes)); }
+    closeProModal();
+    loadChapterView();
+    alert("✔ Backup ripristinato con successo!");
+  } catch (err) {
+    alert("Errore nel file di backup.");
+  }
+}
+
+function dismissSplashScreen() {
+  const splash = document.getElementById("splashScreen");
+  if (splash) {
+    splash.style.opacity = "0";
+    setTimeout(() => splash.remove(), 400);
+  }
+}
+
+// Timer di sicurezza anti-blocco Splash Screen + Inizializzazione
+setTimeout(dismissSplashScreen, 1800);
+applySavedTheme();
+
+populateSelects()
+  .catch(() => {})
+  .finally(() => {
+    loadChapterView().finally(() => {
+      setTimeout(dismissSplashScreen, 400);
+    });
+  });
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW error:', err));
+  });
+}
 </script>
 </body>
 </html>
