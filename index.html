@@ -1252,7 +1252,7 @@ function toggleDarkMode() {
   document.body.classList.toggle("dark-mode");
 }
 
-populateSelects().then(() => {
+PopulateSelects().then(() => {
   loadChapterView().then(() => {
     setTimeout(() => {
       const splash = document.getElementById("splashScreen");
@@ -1263,6 +1263,12 @@ populateSelects().then(() => {
     }, 600);
   });
 });
+</script><script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW error:', err));
+    });
+  }
 </script>
 </body>
 </html>
