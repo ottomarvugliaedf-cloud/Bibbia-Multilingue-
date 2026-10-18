@@ -799,9 +799,9 @@ function showChaptersView(bookId) {
 function selectChapter(ch) {
   state.chapter = ch;
   loadChapterView();
-}
+  }
 
-async function fetchChapterData(transId, bookId, chapter) {
+  async function fetchChapterData(transId, bookId, chapter) {
   const fullOffline = await getOfflineBible(transId);
   if (fullOffline && fullOffline.books) {
     const bObj = fullOffline.books.find(b => Number(b.nr) === Number(bookId));
@@ -901,7 +901,7 @@ async function loadChapterView() {
         <button class="nav-btn" onclick="showBooksView()">Scegli Libro</button>
       </div>`;
   }
-  }
+                     }
   function prevChapter() {
   if (state.chapter > 1) state.chapter--;
   else if (state.bookId > 1) { state.bookId--; state.chapter = getBook(state.bookId).ch; }
@@ -1252,7 +1252,7 @@ function toggleDarkMode() {
   document.body.classList.toggle("dark-mode");
 }
 
-PopulateSelects().then(() => {
+populateSelects().then(() => {
   loadChapterView().then(() => {
     setTimeout(() => {
       const splash = document.getElementById("splashScreen");
