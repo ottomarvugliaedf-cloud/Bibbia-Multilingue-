@@ -2,1013 +2,1267 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#0d254c">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0d47a1">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Bibbia Multilingue Pro</title>
-  <link rel="manifest" href="manifest.json">
+  <title>Bibbia Multilingue (BM)</title>
+  <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3004/3004458.png">
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3004/3004458.png">
+  <link rel="manifest" href='data:application/manifest+json,{"name":"Bibbia Multilingue","short_name":"BM Bibbia","start_url":".","display":"standalone","background_color":"#0d47a1","theme_color":"#0d47a1","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3004/3004458.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}'>
   <style>
     :root {
-      --bg-primary: #ffffff;
-      --bg-secondary: #f4f6f9;
+      --bg-main: #f0f6fc;
       --bg-card: #ffffff;
-      --text-primary: #1a1a1a;
-      --text-secondary: #5a6270;
-      --accent: #1e4bd2;
-      --accent-light: #e8f0fe;
-      --border: #e1e4e8;
-      --header-bg: linear-gradient(180deg, #0d254c 0%, #153568 100%);
-      --header-btn-bg: rgba(255, 255, 255, 0.14);
-      --header-btn-text: #ffffff;
-      --header-border: rgba(255, 255, 255, 0.18);
-      --diff-highlight: rgba(255, 193, 7, 0.28);
-      --hl-yellow: rgba(255, 235, 59, 0.45);
-      --hl-green: rgba(76, 175, 80, 0.35);
-      --hl-blue: rgba(33, 150, 243, 0.35);
-      --hl-pink: rgba(233, 30, 99, 0.35);
-      --font-size: 18px;
-      --line-height: 1.65;
+      --text-main: #102a43;
+      --text-muted: #52667a;
+      --primary-dark: #0a367e;
+      --primary-main: #1565c0;
+      --primary-light: #0288d1;
+      --border-color: #d1dfed;
+      --verse-hover: #e1f5fe;
+      --font-size-verse: 18px;
+      --cat-1: #0d47a1;
+      --cat-2: #1565c0;
+      --cat-3: #0288d1;
+      --cat-4: #0097a7;
+      --success: #2e7d32;
+      --danger: #d32f2f;
     }
 
-    [data-theme="dark"] {
-      --bg-primary: #12161f;
-      --bg-secondary: #1b2230;
-      --bg-card: #12161f;
-      --text-primary: #e4e6eb;
-      --text-secondary: #9aa0a6;
-      --accent: #4c8df6;
-      --accent-light: #1e3a5f;
-      --border: #2d3748;
-      --diff-highlight: rgba(255, 193, 7, 0.22);
+    body.dark-mode {
+      --bg-main: #091526;
+      --bg-card: #12243d;
+      --text-main: #e6f1ff;
+      --text-muted: #8ca0ba;
+      --primary-dark: #050d1a;
+      --primary-main: #0d213f;
+      --primary-light: #29b6f6;
+      --border-color: #1f3758;
+      --verse-hover: #1a3354;
     }
 
-    [data-theme="oled"] {
-      --bg-primary: #000000;
-      --bg-secondary: #0a0a0a;
-      --bg-card: #000000;
-      --text-primary: #f0f0f0;
-      --text-secondary: #888888;
-      --accent: #3b82f6;
-      --accent-light: #111827;
-      --border: #1f1f1f;
-      --diff-highlight: rgba(245, 158, 11, 0.25);
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    html, body {
-      min-height: 100%;
-      height: auto !important;
-      overflow-x: hidden;
-      overflow-y: auto !important;
-      -webkit-overflow-scrolling: touch;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background-color: var(--bg-primary);
-      color: var(--text-primary);
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body {
-      padding-top: 135px !important;
-      padding-bottom: 85px !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
     }
 
-    /* SPLASH SCREEN */
-    #splash-screen {
+    #splashScreen {
       position: fixed;
-      inset: 0;
-      background: linear-gradient(135deg, #071329 0%, #0d254c 50%, #1e4bd2 100%);
+      top: 0; left: 0; width: 100%; height: 100%;
+      background-color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.4s ease;
+    }
+    .splash-box {
+      width: 115px; height: 115px;
+      background: linear-gradient(135deg, #0d47a1, #1565c0);
+      border-radius: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 12px 28px rgba(13, 71, 161, 0.35);
+    }
+    .splash-text {
+      color: #ffffff;
+      font-size: 44px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      font-family: Georgia, serif;
+    }
+    .splash-sub {
+      margin-top: 14px;
+      color: #0d47a1;
+      font-weight: 800;
+      font-size: 13px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--primary-dark), var(--primary-main));
+      color: #fff;
+      padding: 9px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.22);
+      z-index: 100;
+      flex-shrink: 0;
+    }
+    .book-selector-btn {
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.35);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 15.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .header-controls { display: flex; align-items: center; gap: 3px; }
+    .icon-btn {
+      background: transparent;
+      border: none;
+      color: #fff;
+      padding: 6px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 700;
+    }
+        .trans-bar {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-color);
+      padding: 7px 10px;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+    .trans-select {
+      flex: 1;
+      min-width: 140px;
+      padding: 7px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-main);
+      color: var(--text-main);
+      font-size: 13.5px;
+      font-weight: 600;
+    }
+    .quick-menu-bar {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-color);
+      padding: 6px 10px;
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      flex-shrink: 0;
+    }
+    .quick-pill {
+      background: var(--bg-main);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .quick-pill.highlight {
+      background: var(--primary-main);
+      color: #fff;
+      border-color: var(--primary-main);
+    }
+
+    main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 14px 40px 14px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      color: var(--primary-light);
+      font-weight: 800;
+      margin: 14px 0 8px 0;
+      border-bottom: 2px solid var(--primary-light);
+      padding-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .section-title:first-child { margin-top: 2px; }
+    .books-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(62px, 1fr));
+      gap: 5px;
+      margin-bottom: 16px;
+    }
+    .book-tile {
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      height: 48px;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+    .book-tile.cat-1 { background-color: var(--cat-1); }
+    .book-tile.cat-2 { background-color: var(--cat-2); }
+    .book-tile.cat-3 { background-color: var(--cat-3); }
+    .book-tile.cat-4 { background-color: var(--cat-4); }
+
+    .chapters-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+      gap: 7px;
+      margin-top: 12px;
+    }
+    .chapter-tile {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      height: 48px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .chapter-tile.current {
+      background: var(--primary-main);
+      color: #fff;
+      border-color: var(--primary-main);
+    }
+
+    .chapter-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .chapter-title { font-size: 19px; font-weight: 800; color: var(--primary-light); }
+    .chapter-nav-btns { display: flex; gap: 6px; }
+    .nav-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 6px 11px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .verse-row {
+      padding: 8px 6px;
+      border-radius: 6px;
+      line-height: 1.58;
+      font-size: var(--font-size-verse);
+      cursor: pointer;
+      margin-bottom: 3px;
+    }
+    .verse-row:hover { background: var(--verse-hover); }
+    .verse-num {
+      font-weight: 800;
+      color: var(--primary-light);
+      font-size: 0.78em;
+      vertical-align: super;
+      margin-right: 5px;
+    }
+
+    .parallel-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 10px 4px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: var(--font-size-verse);
+      line-height: 1.52;
+      cursor: pointer;
+    }
+    .parallel-col + .parallel-col {
+      border-left: 2px solid var(--primary-light);
+      padding-left: 10px;
+    }
+
+    .hl-yellow { background-color: rgba(255, 235, 59, 0.38) !important; }
+    .hl-blue   { background-color: rgba(3, 169, 244, 0.32) !important; }
+    .hl-green  { background-color: rgba(76, 175, 80, 0.32) !important; }
+    .hl-pink   { background-color: rgba(233, 30, 99, 0.28) !important; }
+    .hl-purple { background-color: rgba(156, 39, 176, 0.28) !important; }
+
+    .verse-action-bar {
+      position: fixed;
+      bottom: 66px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+      border-radius: 30px;
+      padding: 8px 14px;
+      display: none;
+      align-items: center;
+      gap: 9px;
+      z-index: 200;
+      max-width: 96vw;
+      overflow-x: auto;
+    }
+    .color-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid rgba(0,0,0,0.2);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    nav.bottom-nav {
+      background: var(--bg-card);
+      border-top: 1px solid var(--border-color);
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      padding: 5px 2px;
+      flex-shrink: 0;
+      z-index: 150;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 10.5px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      z-index: 9999;
-      transition: opacity 0.4s ease, visibility 0.4s ease;
+      gap: 2px;
+      cursor: pointer;
+      padding: 4px 2px;
+      font-weight: 700;
     }
-    #splash-screen.hidden {
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-    }
-    .splash-logo {
-      width: 96px; height: 96px;
-      background: linear-gradient(145deg, #163675, #0a1b3d);
-      border-radius: 24px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 44px; font-weight: 800; color: #ffffff;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.45);
-      margin-bottom: 18px;
-    }
-    .splash-title { color: #ffffff; font-size: 21px; font-weight: 600; }
-    .splash-sub { color: rgba(255,255,255,0.65); font-size: 13px; margin-top: 6px; }
+    .tab-btn.active { color: var(--primary-light); font-weight: 800; }
+    .tab-icon { font-size: 17px; }
 
-    /* HEADER SUPERIORE BLU CONTINUO (PROtetto contro la barra di stato) */
-    header {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      background: var(--header-bg);
-      color: #ffffff;
-      border-bottom: 1px solid var(--header-border);
-      z-index: 100;
-      padding: 8px 10px;
-      padding-top: max(36px, env(safe-area-inset-top, 36px));
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      box-shadow: 0 3px 12px rgba(0,0,0,0.22);
-    }
-    .header-top, .header-bottom {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 5px;
-    }
-    .brand-badge {
-      background: #3b82f6; color: #fff;
-      padding: 5px 8px; border-radius: 7px;
-      font-size: 13px; font-weight: 800; cursor: pointer;
-    }
-    .nav-selectors {
-      display: flex; gap: 5px; flex: 1; overflow-x: auto; scrollbar-width: none;
-    }
-    .nav-selectors::-webkit-scrollbar { display: none; }
-
-    header select, header .btn-icon, header .btn-pill {
-      background: var(--header-btn-bg);
-      color: var(--header-btn-text);
-      border: 1px solid var(--header-border);
-      padding: 6px 9px; border-radius: 9px;
-      font-size: 13px; font-weight: 600; outline: none; cursor: pointer;
-      display: inline-flex; align-items: center; justify-content: center; gap: 4px; flex-shrink: 0;
-    }
-    header select option { background: #12161f; color: #ffffff; }
-    header .btn-icon.active, header .btn-pill.active {
-      background: #3b82f6; color: #ffffff; border-color: #60a5fa;
-    }
-
-    /* BARRA INFERIORE RIPRISTINATA (PROTETTA DALLE GESTURE DI ANDROID) */
-    .bottom-bar {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      background: var(--bg-secondary);
-      border-top: 1px solid var(--border);
-      padding: 10px 14px;
-      padding-bottom: max(16px, env(safe-area-inset-bottom, 16px));
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      z-index: 100;
-      box-shadow: 0 -2px 10px rgba(0,0,0,0.06);
-    }
-    .bottom-bar .btn-icon {
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      border: 1px solid var(--border);
-      padding: 8px 12px;
-      border-radius: 12px;
+    .search-box { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+    .search-input {
+      flex: 1;
+      min-width: 150px;
+      padding: 9px 11px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-card);
+      color: var(--text-main);
       font-size: 14px;
     }
+    .search-btn {
+      background: var(--primary-main);
+      color: #fff;
+      border: none;
+      padding: 9px 14px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .result-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 11px;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+    .result-ref { font-weight: 700; color: var(--primary-light); margin-bottom: 3px; font-size: 14px; }
+    .loader { text-align: center; padding: 26px 14px; color: var(--text-muted); line-height: 1.5; }
+    .badge-btn {
+      font-size: 12px;
+      padding: 7px 11px;
+      border-radius: 6px;
+      background: var(--primary-main);
+      color: #fff;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .badge-btn.downloaded { background: var(--success); }
+    .badge-btn.downloading { background: #f57c00; }
 
-    /* CONTENUTO A TUTTO SCHERMO */
-    main {
-      width: 100%; max-width: 1400px; padding: 6px 12px; margin: 0 auto;
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 16px;
     }
-    .reading-grid {
-      display: grid; grid-template-columns: 1fr; gap: 18px;
+    .modal-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 440px;
+      padding: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
     }
-    .reading-grid.parallel-2 { grid-template-columns: repeat(2, 1fr); }
-    .reading-grid.parallel-3 { grid-template-columns: repeat(3, 1fr); }
-
-    @media (max-width: 768px) {
-      .reading-grid.parallel-2, .reading-grid.parallel-3 { grid-template-columns: 1fr; }
+    .modal-title { font-size: 16px; font-weight: 800; color: var(--primary-light); margin-bottom: 8px; }
+    .modal-textarea {
+      width: 100%;
+      height: 120px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-main);
+      color: var(--text-main);
+      font-size: 14.5px;
+      font-family: inherit;
+      resize: vertical;
+      margin-bottom: 12px;
     }
-
-    .translation-col { background: transparent; border: none; padding: 4px 0; }
-    .col-header {
-      font-size: 13px; font-weight: 800; text-transform: uppercase; color: var(--accent);
-      margin-bottom: 10px; padding-bottom: 6px; border-bottom: 2px solid var(--border);
-      display: flex; justify-content: space-between; align-items: center;
-    }
-
-    .verse-item {
-      font-size: var(--font-size); line-height: var(--line-height);
-      padding: 8px 4px; border-bottom: 1px solid rgba(128,128,128,0.12); cursor: pointer;
-    }
-    .verse-item:hover { background: var(--bg-secondary); }
-    .verse-num {
-      font-size: 0.78em; font-weight: 800; color: var(--accent); margin-right: 6px; vertical-align: super;
-    }
-    .verse-badge {
-      display: inline-block; font-size: 11px; padding: 1px 6px; border-radius: 5px;
-      background: var(--accent-light); color: var(--accent); margin-left: 6px; font-weight: 600;
-    }
-    .diff-word { background-color: var(--diff-highlight); border-radius: 4px; padding: 0 2px; }
-    .hl-yellow { background-color: rgba(255, 235, 59, 0.45); }
-    .hl-green { background-color: rgba(76, 175, 80, 0.35); }
-    .hl-blue { background-color: rgba(33, 150, 243, 0.35); }
-    .hl-pink { background-color: rgba(233, 30, 99, 0.35); }
-
-    /* MODALI */
-    .modal-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(2px);
-      z-index: 500; display: none; align-items: flex-end; justify-content: center;
-    }
-    .modal-backdrop.open { display: flex; }
-    .modal-sheet {
-      background: var(--bg-primary); color: var(--text-primary);
-      width: 100%; max-width: 650px; max-height: 85vh;
-      border-radius: 22px 22px 0 0; border-top: 1px solid var(--border);
-      padding: 18px; padding-bottom: max(24px, env(safe-area-inset-bottom, 24px));
-      overflow-y: auto;
-    }
-    .sheet-header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
-    }
-    .sheet-title { font-size: 17px; font-weight: 700; }
-    .input-field {
-      width: 100%; padding: 11px 14px; border-radius: 10px;
-      border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-primary);
-      font-size: 15px; margin-bottom: 10px; outline: none;
-    }
-    .tag-chip {
-      display: inline-flex; align-items: center; background: var(--accent-light); color: var(--accent);
-      padding: 4px 10px; border-radius: 14px; font-size: 12px; font-weight: 600; margin: 2px; cursor: pointer;
-    }
-    .color-dot { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 2px solid var(--border); }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
   </style>
 </head>
-<body data-theme="dark">
+<body>
 
-  <!-- SPLASH SCREEN -->
-  <div id="splash-screen">
-    <div class="splash-logo">BM</div>
-    <div class="splash-title">Bibbia Multilingue Pro</div>
-    <div class="splash-sub">110+ Traduzioni • Studio Offline • Versetti Integrali</div>
+  <div id="splashScreen">
+    <div class="splash-box">
+      <span class="splash-text">BM</span>
+    </div>
+    <div class="splash-sub">Bibbia Multilingue v10</div>
   </div>
 
-  <!-- HEADER SUPERIORE -->
   <header>
-    <div class="header-top">
-      <span class="brand-badge" onclick="openModal('modal-info')">BM</span>
-      <div class="nav-selectors">
-        <select id="select-book" onchange="onBookChange()"></select>
-        <select id="select-chapter" onchange="onChapterChange()"></select>
-      </div>
-      <button class="btn-icon" onclick="openModal('modal-quick-jump')" title="Salto Rapido">⚡</button>
-      <button class="btn-icon" onclick="cycleTheme()" id="btn-theme" title="Tema">🌙</button>
+    <div>
+      <button class="book-selector-btn" onclick="showBooksView()">
+        <span id="currentRefLabel">Genesi 1</span>
+        <span>▾</span>
+      </button>
     </div>
-    <div class="header-bottom">
-      <div class="nav-selectors">
-        <select id="select-trans-1" onchange="renderCurrentChapter()"></select>
-        <select id="select-trans-2" onchange="renderCurrentChapter()" style="display:none;"></select>
-        <select id="select-trans-3" onchange="renderCurrentChapter()" style="display:none;"></select>
-      </div>
-      <button class="btn-pill" id="btn-parallel" onclick="cycleParallelMode()">1x</button>
-      <button class="btn-pill" id="btn-diff" onclick="toggleDiffMode()" style="display:none;">Diff</button>
-      <button class="btn-icon" id="btn-tts" onclick="toggleTTS()">🔊</button>
+    <div class="header-controls">
+      <button class="icon-btn" onclick="changeFontSize(-2)">A-</button>
+      <button class="icon-btn" onclick="changeFontSize(2)">A+</button>
+      <button class="icon-btn" onclick="toggleDarkMode()">🌙</button>
     </div>
   </header>
 
-  <!-- CONTENUTO PRINCIPALE -->
-  <main>
-    <div id="reading-container" class="reading-grid"></div>
-  </main>
+  <!-- Selettore Traduzioni Attive -->
+  <div class="trans-bar">
+    <select id="trans1" class="trans-select" onchange="onTranslationChange()"></select>
+    <select id="trans2" class="trans-select" style="display:none;" onchange="onTranslationChange()"></select>
+  </div>
 
-  <!-- BARRA INFERIORE RIPRISTINATA -->
-  <nav class="bottom-bar">
-    <button class="btn-icon" onclick="prevChapter()" title="Precedente">◀ Cap.</button>
-    <button class="btn-icon" onclick="openModal('modal-search')" title="Cerca">🔍 Cerca</button>
-    <button class="btn-icon" onclick="openModal('modal-notes-hub')" title="Note">📝 Note</button>
-    <button class="btn-icon" onclick="openModal('modal-library')" title="Bibbie">📚 Bibbie</button>
-    <button class="btn-icon" onclick="openModal('modal-settings')" title="Impostazioni">⚙️</button>
-    <button class="btn-icon" onclick="nextChapter()" title="Successivo">Cap. ▶</button>
+  <!-- Nuova Barra Menu Rapida Sempre Visibile -->
+  <div class="quick-menu-bar">
+    <button class="quick-pill highlight" onclick="showCatalogView()">⬇️ +110 Bibbie / Lingue</button>
+    <button id="parallelBtn" class="quick-pill" onclick="toggleParallel()">⚖️ Parallelo: OFF</button>
+    <button class="quick-pill" onclick="showNotesView()">📝 Appunti Studio</button>
+    <button class="quick-pill" onclick="showSavedView()">🔖 Preferiti</button>
+    <button class="quick-pill" onclick="showSearchView()">🔍 Cerca</button>
+  </div>
+
+  <main id="mainContainer"></main>
+
+  <!-- Barra Azioni Versetto -->
+  <div id="verseActionBar" class="verse-action-bar">
+    <div class="color-dot" style="background:#ffeb3b;" onclick="applyHighlight('hl-yellow')"></div>
+    <div class="color-dot" style="background:#03a9f4;" onclick="applyHighlight('hl-blue')"></div>
+    <div class="color-dot" style="background:#4caf50;" onclick="applyHighlight('hl-green')"></div>
+    <div class="color-dot" style="background:#e91e63;" onclick="applyHighlight('hl-pink')"></div>
+    <div class="color-dot" style="background:#9c27b0;" onclick="applyHighlight('hl-purple')"></div>
+    <button class="icon-btn" style="color:var(--text-main);" onclick="applyHighlight('')">🚫</button>
+    <button class="icon-btn" style="color:var(--text-main);" onclick="copySelectedVerse()">📋</button>
+    <button class="icon-btn" style="color:var(--primary-light);" onclick="saveBookmark()">🔖</button>
+    <button class="icon-btn" style="color:#ffb300;" onclick="openNoteModalForVerse()">📝</button>
+    <button class="icon-btn" style="color:var(--text-muted);" onclick="closeActionBar()">✕</button>
+  </div>
+
+  <!-- Finestra Modale per Appunti -->
+  <div id="noteModal" class="modal-overlay">
+    <div class="modal-card">
+      <div id="noteModalTitle" class="modal-title">Appunto di Studio</div>
+      <div id="noteModalVersePreview" style="font-size:12px; color:var(--text-muted); margin-bottom:8px; font-style:italic; max-height:55px; overflow-y:auto;"></div>
+      <textarea id="noteModalInput" class="modal-textarea" placeholder="Scrivi qui il tuo appunto per questo versetto..."></textarea>
+      <div class="modal-actions">
+        <button class="nav-btn" onclick="closeNoteModal()">Annulla</button>
+        <button class="search-btn" onclick="saveNoteFromModal()">💾 Salva</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra Navigazione Inferiore a 6 Schede -->
+  <nav class="bottom-nav">
+    <button class="tab-btn active" id="tabRead" onclick="loadChapterView()">
+      <span class="tab-icon">📖</span><span>Lettura</span>
+    </button>
+    <button class="tab-btn" id="tabBooks" onclick="showBooksView()">
+      <span class="tab-icon">🟦</span><span>Libri</span>
+    </button>
+    <button class="tab-btn" id="tabSearch" onclick="showSearchView()">
+      <span class="tab-icon">🔍</span><span>Cerca</span>
+    </button>
+    <button class="tab-btn" id="tabSaved" onclick="showSavedView()">
+      <span class="tab-icon">🔖</span><span>Preferiti</span>
+    </button>
+    <button class="tab-btn" id="tabNotes" onclick="showNotesView()">
+      <span class="tab-icon">📝</span><span>Appunti</span>
+    </button>
+    <button class="tab-btn" id="tabCatalog" onclick="showCatalogView()">
+      <span class="tab-icon">⬇️</span><span>Bibbie</span>
+    </button>
   </nav>
 
-  <!-- MODALE 1: VERSETTO -->
-  <div id="modal-verse" class="modal-backdrop" onclick="closeModalOnBg(event, 'modal-verse')">
-    <div class="modal-sheet">
-      <div class="sheet-header">
-        <div class="sheet-title" id="verse-modal-title">Genesi 1:1</div>
-        <button class="btn-icon" onclick="closeModal('modal-verse')">✕</button>
-      </div>
-      <div id="verse-modal-preview" style="font-style:italic; margin-bottom:14px; color:var(--text-secondary); font-size:15px;"></div>
-      <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
-        <span style="font-size:13px; font-weight:600;">Evidenzia:</span>
-        <div class="color-dot" style="background:#ffeb3b;" onclick="setVerseHighlight('hl-yellow')"></div>
-        <div class="color-dot" style="background:#4caf50;" onclick="setVerseHighlight('hl-green')"></div>
-        <div class="color-dot" style="background:#2196f3;" onclick="setVerseHighlight('hl-blue')"></div>
-        <div class="color-dot" style="background:#e91e63;" onclick="setVerseHighlight('hl-pink')"></div>
-        <button class="btn-pill" onclick="setVerseHighlight('')">Nessuno</button>
-      </div>
-      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
-        <button class="btn-pill" onclick="copySelectedVerse()">📋 Copia</button>
-        <button class="btn-pill" onclick="speakSelectedVerse()">🔊 Ascolta</button>
-        <button class="btn-pill" onclick="showStrongForVerse()">🏛️ Lessico Strong</button>
-        <button class="btn-pill" onclick="showCrossRefsForVerse()">🔗 Passi Paralleli</button>
-        <button class="btn-pill" onclick="generateVerseCard()">🖼️ Crea Card</button>
-      </div>
-      <div id="verse-extra-panel" style="display:none; background:var(--bg-secondary); padding:12px; border-radius:12px; margin-bottom:14px; font-size:14px;"></div>
-      <div style="margin-top:10px;">
-        <label style="font-size:13px; font-weight:700; display:block; margin-bottom:6px;">Nota di Studio:</label>
-        <textarea id="verse-note-input" class="input-field" rows="4" placeholder="Scrivi qui i tuoi appunti..."></textarea>
-        <input type="text" id="verse-tags-input" class="input-field" placeholder="Tag separati da virgola (es. fede, profezie)">
-        <button class="btn-pill active" style="width:100%; padding:11px;" onclick="saveVerseNote()">💾 Salva Nota</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODALE 2: SALTO RAPIDO -->
-  <div id="modal-quick-jump" class="modal-backdrop" onclick="closeModalOnBg(event, 'modal-quick-jump')">
-    <div class="modal-sheet">
-      <div class="sheet-header">
-        <div class="sheet-title">⚡ Vai al Passaggio...</div>
-        <button class="btn-icon" onclick="closeModal('modal-quick-jump')">✕</button>
-      </div>
-      <input type="text" id="quick-jump-input" class="input-field" placeholder="Es. Gv 3 16, Rom 8, Sal 23" onkeydown="if(event.key==='Enter') executeQuickJump()">
-      <button class="btn-pill active" style="width:100%; padding:11px;" onclick="executeQuickJump()">Vai Subito</button>
-    </div>
-  </div>
-
-  <!-- MODALE 3: RICERCA -->
-  <div id="modal-search" class="modal-backdrop" onclick="closeModalOnBg(event, 'modal-search')">
-    <div class="modal-sheet">
-      <div class="sheet-header">
-        <div class="sheet-title">🔍 Ricerca Avanzata</div>
-        <button class="btn-icon" onclick="closeModal('modal-search')">✕</button>
-      </div>
-      <input type="text" id="search-query-input" class="input-field" placeholder="Cerca parole... (supporta AND, OR, NOT)" onkeydown="if(event.key==='Enter') runAdvancedSearch()">
-      <div style="display:flex; gap:8px; margin-bottom:12px;">
-        <select id="search-scope" style="flex:1;">
-          <option value="all">Tutta la Bibbia</option>
-          <option value="ot">Antico Testamento</option>
-          <option value="nt">Nuovo Testamento</option>
-          <option value="pentateuch">Pentateuco</option>
-          <option value="gospels">Vangeli</option>
-        </select>
-        <button class="btn-pill active" onclick="runAdvancedSearch()">Cerca</button>
-      </div>
-      <div id="search-results-info" style="font-size:13px; color:var(--text-secondary); margin-bottom:8px;"></div>
-      <div id="search-results-list" style="max-height:50vh; overflow-y:auto; display:flex; flex-direction:column; gap:8px;"></div>
-    </div>
-  </div>
-
-  <!-- MODALE 4: NOTE -->
-  <div id="modal-notes-hub" class="modal-backdrop" onclick="closeModalOnBg(event, 'modal-notes-hub')">
-    <div class="modal-sheet">
-      <div class="sheet-header">
-        <div class="sheet-title">📝 Il Mio Studio (Note & Tag)</div>
-        <button class="btn-icon" onclick="closeModal('modal-notes-hub')">✕</button>
-      </div>
-      <div id="tags-filter-bar" style="margin-bottom:12px; display:flex; flex-wrap:wrap; gap:4px;"></div>
-      <div id="notes-hub-list" style="display:flex; flex-direction:column; gap:10px; max-height:60vh; overflow-y:auto;"></div>
-    </div>
-  </div>
-
-  <!-- MODALE 5: BIBBIE OFFLINE -->
-  <div id="modal-library" class="modal-backdrop" onclick="closeModalOnBg(event, 'modal-library')">
-    <div class="modal-sheet">
-      <div class="sheet-header">
-        <div class="sheet-title">📚 Libreria Multilingue (Offline DB)</div>
-        <button class="btn-icon" onclick="closeModal('modal-library')">✕</button>
-      </div>
-      <input type="text" id="library-filter-input" class="input-field" placeholder="Filtra tra 110+ versioni o lingue..." oninput="renderLibraryList()">
-      <div id="library-status-msg" style="font-size:12px; color:var(--accent); margin-bottom:8px; font-weight:600;"></div>
-      <div id="library-list" style="display:flex; flex-direction:column; gap:8px; max-height:58vh; overflow-y:auto;"></div>
-    </div>
-  </div>
-
-  <!-- MODALE 6: IMPOSTAZIONI -->
-  <div id="modal-settings" class="modal-backdrop" onclick="closeModalOnBg(event, 'modal-settings')">
-    <div class="modal-sheet">
-      <div class="sheet-header">
-        <div class="sheet-title">⚙️ Impostazioni & Sicurezza Dati</div>
-        <button class="btn-icon" onclick="closeModal('modal-settings')">✕</button>
-      </div>
-      <div style="margin-bottom:18px;">
-        <label style="font-size:14px; font-weight:700; display:block; margin-bottom:8px;">Dimensione Testo Biblico:</label>
-        <div style="display:flex; gap:10px; align-items:center;">
-          <button class="btn-pill" onclick="changeFontSize(-2)">A-</button>
-          <span id="font-size-label" style="font-weight:700; min-width:45px; text-align:center;">18px</span>
-          <button class="btn-pill" onclick="changeFontSize(2)">A+</button>
-        </div>
-      </div>
-      <div style="margin-bottom:18px; padding-top:12px; border-top:1px solid var(--border);">
-        <label style="font-size:14px; font-weight:700; display:block; margin-bottom:6px;">Backup & Ripristino (JSON):</label>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <button class="btn-pill active" onclick="exportUserData()">📤 Esporta Backup</button>
-          <label class="btn-pill" style="cursor:pointer;">
-            📥 Importa Backup
-            <input type="file" accept=".json" style="display:none;" onchange="importUserData(event)">
-          </label>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODALE 7: CARD IMMAGINE -->
-  <div id="modal-card-preview" class="modal-backdrop" onclick="closeModalOnBg(event, 'modal-card-preview')">
-    <div class="modal-sheet" style="text-align:center;">
-      <div class="sheet-header">
-        <div class="sheet-title">🖼️ Card Versetto Pronta</div>
-        <button class="btn-icon" onclick="closeModal('modal-card-preview')">✕</button>
-      </div>
-      <canvas id="verse-card-canvas" width="1080" height="1080" style="width:100%; max-width:340px; border-radius:14px; box-shadow:0 6px 20px rgba(0,0,0,0.3); margin-bottom:12px;"></canvas>
-      <div><button class="btn-pill active" style="width:100%; padding:11px;" onclick="downloadVerseCard()">💾 Scarica Immagine PNG</button></div>
-    </div>
-  </div>
-
-  <!-- MODALE 8: INFO -->
-  <div id="modal-info" class="modal-backdrop" onclick="closeModalOnBg(event, 'modal-info')">
-    <div class="modal-sheet">
-      <div class="sheet-header">
-        <div class="sheet-title">Informazioni su Bibbia Multilingue Pro</div>
-        <button class="btn-icon" onclick="closeModal('modal-info')">✕</button>
-      </div>
-      <p style="font-size:14px; line-height:1.6; color:var(--text-secondary);">
-        <b>Bibbia Multilingue Pro (Edizione Ultimate)</b><br>
-        PWA nativa offline con motore IndexedDB, 110+ versioni, lessico Strong e studio avanzato.
-      </p>
-    </div>
-  </div>
-
 <script>
-    const BIBLE_BOOKS = [
-      { id: 1, name: "Genesi", abbr: ["gen", "ge", "gn"], chapters: 50, testament: "OT" },
-      { id: 2, name: "Esodo", abbr: ["eso", "es", "ex"], chapters: 40, testament: "OT" },
-      { id: 3, name: "Levitico", abbr: ["lev", "lv", "le"], chapters: 27, testament: "OT" },
-      { id: 4, name: "Numeri", abbr: ["num", "nm", "nu"], chapters: 36, testament: "OT" },
-      { id: 5, name: "Deuteronomio", abbr: ["deut", "dt", "de"], chapters: 34, testament: "OT" },
-      { id: 6, name: "Giosuè", abbr: ["gios", "gs", "jos"], chapters: 24, testament: "OT" },
-      { id: 7, name: "Giudici", abbr: ["giud", "gd", "jdg"], chapters: 21, testament: "OT" },
-      { id: 8, name: "Rut", abbr: ["rut", "rt", "ru"], chapters: 4, testament: "OT" },
-      { id: 9, name: "1 Samuele", abbr: ["1sam", "1sa", "1s"], chapters: 31, testament: "OT" },
-      { id: 10, name: "2 Samuele", abbr: ["2sam", "2sa", "2s"], chapters: 24, testament: "OT" },
-      { id: 11, name: "1 Re", abbr: ["1re", "1r", "1ki"], chapters: 22, testament: "OT" },
-      { id: 12, name: "2 Re", abbr: ["2re", "2r", "2ki"], chapters: 25, testament: "OT" },
-      { id: 13, name: "1 Cronache", abbr: ["1cron", "1cr", "1ch"], chapters: 29, testament: "OT" },
-      { id: 14, name: "2 Cronache", abbr: ["2cron", "2cr", "2ch"], chapters: 36, testament: "OT" },
-      { id: 15, name: "Esdra", abbr: ["esd", "ezr"], chapters: 10, testament: "OT" },
-      { id: 16, name: "Neemia", abbr: ["neem", "ne", "neh"], chapters: 13, testament: "OT" },
-      { id: 17, name: "Ester", abbr: ["est", "et", "esth"], chapters: 10, testament: "OT" },
-      { id: 18, name: "Giobbe", abbr: ["giob", "gb", "job"], chapters: 42, testament: "OT" },
-      { id: 19, name: "Salmi", abbr: ["sal", "sl", "ps", "psa"], chapters: 150, testament: "OT" },
-      { id: 20, name: "Proverbi", abbr: ["prov", "pr", "prv"], chapters: 31, testament: "OT" },
-      { id: 21, name: "Ecclesiaste", abbr: ["eccl", "ec", "qo", "ecc"], chapters: 12, testament: "OT" },
-      { id: 22, name: "Cantico dei Cantici", abbr: ["cant", "ct", "cnt", "sng"], chapters: 8, testament: "OT" },
-      { id: 23, name: "Isaia", abbr: ["isa", "is"], chapters: 66, testament: "OT" },
-      { id: 24, name: "Geremia", abbr: ["ger", "gr", "jer"], chapters: 52, testament: "OT" },
-      { id: 25, name: "Lamentazioni", abbr: ["lam", "lm"], chapters: 5, testament: "OT" },
-      { id: 26, name: "Ezechiele", abbr: ["ezec", "ez", "eze"], chapters: 48, testament: "OT" },
-      { id: 27, name: "Daniele", abbr: ["dan", "dn", "da"], chapters: 12, testament: "OT" },
-      { id: 28, name: "Osea", abbr: ["ose", "os", "hos"], chapters: 14, testament: "OT" },
-      { id: 29, name: "Gioele", abbr: ["gioe", "gl", "joel"], chapters: 3, testament: "OT" },
-      { id: 30, name: "Amos", abbr: ["am", "amo"], chapters: 9, testament: "OT" },
-      { id: 31, name: "Abdia", abbr: ["abd", "ab", "ob"], chapters: 1, testament: "OT" },
-      { id: 32, name: "Giona", abbr: ["gion", "gn", "jon"], chapters: 4, testament: "OT" },
-      { id: 33, name: "Michea", abbr: ["mich", "mi", "mic"], chapters: 7, testament: "OT" },
-      { id: 34, name: "Naum", abbr: ["na", "nah"], chapters: 3, testament: "OT" },
-      { id: 35, name: "Abacuc", abbr: ["abac", "ac", "hab"], chapters: 3, testament: "OT" },
-      { id: 36, name: "Sofonia", abbr: ["sof", "sf", "zep"], chapters: 3, testament: "OT" },
-      { id: 37, name: "Aggeo", abbr: ["agg", "ag", "hag"], chapters: 2, testament: "OT" },
-      { id: 38, name: "Zaccaria", abbr: ["zacc", "zc", "zec"], chapters: 14, testament: "OT" },
-      { id: 39, name: "Malachia", abbr: ["mal", "ml"], chapters: 4, testament: "OT" },
-      { id: 40, name: "Matteo", abbr: ["matt", "mt", "mat"], chapters: 28, testament: "NT" },
-      { id: 41, name: "Marco", abbr: ["marc", "mc", "mr", "mk"], chapters: 16, testament: "NT" },
-      { id: 42, name: "Luca", abbr: ["luc", "lc", "lk"], chapters: 24, testament: "NT" },
-      { id: 43, name: "Giovanni", abbr: ["giov", "gv", "jn", "jhn"], chapters: 21, testament: "NT" },
-      { id: 44, name: "Atti", abbr: ["at", "att", "act"], chapters: 28, testament: "NT" },
-      { id: 45, name: "Romani", abbr: ["rom", "rm", "ro"], chapters: 16, testament: "NT" },
-      { id: 46, name: "1 Corinzi", abbr: ["1cor", "1co"], chapters: 16, testament: "NT" },
-      { id: 47, name: "2 Corinzi", abbr: ["2cor", "2co"], chapters: 13, testament: "NT" },
-      { id: 48, name: "Galati", abbr: ["gal", "ga"], chapters: 6, testament: "NT" },
-      { id: 49, name: "Efesini", abbr: ["efes", "ef", "eph"], chapters: 6, testament: "NT" },
-      { id: 50, name: "Filippesi", abbr: ["fil", "flp", "php"], chapters: 4, testament: "NT" },
-      { id: 51, name: "Colossesi", abbr: ["col", "cl"], chapters: 4, testament: "NT" },
-      { id: 52, name: "1 Tessalonicesi", abbr: ["1tess", "1ts", "1th"], chapters: 5, testament: "NT" },
-      { id: 53, name: "2 Tessalonicesi", abbr: ["2tess", "2ts", "2th"], chapters: 3, testament: "NT" },
-      { id: 54, name: "1 Timoteo", abbr: ["1tim", "1tm", "1ti"], chapters: 6, testament: "NT" },
-      { id: 55, name: "2 Timoteo", abbr: ["2tim", "2tm", "2ti"], chapters: 4, testament: "NT" },
-      { id: 56, name: "Tito", abbr: ["tit", "tt", "ti"], chapters: 3, testament: "NT" },
-      { id: 57, name: "Filemone", abbr: ["filem", "flm", "phm"], chapters: 1, testament: "NT" },
-      { id: 58, name: "Ebrei", abbr: ["ebr", "eb", "heb"], chapters: 13, testament: "NT" },
-      { id: 59, name: "Giacomo", abbr: ["giac", "gc", "jas"], chapters: 5, testament: "NT" },
-      { id: 60, name: "1 Pietro", abbr: ["1piet", "1pt", "1pe"], chapters: 5, testament: "NT" },
-      { id: 61, name: "2 Pietro", abbr: ["2piet", "2pt", "2pe"], chapters: 3, testament: "NT" },
-      { id: 62, name: "1 Giovanni", abbr: ["1giov", "1gv", "1jn"], chapters: 5, testament: "NT" },
-      { id: 63, name: "2 Giovanni", abbr: ["2giov", "2gv", "2jn"], chapters: 1, testament: "NT" },
-      { id: 64, name: "3 Giovanni", abbr: ["3giov", "3gv", "3jn"], chapters: 1, testament: "NT" },
-      { id: 65, name: "Giuda", abbr: ["giud", "gd", "jud"], chapters: 1, testament: "NT" },
-      { id: 66, name: "Apocalisse", abbr: ["apoc", "ap", "rev", "rv"], chapters: 22, testament: "NT" }
-    ];
+const BIBLE_BOOKS = [
+  { id: 1,  name: "Genesi", abbr: "Gen", ch: 50, sec: "OT", cat: 1 },
+  { id: 2,  name: "Esodo", abbr: "Eso", ch: 40, sec: "OT", cat: 1 },
+  { id: 3,  name: "Levitico", abbr: "Lev", ch: 27, sec: "OT", cat: 1 },
+  { id: 4,  name: "Numeri", abbr: "Num", ch: 36, sec: "OT", cat: 1 },
+  { id: 5,  name: "Deuteronomio", abbr: "Deu", ch: 34, sec: "OT", cat: 1 },
+  { id: 6,  name: "Giosuè", abbr: "Gios", ch: 24, sec: "OT", cat: 2 },
+  { id: 7,  name: "Giudici", abbr: "Giud", ch: 21, sec: "OT", cat: 2 },
+  { id: 8,  name: "Rut", abbr: "Rut", ch: 4,  sec: "OT", cat: 2 },
+  { id: 9,  name: "1 Samuele", abbr: "1Sa", ch: 31, sec: "OT", cat: 2 },
+  { id: 10, name: "2 Samuele", abbr: "2Sa", ch: 24, sec: "OT", cat: 2 },
+  { id: 11, name: "1 Re", abbr: "1Re", ch: 22, sec: "OT", cat: 2 },
+  { id: 12, name: "2 Re", abbr: "2Re", ch: 25, sec: "OT", cat: 2 },
+  { id: 13, name: "1 Cronache", abbr: "1Cr", ch: 29, sec: "OT", cat: 2 },
+  { id: 14, name: "2 Cronache", abbr: "2Cr", ch: 36, sec: "OT", cat: 2 },
+  { id: 15, name: "Esdra", abbr: "Esd", ch: 10, sec: "OT", cat: 2 },
+  { id: 16, name: "Neemia", abbr: "Nee", ch: 13, sec: "OT", cat: 2 },
+  { id: 17, name: "Ester", abbr: "Est", ch: 10, sec: "OT", cat: 2 },
+  { id: 18, name: "Giobbe", abbr: "Gb", ch: 42, sec: "OT", cat: 3 },
+  { id: 19, name: "Salmi", abbr: "Sal", ch: 150, sec: "OT", cat: 3 },
+  { id: 20, name: "Proverbi", abbr: "Pro", ch: 31, sec: "OT", cat: 3 },
+  { id: 21, name: "Ecclesiaste", abbr: "Ecc", ch: 12, sec: "OT", cat: 3 },
+  { id: 22, name: "Cantico dei Cantici", abbr: "Can", ch: 8, sec: "OT", cat: 3 },
+  { id: 23, name: "Isaia", abbr: "Isa", ch: 66, sec: "OT", cat: 4 },
+  { id: 24, name: "Geremia", abbr: "Ger", ch: 52, sec: "OT", cat: 4 },
+  { id: 25, name: "Lamentazioni", abbr: "Lam", ch: 5, sec: "OT", cat: 4 },
+  { id: 26, name: "Ezechiele", abbr: "Eze", ch: 48, sec: "OT", cat: 4 },
+  { id: 27, name: "Daniele", abbr: "Dan", ch: 12, sec: "OT", cat: 4 },
+  { id: 28, name: "Osea", abbr: "Ose", ch: 14, sec: "OT", cat: 4 },
+  { id: 29, name: "Gioele", abbr: "Gl", ch: 3, sec: "OT", cat: 4 },
+  { id: 30, name: "Amos", abbr: "Amo", ch: 9, sec: "OT", cat: 4 },
+  { id: 31, name: "Abdia", abbr: "Abd", ch: 1, sec: "OT", cat: 4 },
+  { id: 32, name: "Giona", abbr: "Gio", ch: 4, sec: "OT", cat: 4 },
+  { id: 33, name: "Michea", abbr: "Mic", ch: 7, sec: "OT", cat: 4 },
+  { id: 34, name: "Naum", abbr: "Na", ch: 3, sec: "OT", cat: 4 },
+  { id: 35, name: "Abacuc", abbr: "Aba", ch: 3, sec: "OT", cat: 4 },
+  { id: 36, name: "Sofonia", abbr: "Sof", ch: 3, sec: "OT", cat: 4 },
+  { id: 37, name: "Aggeo", abbr: "Agg", ch: 2, sec: "OT", cat: 4 },
+  { id: 38, name: "Zaccaria", abbr: "Zac", ch: 14, sec: "OT", cat: 4 },
+  { id: 39, name: "Malachia", abbr: "Mal", ch: 4, sec: "OT", cat: 4 },
+  { id: 40, name: "Matteo", abbr: "Mat", ch: 28, sec: "NT", cat: 1 },
+  { id: 41, name: "Marco", abbr: "Mar", ch: 16, sec: "NT", cat: 1 },
+  { id: 42, name: "Luca", abbr: "Luc", ch: 24, sec: "NT", cat: 1 },
+  { id: 43, name: "Giovanni", abbr: "Gv", ch: 21, sec: "NT", cat: 1 },
+  { id: 44, name: "Atti", abbr: "At", ch: 28, sec: "NT", cat: 2 },
+  { id: 45, name: "Romani", abbr: "Rom", ch: 16, sec: "NT", cat: 3 },
+  { id: 46, name: "1 Corinti", abbr: "1Co", ch: 16, sec: "NT", cat: 3 },
+  { id: 47, name: "2 Corinti", abbr: "2Co", ch: 13, sec: "NT", cat: 3 },
+  { id: 48, name: "Galati", abbr: "Gal", ch: 6, sec: "NT", cat: 3 },
+  { id: 49, name: "Efesini", abbr: "Efe", ch: 6, sec: "NT", cat: 3 },
+  { id: 50, name: "Filippesi", abbr: "Flp", ch: 4, sec: "NT", cat: 3 },
+  { id: 51, name: "Colossesi", abbr: "Col", ch: 4, sec: "NT", cat: 3 },
+  { id: 52, name: "1 Tessalonicesi", abbr: "1Ts", ch: 5, sec: "NT", cat: 3 },
+  { id: 53, name: "2 Tessalonicesi", abbr: "2Ts", ch: 3, sec: "NT", cat: 3 },
+  { id: 54, name: "1 Timoteo", abbr: "1Tm", ch: 6, sec: "NT", cat: 3 },
+  { id: 55, name: "2 Timoteo", abbr: "2Tm", ch: 4, sec: "NT", cat: 3 },
+  { id: 56, name: "Tito", abbr: "Tit", ch: 3, sec: "NT", cat: 3 },
+  { id: 57, name: "Filemone", abbr: "Flm", ch: 1, sec: "NT", cat: 3 },
+  { id: 58, name: "Ebrei", abbr: "Ebr", ch: 13, sec: "NT", cat: 3 },
+  { id: 59, name: "Giacomo", abbr: "Giac", ch: 5, sec: "NT", cat: 4 },
+  { id: 60, name: "1 Pietro", abbr: "1Pt", ch: 5, sec: "NT", cat: 4 },
+  { id: 61, name: "2 Pietro", abbr: "2Pt", ch: 3, sec: "NT", cat: 4 },
+  { id: 62, name: "1 Giovanni", abbr: "1Gv", ch: 5, sec: "NT", cat: 4 },
+  { id: 63, name: "2 Giovanni", abbr: "2Gv", ch: 1, sec: "NT", cat: 4 },
+  { id: 64, name: "3 Giovanni", abbr: "3Gv", ch: 1, sec: "NT", cat: 4 },
+  { id: 65, name: "Giuda", abbr: "Gda", ch: 1, sec: "NT", cat: 4 },
+  { id: 66, name: "Rivelazione", abbr: "Riv", ch: 22, sec: "NT", cat: 4 }
+];
+  // Elenco pre-attivato di base con codici GetBible v2 100% verificati e funzionanti
+const CORE_BIBLES = [
+  { id: "gb:riveduta", name: "🇮🇹 Italiano: Riveduta 1927 (Luzzi)", lang: "Italian" },
+  { id: "gb:giovanni", name: "🇮🇹 Italiano: Giovanni Diodati (1649)", lang: "Italian" },
+  { id: "gb:kjv", name: "🇬🇧 English: King James Version (KJV)", lang: "English" },
+  { id: "gb:web", name: "🇬🇧 English: World English Bible (WEB)", lang: "English" },
+  { id: "gb:asv", name: "🇬🇧 English: American Standard (ASV)", lang: "English" },
+  { id: "gb:ylt", name: "🇬🇧 English: Young's Literal (YLT)", lang: "English" },
+  { id: "gb:bbe", name: "🇬🇧 English: Basic English (BBE)", lang: "English" },
+  { id: "gb:darby", name: "🇬🇧 English: Darby Translation", lang: "English" },
+  { id: "gb:valera", name: "🇪🇸 Español: Reina Valera (1909)", lang: "Spanish" },
+  { id: "gb:sagradas", name: "🇪🇸 Español: Sagradas Escrituras", lang: "Spanish" },
+  { id: "gb:luther1912", name: "🇩🇪 Deutsch: Lutherbibel (1912)", lang: "German" },
+  { id: "gb:schlachter", name: "🇩🇪 Deutsch: Schlachter (1951)", lang: "German" },
+  { id: "gb:elberfelder", name: "🇩🇪 Deutsch: Elberfelder (1871)", lang: "German" },
+  { id: "gb:luther1545", name: "🇩🇪 Deutsch: Luther (1545)", lang: "German" },
+  { id: "gb:ls1910", name: "🇫🇷 Français: Louis Segond (1910)", lang: "French" },
+  { id: "gb:martin", name: "🇫🇷 Français: David Martin (1744)", lang: "French" },
+  { id: "gb:ostervald", name: "🇫🇷 Français: Ostervald", lang: "French" },
+  { id: "gb:almeida", name: "🇧🇷 Português: João Ferreira de Almeida", lang: "Portuguese" },
+  { id: "gb:synodal", name: "🇷🇺 Русский: Synodal Translation", lang: "Russian" },
+  { id: "gb:cornilescu", name: "🇷🇴 Română: Dumitru Cornilescu", lang: "Romanian" },
+  { id: "gb:statenvertaling", name: "🇳🇱 Nederlands: Statenvertaling", lang: "Dutch" },
+  { id: "gb:svd", name: "🇸🇦 العربية: Smith & Van Dyke", lang: "Arabic" },
+  { id: "gb:cns", name: "🇨🇳 中文: Chinese Union Simplified", lang: "Chinese" },
+  { id: "gb:korean", name: "🇰🇷 한국어: Korean Revised Version", lang: "Korean" },
+  { id: "gb:kougo", name: "🇯🇵 日本語: Kougo-yaku", lang: "Japanese" },
+  { id: "gb:vulgate", name: "🏛️ Latina: Biblia Sacra Vulgata", lang: "Latin" },
+  { id: "gb:esperanto", name: "🌍 Esperanto: Londona Biblio", lang: "Esperanto" },
+  { id: "gb:textusreceptus", name: "📜 Greco NT: Textus Receptus", lang: "Greek" },
+  { id: "gb:lxx", name: "📜 Greco AT: Settanta (LXX)", lang: "Greek" },
+  { id: "gb:tischendorf", name: "📜 Greco NT: Tischendorf 8th", lang: "Greek" },
+  { id: "gb:westcott", name: "📜 Greco NT: Westcott-Hort", lang: "Greek" },
+  { id: "gb:wlc", name: "📜 Ebraico AT: Westminster Leningrad (WLC)", lang: "Hebrew" },
+  { id: "gb:aleppo", name: "📜 Ebraico AT: Aleppo Codex", lang: "Hebrew" }
+];
 
-    const TRANSLATIONS_CATALOG = [
-      { id: "ITA_RIV", name: "Riveduta 1927 (Luzzi)", lang: "Italiano", langCode: "it-IT", remoteUrl: "https://raw.githubusercontent.com/thiagobodruk/bible/master/json/it_riveduta.json" },
-      { id: "ENG_KJV", name: "King James Version (KJV)", lang: "English", langCode: "en-US", remoteUrl: "https://raw.githubusercontent.com/thiagobodruk/bible/master/json/en_kjv.json" },
-      { id: "ESP_RVR", name: "Reina-Valera 1960", lang: "Español", langCode: "es-ES", remoteUrl: "https://raw.githubusercontent.com/thiagobodruk/bible/master/json/es_rvr.json" },
-      { id: "DEU_SCH", name: "Schlachter (1951)", lang: "Deutsch", langCode: "de-DE", remoteUrl: "https://raw.githubusercontent.com/thiagobodruk/bible/master/json/de_schlachter.json" }
-    ];
+let dynamicCatalog = [...CORE_BIBLES];
+let catalogLoaded = false;
 
-    const STRONG_DICTIONARY = {
-      "principio": { code: "H7225 / G746", orig: "רֵאשִׁית / ἀρχή", pron: "ray-sheeth' / ar-khay'", def: "Inizio, origine, primizia, capo o fondamento." },
-      "dio": { code: "H430 / G2316", orig: "אֱלֹהִים / θεός", pron: "el-o-heem' / theh'-os", def: "L'Essere Supremo, Creatore onnipotente." },
-      "luce": { code: "H216 / G5457", orig: "אוֹר / φῶς", pron: "ore / foce", def: "Luce fisica e spirituale, verità divina." },
-      "verbo": { code: "G3056", orig: "λόγος", pron: "log'-os", def: "Espressione personale di Dio, la Parola eterna." }
+// Nuova chiave v10: ignora la vecchia memoria bloccata e carica subito 12 versioni multilingue nel menù!
+const DEFAULT_ACTIVE_IDS = [
+  "gb:riveduta", "gb:giovanni", "gb:kjv", "gb:web", "gb:valera",
+  "gb:luther1912", "gb:schlachter", "gb:ls1910", "gb:almeida",
+  "gb:vulgate", "gb:textusreceptus", "gb:wlc"
+];
+
+let state = {
+  bookId: 1,
+  chapter: 1,
+  trans1: "gb:riveduta",
+  trans2: "gb:kjv",
+  parallel: false,
+  fontSize: 18,
+  selectedVerse: null,
+  selectedVerseText: "",
+  downloadedBibles: JSON.parse(localStorage.getItem("bm_v10_bibles") || JSON.stringify(DEFAULT_ACTIVE_IDS)),
+  highlights: JSON.parse(localStorage.getItem("bm_hl") || "{}"),
+  bookmarks: JSON.parse(localStorage.getItem("bm_bm") || "[]"),
+  notes: JSON.parse(localStorage.getItem("bm_notes") || "[]")
+};
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open("BM_OfflineDB_v10", 1);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains("bibles")) {
+        db.createObjectStore("bibles");
+      }
     };
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror = e => reject(e);
+  });
+}
 
-    const CROSS_REFERENCES = {
-      "1_1_1": ["Giovanni 1:1-3", "Ebrei 11:3", "Salmi 33:6"],
-      "19_23_1": ["Giovanni 10:11", "Isaia 40:11"],
-      "43_1_1": ["Genesi 1:1", "1 Giovanni 1:1-2"]
-    };
-
-    const DB_NAME = "BibbiaMultilingueProDB";
-    const DB_VERSION = 2;
-    let dbInstance = null;
-
-    function initDatabase() {
-      return new Promise((resolve, reject) => {
-        const req = indexedDB.open(DB_NAME, DB_VERSION);
-        req.onupgradeneeded = (e) => {
-          const db = e.target.result;
-          if (!db.objectStoreNames.contains("bibles")) db.createObjectStore("bibles", { keyPath: "id" });
-          if (!db.objectStoreNames.contains("notes")) db.createObjectStore("notes", { keyPath: "verseKey" });
-          if (!db.objectStoreNames.contains("highlights")) db.createObjectStore("highlights", { keyPath: "verseKey" });
-        };
-        req.onsuccess = (e) => { dbInstance = e.target.result; resolve(dbInstance); };
-        req.onerror = (e) => reject(e.target.error);
-      });
-    }
-
-    function dbPut(storeName, data) {
-      return new Promise((resolve) => {
-        if (!dbInstance) return resolve();
-        const tx = dbInstance.transaction(storeName, "readwrite");
-        tx.objectStore(storeName).put(data);
-        tx.oncomplete = () => resolve();
-      });
-    }
-
-    function dbGet(storeName, key) {
-      return new Promise((resolve) => {
-        if (!dbInstance) return resolve(null);
-        const tx = dbInstance.transaction(storeName, "readonly");
-        const req = tx.objectStore(storeName).get(key);
-        req.onsuccess = () => resolve(req.result || null);
-      });
-    }
-
-    function dbGetAll(storeName) {
-      return new Promise((resolve) => {
-        if (!dbInstance) return resolve([]);
-        const tx = dbInstance.transaction(storeName, "readonly");
-        const req = tx.objectStore(storeName).getAll();
-        req.onsuccess = () => resolve(req.result || []);
-      });
-    }
-
-    function dbDelete(storeName, key) {
-      return new Promise((resolve) => {
-        if (!dbInstance) return resolve();
-        const tx = dbInstance.transaction(storeName, "readwrite");
-        tx.objectStore(storeName).delete(key);
-        tx.oncomplete = () => resolve();
-      });
-    }
-
-  const appState = {
-      bookId: parseInt(localStorage.getItem("bm_book") || "1"),
-      chapter: parseInt(localStorage.getItem("bm_chapter") || "1"),
-      parallelMode: parseInt(localStorage.getItem("bm_parallel") || "1"),
-      diffMode: localStorage.getItem("bm_diff") === "true",
-      theme: localStorage.getItem("bm_theme") || "dark",
-      fontSize: parseInt(localStorage.getItem("bm_fontsize") || "18"),
-      trans1: localStorage.getItem("bm_trans1") || "ITA_RIV",
-      trans2: localStorage.getItem("bm_trans2") || "ENG_KJV",
-      trans3: localStorage.getItem("bm_trans3") || "ESP_RVR",
-      selectedVerse: 1,
-      activeTagFilter: null,
-      loadedBiblesCache: {},
-      notesMap: {},
-      highlightsMap: {},
-      downloadedIds: new Set()
-    };
-
-    async function loadUserAnnotations() {
-      const allNotes = await dbGetAll("notes");
-      appState.notesMap = {};
-      allNotes.forEach(n => { appState.notesMap[n.verseKey] = n; });
-
-      const allHl = await dbGetAll("highlights");
-      appState.highlightsMap = {};
-      allHl.forEach(h => { appState.highlightsMap[h.verseKey] = h.color; });
-
-      const allBibles = await dbGetAll("bibles");
-      appState.downloadedIds = new Set(allBibles.map(b => b.id));
-    }
-
-    async function getChapterVerses(transId, bookId, chapter) {
-      if (!appState.loadedBiblesCache[transId]) {
-        const stored = await dbGet("bibles", transId);
-        if (stored && stored.data) {
-          appState.loadedBiblesCache[transId] = stored.data;
-        } else {
-          const tMeta = TRANSLATIONS_CATALOG.find(t => t.id === transId) || TRANSLATIONS_CATALOG[0];
-          try {
-            const res = await fetch(tMeta.remoteUrl);
-            if (res.ok) {
-              const fullBibleJson = await res.json();
-              appState.loadedBiblesCache[transId] = fullBibleJson;
-              appState.downloadedIds.add(transId);
-              await dbPut("bibles", { id: transId, name: tMeta.name, data: fullBibleJson, savedAt: Date.now() });
-            }
-          } catch (e) {
-            console.warn("Offline fallback");
-          }
-        }
-      }
-
-      const cachedBible = appState.loadedBiblesCache[transId];
-      if (Array.isArray(cachedBible) && cachedBible[bookId - 1]) {
-        const chaps = cachedBible[bookId - 1].chapters;
-        if (chaps && chaps[chapter - 1]) return chaps[chapter - 1];
-      }
-
-      return [
-        `(${transId}) Caricamento completato. Se vedi questo messaggio in assenza di rete, seleziona una versione memorizzata offline.`,
-        `Capitolo pronto per lo studio completo.`
-      ];
-    }
-
-    function populateSelectors() {
-      const bookSel = document.getElementById("select-book");
-      bookSel.innerHTML = BIBLE_BOOKS.map(b => `<option value="${b.id}" ${b.id === appState.bookId ? "selected" : ""}>${b.name}</option>`).join("");
-      updateChapterSelector();
-
-      const transOptions = TRANSLATIONS_CATALOG.map(t => `<option value="${t.id}">${t.lang} — ${t.name}</option>`).join("");
-      document.getElementById("select-trans-1").innerHTML = transOptions;
-      document.getElementById("select-trans-2").innerHTML = transOptions;
-      document.getElementById("select-trans-3").innerHTML = transOptions;
-
-      document.getElementById("select-trans-1").value = appState.trans1;
-      document.getElementById("select-trans-2").value = appState.trans2;
-      document.getElementById("select-trans-3").value = appState.trans3;
-    }
-
-    function updateChapterSelector() {
-      const bookObj = BIBLE_BOOKS.find(b => b.id === appState.bookId) || BIBLE_BOOKS[0];
-      if (appState.chapter > bookObj.chapters) appState.chapter = 1;
-      let html = "";
-      for (let c = 1; c <= bookObj.chapters; c++) {
-        html += `<option value="${c}" ${c === appState.chapter ? "selected" : ""}>Cap. ${c}</option>`;
-      }
-      document.getElementById("select-chapter").innerHTML = html;
-    }
-
-    function highlightDifferences(baseText, compareText) {
-      if (!appState.diffMode || !baseText || !compareText) return compareText;
-      const baseWords = new Set(baseText.toLowerCase().replace(/[.,;:!?'"]/g, "").split(/\s+/));
-      return compareText.split(/(\s+)/).map(token => {
-        const clean = token.toLowerCase().replace(/[.,;:!?'"]/g, "");
-        if (clean.length > 2 && !baseWords.has(clean)) return `<span class="diff-word">${token}</span>`;
-        return token;
-      }).join("");
-    }
-
-    async function renderCurrentChapter() {
-      appState.trans1 = document.getElementById("select-trans-1").value;
-      appState.trans2 = document.getElementById("select-trans-2").value;
-      appState.trans3 = document.getElementById("select-trans-3").value;
-
-      localStorage.setItem("bm_book", appState.bookId);
-      localStorage.setItem("bm_chapter", appState.chapter);
-      localStorage.setItem("bm_trans1", appState.trans1);
-      localStorage.setItem("bm_trans2", appState.trans2);
-      localStorage.setItem("bm_trans3", appState.trans3);
-
-      const activeTrans = [appState.trans1];
-      if (appState.parallelMode >= 2) activeTrans.push(appState.trans2);
-      if (appState.parallelMode === 3) activeTrans.push(appState.trans3);
-
-      const container = document.getElementById("reading-container");
-      container.className = `reading-grid parallel-${appState.parallelMode}`;
-
-      const versesArrays = await Promise.all(activeTrans.map(id => getChapterVerses(id, appState.bookId, appState.chapter)));
-      const bookObj = BIBLE_BOOKS.find(b => b.id === appState.bookId) || BIBLE_BOOKS[0];
-
-      container.innerHTML = activeTrans.map((tId, colIndex) => {
-        const tMeta = TRANSLATIONS_CATALOG.find(t => t.id === tId) || { name: tId, lang: "" };
-        const verses = versesArrays[colIndex] || [];
-        const baseVerses = versesArrays[0] || [];
-
-        const versesHtml = verses.map((vText, idx) => {
-          const vNum = idx + 1;
-          const vKey = `${appState.bookId}_${appState.chapter}_${vNum}`;
-          const hlClass = appState.highlightsMap[vKey] || "";
-          const hasNote = appState.notesMap[vKey];
-          const hasCross = CROSS_REFERENCES[vKey];
-          const displayHtml = colIndex > 0 ? highlightDifferences(baseVerses[idx] || "", vText) : vText;
-
-          return `
-            <div class="verse-item ${hlClass}" onclick="openVerseModal(${vNum})">
-              <span class="verse-num">${vNum}</span>
-              <span class="verse-text">${displayHtml}</span>
-              ${hasNote ? `<span class="verse-badge">📝 Nota</span>` : ""}
-              ${hasCross ? `<span class="verse-badge">🔗 Rif</span>` : ""}
-            </div>
-          `;
-        }).join("");
-
-  return `
-          <div class="translation-col">
-            <div class="col-header">
-              <span>${bookObj.name} ${appState.chapter} — ${tMeta.name}</span>
-              <span>${tMeta.lang}</span>
-            </div>
-            ${versesHtml}
-          </div>
-        `;
-      }).join("");
-    }
-
-    function onBookChange() {
-      appState.bookId = parseInt(document.getElementById("select-book").value);
-      appState.chapter = 1;
-      updateChapterSelector();
-      renderCurrentChapter();
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-
-    function onChapterChange() {
-      appState.chapter = parseInt(document.getElementById("select-chapter").value);
-      renderCurrentChapter();
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-
-    function prevChapter() {
-      if (appState.chapter > 1) {
-        appState.chapter--;
-      } else if (appState.bookId > 1) {
-        appState.bookId--;
-        const prevBook = BIBLE_BOOKS.find(b => b.id === appState.bookId);
-        appState.chapter = prevBook ? prevBook.chapters : 1;
-        document.getElementById("select-book").value = appState.bookId;
-      }
-      updateChapterSelector();
-      renderCurrentChapter();
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-
-    function nextChapter() {
-      const curBook = BIBLE_BOOKS.find(b => b.id === appState.bookId) || BIBLE_BOOKS[0];
-      if (appState.chapter < curBook.chapters) {
-        appState.chapter++;
-      } else if (appState.bookId < 66) {
-        appState.bookId++;
-        appState.chapter = 1;
-        document.getElementById("select-book").value = appState.bookId;
-      }
-      updateChapterSelector();
-      renderCurrentChapter();
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-
-    function cycleParallelMode() {
-      appState.parallelMode = (appState.parallelMode % 3) + 1;
-      localStorage.setItem("bm_parallel", appState.parallelMode);
-      updateParallelUI();
-      renderCurrentChapter();
-    }
-
-    function updateParallelUI() {
-      document.getElementById("btn-parallel").textContent = `${appState.parallelMode}x`;
-      document.getElementById("select-trans-2").style.display = appState.parallelMode >= 2 ? "inline-flex" : "none";
-      document.getElementById("select-trans-3").style.display = appState.parallelMode === 3 ? "inline-flex" : "none";
-      const diffBtn = document.getElementById("btn-diff");
-      diffBtn.style.display = appState.parallelMode >= 2 ? "inline-flex" : "none";
-      diffBtn.classList.toggle("active", appState.diffMode);
-    }
-
-    function toggleDiffMode() {
-      appState.diffMode = !appState.diffMode;
-      localStorage.setItem("bm_diff", appState.diffMode);
-      updateParallelUI();
-      renderCurrentChapter();
-    }
-
-    function cycleTheme() {
-      const order = ["light", "dark", "oled"];
-      appState.theme = order[(order.indexOf(appState.theme) + 1) % order.length];
-      localStorage.setItem("bm_theme", appState.theme);
-      applyTheme();
-    }
-
-    function applyTheme() {
-      document.body.setAttribute("data-theme", appState.theme);
-      const icons = { light: "☀️", dark: "🌙", oled: "🖤" };
-      document.getElementById("btn-theme").textContent = icons[appState.theme] || "🌙";
-    }
-
-    function changeFontSize(delta) {
-      appState.fontSize = Math.min(30, Math.max(13, appState.fontSize + delta));
-      localStorage.setItem("bm_fontsize", appState.fontSize);
-      document.documentElement.style.setProperty("--font-size", `${appState.fontSize}px`);
-      document.getElementById("font-size-label").textContent = `${appState.fontSize}px`;
-    }
-
-    function toggleTTS() {
-      if (!("speechSynthesis" in window)) return alert("TTS non supportato");
-      if (window.speechSynthesis.speaking) {
-        window.speechSynthesis.cancel();
-        return document.getElementById("btn-tts").classList.remove("active");
-      }
-      getChapterVerses(appState.trans1, appState.bookId, appState.chapter).then(verses => {
-        const utter = new SpeechSynthesisUtterance(verses.join(" "));
-        const tMeta = TRANSLATIONS_CATALOG.find(t => t.id === appState.trans1);
-        utter.lang = tMeta ? tMeta.langCode : "it-IT";
-        utter.onend = () => document.getElementById("btn-tts").classList.remove("active");
-        document.getElementById("btn-tts").classList.add("active");
-        window.speechSynthesis.speak(utter);
-      });
-  }
-
-  function openModal(id) { document.getElementById(id).classList.add("open"); }
-    function closeModal(id) { document.getElementById(id).classList.remove("open"); }
-    function closeModalOnBg(e, id) { if (e.target.id === id) closeModal(id); }
-
-    async function openVerseModal(vNum) {
-      appState.selectedVerse = vNum;
-      const bookObj = BIBLE_BOOKS.find(b => b.id === appState.bookId) || BIBLE_BOOKS[0];
-      const verses = await getChapterVerses(appState.trans1, appState.bookId, appState.chapter);
-      document.getElementById("verse-modal-title").textContent = `${bookObj.name} ${appState.chapter}:${vNum}`;
-      document.getElementById("verse-modal-preview").textContent = `"${verses[vNum - 1] || ""}"`;
-      document.getElementById("verse-extra-panel").style.display = "none";
-      const note = appState.notesMap[`${appState.bookId}_${appState.chapter}_${vNum}`];
-      document.getElementById("verse-note-input").value = note ? note.text : "";
-      document.getElementById("verse-tags-input").value = (note && note.tags) ? note.tags.join(", ") : "";
-      openModal("modal-verse");
-    }
-
-    async function setVerseHighlight(colorClass) {
-      const vKey = `${appState.bookId}_${appState.chapter}_${appState.selectedVerse}`;
-      if (!colorClass) {
-        delete appState.highlightsMap[vKey];
-        await dbDelete("highlights", vKey);
-      } else {
-        appState.highlightsMap[vKey] = colorClass;
-        await dbPut("highlights", { verseKey: vKey, color: colorClass, updatedAt: Date.now() });
-      }
-      renderCurrentChapter();
-    }
-
-    function copySelectedVerse() {
-      navigator.clipboard.writeText(`${document.getElementById("verse-modal-title").textContent} — ${document.getElementById("verse-modal-preview").textContent}`);
-      alert("Copiato!");
-    }
-
-    function speakSelectedVerse() {
-      if (!("speechSynthesis" in window)) return;
-      const text = document.getElementById("verse-modal-preview").textContent.replace(/^"|"$/g, "");
-      window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
-    }
-
-    function showStrongForVerse() {
-      const panel = document.getElementById("verse-extra-panel");
-      const text = document.getElementById("verse-modal-preview").textContent.toLowerCase();
-      let matches = [];
-      Object.keys(STRONG_DICTIONARY).forEach(w => {
-        if (text.includes(w)) {
-          const item = STRONG_DICTIONARY[w];
-          matches.push(`<b>${w.toUpperCase()}</b> (${item.code}): ${item.orig} — ${item.def}`);
-        }
-      });
-      panel.style.display = "block";
-      panel.innerHTML = matches.length ? matches.join("<br><br>") : "Nessun termine Strong indicizzato in questo versetto.";
-    }
-
-    function showCrossRefsForVerse() {
-      const panel = document.getElementById("verse-extra-panel");
-      const refs = CROSS_REFERENCES[`${appState.bookId}_${appState.chapter}_${appState.selectedVerse}`] || ["Salmi 119:105"];
-      panel.style.display = "block";
-      panel.innerHTML = `<b>Passi Paralleli:</b><br>` + refs.map(r => `<span class="tag-chip" onclick="jumpFromRef('${r}')">${r}</span>`).join(" ");
-    }
-
-    function jumpFromRef(str) {
-      closeModal("modal-verse");
-      jumpFromReferenceString(str);
-    }
-
-    async function saveVerseNote() {
-      const vKey = `${appState.bookId}_${appState.chapter}_${appState.selectedVerse}`;
-      const text = document.getElementById("verse-note-input").value.trim();
-      const tags = document.getElementById("verse-tags-input").value.split(",").map(t => t.trim().replace(/^#/, "")).filter(Boolean);
-      if (!text && !tags.length) {
-        delete appState.notesMap[vKey];
-        await dbDelete("notes", vKey);
-      } else {
-        const obj = { verseKey: vKey, bookId: appState.bookId, chapter: appState.chapter, verse: appState.selectedVerse, text, tags, updatedAt: Date.now() };
-        appState.notesMap[vKey] = obj;
-        await dbPut("notes", obj);
-      }
-      closeModal("modal-verse");
-      renderCurrentChapter();
-    }
-
-    function executeQuickJump() {
-      jumpFromReferenceString(document.getElementById("quick-jump-input").value);
-      closeModal("modal-quick-jump");
-    }
-
-    function jumpFromReferenceString(str) {
-      const match = str.trim().replace(/[:.]/g, " ").match(/^([1-3]?\s?[a-zA-ZÀ-ÿ]+)\s*(\d+)?(?:\s+(\d+))?/);
-      if (!match) return;
-      const bQuery = match[1].toLowerCase().replace(/\s+/g, "");
-      const found = BIBLE_BOOKS.find(b => b.name.toLowerCase().replace(/\s+/g, "").startsWith(bQuery) || b.abbr.includes(bQuery));
-      if (found) {
-        appState.bookId = found.id;
-        appState.chapter = Math.min(found.chapters, Math.max(1, parseInt(match[2] || "1")));
-        updateChapterSelector();
-        renderCurrentChapter();
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
-    }
-
-    async function runAdvancedSearch() {
-      const q = document.getElementById("search-query-input").value.toLowerCase();
-      const listEl = document.getElementById("search-results-list");
-      if (!q) return;
-      listEl.innerHTML = "Ricerca in corso...";
-      const cached = appState.loadedBiblesCache[appState.trans1];
-      const results = [];
-      if (Array.isArray(cached)) {
-        cached.forEach((bData, bIdx) => {
-          if (bData && bData.chapters) {
-            bData.chapters.forEach((cArr, cIdx) => {
-              cArr.forEach((vText, vIdx) => {
-                if (results.length < 50 && vText.toLowerCase().includes(q)) {
-                  results.push({ book: BIBLE_BOOKS[bIdx], chap: cIdx + 1, verse: vIdx + 1, text: vText });
-                }
-              });
-            });
-          }
-        });
-      }
-      listEl.innerHTML = results.map(r => `
-        <div style="background:var(--bg-secondary); padding:10px; border-radius:10px; cursor:pointer;" onclick="goToVerse(${r.book.id}, ${r.chap}, ${r.verse})">
-          <b>${r.book.name} ${r.chap}:${r.verse}</b>
-          <div style="font-size:14px; margin-top:4px;">${r.text}</div>
-        </div>
-      `).join("") || "Nessun risultato trovato.";
-    }
-
-    function goToVerse(bId, c, v) {
-      appState.bookId = bId;
-      appState.chapter = c;
-      updateChapterSelector();
-      closeModal("modal-search");
-      renderCurrentChapter();
-    }
-
-    async function exportUserData() {
-      const notes = await dbGetAll("notes");
-      const highlights = await dbGetAll("highlights");
-      const blob = new Blob([JSON.stringify({ notes, highlights }, null, 2)], { type: "application/json" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = `Backup_BibbiaPro.json`;
-      a.click();
-    }
-
-    async function importUserData(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const data = JSON.parse(await file.text());
-      if (data.notes) for (const n of data.notes) await dbPut("notes", n);
-      if (data.highlights) for (const h of data.highlights) await dbPut("highlights", h);
-      await loadUserAnnotations();
-      renderCurrentChapter();
-      alert("Ripristinato!");
-      closeModal("modal-settings");
-  }
-
-  window.addEventListener("DOMContentLoaded", async () => {
-      applyTheme();
-      document.documentElement.style.setProperty("--font-size", `${appState.fontSize}px`);
-      document.getElementById("font-size-label").textContent = `${appState.fontSize}px`;
-      try {
-        await initDatabase();
-        await loadUserAnnotations();
-      } catch (e) {}
-      populateSelectors();
-      updateParallelUI();
-      await renderCurrentChapter();
-      setTimeout(() => document.getElementById("splash-screen").classList.add("hidden"), 500);
+async function getOfflineBible(id) {
+  try {
+    const db = await openDB();
+    return new Promise(res => {
+      const tx = db.transaction("bibles", "readonly");
+      const req = tx.objectStore("bibles").get(id);
+      req.onsuccess = () => res(req.result || null);
+      req.onerror = () => res(null);
     });
-  </script>
+  } catch(e) { return null; }
+}
+
+async function saveOfflineBible(id, data) {
+  const db = await openDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction("bibles", "readwrite");
+    tx.objectStore("bibles").put(data, id);
+    tx.oncomplete = () => res();
+    tx.onerror = e => rej(e);
+  });
+}
+
+async function removeOfflineBible(id) {
+  try {
+    const db = await openDB();
+    return new Promise((res, rej) => {
+      const tx = db.transaction("bibles", "readwrite");
+      tx.objectStore("bibles").delete(id);
+      tx.oncomplete = () => res();
+      tx.onerror = e => rej(e);
+    });
+  } catch(e) {}
+}
+
+// Carica l'intero indice ufficiale di oltre 110+ Bibbie da GetBible v2
+async function loadFullGlobalCatalog() {
+  if (catalogLoaded) return dynamicCatalog;
+  try {
+    const res = await fetch("https://api.getbible.net/v2/translations.json");
+    if (res.ok) {
+      const data = await res.json();
+      const map = new Map();
+      CORE_BIBLES.forEach(b => map.set(b.id, b));
+      Object.keys(data).forEach(code => {
+        const item = data[code];
+        const id = `gb:${code}`;
+        if (!map.has(id)) {
+          const langLabel = item.language || "Global";
+          map.set(id, {
+            id: id,
+            name: `🌐 ${langLabel}: ${item.translation || code}`,
+            lang: langLabel
+          });
+        }
+      });
+      dynamicCatalog = Array.from(map.values());
+      catalogLoaded = true;
+    }
+  } catch(e) {}
+  return dynamicCatalog;
+   }
+  async function populateSelects() {
+  await loadFullGlobalCatalog();
+  let activeList = dynamicCatalog.filter(b => state.downloadedBibles.includes(b.id));
+  if (activeList.length < 2) {
+    state.downloadedBibles = [...DEFAULT_ACTIVE_IDS];
+    localStorage.setItem("bm_v10_bibles", JSON.stringify(state.downloadedBibles));
+    activeList = dynamicCatalog.filter(b => state.downloadedBibles.includes(b.id));
+  }
+
+  const s1 = document.getElementById("trans1");
+  const s2 = document.getElementById("trans2");
+  const html = activeList.map(t => `<option value="${t.id}">${t.name}</option>`).join("");
+  s1.innerHTML = html;
+  s2.innerHTML = html;
+
+  if (activeList.some(b => b.id === state.trans1)) s1.value = state.trans1;
+  else { state.trans1 = activeList[0].id; s1.value = state.trans1; }
+
+  if (activeList.some(b => b.id === state.trans2)) s2.value = state.trans2;
+  else { state.trans2 = (activeList[1] || activeList[0]).id; s2.value = state.trans2; }
+}
+
+function setActiveTab(tabId) {
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  const el = document.getElementById(tabId);
+  if (el) el.classList.add("active");
+}
+
+function getBook(id) {
+  return BIBLE_BOOKS.find(b => b.id === Number(id)) || BIBLE_BOOKS[0];
+}
+
+function showBooksView() {
+  closeActionBar();
+  setActiveTab("tabBooks");
+  const main = document.getElementById("mainContainer");
+  const ot = BIBLE_BOOKS.filter(b => b.sec === "OT");
+  const nt = BIBLE_BOOKS.filter(b => b.sec === "NT");
+  main.innerHTML = `
+    <div class="section-title"><span>Scritture Ebraico-Aramaiche</span><span>39 Libri</span></div>
+    <div class="books-grid">${ot.map(b => `<button class="book-tile cat-${b.cat}" onclick="showChaptersView(${b.id})">${b.abbr}</button>`).join("")}</div>
+    <div class="section-title"><span>Scritture Greche Cristiane</span><span>27 Libri</span></div>
+    <div class="books-grid">${nt.map(b => `<button class="book-tile cat-${b.cat}" onclick="showChaptersView(${b.id})">${b.abbr}</button>`).join("")}</div>
+  `;
+  main.scrollTop = 0;
+}
+
+function showChaptersView(bookId) {
+  state.bookId = bookId;
+  const book = getBook(bookId);
+  if (book.ch === 1) { state.chapter = 1; loadChapterView(); return; }
+  const main = document.getElementById("mainContainer");
+  let btns = "";
+  for (let i = 1; i <= book.ch; i++) {
+    const isCurr = (i === state.chapter) ? "current" : "";
+    btns += `<button class="chapter-tile ${isCurr}" onclick="selectChapter(${i})">${i}</button>`;
+  }
+  main.innerHTML = `
+    <div class="chapter-header">
+      <div class="chapter-title">${book.name} — Capitoli</div>
+      <button class="nav-btn" onclick="showBooksView()">← Tutti i Libri</button>
+    </div>
+    <div class="chapters-grid">${btns}</div>
+  `;
+  main.scrollTop = 0;
+}
+
+function selectChapter(ch) {
+  state.chapter = ch;
+  loadChapterView();
+}
+
+async function fetchChapterData(transId, bookId, chapter) {
+  const fullOffline = await getOfflineBible(transId);
+  if (fullOffline && fullOffline.books) {
+    const bObj = fullOffline.books.find(b => Number(b.nr) === Number(bookId));
+    if (bObj && bObj.chapters) {
+      const cObj = bObj.chapters.find(c => Number(c.chapter) === Number(chapter));
+      if (cObj && cObj.verses) return cObj.verses;
+    }
+  }
+
+  const cacheKey = `bm_ch_${transId}_${bookId}_${chapter}`;
+  const cached = localStorage.getItem(cacheKey);
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached);
+      if (parsed && parsed.length > 0) return parsed;
+    } catch(e) {}
+  }
+
+  const code = transId.includes(":") ? transId.split(":")[1] : transId;
+  const res = await fetch(`https://api.getbible.net/v2/${code}/${bookId}/${chapter}.json`);
+  if (!res.ok) throw new Error("Capitolo non disponibile");
+  const data = await res.json();
+  const verses = (data.verses || []).map(v => ({ verse: Number(v.verse), text: v.text }));
+
+  if (verses.length > 0) {
+    try { localStorage.setItem(cacheKey, JSON.stringify(verses)); } catch(e) {}
+  }
+  return verses;
+}
+
+async function loadChapterView() {
+  closeActionBar();
+  setActiveTab("tabRead");
+  const book = getBook(state.bookId);
+  document.getElementById("currentRefLabel").textContent = `${book.name} ${state.chapter}`;
+  const main = document.getElementById("mainContainer");
+  main.innerHTML = `<div class="loader">Caricamento di <b>${book.name} ${state.chapter}</b>...</div>`;
+
+  try {
+    const data1 = await fetchChapterData(state.trans1, state.bookId, state.chapter);
+    let data2 = [];
+    if (state.parallel) {
+      try { data2 = await fetchChapterData(state.trans2, state.bookId, state.chapter); } catch(e) { data2 = []; }
+    }
+
+    let versesHtml = "";
+    if (!state.parallel) {
+      versesHtml = data1.map(v => {
+        const key = `${state.bookId}_${state.chapter}_${v.verse}`;
+        const hlClass = state.highlights[key] || "";
+        const refStr = `${book.name} ${state.chapter}:${v.verse}`;
+        const hasNote = state.notes.some(n => n.ref === refStr);
+        const noteBadge = hasNote ? ` <span title="Appunto presente">📝</span>` : "";
+        const cleanText = (v.text || "").replace(/<[^>]*>?/gm, "").replace(/"/g, "&quot;");
+        return `
+          <div class="verse-row ${hlClass}" id="v_${v.verse}" data-text="${cleanText}" onclick="onVerseClick(${v.verse}, this.getAttribute('data-text'))">
+            <span class="verse-num">${v.verse}</span><span>${v.text}</span>${noteBadge}
+          </div>`;
+      }).join("");
+    } else {
+      const map2 = {};
+      data2.forEach(v => map2[v.verse] = v.text);
+      versesHtml = data1.map(v => {
+        const key = `${state.bookId}_${state.chapter}_${v.verse}`;
+        const hlClass = state.highlights[key] || "";
+        const cleanText = (v.text || "").replace(/<[^>]*>?/gm, "").replace(/"/g, "&quot;");
+        const text2 = map2[v.verse] || "—";
+        return `
+          <div class="parallel-row ${hlClass}" id="v_${v.verse}" data-text="${cleanText}" onclick="onVerseClick(${v.verse}, this.getAttribute('data-text'))">
+            <div class="parallel-col"><span class="verse-num">${v.verse}</span>${v.text}</div>
+            <div class="parallel-col"><span class="verse-num">${v.verse}</span>${text2}</div>
+          </div>`;
+      }).join("");
+    }
+
+    main.innerHTML = `
+      <div class="chapter-header">
+        <div class="chapter-title" onclick="showChaptersView(${state.bookId})" style="cursor:pointer;">${book.name} ${state.chapter} ▾</div>
+        <div class="chapter-nav-btns">
+          <button class="nav-btn" onclick="prevChapter()">◀ Prec</button>
+          <button class="nav-btn" onclick="nextChapter()">Succ ▶</button>
+        </div>
+      </div>
+      <div>${versesHtml}</div>
+      <div style="display:flex; justify-content:space-between; margin-top:20px; padding-top:12px; border-top:1px solid var(--border-color);">
+        <button class="nav-btn" onclick="prevChapter()">◀ Capitolo Prec.</button>
+        <button class="nav-btn" onclick="nextChapter()">Capitolo Succ. ▶</button>
+      </div>
+    `;
+    main.scrollTop = 0;
+  } catch (err) {
+    const isNT = state.bookId >= 40;
+    main.innerHTML = `
+      <div class="loader">
+        <b>${book.name} ${state.chapter}</b> non è presente in questa specifica edizione (ad es. le versioni in <b>Greco NT</b> contengono solo i libri da Matteo a Rivelazione, mentre l'<b>Ebraico WLC</b> contiene solo i libri da Genesi a Malachia).<br><br>
+        <button class="search-btn" onclick="openRef(${isNT ? 1 : 40}, 1)">Vai a ${isNT ? 'Genesi 1 (AT)' : 'Matteo 1 (NT)'}</button>
+        <button class="nav-btn" onclick="showBooksView()">Scegli Libro</button>
+      </div>`;
+  }
+  }
+  function prevChapter() {
+  if (state.chapter > 1) state.chapter--;
+  else if (state.bookId > 1) { state.bookId--; state.chapter = getBook(state.bookId).ch; }
+  loadChapterView();
+}
+
+function nextChapter() {
+  const book = getBook(state.bookId);
+  if (state.chapter < book.ch) state.chapter++;
+  else if (state.bookId < 66) { state.bookId++; state.chapter = 1; }
+  loadChapterView();
+}
+
+function onTranslationChange() {
+  state.trans1 = document.getElementById("trans1").value;
+  state.trans2 = document.getElementById("trans2").value;
+  loadChapterView();
+}
+
+function toggleParallel() {
+  state.parallel = !state.parallel;
+  const btn = document.getElementById("parallelBtn");
+  const sel2 = document.getElementById("trans2");
+  if (state.parallel) {
+    btn.textContent = "⚖️ Parallelo: ON";
+    btn.classList.add("highlight");
+    sel2.style.display = "block";
+  } else {
+    btn.textContent = "⚖️ Parallelo: OFF";
+    btn.classList.remove("highlight");
+    sel2.style.display = "none";
+  }
+  loadChapterView();
+}
+
+function onVerseClick(verseNum, text) {
+  state.selectedVerse = verseNum;
+  state.selectedVerseText = text;
+  document.getElementById("verseActionBar").style.display = "flex";
+}
+
+function closeActionBar() {
+  document.getElementById("verseActionBar").style.display = "none";
+  state.selectedVerse = null;
+}
+
+function applyHighlight(colorClass) {
+  if (!state.selectedVerse) return;
+  const key = `${state.bookId}_${state.chapter}_${state.selectedVerse}`;
+  if (colorClass) state.highlights[key] = colorClass;
+  else delete state.highlights[key];
+  localStorage.setItem("bm_hl", JSON.stringify(state.highlights));
+  const row = document.getElementById(`v_${state.selectedVerse}`);
+  if (row) {
+    row.classList.remove("hl-yellow", "hl-blue", "hl-green", "hl-pink", "hl-purple");
+    if (colorClass) row.classList.add(colorClass);
+  }
+  closeActionBar();
+}
+
+function copySelectedVerse() {
+  if (!state.selectedVerse) return;
+  const book = getBook(state.bookId);
+  const fullCopy = `${book.name} ${state.chapter}:${state.selectedVerse} — "${state.selectedVerseText}"`;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(fullCopy).then(() => alert("Versetto copiato negli appunti!"));
+  } else {
+    prompt("Copia il versetto:", fullCopy);
+  }
+  closeActionBar();
+}
+
+function saveBookmark() {
+  if (!state.selectedVerse) return;
+  const book = getBook(state.bookId);
+  const ref = `${book.name} ${state.chapter}:${state.selectedVerse}`;
+  state.bookmarks.unshift({
+    bookId: state.bookId,
+    chapter: state.chapter,
+    verse: state.selectedVerse,
+    ref: ref,
+    text: state.selectedVerseText
+  });
+  localStorage.setItem("bm_bm", JSON.stringify(state.bookmarks));
+  closeActionBar();
+  alert("🔖 Preferito salvato in " + ref);
+}
+
+function openNoteModalForVerse() {
+  if (!state.selectedVerse) return;
+  const book = getBook(state.bookId);
+  const ref = `${book.name} ${state.chapter}:${state.selectedVerse}`;
+  const existing = state.notes.find(n => n.ref === ref);
+
+  document.getElementById("noteModalTitle").textContent = `📝 Appunto: ${ref}`;
+  document.getElementById("noteModalVersePreview").textContent = `"${state.selectedVerseText}"`;
+  document.getElementById("noteModalInput").value = existing ? existing.text : "";
+  document.getElementById("noteModal").style.display = "flex";
+}
+
+function closeNoteModal() {
+  document.getElementById("noteModal").style.display = "none";
+  closeActionBar();
+}
+
+function saveNoteFromModal() {
+  const text = document.getElementById("noteModalInput").value.trim();
+  const book = getBook(state.bookId);
+  const ref = `${book.name} ${state.chapter}:${state.selectedVerse}`;
+
+  if (text !== "") {
+    const existingIdx = state.notes.findIndex(n => n.ref === ref);
+    const noteObj = {
+      id: Date.now(),
+      bookId: state.bookId,
+      chapter: state.chapter,
+      verse: state.selectedVerse,
+      ref: ref,
+      verseText: state.selectedVerseText,
+      text: text,
+      date: new Date().toLocaleDateString("it-IT")
+    };
+    if (existingIdx > -1) state.notes[existingIdx] = noteObj;
+    else state.notes.unshift(noteObj);
+    localStorage.setItem("bm_notes", JSON.stringify(state.notes));
+  }
+  closeNoteModal();
+  loadChapterView();
+}
+
+function showNotesView() {
+  closeActionBar();
+  setActiveTab("tabNotes");
+  const main = document.getElementById("mainContainer");
+
+  if (!state.notes.length) {
+    main.innerHTML = `<div class="loader">Nessun appunto di studio salvato.<br><br>Durante la lettura, tocca un versetto qualsiasi e premi l'icona 📝 per aggiungere una nota personale.</div>`;
+    return;
+  }
+
+  main.innerHTML = `<div class="section-title"><span>I tuoi Appunti di Studio</span><span>${state.notes.length} note</span></div>` +
+    state.notes.map((n, idx) => `
+      <div class="result-card" onclick="openRef(${n.bookId || 1}, ${n.chapter || 1})">
+        <div class="result-ref" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>📝 ${n.ref} <small style="color:var(--text-muted);font-weight:normal;">(${n.date || ''})</small></span>
+          <span onclick="event.stopPropagation();deleteNote(${idx})" style="color:var(--danger);cursor:pointer;font-size:13px;">🗑 Elimina</span>
+        </div>
+        ${n.verseText ? `<div style="font-size:12px;color:var(--text-muted);font-style:italic;margin:4px 0 8px 0;border-left:2px solid var(--border-color);padding-left:8px;">"${n.verseText}"</div>` : ""}
+        <div style="margin-top:4px;line-height:1.5;white-space:pre-wrap;">${n.text}</div>
+      </div>`).join("");
+}
+
+function deleteNote(idx) {
+  state.notes.splice(idx, 1);
+  localStorage.setItem("bm_notes", JSON.stringify(state.notes));
+  showNotesView();
+}
+
+async function showCatalogView() {
+  closeActionBar();
+  setActiveTab("tabCatalog");
+  const main = document.getElementById("mainContainer");
+  main.innerHTML = `<div class="loader">Caricamento catalogo globale (oltre 110 versioni)...</div>`;
+
+  await loadFullGlobalCatalog();
+  const langs = ["Tutte le lingue", ...new Set(dynamicCatalog.map(b => b.lang))];
+
+  main.innerHTML = `
+    <div class="section-title">
+      <span>Catalogo Globale Traduzioni</span>
+      <span>${dynamicCatalog.length} Bibbie</span>
+    </div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:10px;line-height:1.4;">
+      Tocca <b>⬇ Scarica / Attiva</b> per aggiungere qualsiasi versione al menu a tendina in alto e salvarla per l'uso offline.
+    </div>
+    <div class="search-box">
+      <input type="text" id="catFilter" class="search-input" placeholder="🔍 Cerca lingua o versione (es. English, Greek, Luther)..." oninput="filterCatalogList()">
+      <select id="catLangFilter" class="trans-select" style="max-width:155px;" onchange="filterCatalogList()">
+        ${langs.map(l => `<option value="${l}">${l}</option>`).join("")}
+      </select>
+    </div>
+    <div id="catalogList"></div>
+  `;
+  renderCatalogItems(dynamicCatalog);
+}
+
+function renderCatalogItems(list) {
+  const container = document.getElementById("catalogList");
+  if (!container) return;
+  container.innerHTML = list.map(b => {
+    const isDown = state.downloadedBibles.includes(b.id);
+    const safeId = b.id.replace(":", "_");
+    return `
+      <div class="result-card" style="display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:default;">
+        <div>
+          <div class="result-ref">${b.name}</div>
+          <div style="font-size:12px;color:var(--text-muted);">Lingua: ${b.lang} • Codice: <code>${b.id.split(':')[1]}</code></div>
+        </div>
+        <button id="btn_${safeId}" class="badge-btn ${isDown ? 'downloaded' : ''}" onclick="toggleDownload('${b.id}')">
+          ${isDown ? '✔ Attiva' : '⬇ Scarica'}
+        </button>
+      </div>`;
+  }).join("");
+}
+
+function filterCatalogList() {
+  const q = (document.getElementById("catFilter")?.value || "").toLowerCase();
+  const lang = document.getElementById("catLangFilter")?.value || "Tutte le lingue";
+  const filtered = dynamicCatalog.filter(b => {
+    const matchText = b.name.toLowerCase().includes(q) || b.lang.toLowerCase().includes(q) || b.id.toLowerCase().includes(q);
+    const matchLang = (lang === "Tutte le lingue") || (b.lang === lang);
+    return matchText && matchLang;
+  });
+  renderCatalogItems(filtered);
+}
+
+async function toggleDownload(id) {
+  const safeId = id.replace(":", "_");
+  const btn = document.getElementById(`btn_${safeId}`);
+
+  if (state.downloadedBibles.includes(id)) {
+    if (state.downloadedBibles.length <= 1) {
+      alert("Devi mantenere almeno una traduzione attiva!");
+      return;
+    }
+    state.downloadedBibles = state.downloadedBibles.filter(item => item !== id);
+    await removeOfflineBible(id);
+    localStorage.setItem("bm_v10_bibles", JSON.stringify(state.downloadedBibles));
+    await populateSelects();
+    filterCatalogList();
+  } else {
+    if (btn) { btn.textContent = "⏳ Scarico..."; btn.classList.add("downloading"); }
+    if (!state.downloadedBibles.includes(id)) state.downloadedBibles.push(id);
+    localStorage.setItem("bm_v10_bibles", JSON.stringify(state.downloadedBibles));
+    try {
+      const code = id.split(":")[1];
+      const res = await fetch(`https://api.getbible.net/v2/${code}.json`);
+      if (res.ok) {
+        const data = await res.json();
+        await saveOfflineBible(id, data);
+      }
+    } catch(e) {}
+    await populateSelects();
+    filterCatalogList();
+  }
+}
+
+function showSearchView() {
+  closeActionBar();
+  setActiveTab("tabSearch");
+  const main = document.getElementById("mainContainer");
+  main.innerHTML = `
+    <div class="section-title"><span>Ricerca nei 66 Libri</span></div>
+    <div class="search-box">
+      <input type="text" id="searchInput" class="search-input" placeholder="Cerca parola o frase..." onkeydown="if(event.key==='Enter') executeSearch()">
+      <button class="search-btn" onclick="executeSearch()">Cerca</button>
+    </div>
+    <div id="searchResults"><div class="loader">Inserisci una parola da cercare nella traduzione selezionata.</div></div>
+  `;
+}
+
+async function executeSearch() {
+  const query = document.getElementById("searchInput").value.trim().toLowerCase();
+  if (!query) return;
+  const resDiv = document.getElementById("searchResults");
+  resDiv.innerHTML = `<div class="loader">Ricerca di "<b>${query}</b>" in tutti i libri in corso...</div>`;
+
+  try {
+    let fullBible = await getOfflineBible(state.trans1);
+    if (!fullBible) {
+      const code = state.trans1.split(":")[1];
+      const res = await fetch(`https://api.getbible.net/v2/${code}.json`);
+      if (res.ok) {
+        fullBible = await res.json();
+        await saveOfflineBible(state.trans1, fullBible);
+      }
+    }
+    if (fullBible && fullBible.books) {
+      let matches = [];
+      for (const b of fullBible.books) {
+        const bMeta = getBook(Number(b.nr));
+        for (const c of (b.chapters || [])) {
+          for (const v of (c.verses || [])) {
+            if (v.text && v.text.toLowerCase().includes(query)) {
+              matches.push({ bookId: Number(b.nr), bookName: bMeta.name, ch: c.chapter, v: v.verse, text: v.text });
+              if (matches.length >= 100) break;
+            }
+          }
+          if (matches.length >= 100) break;
+        }
+        if (matches.length >= 100) break;
+      }
+      if (!matches.length) {
+        resDiv.innerHTML = `<div class="loader">Nessun risultato trovato per "<b>${query}</b>".</div>`;
+        return;
+      }
+      resDiv.innerHTML = `<div style="margin-bottom:10px;font-size:13px;color:var(--text-muted);">Trovati <b>${matches.length}</b> risultati:</div>` +
+        matches.map(m => `
+          <div class="result-card" onclick="openRef(${m.bookId}, ${m.ch})">
+            <div class="result-ref">${m.bookName} ${m.ch}:${m.v}</div>
+            <div>${m.text}</div>
+          </div>`).join("");
+    } else {
+      resDiv.innerHTML = `<div class="loader">Errore di connessione all'indice di ricerca.</div>`;
+    }
+  } catch (e) {
+    resDiv.innerHTML = `<div class="loader">Errore durante la ricerca.</div>`;
+  }
+}
+
+function showSavedView() {
+  closeActionBar();
+  setActiveTab("tabSaved");
+  const main = document.getElementById("mainContainer");
+  if (!state.bookmarks.length) {
+    main.innerHTML = `<div class="loader">Nessun preferito salvato.<br><br>Tocca un versetto e premi 🔖 per salvarlo.</div>`;
+    return;
+  }
+  main.innerHTML = `<div class="section-title"><span>Preferiti Salvati</span><span>${state.bookmarks.length}</span></div>` +
+    state.bookmarks.map((b, idx) => `
+      <div class="result-card" onclick="openRef(${b.bookId}, ${b.chapter})">
+        <div class="result-ref" style="display:flex;justify-content:space-between;">
+          <span>🔖 ${b.ref}</span>
+          <span onclick="event.stopPropagation();deleteBookmark(${idx})" style="color:var(--danger);">🗑 Elimina</span>
+        </div>
+        <div>${b.text}</div>
+      </div>`).join("");
+}
+
+function deleteBookmark(idx) {
+  state.bookmarks.splice(idx, 1);
+  localStorage.setItem("bm_bm", JSON.stringify(state.bookmarks));
+  showSavedView();
+}
+
+function openRef(bookId, chapter) {
+  state.bookId = Number(bookId);
+  state.chapter = Number(chapter);
+  loadChapterView();
+}
+
+function changeFontSize(delta) {
+  state.fontSize = Math.min(30, Math.max(14, state.fontSize + delta));
+  document.documentElement.style.setProperty("--font-size-verse", state.fontSize + "px");
+}
+
+function toggleDarkMode() {
+  document.body.classList.toggle("dark-mode");
+}
+
+populateSelects().then(() => {
+  loadChapterView().then(() => {
+    setTimeout(() => {
+      const splash = document.getElementById("splashScreen");
+      if (splash) {
+        splash.style.opacity = "0";
+        setTimeout(() => splash.remove(), 400);
+      }
+    }, 600);
+  });
+});
+</script>
 </body>
 </html>
