@@ -1459,6 +1459,7 @@ async function executeSearch() {
     resDiv.innerHTML = `<div class="loader">Errore durante la ricerca.</div>`;
   }
     }
+    }
     function showSavedView() {
   closeActionBar();
   setActiveTab("tabSaved");
@@ -1567,29 +1568,29 @@ function jumpToRefString(str) {
 }
 
 // ============================================================================
-// MOTORE AUDIO V9 SINCRONO PURO (Attivazione Diretta sul Tocco come in V3 + Filtro Numeri)
+// MOTORE AUDIO PRO (Basato sul motore V3 che parlava sul Pixel + Filtro Numeri)
 // ============================================================================
+let bmAudioPlayer = null;
 let bmAudioPlaying = false;
 let bmUserStopped = false;
-let bmCurrentUtter = null;
 let bmSessionId = 0;
 
-function getActiveTTSLangCode() {
+function getActiveTTSLangCode(fullLocale = false) {
   const t = (state.trans1 || "").toLowerCase();
-  if (t.includes("riveduta") || t.includes("giovanni")) return "it-IT";
-  if (t.includes("valera") || t.includes("sagradas") || t.includes("rvg")) return "es-ES";
-  if (t.includes("luther") || t.includes("schlachter") || t.includes("elberfelder")) return "de-DE";
-  if (t.includes("ls1910") || t.includes("martin") || t.includes("ostervald")) return "fr-FR";
-  if (t.includes("almeida")) return "pt-BR";
-  if (t.includes("synodal") || t.includes("makarij")) return "ru-RU";
-  return "en-US";
+  if (t.includes("riveduta") || t.includes("giovanni")) return fullLocale ? "it-IT" : "it";
+  if (t.includes("valera") || t.includes("sagradas") || t.includes("rvg")) return fullLocale ? "es-ES" : "es";
+  if (t.includes("luther") || t.includes("schlachter") || t.includes("elberfelder")) return fullLocale ? "de-DE" : "de";
+  if (t.includes("ls1910") || t.includes("martin") || t.includes("ostervald")) return fullLocale ? "fr-FR" : "fr";
+  if (t.includes("almeida")) return fullLocale ? "pt-BR" : "pt";
+  if (t.includes("synodal") || t.includes("makarij")) return fullLocale ? "ru-RU" : "ru";
+  return fullLocale ? "en-US" : "en";
 }
 
 function cleanTextForSpeech(rawText) {
   if (!rawText) return "";
   return rawText
     .replace(/<[^>]*>?/gm, " ")       // Rimuove tag HTML
-    .replace(/\[[^\]]*\]/g, " ")      // Rimuove note tra parentesi quadre
+    .replace(/\[[^\]]*\]/g, " ")      // Rimuove parentesi quadre
     .replace(/\b[HGhg]?\d+\b/g, " ")  // Rimuove codici Strong (es. 5688, H430)
     .replace(/\d+/g, " ")             // Rimuove tutti i numeri (niente più "5, 6, 8...")
     .replace(/[{}<>«»""]/g, " ")      // Rimuove simboli speciali
@@ -1598,15 +1599,15 @@ function cleanTextForSpeech(rawText) {
 }
 
 function splitTextForAudio(text, maxLen = 160) {
-  const sentences = text.replace(/\s+/g, " ").trim().split(/(?<=[.!?;:])\s+/);
+  const cleanFull = cleanTextForSpeech(text);
+  if (!cleanFull) return [];
+  const sentences = cleanFull.split(/(?<=[.!?;:])\s+/);
   const chunks = [];
   for (const s of sentences) {
-    const cleanS = cleanTextForSpeech(s);
-    if (!cleanS) continue;
-    if (cleanS.length <= maxLen) {
-      chunks.push(cleanS);
+    if (s.length <= maxLen) {
+      if (s.trim()) chunks.push(s.trim());
     } else {
-      const words = cleanS.split(" ");
+      const words = s.split(" ");
       let cur = "";
       for (const w of words) {
         if ((cur + " " + w).trim().length > maxLen) {
@@ -1626,7 +1627,15 @@ function stopAllAudio() {
   bmSessionId++;
   bmUserStopped = true;
   bmAudioPlaying = false;
-  bmCurrentUtter = null;
+  if (bmAudioPlayer) {
+    try {
+      bmAudioPlayer.onended = null;
+      bmAudioPlayer.onerror = null;
+      bmAudioPlayer.pause();
+      bmAudioPlayer.removeAttribute("src");
+    } catch (e) {}
+    bmAudioPlayer = null;
+  }
   if ("speechSynthesis" in window) {
     try { window.speechSynthesis.cancel(); } catch (e) {}
   }
@@ -1634,61 +1643,105 @@ function stopAllAudio() {
   if (btn) btn.innerHTML = "🔊 Ascolta";
 }
 
-function startDirectSpeech(rawText, updateMainBtn = true) {
-  if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
-    alert("Motore vocale nativo disattivato nella WebView.");
+// Identico al motore V3 che ha fatto parlare l'APK sul Pixel, ma con 1 sola voce e testo pulito
+function playCloudAudioStream(chunks, index = 0, sessionId = bmSessionId) {
+  if (bmUserStopped || !bmAudioPlaying || sessionId !== bmSessionId || index >= chunks.length) {
+    if (sessionId === bmSessionId) stopAllAudio();
     return;
   }
+  const tl = getActiveTTSLangCode(false);
+  const q = encodeURIComponent(chunks[index]);
+  const urls = [
+    `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=${tl}&q=${q}`,
+    `https://translate.googleapis.com/translate_tts?client=tw-ob&ie=UTF-8&tl=${tl}&q=${q}`,
+    `https://dict.youdao.com/dictvoice?audio=${q}&le=${tl}`
+  ];
 
-  const chunks = splitTextForAudio(rawText, 160);
-  if (!chunks.length) return;
-
-  const mySession = ++bmSessionId;
-  bmUserStopped = false;
-  bmAudioPlaying = true;
-
-  const btn = document.getElementById("ttsChapterBtn");
-  if (updateMainBtn && btn) btn.innerHTML = "⏹️ Ferma";
-
-  const langCode = getActiveTTSLangCode();
-  let idx = 0;
-
-  const speakNext = () => {
-    if (bmUserStopped || !bmAudioPlaying || mySession !== bmSessionId || idx >= chunks.length) {
-      if (mySession === bmSessionId) stopAllAudio();
+  let urlIdx = 0;
+  const tryPlayUrl = () => {
+    if (bmUserStopped || !bmAudioPlaying || sessionId !== bmSessionId) return;
+    if (urlIdx >= urls.length) {
+      playCloudAudioStream(chunks, index + 1, sessionId);
       return;
     }
+    const audio = new Audio();
+    audio.referrerPolicy = "no-referrer";
+    audio.preload = "auto";
+    audio.src = urls[urlIdx++];
+    bmAudioPlayer = audio;
 
-    try {
-      const u = new SpeechSynthesisUtterance(chunks[idx]);
-      bmCurrentUtter = u; // Impedisce al Garbage Collector di Android di fermare l'audio
-      u.lang = langCode;
-      u.rate = 1.0;
+    audio.onended = () => {
+      if (!bmUserStopped && bmAudioPlaying && sessionId === bmSessionId) {
+        playCloudAudioStream(chunks, index + 1, sessionId);
+      }
+    };
+    audio.onerror = () => {
+      if (!bmUserStopped && bmAudioPlaying && sessionId === bmSessionId) {
+        tryPlayUrl();
+      }
+    };
 
-      u.onend = () => {
-        if (!bmUserStopped && bmAudioPlaying && mySession === bmSessionId) {
-          idx++;
-          speakNext();
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {
+        if (!bmUserStopped && bmAudioPlaying && sessionId === bmSessionId) {
+          tryPlayUrl();
         }
-      };
-
-      u.onerror = (ev) => {
-        if (bmUserStopped || mySession !== bmSessionId || ev.error === "canceled" || ev.error === "interrupted") {
-          return;
-        }
-        idx++;
-        speakNext();
-      };
-
-      window.speechSynthesis.speak(u);
-    } catch (err) {
-      stopAllAudio();
+      });
     }
   };
 
-  // IMPORTANTE: Esecuzione SINCRONA immediata dentro il click dell'utente (identica al V3 che parlava!)
-  try { window.speechSynthesis.cancel(); } catch (e) {}
-  speakNext();
+  tryPlayUrl();
+}
+
+function startUniversalSpeech(text, updateMainBtn = true) {
+  stopAllAudio();
+  const chunks = splitTextForAudio(text, 160);
+  if (!chunks.length) return;
+
+  const currentSession = ++bmSessionId;
+  bmUserStopped = false;
+  bmAudioPlaying = true;
+  const btn = document.getElementById("ttsChapterBtn");
+  if (updateMainBtn && btn) btn.innerHTML = "⏹️ Ferma";
+
+  // Se speechSynthesis esiste (es. Preview Chrome), prova quello; se non esiste (APK WebView), va subito su Cloud V3
+  if ("speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined") {
+    let idx = 0;
+    let nativeStarted = false;
+
+    const speakNextNative = () => {
+      if (bmUserStopped || !bmAudioPlaying || currentSession !== bmSessionId || idx >= chunks.length) {
+        if (currentSession === bmSessionId) stopAllAudio();
+        return;
+      }
+      try {
+        const u = new SpeechSynthesisUtterance(chunks[idx]);
+        u.lang = getActiveTTSLangCode(true);
+        u.onstart = () => { nativeStarted = true; };
+        u.onend = () => {
+          if (!bmUserStopped && bmAudioPlaying && currentSession === bmSessionId) {
+            idx++;
+            speakNextNative();
+          }
+        };
+        u.onerror = (ev) => {
+          if (bmUserStopped || currentSession !== bmSessionId || ev.error === "canceled" || ev.error === "interrupted") {
+            return;
+          }
+          playCloudAudioStream(chunks, idx, currentSession);
+        };
+        window.speechSynthesis.speak(u);
+      } catch (err) {
+        playCloudAudioStream(chunks, idx, currentSession);
+      }
+    };
+
+    try { window.speechSynthesis.cancel(); } catch (e) {}
+    speakNextNative();
+  } else {
+    playCloudAudioStream(chunks, 0, currentSession);
+  }
 }
 
 function toggleChapterTTS() {
@@ -1697,9 +1750,10 @@ function toggleChapterTTS() {
     return;
   }
   const rows = [...document.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3")];
+  // Prende SOLO il testo del versetto senza aggiungere il numero!
   const fullText = rows.map(r => r.getAttribute("data-text") || "").join(". ");
   if (!fullText.trim()) return;
-  startDirectSpeech(fullText, true);
+  startUniversalSpeech(fullText, true);
 }
 
 function speakSelectedVerse() {
@@ -1708,7 +1762,7 @@ function speakSelectedVerse() {
     stopAllAudio();
     return;
   }
-  startDirectSpeech(state.selectedVerseText, false);
+  startUniversalSpeech(state.selectedVerseText, false);
 }
 
 function openStrongModalForVerse() {
@@ -1777,7 +1831,7 @@ function generateVerseCardModal() {
   ctx.fillStyle = "rgba(255,255,255,0.85)";
   ctx.font = "bold 32px sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("BIBBIA MULTILINGUE (BM)", 540, 140);
+  ctx.fillText("BIBBIA MULTILINGUE PRO (BM)", 540, 140);
 
   ctx.fillStyle = "#ffffff";
   ctx.font = "italic 42px Georgia, serif";
@@ -1802,7 +1856,7 @@ function downloadCanvasCard() {
   const canvas = document.getElementById("verseCanvas");
   const a = document.createElement("a");
   a.href = canvas.toDataURL("image/png");
-  a.download = `BM_Versetto_${Date.now()}.png`;
+  a.download = `BM_PRO_Versetto_${Date.now()}.png`;
   a.click();
 }
 
@@ -1825,7 +1879,7 @@ function openBackupModal() {
 
 function exportBackupJson() {
   const data = {
-    app: "BibbiaMultilingue_v10_Pro",
+    app: "BibbiaMultilingue_PRO",
     date: new Date().toISOString(),
     highlights: state.highlights,
     bookmarks: state.bookmarks,
@@ -1834,7 +1888,7 @@ function exportBackupJson() {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `BM_Backup_${new Date().toISOString().slice(0,10)}.json`;
+  a.download = `BM_PRO_Backup_${new Date().toISOString().slice(0,10)}.json`;
   a.click();
 }
 
@@ -1854,23 +1908,72 @@ async function importBackupJson(e) {
   }
 }
 
+// ============================================================================
+// SCHERMATA INIZIALE BLU ROYAL "BIBBIA MULTILINGUE PRO" CON BLOCCO CENTRALE "BM"
+// ============================================================================
+function upgradeSplashScreenToPro() {
+  document.title = "Bibbia Multilingue PRO";
+  const splash = document.getElementById("splashScreen");
+  if (!splash) return;
+
+  splash.style.cssText = `
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at center, #0d47a1 0%, #072a60 55%, #031533 100%);
+    color: #ffffff;
+    transition: opacity 0.5s ease;
+    font-family: system-ui, -apple-system, sans-serif;
+  `;
+
+  splash.innerHTML = `
+    <div style="
+      width: 112px;
+      height: 112px;
+      border-radius: 28px;
+      background: linear-gradient(135deg, #1976d2 0%, #0d47a1 100%);
+      border: 2.5px solid rgba(255, 255, 255, 0.35);
+      box-shadow: 0 14px 35px rgba(0, 0, 0, 0.45), 0 0 28px rgba(33, 150, 243, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 46px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      color: #ffffff;
+      margin-bottom: 22px;
+    ">BM</div>
+    <div style="font-size: 22px; font-weight: 800; letter-spacing: 0.8px; text-shadow: 0 2px 8px rgba(0,0,0,0.4);">
+      BIBBIA MULTILINGUE <span style="background:#ffca28; color:#072a60; padding:2px 8px; border-radius:6px; font-size:15px; vertical-align:middle; margin-left:4px;">PRO</span>
+    </div>
+    <div style="font-size: 13px; color: rgba(255,255,255,0.78); margin-top: 8px; letter-spacing: 0.4px;">
+      Studio Biblico Parallelo & Audio Universale
+    </div>
+  `;
+}
+
 function dismissSplashScreen() {
   const splash = document.getElementById("splashScreen");
   if (splash) {
     splash.style.opacity = "0";
-    setTimeout(() => splash.remove(), 400);
+    setTimeout(() => splash.remove(), 450);
   }
 }
 
-// Timer di sicurezza anti-blocco Splash Screen + Inizializzazione
-setTimeout(dismissSplashScreen, 1800);
+// Applica subito lo schermo Blu PRO + Timer di sicurezza anti-blocco Splash Screen
+upgradeSplashScreenToPro();
+setTimeout(dismissSplashScreen, 1900);
 applySavedTheme();
 
 populateSelects()
   .catch(() => {})
   .finally(() => {
     loadChapterView().finally(() => {
-      setTimeout(dismissSplashScreen, 400);
+      setTimeout(dismissSplashScreen, 600);
     });
   });
 
