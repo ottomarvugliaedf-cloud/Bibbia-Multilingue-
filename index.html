@@ -1566,30 +1566,131 @@ function jumpToRefString(str) {
   }
 }
 
-function toggleChapterTTS() {
-  if (!("speechSynthesis" in window)) return alert("Sintesi vocale non supportata su questo dispositivo.");
+// ============================================================================
+// MOTORE AUDIO IBRIDO UNIVERSALE (Nativo + Streaming HTML5 per APK AppsGeyser)
+// ============================================================================
+let bmAudioPlayer = null;
+let bmAudioQueue = [];
+let bmAudioPlaying = false;
+
+function getActiveTTSLangCode(fullLocale = false) {
+  const t = (state.trans1 || "").toLowerCase();
+  if (t.includes("riveduta") || t.includes("giovanni")) return fullLocale ? "it-IT" : "it";
+  if (t.includes("valera") || t.includes("sagradas") || t.includes("rvg")) return fullLocale ? "es-ES" : "es";
+  if (t.includes("luther") || t.includes("schlachter") || t.includes("elberfelder")) return fullLocale ? "de-DE" : "de";
+  if (t.includes("ls1910") || t.includes("martin") || t.includes("ostervald")) return fullLocale ? "fr-FR" : "fr";
+  if (t.includes("almeida")) return fullLocale ? "pt-BR" : "pt";
+  if (t.includes("synodal") || t.includes("makarij")) return fullLocale ? "ru-RU" : "ru";
+  return fullLocale ? "en-US" : "en";
+}
+
+function splitTextForAudio(text, maxLen = 175) {
+  const words = text.replace(/\s+/g, " ").trim().split(" ");
+  const chunks = [];
+  let current = "";
+  for (const w of words) {
+    if ((current + " " + w).trim().length > maxLen) {
+      if (current) chunks.push(current.trim());
+      current = w;
+    } else {
+      current = (current ? current + " " : "") + w;
+    }
+  }
+  if (current.trim()) chunks.push(current.trim());
+  return chunks;
+}
+
+function stopAllAudio() {
+  bmAudioPlaying = false;
+  bmAudioQueue = [];
+  if (bmAudioPlayer) {
+    try { bmAudioPlayer.pause(); bmAudioPlayer.src = ""; } catch(e) {}
+    bmAudioPlayer = null;
+  }
+  if ("speechSynthesis" in window) {
+    try { window.speechSynthesis.cancel(); } catch(e) {}
+  }
   const btn = document.getElementById("ttsChapterBtn");
-  if (window.speechSynthesis.speaking) {
-    window.speechSynthesis.cancel();
-    if (btn) btn.innerHTML = "🔊 Ascolta";
+  if (btn) btn.innerHTML = "🔊 Ascolta";
+}
+
+function playFallbackAudioStream(text, onFinish) {
+  stopAllAudio();
+  const chunks = splitTextForAudio(text, 175);
+  if (!chunks.length) return;
+  const tl = getActiveTTSLangCode(false);
+  bmAudioQueue = chunks.map(c => `https://translate.googleapis.com/translate_tts?client=tw-ob&ie=UTF-8&tl=${tl}&q=${encodeURIComponent(c)}`);
+  bmAudioPlaying = true;
+  const btn = document.getElementById("ttsChapterBtn");
+  if (btn && onFinish) btn.innerHTML = "⏹️ Ferma";
+
+  const playNextChunk = () => {
+    if (!bmAudioPlaying || !bmAudioQueue.length) {
+      stopAllAudio();
+      if (onFinish) onFinish();
+      return;
+    }
+    const nextUrl = bmAudioQueue.shift();
+    bmAudioPlayer = new Audio(nextUrl);
+    bmAudioPlayer.onended = playNextChunk;
+    bmAudioPlayer.onerror = playNextChunk;
+    bmAudioPlayer.play().catch(() => {
+      stopAllAudio();
+      alert("Impossibile avviare lo stream audio. Verifica la connessione internet.");
+    });
+  };
+  playNextChunk();
+}
+
+function toggleChapterTTS() {
+  const btn = document.getElementById("ttsChapterBtn");
+  if (bmAudioPlaying || ("speechSynthesis" in window && window.speechSynthesis.speaking)) {
+    stopAllAudio();
     return;
   }
+
   const rows = [...document.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3")];
   const fullText = rows.map(r => r.getAttribute("data-text") || "").join(" ");
   if (!fullText) return;
-  const utter = new SpeechSynthesisUtterance(fullText);
-  utter.lang = (state.trans1.includes("riveduta") || state.trans1.includes("giovanni")) ? "it-IT" : "en-US";
-  utter.onend = () => { if (btn) btn.innerHTML = "🔊 Ascolta"; };
-  if (btn) btn.innerHTML = "⏹️ Ferma";
-  window.speechSynthesis.speak(utter);
+
+  const isWebViewAPK = /wv|Version\/\d+\.\d+.*Chrome/i.test(navigator.userAgent);
+
+  if ("speechSynthesis" in window && !isWebViewAPK) {
+    try {
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(fullText);
+      utter.lang = getActiveTTSLangCode(true);
+      utter.onend = () => { if (btn) btn.innerHTML = "🔊 Ascolta"; };
+      utter.onerror = () => {
+        playFallbackAudioStream(fullText, () => { if (btn) btn.innerHTML = "🔊 Ascolta"; });
+      };
+      if (btn) btn.innerHTML = "⏹️ Ferma";
+      window.speechSynthesis.speak(utter);
+      return;
+    } catch (e) {}
+  }
+
+  // Fallback diretto per APK generati con AppsGeyser / WebView Android
+  playFallbackAudioStream(fullText, () => { if (btn) btn.innerHTML = "🔊 Ascolta"; });
 }
 
 function speakSelectedVerse() {
-  if (!("speechSynthesis" in window) || !state.selectedVerseText) return;
-  window.speechSynthesis.cancel();
-  const utter = new SpeechSynthesisUtterance(state.selectedVerseText);
-  utter.lang = (state.trans1.includes("riveduta") || state.trans1.includes("giovanni")) ? "it-IT" : "en-US";
-  window.speechSynthesis.speak(utter);
+  if (!state.selectedVerseText) return;
+  const text = state.selectedVerseText;
+  const isWebViewAPK = /wv|Version\/\d+\.\d+.*Chrome/i.test(navigator.userAgent);
+
+  if ("speechSynthesis" in window && !isWebViewAPK) {
+    try {
+      stopAllAudio();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = getActiveTTSLangCode(true);
+      utter.onerror = () => playFallbackAudioStream(text, null);
+      window.speechSynthesis.speak(utter);
+      return;
+    } catch (e) {}
+  }
+
+  playFallbackAudioStream(text, null);
 }
 
 function openStrongModalForVerse() {
@@ -1763,3 +1864,4 @@ if ('serviceWorker' in navigator) {
 </script>
 </body>
 </html>
+              
