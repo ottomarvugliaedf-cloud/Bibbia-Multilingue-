@@ -1567,21 +1567,23 @@ function jumpToRefString(str) {
 }
 
 // ============================================================================
-// MOTORE AUDIO V6 NATIVO PURO (Senza dipendenze web esterne)
+// MOTORE AUDIO V7 DEFINITIVO (Voce Singola + No-Referrer Stream + Anti-Numeri)
 // ============================================================================
 let bmAudioPlaying = false;
 let bmUserStopped = false;
 let bmCurrentUtter = null;
+let bmAudioPlayer = null;
+let bmSessionId = 0; // Impedisce matematicamente che due voci parlino insieme
 
-function getActiveTTSLangCode() {
+function getActiveTTSLangCode(fullLocale = false) {
   const t = (state.trans1 || "").toLowerCase();
-  if (t.includes("riveduta") || t.includes("giovanni")) return "it-IT";
-  if (t.includes("valera") || t.includes("sagradas") || t.includes("rvg")) return "es-ES";
-  if (t.includes("luther") || t.includes("schlachter") || t.includes("elberfelder")) return "de-DE";
-  if (t.includes("ls1910") || t.includes("martin") || t.includes("ostervald")) return "fr-FR";
-  if (t.includes("almeida")) return "pt-BR";
-  if (t.includes("synodal") || t.includes("makarij")) return "ru-RU";
-  return "en-US";
+  if (t.includes("riveduta") || t.includes("giovanni")) return fullLocale ? "it-IT" : "it";
+  if (t.includes("valera") || t.includes("sagradas") || t.includes("rvg")) return fullLocale ? "es-ES" : "es";
+  if (t.includes("luther") || t.includes("schlachter") || t.includes("elberfelder")) return fullLocale ? "de-DE" : "de";
+  if (t.includes("ls1910") || t.includes("martin") || t.includes("ostervald")) return fullLocale ? "fr-FR" : "fr";
+  if (t.includes("almeida")) return fullLocale ? "pt-BR" : "pt";
+  if (t.includes("synodal") || t.includes("makarij")) return fullLocale ? "ru-RU" : "ru";
+  return fullLocale ? "en-US" : "en";
 }
 
 function cleanTextForSpeech(rawText) {
@@ -1589,83 +1591,168 @@ function cleanTextForSpeech(rawText) {
   return rawText
     .replace(/<[^>]*>?/gm, " ")       // Rimuove tag HTML
     .replace(/\[[^\]]*\]/g, " ")      // Rimuove note tra parentesi quadre
-    .replace(/\b[HGhg]?\d+\b/g, " ")  // Rimuove codici Strong e numeri isolati
-    .replace(/\d+/g, " ")             // Rimuove cifre numeriche
+    .replace(/\b[HGhg]?\d+\b/g, " ")  // Rimuove codici Strong (es. 5688, H430)
+    .replace(/\d+/g, " ")             // Rimuove qualsiasi numero residuo
     .replace(/[{}<>«»""]/g, " ")      // Rimuove simboli speciali
     .replace(/\s+/g, " ")
     .trim();
 }
 
+function splitIntoShortChunks(cleanVerses, maxLen = 165) {
+  const chunks = [];
+  for (const v of cleanVerses) {
+    if (v.length <= maxLen) {
+      chunks.push(v);
+    } else {
+      const words = v.split(" ");
+      let cur = "";
+      for (const w of words) {
+        if ((cur + " " + w).trim().length > maxLen) {
+          if (cur.trim()) chunks.push(cur.trim());
+          cur = w;
+        } else {
+          cur = (cur ? cur + " " : "") + w;
+        }
+      }
+      if (cur.trim()) chunks.push(cur.trim());
+    }
+  }
+  return chunks;
+}
+
 function stopAllAudio() {
+  bmSessionId++; // Invalida qualsiasi coda precedente
   bmUserStopped = true;
   bmAudioPlaying = false;
   bmCurrentUtter = null;
+  if (bmAudioPlayer) {
+    try {
+      bmAudioPlayer.onended = null;
+      bmAudioPlayer.onerror = null;
+      bmAudioPlayer.pause();
+      bmAudioPlayer.removeAttribute("src");
+    } catch (e) {}
+    bmAudioPlayer = null;
+  }
   if ("speechSynthesis" in window) {
-    try { window.speechSynthesis.cancel(); } catch(e) {}
+    try { window.speechSynthesis.cancel(); } catch (e) {}
   }
   const btn = document.getElementById("ttsChapterBtn");
   if (btn) btn.innerHTML = "🔊 Ascolta";
 }
 
+// Motore Cloud con No-Referrer (quello che funzionava sul Pixel nel V3, ma con 1 sola voce e senza numeri)
+function playCloudNoReferrer(chunks, sessionId) {
+  const tl = getActiveTTSLangCode(false);
+  let idx = 0;
+
+  const playNext = () => {
+    if (bmUserStopped || !bmAudioPlaying || sessionId !== bmSessionId || idx >= chunks.length) {
+      if (sessionId === bmSessionId) stopAllAudio();
+      return;
+    }
+
+    const q = encodeURIComponent(chunks[idx]);
+    // Endpoint gtx con client=tw-ob + no-referrer per bypassare il blocco di GitHub Pages
+    const url = `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=${tl}&q=${q}`;
+
+    const audio = new Audio();
+    audio.referrerPolicy = "no-referrer";
+    audio.preload = "auto";
+    audio.src = url;
+    bmAudioPlayer = audio;
+
+    audio.onended = () => {
+      if (sessionId === bmSessionId && !bmUserStopped && bmAudioPlaying) {
+        idx++;
+        playNext();
+      }
+    };
+
+    audio.onerror = () => {
+      if (sessionId !== bmSessionId || bmUserStopped || !bmAudioPlaying) return;
+      // Riprova col secondo parametro client=tw-ob se gtx fallisce su una frase
+      const fallbackUrl = `https://translate.googleapis.com/translate_tts?client=tw-ob&ie=UTF-8&tl=${tl}&q=${q}`;
+      if (audio.src !== fallbackUrl) {
+        audio.src = fallbackUrl;
+        audio.play().catch(() => { idx++; playNext(); });
+      } else {
+        idx++;
+        playNext();
+      }
+    };
+
+    audio.play().catch(() => {
+      if (sessionId === bmSessionId && !bmUserStopped && bmAudioPlaying) {
+        idx++;
+        playNext();
+      }
+    });
+  };
+
+  playNext();
+}
+
 function speakVerseQueue(verseList, updateMainBtn = true) {
   stopAllAudio();
-  const cleanQueue = verseList.map(v => cleanTextForSpeech(v)).filter(v => v.length > 1);
-  if (!cleanQueue.length) {
-    alert("Nessun testo disponibile per la lettura.");
-    return;
-  }
+  const cleanVerses = verseList.map(v => cleanTextForSpeech(v)).filter(v => v.length > 1);
+  if (!cleanVerses.length) return;
 
-  if (!("speechSynthesis" in window)) {
-    alert("Sintesi vocale non supportata su questo dispositivo.");
-    return;
-  }
-
+  const chunks = splitIntoShortChunks(cleanVerses, 165);
+  const currentSession = ++bmSessionId;
   bmUserStopped = false;
   bmAudioPlaying = true;
+
   const btn = document.getElementById("ttsChapterBtn");
   if (updateMainBtn && btn) btn.innerHTML = "⏹️ Ferma";
 
-  let idx = 0;
-  const langCode = getActiveTTSLangCode();
+  // 1) Se siamo nell'APK di AppsGeyser (dove speechSynthesis non esiste), va DRITTO al Cloud No-Referrer
+  if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
+    playCloudNoReferrer(chunks, currentSession);
+    return;
+  }
 
-  const playNextVerse = () => {
-    if (bmUserStopped || !bmAudioPlaying || idx >= cleanQueue.length) {
-      stopAllAudio();
+  // 2) Se siamo su Chrome (Preview), usa il sintetizzatore nativo ma se fallisce al primo versetto passa al Cloud
+  let idx = 0;
+  let nativeWorked = false;
+  const langLocale = getActiveTTSLangCode(true);
+
+  const playNextNative = () => {
+    if (bmUserStopped || !bmAudioPlaying || currentSession !== bmSessionId || idx >= chunks.length) {
+      if (currentSession === bmSessionId) stopAllAudio();
       return;
     }
 
     try {
-      if (window.speechSynthesis.paused) {
-        window.speechSynthesis.resume();
-      }
-      const u = new SpeechSynthesisUtterance(cleanQueue[idx]);
-      bmCurrentUtter = u; // Evita la cancellazione della voce da parte di Android
-      u.lang = langCode;
-      u.rate = 1.0;
+      const u = new SpeechSynthesisUtterance(chunks[idx]);
+      bmCurrentUtter = u;
+      u.lang = langLocale;
 
+      u.onstart = () => { nativeWorked = true; };
       u.onend = () => {
-        if (!bmUserStopped && bmAudioPlaying) {
+        if (currentSession === bmSessionId && !bmUserStopped && bmAudioPlaying) {
           idx++;
-          playNextVerse();
+          playNextNative();
         }
       };
-
       u.onerror = (ev) => {
-        if (bmUserStopped || ev.error === "canceled" || ev.error === "interrupted") {
-          return;
+        if (bmUserStopped || currentSession !== bmSessionId || ev.error === "canceled" || ev.error === "interrupted") return;
+        if (!nativeWorked) {
+          try { window.speechSynthesis.cancel(); } catch (e) {}
+          playCloudNoReferrer(chunks.slice(idx), currentSession);
+        } else {
+          idx++;
+          playNextNative();
         }
-        idx++;
-        playNextVerse();
       };
 
       window.speechSynthesis.speak(u);
     } catch (e) {
-      stopAllAudio();
+      playCloudNoReferrer(chunks.slice(idx), currentSession);
     }
   };
 
-  try { window.speechSynthesis.cancel(); } catch(e) {}
-  setTimeout(playNextVerse, 100);
+  playNextNative();
 }
 
 function toggleChapterTTS() {
