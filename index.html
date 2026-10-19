@@ -1567,23 +1567,22 @@ function jumpToRefString(str) {
 }
 
 // ============================================================================
-// MOTORE AUDIO V8 (Multi-Server Cloud V3 + Filtro Anti-Numeri + Voce Unica)
+// MOTORE AUDIO V9 SINCRONO PURO (Attivazione Diretta sul Tocco come in V3 + Filtro Numeri)
 // ============================================================================
 let bmAudioPlaying = false;
 let bmUserStopped = false;
 let bmCurrentUtter = null;
-let bmAudioPlayer = null;
 let bmSessionId = 0;
 
-function getActiveTTSLangCode(fullLocale = false) {
+function getActiveTTSLangCode() {
   const t = (state.trans1 || "").toLowerCase();
-  if (t.includes("riveduta") || t.includes("giovanni")) return fullLocale ? "it-IT" : "it";
-  if (t.includes("valera") || t.includes("sagradas") || t.includes("rvg")) return fullLocale ? "es-ES" : "es";
-  if (t.includes("luther") || t.includes("schlachter") || t.includes("elberfelder")) return fullLocale ? "de-DE" : "de";
-  if (t.includes("ls1910") || t.includes("martin") || t.includes("ostervald")) return fullLocale ? "fr-FR" : "fr";
-  if (t.includes("almeida")) return fullLocale ? "pt-BR" : "pt";
-  if (t.includes("synodal") || t.includes("makarij")) return fullLocale ? "ru-RU" : "ru";
-  return fullLocale ? "en-US" : "en";
+  if (t.includes("riveduta") || t.includes("giovanni")) return "it-IT";
+  if (t.includes("valera") || t.includes("sagradas") || t.includes("rvg")) return "es-ES";
+  if (t.includes("luther") || t.includes("schlachter") || t.includes("elberfelder")) return "de-DE";
+  if (t.includes("ls1910") || t.includes("martin") || t.includes("ostervald")) return "fr-FR";
+  if (t.includes("almeida")) return "pt-BR";
+  if (t.includes("synodal") || t.includes("makarij")) return "ru-RU";
+  return "en-US";
 }
 
 function cleanTextForSpeech(rawText) {
@@ -1591,34 +1590,33 @@ function cleanTextForSpeech(rawText) {
   return rawText
     .replace(/<[^>]*>?/gm, " ")       // Rimuove tag HTML
     .replace(/\[[^\]]*\]/g, " ")      // Rimuove note tra parentesi quadre
-    .replace(/\b[HGhg]?\d+\b/g, " ")  // Rimuove tutti i codici Strong (es. 5688, H430)
-    .replace(/\d+/g, " ")             // Rimuove qualsiasi numero residuo
+    .replace(/\b[HGhg]?\d+\b/g, " ")  // Rimuove codici Strong (es. 5688, H430)
+    .replace(/\d+/g, " ")             // Rimuove tutti i numeri (niente più "5, 6, 8...")
     .replace(/[{}<>«»""]/g, " ")      // Rimuove simboli speciali
     .replace(/\s+/g, " ")
     .trim();
 }
 
-function splitIntoShortChunks(cleanVerses, maxLen = 150) {
+function splitTextForAudio(text, maxLen = 160) {
+  const sentences = text.replace(/\s+/g, " ").trim().split(/(?<=[.!?;:])\s+/);
   const chunks = [];
-  for (const v of cleanVerses) {
-    // Divide anche per frasi interne al versetto senza mai spezzare le parole
-    const subSentences = v.split(/(?<=[.!?;:])\s+/);
-    for (const s of subSentences) {
-      if (s.length <= maxLen) {
-        if (s.trim()) chunks.push(s.trim());
-      } else {
-        const words = s.split(" ");
-        let cur = "";
-        for (const w of words) {
-          if ((cur + " " + w).trim().length > maxLen) {
-            if (cur.trim()) chunks.push(cur.trim());
-            cur = w;
-          } else {
-            cur = (cur ? cur + " " : "") + w;
-          }
+  for (const s of sentences) {
+    const cleanS = cleanTextForSpeech(s);
+    if (!cleanS) continue;
+    if (cleanS.length <= maxLen) {
+      chunks.push(cleanS);
+    } else {
+      const words = cleanS.split(" ");
+      let cur = "";
+      for (const w of words) {
+        if ((cur + " " + w).trim().length > maxLen) {
+          if (cur.trim()) chunks.push(cur.trim());
+          cur = w;
+        } else {
+          cur = (cur ? cur + " " : "") + w;
         }
-        if (cur.trim()) chunks.push(cur.trim());
       }
+      if (cur.trim()) chunks.push(cur.trim());
     }
   }
   return chunks;
@@ -1629,15 +1627,6 @@ function stopAllAudio() {
   bmUserStopped = true;
   bmAudioPlaying = false;
   bmCurrentUtter = null;
-  if (bmAudioPlayer) {
-    try {
-      bmAudioPlayer.onended = null;
-      bmAudioPlayer.onerror = null;
-      bmAudioPlayer.pause();
-      bmAudioPlayer.removeAttribute("src");
-    } catch (e) {}
-    bmAudioPlayer = null;
-  }
   if ("speechSynthesis" in window) {
     try { window.speechSynthesis.cancel(); } catch (e) {}
   }
@@ -1645,137 +1634,61 @@ function stopAllAudio() {
   if (btn) btn.innerHTML = "🔊 Ascolta";
 }
 
-function playMultiServerCloud(chunks, startIndex, sessionId) {
-  const tl = getActiveTTSLangCode(false);
-  let idx = startIndex;
+function startDirectSpeech(rawText, updateMainBtn = true) {
+  if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
+    alert("Motore vocale nativo disattivato nella WebView.");
+    return;
+  }
 
-  const playChunkAt = () => {
-    if (bmUserStopped || !bmAudioPlaying || sessionId !== bmSessionId || idx >= chunks.length) {
-      if (sessionId === bmSessionId) stopAllAudio();
-      return;
-    }
+  const chunks = splitTextForAudio(rawText, 160);
+  if (!chunks.length) return;
 
-    const q = encodeURIComponent(chunks[idx]);
-    // Lista di 3 server indipendenti (incluso dictvoice che funzionava nel V3 su AppsGeyser)
-    const serverUrls = [
-      `https://dict.youdao.com/dictvoice?audio=${q}&le=${tl}`,
-      `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=${tl}&q=${q}`,
-      `https://translate.googleapis.com/translate_tts?client=tw-ob&ie=UTF-8&tl=${tl}&q=${q}`
-    ];
-
-    let sIdx = 0;
-
-    const tryNextServer = () => {
-      if (bmUserStopped || !bmAudioPlaying || sessionId !== bmSessionId) return;
-      if (sIdx >= serverUrls.length) {
-        // Se tutti i server falliscono sul primo pezzo, avvisa invece di chiudersi in silenzio
-        if (idx === startIndex) {
-          stopAllAudio();
-          alert("Impossibile riprodurre il flusso vocale nella WebView.");
-          return;
-        }
-        idx++;
-        playChunkAt();
-        return;
-      }
-
-      const audio = new Audio();
-      audio.referrerPolicy = "no-referrer";
-      audio.preload = "auto";
-      audio.src = serverUrls[sIdx++];
-      bmAudioPlayer = audio;
-
-      audio.onended = () => {
-        if (sessionId === bmSessionId && !bmUserStopped && bmAudioPlaying) {
-          idx++;
-          playChunkAt();
-        }
-      };
-
-      audio.onerror = () => {
-        if (sessionId === bmSessionId && !bmUserStopped && bmAudioPlaying) {
-          tryNextServer();
-        }
-      };
-
-      const p = audio.play();
-      if (p !== undefined) {
-        p.catch(() => {
-          if (sessionId === bmSessionId && !bmUserStopped && bmAudioPlaying) {
-            tryNextServer();
-          }
-        });
-      }
-    };
-
-    tryNextServer();
-  };
-
-  playChunkAt();
-}
-
-function speakVerseQueue(verseList, updateMainBtn = true) {
-  stopAllAudio();
-  const cleanVerses = verseList.map(v => cleanTextForSpeech(v)).filter(v => v.length > 1);
-  if (!cleanVerses.length) return;
-
-  const chunks = splitIntoShortChunks(cleanVerses, 150);
-  const currentSession = ++bmSessionId;
+  const mySession = ++bmSessionId;
   bmUserStopped = false;
   bmAudioPlaying = true;
 
   const btn = document.getElementById("ttsChapterBtn");
   if (updateMainBtn && btn) btn.innerHTML = "⏹️ Ferma";
 
-  const isWebViewAPK = /wv|Version\/\d+\.\d+.*Chrome/i.test(navigator.userAgent);
-
-  // Se siamo dentro l'APK di AppsGeyser o manca speechSynthesis, usa direttamente il Multi-Server Cloud senza sovrapposizioni
-  if (isWebViewAPK || !("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
-    playMultiServerCloud(chunks, 0, currentSession);
-    return;
-  }
-
-  // Su browser desktop/Chrome standard usa la voce di sistema con paracadute Cloud
+  const langCode = getActiveTTSLangCode();
   let idx = 0;
-  let nativeStarted = false;
-  const langLocale = getActiveTTSLangCode(true);
 
-  const playNextNative = () => {
-    if (bmUserStopped || !bmAudioPlaying || currentSession !== bmSessionId || idx >= chunks.length) {
-      if (currentSession === bmSessionId) stopAllAudio();
+  const speakNext = () => {
+    if (bmUserStopped || !bmAudioPlaying || mySession !== bmSessionId || idx >= chunks.length) {
+      if (mySession === bmSessionId) stopAllAudio();
       return;
     }
 
     try {
       const u = new SpeechSynthesisUtterance(chunks[idx]);
-      bmCurrentUtter = u;
-      u.lang = langLocale;
+      bmCurrentUtter = u; // Impedisce al Garbage Collector di Android di fermare l'audio
+      u.lang = langCode;
+      u.rate = 1.0;
 
-      u.onstart = () => { nativeStarted = true; };
       u.onend = () => {
-        if (currentSession === bmSessionId && !bmUserStopped && bmAudioPlaying) {
+        if (!bmUserStopped && bmAudioPlaying && mySession === bmSessionId) {
           idx++;
-          playNextNative();
+          speakNext();
         }
       };
+
       u.onerror = (ev) => {
-        if (bmUserStopped || currentSession !== bmSessionId || ev.error === "canceled" || ev.error === "interrupted") return;
-        if (!nativeStarted) {
-          try { window.speechSynthesis.cancel(); } catch (e) {}
-          playMultiServerCloud(chunks, idx, currentSession);
-        } else {
-          idx++;
-          playNextNative();
+        if (bmUserStopped || mySession !== bmSessionId || ev.error === "canceled" || ev.error === "interrupted") {
+          return;
         }
+        idx++;
+        speakNext();
       };
 
       window.speechSynthesis.speak(u);
-    } catch (e) {
-      playMultiServerCloud(chunks, idx, currentSession);
+    } catch (err) {
+      stopAllAudio();
     }
   };
 
-  playNextNative();
+  // IMPORTANTE: Esecuzione SINCRONA immediata dentro il click dell'utente (identica al V3 che parlava!)
+  try { window.speechSynthesis.cancel(); } catch (e) {}
+  speakNext();
 }
 
 function toggleChapterTTS() {
@@ -1784,9 +1697,9 @@ function toggleChapterTTS() {
     return;
   }
   const rows = [...document.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3")];
-  const verseTexts = rows.map(r => r.getAttribute("data-text") || "").filter(Boolean);
-  if (!verseTexts.length) return;
-  speakVerseQueue(verseTexts, true);
+  const fullText = rows.map(r => r.getAttribute("data-text") || "").join(". ");
+  if (!fullText.trim()) return;
+  startDirectSpeech(fullText, true);
 }
 
 function speakSelectedVerse() {
@@ -1795,7 +1708,7 @@ function speakSelectedVerse() {
     stopAllAudio();
     return;
   }
-  speakVerseQueue([state.selectedVerseText], false);
+  startDirectSpeech(state.selectedVerseText, false);
 }
 
 function openStrongModalForVerse() {
