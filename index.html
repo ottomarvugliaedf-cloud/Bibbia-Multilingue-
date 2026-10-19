@@ -1567,13 +1567,13 @@ function jumpToRefString(str) {
 }
 
 // ============================================================================
-// MOTORE AUDIO V7 DEFINITIVO (Voce Singola + No-Referrer Stream + Anti-Numeri)
+// MOTORE AUDIO V8 (Multi-Server Cloud V3 + Filtro Anti-Numeri + Voce Unica)
 // ============================================================================
 let bmAudioPlaying = false;
 let bmUserStopped = false;
 let bmCurrentUtter = null;
 let bmAudioPlayer = null;
-let bmSessionId = 0; // Impedisce matematicamente che due voci parlino insieme
+let bmSessionId = 0;
 
 function getActiveTTSLangCode(fullLocale = false) {
   const t = (state.trans1 || "").toLowerCase();
@@ -1591,37 +1591,41 @@ function cleanTextForSpeech(rawText) {
   return rawText
     .replace(/<[^>]*>?/gm, " ")       // Rimuove tag HTML
     .replace(/\[[^\]]*\]/g, " ")      // Rimuove note tra parentesi quadre
-    .replace(/\b[HGhg]?\d+\b/g, " ")  // Rimuove codici Strong (es. 5688, H430)
+    .replace(/\b[HGhg]?\d+\b/g, " ")  // Rimuove tutti i codici Strong (es. 5688, H430)
     .replace(/\d+/g, " ")             // Rimuove qualsiasi numero residuo
     .replace(/[{}<>«»""]/g, " ")      // Rimuove simboli speciali
     .replace(/\s+/g, " ")
     .trim();
 }
 
-function splitIntoShortChunks(cleanVerses, maxLen = 165) {
+function splitIntoShortChunks(cleanVerses, maxLen = 150) {
   const chunks = [];
   for (const v of cleanVerses) {
-    if (v.length <= maxLen) {
-      chunks.push(v);
-    } else {
-      const words = v.split(" ");
-      let cur = "";
-      for (const w of words) {
-        if ((cur + " " + w).trim().length > maxLen) {
-          if (cur.trim()) chunks.push(cur.trim());
-          cur = w;
-        } else {
-          cur = (cur ? cur + " " : "") + w;
+    // Divide anche per frasi interne al versetto senza mai spezzare le parole
+    const subSentences = v.split(/(?<=[.!?;:])\s+/);
+    for (const s of subSentences) {
+      if (s.length <= maxLen) {
+        if (s.trim()) chunks.push(s.trim());
+      } else {
+        const words = s.split(" ");
+        let cur = "";
+        for (const w of words) {
+          if ((cur + " " + w).trim().length > maxLen) {
+            if (cur.trim()) chunks.push(cur.trim());
+            cur = w;
+          } else {
+            cur = (cur ? cur + " " : "") + w;
+          }
         }
+        if (cur.trim()) chunks.push(cur.trim());
       }
-      if (cur.trim()) chunks.push(cur.trim());
     }
   }
   return chunks;
 }
 
 function stopAllAudio() {
-  bmSessionId++; // Invalida qualsiasi coda precedente
+  bmSessionId++;
   bmUserStopped = true;
   bmAudioPlaying = false;
   bmCurrentUtter = null;
@@ -1641,56 +1645,73 @@ function stopAllAudio() {
   if (btn) btn.innerHTML = "🔊 Ascolta";
 }
 
-// Motore Cloud con No-Referrer (quello che funzionava sul Pixel nel V3, ma con 1 sola voce e senza numeri)
-function playCloudNoReferrer(chunks, sessionId) {
+function playMultiServerCloud(chunks, startIndex, sessionId) {
   const tl = getActiveTTSLangCode(false);
-  let idx = 0;
+  let idx = startIndex;
 
-  const playNext = () => {
+  const playChunkAt = () => {
     if (bmUserStopped || !bmAudioPlaying || sessionId !== bmSessionId || idx >= chunks.length) {
       if (sessionId === bmSessionId) stopAllAudio();
       return;
     }
 
     const q = encodeURIComponent(chunks[idx]);
-    // Endpoint gtx con client=tw-ob + no-referrer per bypassare il blocco di GitHub Pages
-    const url = `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=${tl}&q=${q}`;
+    // Lista di 3 server indipendenti (incluso dictvoice che funzionava nel V3 su AppsGeyser)
+    const serverUrls = [
+      `https://dict.youdao.com/dictvoice?audio=${q}&le=${tl}`,
+      `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=${tl}&q=${q}`,
+      `https://translate.googleapis.com/translate_tts?client=tw-ob&ie=UTF-8&tl=${tl}&q=${q}`
+    ];
 
-    const audio = new Audio();
-    audio.referrerPolicy = "no-referrer";
-    audio.preload = "auto";
-    audio.src = url;
-    bmAudioPlayer = audio;
+    let sIdx = 0;
 
-    audio.onended = () => {
-      if (sessionId === bmSessionId && !bmUserStopped && bmAudioPlaying) {
+    const tryNextServer = () => {
+      if (bmUserStopped || !bmAudioPlaying || sessionId !== bmSessionId) return;
+      if (sIdx >= serverUrls.length) {
+        // Se tutti i server falliscono sul primo pezzo, avvisa invece di chiudersi in silenzio
+        if (idx === startIndex) {
+          stopAllAudio();
+          alert("Impossibile riprodurre il flusso vocale nella WebView.");
+          return;
+        }
         idx++;
-        playNext();
+        playChunkAt();
+        return;
+      }
+
+      const audio = new Audio();
+      audio.referrerPolicy = "no-referrer";
+      audio.preload = "auto";
+      audio.src = serverUrls[sIdx++];
+      bmAudioPlayer = audio;
+
+      audio.onended = () => {
+        if (sessionId === bmSessionId && !bmUserStopped && bmAudioPlaying) {
+          idx++;
+          playChunkAt();
+        }
+      };
+
+      audio.onerror = () => {
+        if (sessionId === bmSessionId && !bmUserStopped && bmAudioPlaying) {
+          tryNextServer();
+        }
+      };
+
+      const p = audio.play();
+      if (p !== undefined) {
+        p.catch(() => {
+          if (sessionId === bmSessionId && !bmUserStopped && bmAudioPlaying) {
+            tryNextServer();
+          }
+        });
       }
     };
 
-    audio.onerror = () => {
-      if (sessionId !== bmSessionId || bmUserStopped || !bmAudioPlaying) return;
-      // Riprova col secondo parametro client=tw-ob se gtx fallisce su una frase
-      const fallbackUrl = `https://translate.googleapis.com/translate_tts?client=tw-ob&ie=UTF-8&tl=${tl}&q=${q}`;
-      if (audio.src !== fallbackUrl) {
-        audio.src = fallbackUrl;
-        audio.play().catch(() => { idx++; playNext(); });
-      } else {
-        idx++;
-        playNext();
-      }
-    };
-
-    audio.play().catch(() => {
-      if (sessionId === bmSessionId && !bmUserStopped && bmAudioPlaying) {
-        idx++;
-        playNext();
-      }
-    });
+    tryNextServer();
   };
 
-  playNext();
+  playChunkAt();
 }
 
 function speakVerseQueue(verseList, updateMainBtn = true) {
@@ -1698,7 +1719,7 @@ function speakVerseQueue(verseList, updateMainBtn = true) {
   const cleanVerses = verseList.map(v => cleanTextForSpeech(v)).filter(v => v.length > 1);
   if (!cleanVerses.length) return;
 
-  const chunks = splitIntoShortChunks(cleanVerses, 165);
+  const chunks = splitIntoShortChunks(cleanVerses, 150);
   const currentSession = ++bmSessionId;
   bmUserStopped = false;
   bmAudioPlaying = true;
@@ -1706,15 +1727,17 @@ function speakVerseQueue(verseList, updateMainBtn = true) {
   const btn = document.getElementById("ttsChapterBtn");
   if (updateMainBtn && btn) btn.innerHTML = "⏹️ Ferma";
 
-  // 1) Se siamo nell'APK di AppsGeyser (dove speechSynthesis non esiste), va DRITTO al Cloud No-Referrer
-  if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
-    playCloudNoReferrer(chunks, currentSession);
+  const isWebViewAPK = /wv|Version\/\d+\.\d+.*Chrome/i.test(navigator.userAgent);
+
+  // Se siamo dentro l'APK di AppsGeyser o manca speechSynthesis, usa direttamente il Multi-Server Cloud senza sovrapposizioni
+  if (isWebViewAPK || !("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
+    playMultiServerCloud(chunks, 0, currentSession);
     return;
   }
 
-  // 2) Se siamo su Chrome (Preview), usa il sintetizzatore nativo ma se fallisce al primo versetto passa al Cloud
+  // Su browser desktop/Chrome standard usa la voce di sistema con paracadute Cloud
   let idx = 0;
-  let nativeWorked = false;
+  let nativeStarted = false;
   const langLocale = getActiveTTSLangCode(true);
 
   const playNextNative = () => {
@@ -1728,7 +1751,7 @@ function speakVerseQueue(verseList, updateMainBtn = true) {
       bmCurrentUtter = u;
       u.lang = langLocale;
 
-      u.onstart = () => { nativeWorked = true; };
+      u.onstart = () => { nativeStarted = true; };
       u.onend = () => {
         if (currentSession === bmSessionId && !bmUserStopped && bmAudioPlaying) {
           idx++;
@@ -1737,9 +1760,9 @@ function speakVerseQueue(verseList, updateMainBtn = true) {
       };
       u.onerror = (ev) => {
         if (bmUserStopped || currentSession !== bmSessionId || ev.error === "canceled" || ev.error === "interrupted") return;
-        if (!nativeWorked) {
+        if (!nativeStarted) {
           try { window.speechSynthesis.cancel(); } catch (e) {}
-          playCloudNoReferrer(chunks.slice(idx), currentSession);
+          playMultiServerCloud(chunks, idx, currentSession);
         } else {
           idx++;
           playNextNative();
@@ -1748,7 +1771,7 @@ function speakVerseQueue(verseList, updateMainBtn = true) {
 
       window.speechSynthesis.speak(u);
     } catch (e) {
-      playCloudNoReferrer(chunks.slice(idx), currentSession);
+      playMultiServerCloud(chunks, idx, currentSession);
     }
   };
 
