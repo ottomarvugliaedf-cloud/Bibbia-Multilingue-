@@ -1567,16 +1567,11 @@ function jumpToRefString(str) {
 }
 
 // ============================================================================
-// MOTORE AUDIO V5 (Voce nativa + ripiego audio online per WebView/APK)
+// MOTORE AUDIO V6 NATIVO PURO (Senza dipendenze web esterne)
 // ============================================================================
 let bmAudioPlaying = false;
 let bmUserStopped = false;
 let bmCurrentUtter = null;
-let bmAudioEl = null;
-
-function hasNativeTTS() {
-  return ("speechSynthesis" in window) && typeof SpeechSynthesisUtterance !== "undefined";
-}
 
 function getActiveTTSLangCode() {
   const t = (state.trans1 || "").toLowerCase();
@@ -1592,10 +1587,10 @@ function getActiveTTSLangCode() {
 function cleanTextForSpeech(rawText) {
   if (!rawText) return "";
   return rawText
-    .replace(/<[^>]*>?/gm, " ")       // Rimuove eventuali tag HTML
+    .replace(/<[^>]*>?/gm, " ")       // Rimuove tag HTML
     .replace(/\[[^\]]*\]/g, " ")      // Rimuove note tra parentesi quadre
-    .replace(/\b[HGhg]?\d+\b/g, " ")  // Rimuove TUTTI i numeri e codici Strong (es. 5, 6, 8, H430)
-    .replace(/\d+/g, " ")             // Sicurezza extra: rimuove qualsiasi cifra residua
+    .replace(/\b[HGhg]?\d+\b/g, " ")  // Rimuove codici Strong e numeri isolati
+    .replace(/\d+/g, " ")             // Rimuove cifre numeriche
     .replace(/[{}<>«»""]/g, " ")      // Rimuove simboli speciali
     .replace(/\s+/g, " ")
     .trim();
@@ -1605,131 +1600,72 @@ function stopAllAudio() {
   bmUserStopped = true;
   bmAudioPlaying = false;
   bmCurrentUtter = null;
-  if (hasNativeTTS()) {
+  if ("speechSynthesis" in window) {
     try { window.speechSynthesis.cancel(); } catch(e) {}
-  }
-  if (bmAudioEl) {
-    try { bmAudioEl.onended = null; bmAudioEl.onerror = null; bmAudioEl.pause(); } catch(e) {}
-    bmAudioEl = null;
   }
   const btn = document.getElementById("ttsChapterBtn");
   if (btn) btn.innerHTML = "🔊 Ascolta";
 }
 
-// Spezza il testo in pezzi da max ~180 caratteri
-function splitForOnlineTTS(text) {
-  const parts = text.match(/[^.;:!?,]+[.;:!?,]?/g) || [text];
-  const out = [];
-  let cur = "";
-  parts.forEach(p => {
-    if ((cur + p).length > 180) {
-      if (cur.trim()) out.push(cur.trim());
-      while (p.length > 180) {
-        let cut = p.lastIndexOf(" ", 180);
-        if (cut < 50) cut = 180;
-        out.push(p.slice(0, cut).trim());
-        p = p.slice(cut);
-      }
-      cur = p;
-    } else cur += p;
-  });
-  if (cur.trim()) out.push(cur.trim());
-  return out;
-}
-
-function speakViaAudio(cleanQueue, langCode) {
-  const lang = langCode.split("-")[0];
-  const chunks = cleanQueue.flatMap(splitForOnlineTTS);
-  let i = 0;
-
-  const next = () => {
-    if (bmUserStopped || !bmAudioPlaying || i >= chunks.length) {
-      stopAllAudio();
-      return;
-    }
-    const url = "https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl="
-      + lang + "&q=" + encodeURIComponent(chunks[i]);
-    const a = new Audio(url);
-    bmAudioEl = a;
-    a.onended = () => { i++; next(); };
-    a.onerror = () => {
-      if (i === 0) {
-        alert("Impossibile leggere il testo: controlla la connessione internet.");
-        stopAllAudio();
-      } else { i++; next(); }
-    };
-    a.play().catch(() => {
-      if (i === 0) { alert("Audio non disponibile."); stopAllAudio(); }
-    });
-  };
-  next();
-}
-
 function speakVerseQueue(verseList, updateMainBtn = true) {
   stopAllAudio();
   const cleanQueue = verseList.map(v => cleanTextForSpeech(v)).filter(v => v.length > 1);
-  if (!cleanQueue.length) return;
+  if (!cleanQueue.length) {
+    alert("Nessun testo disponibile per la lettura.");
+    return;
+  }
+
+  if (!("speechSynthesis" in window)) {
+    alert("Sintesi vocale non supportata su questo dispositivo.");
+    return;
+  }
 
   bmUserStopped = false;
   bmAudioPlaying = true;
   const btn = document.getElementById("ttsChapterBtn");
   if (updateMainBtn && btn) btn.innerHTML = "⏹️ Ferma";
 
+  let idx = 0;
   const langCode = getActiveTTSLangCode();
 
-  // Se la voce nativa non esiste (WebView) -> audio online
-  if (!hasNativeTTS()) {
-    speakViaAudio(cleanQueue, langCode);
-    return;
-  }
-
-  let idx = 0;
-  let started = false;
-  let fellBack = false;
-
-  const fallback = () => {
-    if (fellBack || bmUserStopped) return;
-    fellBack = true;
-    try { window.speechSynthesis.cancel(); } catch(e) {}
-    speakViaAudio(cleanQueue.slice(idx), langCode);
-  };
-
   const playNextVerse = () => {
-    if (fellBack) return;
     if (bmUserStopped || !bmAudioPlaying || idx >= cleanQueue.length) {
       stopAllAudio();
       return;
     }
+
     try {
-      if (window.speechSynthesis.paused) window.speechSynthesis.resume();
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      }
       const u = new SpeechSynthesisUtterance(cleanQueue[idx]);
-      bmCurrentUtter = u; // Previene che il Garbage Collector di Android interrompa la frase
+      bmCurrentUtter = u; // Evita la cancellazione della voce da parte di Android
       u.lang = langCode;
       u.rate = 1.0;
 
-      u.onstart = () => { started = true; };
       u.onend = () => {
-        if (!bmUserStopped && bmAudioPlaying && !fellBack) { idx++; playNextVerse(); }
+        if (!bmUserStopped && bmAudioPlaying) {
+          idx++;
+          playNextVerse();
+        }
       };
+
       u.onerror = (ev) => {
-        if (bmUserStopped || ev.error === "canceled" || ev.error === "interrupted") return;
-        if (!started) { fallback(); return; }   // la voce nativa non funziona
-        idx++; playNextVerse();
+        if (bmUserStopped || ev.error === "canceled" || ev.error === "interrupted") {
+          return;
+        }
+        idx++;
+        playNextVerse();
       };
 
       window.speechSynthesis.speak(u);
-
-      // Se dopo 2,5 s non è partito nulla, passa all'audio online
-      if (!started && idx === 0) {
-        setTimeout(() => { if (!started && !bmUserStopped && bmAudioPlaying) fallback(); }, 2500);
-      }
     } catch (e) {
-      fallback();
+      stopAllAudio();
     }
   };
 
   try { window.speechSynthesis.cancel(); } catch(e) {}
-  setTimeout(playNextVerse, 80);
+  setTimeout(playNextVerse, 100);
 }
 
 function toggleChapterTTS() {
