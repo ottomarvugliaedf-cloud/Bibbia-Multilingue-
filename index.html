@@ -1567,11 +1567,11 @@ function jumpToRefString(str) {
 }
 
 // ============================================================================
-// MOTORE AUDIO IBRIDO UNIVERSALE (Nativo + Streaming HTML5 per APK AppsGeyser)
+// MOTORE AUDIO V3 ANTI-BLOCCO (No-Referrer Stream + Chunking Nativo Android)
 // ============================================================================
 let bmAudioPlayer = null;
-let bmAudioQueue = [];
 let bmAudioPlaying = false;
+let bmUserStopped = false;
 
 function getActiveTTSLangCode(fullLocale = false) {
   const t = (state.trans1 || "").toLowerCase();
@@ -1584,27 +1584,39 @@ function getActiveTTSLangCode(fullLocale = false) {
   return fullLocale ? "en-US" : "en";
 }
 
-function splitTextForAudio(text, maxLen = 175) {
-  const words = text.replace(/\s+/g, " ").trim().split(" ");
+function splitTextForAudio(text, maxLen = 160) {
+  const sentences = text.replace(/\s+/g, " ").trim().split(/(?<=[.!?;:])\s+/);
   const chunks = [];
-  let current = "";
-  for (const w of words) {
-    if ((current + " " + w).trim().length > maxLen) {
-      if (current) chunks.push(current.trim());
-      current = w;
+  for (const s of sentences) {
+    if (s.length <= maxLen) {
+      if (s.trim()) chunks.push(s.trim());
     } else {
-      current = (current ? current + " " : "") + w;
+      const words = s.split(" ");
+      let cur = "";
+      for (const w of words) {
+        if ((cur + " " + w).trim().length > maxLen) {
+          if (cur.trim()) chunks.push(cur.trim());
+          cur = w;
+        } else {
+          cur = (cur ? cur + " " : "") + w;
+        }
+      }
+      if (cur.trim()) chunks.push(cur.trim());
     }
   }
-  if (current.trim()) chunks.push(current.trim());
   return chunks;
 }
 
 function stopAllAudio() {
+  bmUserStopped = true;
   bmAudioPlaying = false;
-  bmAudioQueue = [];
   if (bmAudioPlayer) {
-    try { bmAudioPlayer.pause(); bmAudioPlayer.src = ""; } catch(e) {}
+    try {
+      bmAudioPlayer.onended = null;
+      bmAudioPlayer.onerror = null;
+      bmAudioPlayer.pause();
+      bmAudioPlayer.removeAttribute("src");
+    } catch(e) {}
     bmAudioPlayer = null;
   }
   if ("speechSynthesis" in window) {
@@ -1614,83 +1626,132 @@ function stopAllAudio() {
   if (btn) btn.innerHTML = "🔊 Ascolta";
 }
 
-function playFallbackAudioStream(text, onFinish) {
-  stopAllAudio();
-  const chunks = splitTextForAudio(text, 175);
-  if (!chunks.length) return;
-  const tl = getActiveTTSLangCode(false);
-  bmAudioQueue = chunks.map(c => `https://translate.googleapis.com/translate_tts?client=tw-ob&ie=UTF-8&tl=${tl}&q=${encodeURIComponent(c)}`);
-  bmAudioPlaying = true;
-  const btn = document.getElementById("ttsChapterBtn");
-  if (btn && onFinish) btn.innerHTML = "⏹️ Ferma";
-
-  const playNextChunk = () => {
-    if (!bmAudioPlaying || !bmAudioQueue.length) {
-      stopAllAudio();
-      if (onFinish) onFinish();
-      return;
-    }
-    const nextUrl = bmAudioQueue.shift();
-    bmAudioPlayer = new Audio(nextUrl);
-    bmAudioPlayer.onended = playNextChunk;
-    bmAudioPlayer.onerror = playNextChunk;
-    bmAudioPlayer.play().catch(() => {
-      stopAllAudio();
-      alert("Impossibile avviare lo stream audio. Verifica la connessione internet.");
-    });
-  };
-  playNextChunk();
-}
-
-function toggleChapterTTS() {
-  const btn = document.getElementById("ttsChapterBtn");
-  if (bmAudioPlaying || ("speechSynthesis" in window && window.speechSynthesis.speaking)) {
+function playCloudAudioStream(chunks, index = 0, updateBtn = true) {
+  if (bmUserStopped || !bmAudioPlaying || index >= chunks.length) {
     stopAllAudio();
     return;
   }
+  const tl = getActiveTTSLangCode(false);
+  const q = encodeURIComponent(chunks[index]);
+  const urls = [
+    `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=${tl}&q=${q}`,
+    `https://dict.youdao.com/dictvoice?audio=${q}&le=${tl}`
+  ];
 
-  const rows = [...document.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3")];
-  const fullText = rows.map(r => r.getAttribute("data-text") || "").join(" ");
-  if (!fullText) return;
-
-  const isWebViewAPK = /wv|Version\/\d+\.\d+.*Chrome/i.test(navigator.userAgent);
-
-  if ("speechSynthesis" in window && !isWebViewAPK) {
-    try {
-      window.speechSynthesis.cancel();
-      const utter = new SpeechSynthesisUtterance(fullText);
-      utter.lang = getActiveTTSLangCode(true);
-      utter.onend = () => { if (btn) btn.innerHTML = "🔊 Ascolta"; };
-      utter.onerror = () => {
-        playFallbackAudioStream(fullText, () => { if (btn) btn.innerHTML = "🔊 Ascolta"; });
-      };
-      if (btn) btn.innerHTML = "⏹️ Ferma";
-      window.speechSynthesis.speak(utter);
+  let urlIdx = 0;
+  const tryPlayUrl = () => {
+    if (bmUserStopped || !bmAudioPlaying) return;
+    if (urlIdx >= urls.length) {
+      // Se un singolo frammento fallisce, passa al successivo senza bloccare tutto
+      playCloudAudioStream(chunks, index + 1, updateBtn);
       return;
-    } catch (e) {}
-  }
+    }
+    const audio = new Audio();
+    audio.referrerPolicy = "no-referrer";
+    audio.preload = "auto";
+    audio.src = urls[urlIdx++];
+    bmAudioPlayer = audio;
 
-  // Fallback diretto per APK generati con AppsGeyser / WebView Android
-  playFallbackAudioStream(fullText, () => { if (btn) btn.innerHTML = "🔊 Ascolta"; });
+    audio.onended = () => {
+      if (!bmUserStopped && bmAudioPlaying) {
+        playCloudAudioStream(chunks, index + 1, updateBtn);
+      }
+    };
+    audio.onerror = () => {
+      if (!bmUserStopped && bmAudioPlaying) tryPlayUrl();
+    };
+
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {
+        if (!bmUserStopped && bmAudioPlaying) tryPlayUrl();
+      });
+    }
+  };
+
+  tryPlayUrl();
+}
+
+function startUniversalSpeech(text, updateMainBtn = true) {
+  stopAllAudio();
+  const chunks = splitTextForAudio(text, 160);
+  if (!chunks.length) return;
+
+  bmUserStopped = false;
+  bmAudioPlaying = true;
+  const btn = document.getElementById("ttsChapterBtn");
+  if (updateMainBtn && btn) btn.innerHTML = "⏹️ Ferma";
+
+  // Prova prima il motore vocale nativo frase per frase (molto più stabile su Android)
+  if ("speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined") {
+    let idx = 0;
+    let nativeStarted = false;
+
+    const speakNextNative = () => {
+      if (bmUserStopped || !bmAudioPlaying || idx >= chunks.length) {
+        stopAllAudio();
+        return;
+      }
+      try {
+        const u = new SpeechSynthesisUtterance(chunks[idx]);
+        u.lang = getActiveTTSLangCode(true);
+        u.onstart = () => { nativeStarted = true; };
+        u.onend = () => {
+          if (!bmUserStopped && bmAudioPlaying) {
+            idx++;
+            speakNextNative();
+          }
+        };
+        u.onerror = (ev) => {
+          if (bmUserStopped || ev.error === "canceled" || ev.error === "interrupted") {
+            return;
+          }
+          // Se il sintetizzatore nativo è bloccato dalla WebView APK, passa subito allo stream Cloud No-Referrer
+          playCloudAudioStream(chunks, idx, updateMainBtn);
+        };
+        window.speechSynthesis.speak(u);
+      } catch (err) {
+        playCloudAudioStream(chunks, idx, updateMainBtn);
+      }
+    };
+
+    try { window.speechSynthesis.cancel(); } catch(e) {}
+    speakNextNative();
+
+    // Watchdog: se entro 1.2 secondi la WebView di AppsGeyser ignora speechSynthesis in silenzio, avvia lo stream Cloud
+    setTimeout(() => {
+      if (bmAudioPlaying && !bmUserStopped && !nativeStarted && !window.speechSynthesis.speaking) {
+        try { window.speechSynthesis.cancel(); } catch(e) {}
+        playCloudAudioStream(chunks, 0, updateMainBtn);
+      }
+    }, 1200);
+  } else {
+    playCloudAudioStream(chunks, 0, updateMainBtn);
+  }
+}
+
+function toggleChapterTTS() {
+  if (bmAudioPlaying) {
+    stopAllAudio();
+    return;
+  }
+  const rows = [...document.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3")];
+  const fullText = rows.map(r => {
+    const vNum = r.id ? r.id.replace("v_", "") : "";
+    const txt = r.getAttribute("data-text") || "";
+    return vNum ? `${vNum}. ${txt}` : txt;
+  }).join(" ");
+  if (!fullText.trim()) return;
+  startUniversalSpeech(fullText, true);
 }
 
 function speakSelectedVerse() {
   if (!state.selectedVerseText) return;
-  const text = state.selectedVerseText;
-  const isWebViewAPK = /wv|Version\/\d+\.\d+.*Chrome/i.test(navigator.userAgent);
-
-  if ("speechSynthesis" in window && !isWebViewAPK) {
-    try {
-      stopAllAudio();
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = getActiveTTSLangCode(true);
-      utter.onerror = () => playFallbackAudioStream(text, null);
-      window.speechSynthesis.speak(utter);
-      return;
-    } catch (e) {}
+  if (bmAudioPlaying) {
+    stopAllAudio();
+    return;
   }
-
-  playFallbackAudioStream(text, null);
+  startUniversalSpeech(state.selectedVerseText, false);
 }
 
 function openStrongModalForVerse() {
@@ -1863,5 +1924,4 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 </body>
-</html>
-              
+</html>               
