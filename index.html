@@ -684,11 +684,12 @@ const BIBLE_BOOKS = [
   { id: 66, name: "Rivelazione", abbr: "Riv", ch: 22, sec: "NT", cat: 4 }
 ];
 
-// Elenco reale e verificato di tutte le Bibbie supportate nativamente da GetBible v2
+// Elenco verificato delle Bibbie + Versioni con Numeri Strong nativi integrate
 const CORE_BIBLES = [
   { id: "gb:riveduta", name: "🇮🇹 Italiano: Riveduta 1927 (Luzzi)", lang: "Italian" },
   { id: "gb:giovanni", name: "🇮🇹 Italiano: Giovanni Diodati (1649)", lang: "Italian" },
   { id: "gb:kjv", name: "🇬🇧 English: King James Version (KJV)", lang: "English" },
+  { id: "gb:kjv_strongs", name: "🇬🇧🏛️ English: KJV + Numeri Strong Integrati", lang: "English" },
   { id: "gb:akjv", name: "🇬🇧 English: Authorized King James (AKJV)", lang: "English" },
   { id: "gb:web", name: "🇬🇧 English: World English Bible (WEB)", lang: "English" },
   { id: "gb:asv", name: "🇬🇧 English: American Standard (ASV 1901)", lang: "English" },
@@ -743,31 +744,58 @@ const CORE_BIBLES = [
   { id: "gb:vietnamese", name: "🇻🇳 Tiếng Việt: Bibbia Vietnamita (1934)", lang: "Vietnamese" }
 ];
 
+// Lessico Esegetico Strong (Italiano / Inglese / Spagnolo / Tedesco / Francese + Codici H/G)
 const PRO_STRONG_DICT = {
-  "principio": { code: "H7225 / G746", orig: "רֵאשִׁית (reshith) / ἀρχή (archē)", def: "Inizio, origine, primizia, fondamento temporale o rango." },
-  "dio": { code: "H430 / G2316", orig: "אֱלֹהִים (Elohim) / θεός (Theos)", def: "L'Essere Supremo, Creatore onnipotente e sovrano." },
-  "iddio": { code: "H430", orig: "אֱלֹהִים (Elohim)", def: "Plurale di maestà indicante la pienezza della potenza divina creatrice." },
-  "signore": { code: "H3068 / G2962", orig: "יְהוָה (YHWH) / κύριος (Kyrios)", def: "Il Nome divino personale (Tetragramma) / Sovrano legittimo." },
-  "eterno": { code: "H3068", orig: "יְהוָה (YHWH)", def: "Colui che fa divenire, l'Iddio vivente ed eterno." },
-  "creò": { code: "H1254", orig: "בָּרָא (bara')", def: "Creare, plasmare qualcosa di nuovo (usato esclusivamente con Dio come soggetto)." },
-  "terra": { code: "H776 / G1093", orig: "אֶרֶץ ('erets) / γῆ (gē)", def: "Terra ferma, suolo, regione abitata, pianeta." },
-  "luce": { code: "H216 / G5457", orig: "אוֹר ('owr) / φῶς (phōs)", def: "Luce fisica, splendore, illuminazione e verità spirituale." },
-  "parola": { code: "G3056 / H1697", orig: "λόγος (Logos) / דָּבָר (dabar)", def: "Parola espressa, pensiero divino, messaggio, il Verbo." },
-  "spirito": { code: "H7307 / G4151", orig: "רוּחַ (ruach) / πνεῦμα (pneuma)", def: "Soffio, vento, alito vitale, forza attiva invisibile." },
-  "vita": { code: "G2222 / H2416", orig: "ζωή (zōē) / חַי (chay)", def: "Vita in senso assoluto, pienezza di vitalità fisica e spirituale." },
-  "fede": { code: "G4102", orig: "πίστις (pistis)", def: "Certezza, solida fiducia e convinzione basata su prove." },
-  "amore": { code: "G26 / H160", orig: "ἀγάπη (agapē) / אַהֲבָה (ahavah)", def: "Amore altruistico guidato da principi elevati (Agape)." },
-  "pastore": { code: "H7462 / G4166", orig: "רָעָה (ra'ah) / ποιμήν (poimēn)", def: "Colui che pasce, guida, protegge e nutre il gregge." },
-  "anima": { code: "H5315 / G5590", orig: "נֶפֶשׁ (nephesh) / ψυχή (psychē)", def: "Essere vivente, persona, respiro vitale, la vita stessa." }
+  "principio": { code: "H7225 / G746", orig: "רֵאשִׁית (reshith) / ἀρχή (archē)", def: "Inizio, origine, primizia, fondamento temporale o d'autorità. (Commentario: In Gen 1:1 e Gv 1:1 indica l'origine assoluta dell'opera creatrice e del Logos)." },
+  "beginning": { code: "H7225 / G746", orig: "רֵאשִׁית (reshith) / ἀρχή (archē)", def: "Origin, firstfruits, commencement, chief cornerstone." },
+  "dio": { code: "H430 / G2316", orig: "אֱלֹהִים (Elohim) / θεός (Theos)", def: "L'Essere Supremo, Creatore onnipotente e Giudice universale." },
+  "iddio": { code: "H430", orig: "אֱלֹהִים (Elohim)", def: "Plurale di maestà ebraico che esprime la pienezza della potenza e maestà divina." },
+  "god": { code: "H430 / G2316", orig: "אֱלֹהִים (Elohim) / θεός (Theos)", def: "Supreme Deity, Creator and Ruler of the universe." },
+  "signore": { code: "H3068 / G2962", orig: "יְהוָה (YHWH) / κύριος (Kyrios)", def: "Il Nome dell'Alleanza (Tetragramma sacro) nell'AT; Sovrano e Maestro legittimo nel NT." },
+  "eterno": { code: "H3068", orig: "יְהוָה (YHWH)", def: "Colui che è e che fa divenire, l'Iddio vivente e fedele alle promesse." },
+  "lord": { code: "H3068 / G2962", orig: "יְהוָה (YHWH) / κύριος (Kyrios)", def: "Self-Existent Eternal One (YHWH) / Supreme Master (Kyrios)." },
+  "creò": { code: "H1254", orig: "בָּרָא (bara')", def: "Creare dal nulla o plasmare qualcosa di radicalmente nuovo (verbo usato nella Bibbia solo con Dio come soggetto)." },
+  "cieli": { code: "H8064 / G3772", orig: "שָׁמַיִם (shamayim) / οὐρανός (ouranos)", def: "La volta celeste, il firmamento cosmico e la dimora spirituale di Dio." },
+  "terra": { code: "H776 / G1093", orig: "אֶרֶץ ('erets) / γῆ (gē)", def: "Terra ferma, suolo, regione abitata, mondo creato per l'uomo." },
+  "luce": { code: "H216 / G5457", orig: "אוֹר ('owr) / φῶς (phōs)", def: "Luce fisica e splendore; metafora della verità, santità e salvezza divina." },
+  "tenebre": { code: "H2822 / G4655", orig: "חֹשֶׁךְ (choshek) / σκοτία (skotia)", def: "Oscurità profonda; simbolo di caos, ignoranza spirituale o allontanamento da Dio." },
+  "parola": { code: "G3056 / H1697", orig: "λόγος (Logos) / דָּבָר (dabar)", def: "Parola espressa, pensiero divino rivelato, messaggio creativo, il Verbo." },
+  "spirito": { code: "H7307 / G4151", orig: "רוּחַ (ruach) / πνεῦμα (pneuma)", def: "Soffio, vento, alito vitale, forza attiva invisibile e presenza dello Spirito di Dio." },
+  "vita": { code: "G2222 / H2416", orig: "ζωή (zōē) / חַי (chay)", def: "Vita in senso assoluto, pienezza di vitalità fisica, spirituale ed eterna." },
+  "fede": { code: "G4102 / H530", orig: "πίστις (pistis) / אֱמוּנָה ('emunah)", def: "Certezza, solida fiducia, fedeltà costante e convinzione radicata nelle promesse divine." },
+  "amore": { code: "G26 / H160", orig: "ἀγάπη (agapē) / אַהֲבָה ('ahavah)", def: "Amore incondizionato, sacrificale e altruistico guidato dalla natura stessa di Dio." },
+  "grazia": { code: "G5485 / H2580", orig: "χάρις (charis) / חֵן (chen)", def: "Favore immeritato, benevolenza sovrana e dono gratuito di Dio." },
+  "pace": { code: "H7965 / G1515", orig: "שָׁלוֹם (shalom) / εἰρήνη (eirēnē)", def: "Benessere completo, integrità, armonia, riconciliazione con Dio e assenza di conflitto." },
+  "pastore": { code: "H7462 / G4166", orig: "רָעָה (ra'ah) / ποιμήν (poimēn)", def: "Colui che pasce, guida, protegge e dà la vita per il proprio gregge." },
+  "anima": { code: "H5315 / G5590", orig: "נֶפֶשׁ (nephesh) / ψυχή (psychē)", def: "Essere vivente, persona intera, respiro vitale, sede degli affetti e della vita." },
+  "cuore": { code: "H3820 / G2588", orig: "לֵב (lev) / καρδία (kardia)", def: "Centro della vita interiore, dell'intelletto, della volontà e delle decisioni morali." },
+  "peccato": { code: "H2403 / G266", orig: "חַטָּאת (chatta'th) / ἁμαρτία (hamartia)", def: "Letteralmente 'mancare il bersaglio': trasgressione della legge e della perfezione divina." },
+  "salvezza": { code: "H3444 / G4991", orig: "יְשׁוּעָה (yeshu'ah) / σωτηρία (sōtēria)", def: "Liberazione, riscatto, guarigione e preservazione eterna operata da Dio." },
+  "regno": { code: "H4438 / G932", orig: "מַלְכוּת (malkuth) / βασιλεία (basileia)", def: "Sovranità regale, dominio effettivo e governo celeste di Dio." },
+  "verità": { code: "H571 / G225", orig: "אֱמֶת ('emeth) / ἀλήθεια (alētheia)", def: "Stabilità, fedeltà incrollabile, realtà non nascosta e conforme alla natura divina." },
+  "legge": { code: "H8451 / G3551", orig: "תּוֹרָה (Torah) / νόμος (nomos)", def: "Istruzione, insegnamento paterno, direzione e precetto rivelato." },
+  "gloria": { code: "H3519 / G1391", orig: "כָּבוֹד (kavod) / δόξα (doxa)", def: "Peso, onore, splendore visibile della presenza e della maestà di Dio." },
+  "santo": { code: "H6918 / G40", orig: "קָדוֹשׁ (qadosh) / ἅγιος (hagios)", def: "Separato dal profano, puro, consacrato esclusivamente a Dio." },
+  "cristo": { code: "G5547 / H4899", orig: "Χριστός (Christos) / מָשִׁיחַ (Mashiach)", def: "L'Unto, il Messia consacrato da Dio come Re, Sommo Sacerdote e Redentore." },
+  "gesù": { code: "G2424 / H3091", orig: "Ἰησοῦς (Iēsous) / יְהוֹשֻׁעַ (Yehoshua')", def: "Significa 'YHWH è salvezza': il Salvatore promesso." }
 };
 
 const PRO_CROSS_REFS = {
   "1_1_1": ["Giovanni 1:1", "Ebrei 11:3", "Salmi 33:6", "Isaia 45:18", "Rivelazione 4:11"],
   "1_1_2": ["Salmi 104:30", "Geremia 4:23"],
   "1_1_3": ["2 Corinti 4:6", "Salmi 33:9", "Giovanni 1:5"],
+  "1_1_26": ["Genesi 9:6", "Salmi 8:5", "Colossesi 3:10", "Giacomo 3:9"],
+  "19_1_1": ["Proverbi 4:14", "Geremia 17:7", "Giosuè 1:8"],
   "19_23_1": ["Giovanni 10:11", "Isaia 40:11", "Ezechiele 34:11", "1 Pietro 2:25"],
+  "19_119_105": ["Proverbi 6:23", "2 Pietro 1:19", "Giovanni 8:12"],
+  "20_3_5": ["Salmi 37:5", "Geremia 17:7", "Filippesi 4:6"],
+  "23_53_5": ["1 Pietro 2:24", "Romani 4:25", "Matteo 8:17"],
+  "40_5_3": ["Luca 6:20", "Isaia 57:15", "Giacomo 2:5"],
   "43_1_1": ["Genesi 1:1", "1 Giovanni 1:1", "Rivelazione 19:13"],
-  "43_3_16": ["Romani 5:8", "1 Giovanni 4:9", "Efesini 2:4"]
+  "43_3_16": ["Romani 5:8", "1 Giovanni 4:9", "Efesini 2:4"],
+  "43_14_6": ["Atti 4:12", "1 Timoteo 2:5", "Ebrei 10:19"],
+  "45_8_28": ["Genesi 50:20", "Efesini 1:11", "1 Pietro 1:5"],
+  "58_11_1": ["Romani 8:24", "2 Corinti 4:18", "2 Corinti 5:7"]
 };
     let dynamicCatalog = [...CORE_BIBLES];
 let catalogLoaded = false;
@@ -855,9 +883,10 @@ async function loadFullGlobalCatalog() {
         const id = `gb:${code}`;
         if (!map.has(id)) {
           const langLabel = item.language || "Global";
+          const hasStrongs = code.toLowerCase().includes("strong") ? " 🏛️ [Con Codici Strong]" : "";
           map.set(id, {
             id: id,
-            name: `🌐 ${langLabel}: ${item.translation || code}`,
+            name: `🌐 ${langLabel}: ${item.translation || code}${hasStrongs}`,
             lang: langLabel
           });
         }
@@ -944,8 +973,8 @@ function showChaptersView(bookId) {
 function selectChapter(ch) {
   state.chapter = ch;
   loadChapterView();
-      }
-    async function fetchChapterData(transId, bookId, chapter) {
+                     }
+  async function fetchChapterData(transId, bookId, chapter) {
   const fullOffline = await getOfflineBible(transId);
   if (fullOffline && fullOffline.books) {
     const bObj = fullOffline.books.find(b => Number(b.nr) === Number(bookId));
@@ -986,6 +1015,14 @@ function highlightDiffText(baseStr, targetStr) {
   }).join("");
 }
 
+// Rende cliccabili eventuali codici Strong (es. H430, G3056) presenti nelle Bibbie Strong
+function formatInlineStrongs(rawHtml, verseNum) {
+  if (!rawHtml) return "";
+  return rawHtml.replace(/\b([HG]\d{1,4})\b/g, function(code) {
+    return `<span class="tag-badge" onclick="event.stopPropagation(); openDirectStrongCode('${code}', ${verseNum})">${code}</span>`;
+  });
+}
+
 async function loadChapterView() {
   closeActionBar();
   setActiveTab("tabRead");
@@ -1012,12 +1049,17 @@ async function loadChapterView() {
         const refStr = `${book.name} ${state.chapter}:${v.verse}`;
         const hasNote = state.notes.some(n => n.ref === refStr);
         const hasCross = PRO_CROSS_REFS[key];
-        const badges = (hasNote ? ` <span title="Appunto presente">📝</span>` : "") +
-                       (hasCross ? ` <span title="Passi Paralleli disponibili">🔗</span>` : "");
         const cleanText = (v.text || "").replace(/<[^>]*>?/gm, "").replace(/"/g, "&quot;");
+        const formattedText = formatInlineStrongs(v.text, v.verse);
+
+        // Ora i badge 📝 e 🔗 sono VERE icone interattive che aprono direttamente la Nota o la Concordanza!
+        const badges =
+          (hasNote ? ` <span class="tag-badge" title="Apri il tuo Appunto" onclick="event.stopPropagation(); openVerseNoteDirectly(${v.verse})">📝 Nota</span>` : "") +
+          (hasCross ? ` <span class="tag-badge" title="Apri Passi Paralleli e Concordanza" onclick="event.stopPropagation(); openVerseCrossDirectly(${v.verse})">🔗 Paralleli</span>` : "");
+
         return `
           <div class="verse-row ${hlClass}" id="v_${v.verse}" data-text="${cleanText}" onclick="onVerseClick(${v.verse}, this.getAttribute('data-text'))">
-            <span class="verse-num">${v.verse}</span><span>${v.text}</span>${badges}
+            <span class="verse-num">${v.verse}</span><span>${formattedText}</span>${badges}
           </div>`;
       }).join("");
     } else if (state.parallelCount === 2) {
@@ -1030,7 +1072,7 @@ async function loadChapterView() {
         const text2 = highlightDiffText(v.text, map2[v.verse] || "—");
         return `
           <div class="parallel-row ${hlClass}" id="v_${v.verse}" data-text="${cleanText}" onclick="onVerseClick(${v.verse}, this.getAttribute('data-text'))">
-            <div class="parallel-col"><span class="verse-num">${v.verse}</span>${v.text}</div>
+            <div class="parallel-col"><span class="verse-num">${v.verse}</span>${formatInlineStrongs(v.text, v.verse)}</div>
             <div class="parallel-col"><span class="verse-num">${v.verse}</span>${text2}</div>
           </div>`;
       }).join("");
@@ -1046,7 +1088,7 @@ async function loadChapterView() {
         const text3 = highlightDiffText(v.text, map3[v.verse] || "—");
         return `
           <div class="parallel-row-3 ${hlClass}" id="v_${v.verse}" data-text="${cleanText}" onclick="onVerseClick(${v.verse}, this.getAttribute('data-text'))">
-            <div class="parallel-col"><span class="verse-num">${v.verse}</span>${v.text}</div>
+            <div class="parallel-col"><span class="verse-num">${v.verse}</span>${formatInlineStrongs(v.text, v.verse)}</div>
             <div class="parallel-col"><span class="verse-num">${v.verse}</span>${text2}</div>
             <div class="parallel-col"><span class="verse-num">${v.verse}</span>${text3}</div>
           </div>`;
@@ -1137,16 +1179,45 @@ function toggleDiffMode() {
   btn.textContent = state.diffMode ? "🔍 Diff: ON" : "🔍 Diff: OFF";
   btn.classList.toggle("highlight", state.diffMode);
   loadChapterView();
-    }
-    function onVerseClick(verseNum, text) {
+        }
+    // Variabile dedicata che impedisce la perdita del versetto quando si chiude la barra azioni
+let activeNoteTarget = null;
+
+function onVerseClick(verseNum, text) {
   state.selectedVerse = verseNum;
-  state.selectedVerseText = text;
+  state.selectedVerseText = text || "";
   document.getElementById("verseActionBar").style.display = "flex";
 }
 
 function closeActionBar() {
-  document.getElementById("verseActionBar").style.display = "none";
-  state.selectedVerse = null;
+  const bar = document.getElementById("verseActionBar");
+  if (bar) bar.style.display = "none";
+}
+
+function selectVerseDataFromDOM(verseNum) {
+  const row = document.getElementById(`v_${verseNum}`);
+  const txt = row ? (row.getAttribute("data-text") || "") : "";
+  state.selectedVerse = verseNum;
+  state.selectedVerseText = txt;
+}
+
+function openVerseNoteDirectly(verseNum) {
+  selectVerseDataFromDOM(verseNum);
+  openNoteModalForVerse();
+}
+
+function openVerseCrossDirectly(verseNum) {
+  selectVerseDataFromDOM(verseNum);
+  if (typeof openCrossRefsModalForVerse === "function") {
+    openCrossRefsModalForVerse();
+  }
+}
+
+function openDirectStrongCode(code, verseNum) {
+  selectVerseDataFromDOM(verseNum);
+  if (typeof openStrongModalForVerse === "function") {
+    openStrongModalForVerse();
+  }
 }
 
 function applyHighlight(colorClass) {
@@ -1163,84 +1234,176 @@ function applyHighlight(colorClass) {
   closeActionBar();
 }
 
+// 📋 COPIA VERSETTO: Salva il versetto direttamente nella sezione "Appunti" dell'app e copia in modo silenzioso
 function copySelectedVerse() {
   if (!state.selectedVerse) return;
   const book = getBook(state.bookId);
-  const fullCopy = `${book.name} ${state.chapter}:${state.selectedVerse} — "${state.selectedVerseText}"`;
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(fullCopy).then(() => alert("Versetto copiato negli appunti!"));
-  } else {
-    prompt("Copia il versetto:", fullCopy);
-  }
-  closeActionBar();
-}
-
-function saveBookmark() {
-  if (!state.selectedVerse) return;
-  const book = getBook(state.bookId);
   const ref = `${book.name} ${state.chapter}:${state.selectedVerse}`;
-  state.bookmarks.unshift({
-    bookId: state.bookId,
-    chapter: state.chapter,
-    verse: state.selectedVerse,
-    ref: ref,
-    text: state.selectedVerseText
-  });
-  localStorage.setItem("bm_bm", JSON.stringify(state.bookmarks));
-  closeActionBar();
-  alert("🔖 Preferito salvato in " + ref);
-}
+  const fullCopy = `${ref} — "${state.selectedVerseText}"`;
 
-function openNoteModalForVerse() {
-  if (!state.selectedVerse) return;
-  const book = getBook(state.bookId);
-  const ref = `${book.name} ${state.chapter}:${state.selectedVerse}`;
-  const existing = state.notes.find(n => n.ref === ref);
-
-  document.getElementById("noteModalTitle").textContent = `📝 Appunto: ${ref}`;
-  document.getElementById("noteModalVersePreview").textContent = `"${state.selectedVerseText}"`;
-  document.getElementById("noteModalInput").value = existing ? existing.text : "";
-  document.getElementById("noteTagsInput").value = (existing && existing.tags) ? existing.tags.join(", ") : "";
-  document.getElementById("noteModal").style.display = "flex";
-}
-
-function closeNoteModal() {
-  document.getElementById("noteModal").style.display = "none";
-  closeActionBar();
-}
-
-function saveNoteFromModal() {
-  const text = document.getElementById("noteModalInput").value.trim();
-  const rawTags = document.getElementById("noteTagsInput").value || "";
-  const tags = rawTags.split(",").map(t => t.trim().replace(/^#/, "")).filter(Boolean);
-  const book = getBook(state.bookId);
-  const ref = `${book.name} ${state.chapter}:${state.selectedVerse}`;
-
-  if (text !== "" || tags.length > 0) {
-    const existingIdx = state.notes.findIndex(n => n.ref === ref);
-    const noteObj = {
+  const existingIdx = state.notes.findIndex(n => n.ref === ref);
+  if (existingIdx === -1) {
+    state.notes.unshift({
       id: Date.now(),
       bookId: state.bookId,
       chapter: state.chapter,
       verse: state.selectedVerse,
       ref: ref,
       verseText: state.selectedVerseText,
-      text: text,
-      tags: tags,
+      text: "📌 Versetto copiato per lo studio (tocca ✏️ Scrivi/Modifica per aggiungere le tue note personali).",
+      tags: ["copiato"],
       date: new Date().toLocaleDateString("it-IT")
-    };
-    if (existingIdx > -1) state.notes[existingIdx] = noteObj;
-    else state.notes.unshift(noteObj);
+    });
     localStorage.setItem("bm_notes", JSON.stringify(state.notes));
   }
+
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = fullCopy;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+  } catch (e) {}
+
+  closeActionBar();
+  showNotesView();
+}
+
+function saveBookmark() {
+  if (!state.selectedVerse) return;
+  const book = getBook(state.bookId);
+  const ref = `${book.name} ${state.chapter}:${state.selectedVerse}`;
+  if (!state.bookmarks.some(b => b.ref === ref)) {
+    state.bookmarks.unshift({
+      bookId: state.bookId,
+      chapter: state.chapter,
+      verse: state.selectedVerse,
+      ref: ref,
+      text: state.selectedVerseText
+    });
+    localStorage.setItem("bm_bm", JSON.stringify(state.bookmarks));
+  }
+  closeActionBar();
+  showSavedView();
+}
+
+function openNoteModalForVerse(customRef) {
+  const book = getBook(state.bookId);
+  let ref = customRef;
+  if (!ref) {
+    const vNum = state.selectedVerse || 1;
+    ref = `${book.name} ${state.chapter}:${vNum}`;
+    activeNoteTarget = {
+      bookId: state.bookId,
+      chapter: state.chapter,
+      verse: vNum,
+      ref: ref,
+      verseText: state.selectedVerseText || ""
+    };
+  } else {
+    const existingNote = state.notes.find(n => n.ref === customRef);
+    activeNoteTarget = existingNote ? {
+      bookId: existingNote.bookId || state.bookId,
+      chapter: existingNote.chapter || state.chapter,
+      verse: existingNote.verse || 1,
+      ref: existingNote.ref,
+      verseText: existingNote.verseText || ""
+    } : {
+      bookId: state.bookId,
+      chapter: state.chapter,
+      verse: 1,
+      ref: customRef,
+      verseText: ""
+    };
+  }
+
+  const existing = state.notes.find(n => n.ref === activeNoteTarget.ref);
+  document.getElementById("noteModalTitle").textContent = `📝 Appunto e Note: ${activeNoteTarget.ref}`;
+  document.getElementById("noteModalVersePreview").textContent = activeNoteTarget.verseText ? `"${activeNoteTarget.verseText}"` : "Nota di studio personale";
+  document.getElementById("noteModalInput").value = existing ? existing.text : "";
+  document.getElementById("noteTagsInput").value = (existing && existing.tags) ? existing.tags.join(", ") : "";
+  closeActionBar();
+  document.getElementById("noteModal").style.display = "flex";
+  setTimeout(() => {
+    const inp = document.getElementById("noteModalInput");
+    if (inp) inp.focus();
+  }, 120);
+}
+
+function openNewFreeNoteModal() {
+  const title = prompt("Titolo o Tema del tuo nuovo Appunto (es. Studio sulla Fede, Sermone, Promemoria):", "Nota di Studio " + (state.notes.length + 1));
+  if (!title) return;
+  activeNoteTarget = {
+    bookId: state.bookId,
+    chapter: state.chapter,
+    verse: 1,
+    ref: title.trim(),
+    verseText: ""
+  };
+  document.getElementById("noteModalTitle").textContent = `📝 ${activeNoteTarget.ref}`;
+  document.getElementById("noteModalVersePreview").textContent = "Appunto libero personale";
+  document.getElementById("noteModalInput").value = "";
+  document.getElementById("noteTagsInput").value = "studio";
+  document.getElementById("noteModal").style.display = "flex";
+}
+
+function closeNoteModal() {
+  document.getElementById("noteModal").style.display = "none";
+}
+
+function saveNoteFromModal() {
+  const textEl = document.getElementById("noteModalInput");
+  const tagsEl = document.getElementById("noteTagsInput");
+  const text = textEl ? textEl.value.trim() : "";
+  const rawTags = tagsEl ? tagsEl.value : "";
+  const tags = rawTags.split(",").map(t => t.trim().replace(/^#/, "")).filter(Boolean);
+
+  if (!activeNoteTarget) {
+    const book = getBook(state.bookId);
+    const vNum = state.selectedVerse || 1;
+    activeNoteTarget = {
+      bookId: state.bookId,
+      chapter: state.chapter,
+      verse: vNum,
+      ref: `${book.name} ${state.chapter}:${vNum}`,
+      verseText: state.selectedVerseText || ""
+    };
+  }
+
+  const finalNoteText = text || "📌 Versetto annotato per lo studio.";
+  const existingIdx = state.notes.findIndex(n => n.ref === activeNoteTarget.ref);
+  const noteObj = {
+    id: Date.now(),
+    bookId: activeNoteTarget.bookId,
+    chapter: activeNoteTarget.chapter,
+    verse: activeNoteTarget.verse,
+    ref: activeNoteTarget.ref,
+    verseText: activeNoteTarget.verseText,
+    text: finalNoteText,
+    tags: tags.length ? tags : ["appunto"],
+    date: new Date().toLocaleDateString("it-IT")
+  };
+
+  if (existingIdx > -1) state.notes[existingIdx] = noteObj;
+  else state.notes.unshift(noteObj);
+
+  localStorage.setItem("bm_notes", JSON.stringify(state.notes));
   closeNoteModal();
-  loadChapterView();
+  showNotesView();
 }
 
 function formatNoteLinks(txt) {
   if (!txt) return "";
   return txt.replace(/([1-3]?\s?[A-Za-zÀ-ÿ]+)\s+(\d+)(?::(\d+))?/g, (m) => {
-    return `<span class="tag-badge" onclick="event.stopPropagation(); jumpToRefString('${m.replace(/'/g, "")}')">🔗 ${m}</span>`;
+    const matchedBook = BIBLE_BOOKS.some(b =>
+      m.toLowerCase().startsWith(b.name.toLowerCase()) ||
+      m.toLowerCase().startsWith(b.abbr.toLowerCase() + " ")
+    );
+    if (!matchedBook) return m;
+    return `<span class="tag-badge" onclick="event.stopPropagation(); jumpToRefString('${m.replace(/'/g, "")}')">📖 ${m}</span>`;
   });
 }
 
@@ -1249,8 +1412,22 @@ function showNotesView() {
   setActiveTab("tabNotes");
   const main = document.getElementById("mainContainer");
 
+  const headerActions = `
+    <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
+      <button class="search-btn" style="flex:1;" onclick="openNewFreeNoteModal()">➕ Scrivi Nuova Nota Libera</button>
+      <button class="nav-btn" onclick="openNoteModalForVerse()">📝 Nota su ${getBook(state.bookId).name} ${state.chapter}:${state.selectedVerse || 1}</button>
+    </div>
+  `;
+
   if (!state.notes.length) {
-    main.innerHTML = `<div class="loader">Nessun appunto di studio salvato.<br><br>Durante la lettura, tocca un versetto qualsiasi e premi l'icona 📝 per aggiungere una nota personale con Tag #.</div>`;
+    main.innerHTML = `
+      <div class="section-title"><span>I tuoi Appunti e Note di Studio</span><span>0 note</span></div>
+      ${headerActions}
+      <div class="loader">
+        Nessun appunto ancora salvato.<br><br>
+        • Tocca un versetto e premi <b>📋</b> per copiarlo subito qui negli Appunti.<br>
+        • Oppure premi <b>📝</b> su un versetto (o il pulsante blu qui sopra) per scrivere le tue note personali!
+      </div>`;
     return;
   }
 
@@ -1268,45 +1445,63 @@ function showNotesView() {
   });
   tagBar += `</div>`;
 
-  main.innerHTML = `<div class="section-title"><span>I tuoi Appunti di Studio</span><span>${filtered.length} note</span></div>` +
+  main.innerHTML = `<div class="section-title"><span>I tuoi Appunti e Note di Studio</span><span>${filtered.length} note</span></div>` +
+    headerActions +
     tagBar +
-    filtered.map((n, idx) => `
+    filtered.map((n, idx) => {
+      const safeRef = (n.ref || "").replace(/'/g, "\\'");
+      return `
       <div class="result-card" onclick="openRef(${n.bookId || 1}, ${n.chapter || 1})">
-        <div class="result-ref" style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="result-ref" style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;">
           <span>📝 ${n.ref} <small style="color:var(--text-muted);font-weight:normal;">(${n.date || ''})</small></span>
-          <span onclick="event.stopPropagation();deleteNote(${idx})" style="color:var(--danger);cursor:pointer;font-size:13px;">🗑 Elimina</span>
+          <div style="display:flex;gap:10px;">
+            <span onclick="event.stopPropagation();openNoteModalForVerse('${safeRef}')" style="color:var(--primary-light);cursor:pointer;font-size:13px;">✏️ Scrivi/Modifica</span>
+            <span onclick="event.stopPropagation();deleteNote(${idx})" style="color:var(--danger);cursor:pointer;font-size:13px;">🗑 Elimina</span>
+          </div>
         </div>
-        ${n.verseText ? `<div style="font-size:12px;color:var(--text-muted);font-style:italic;margin:4px 0 8px 0;border-left:2px solid var(--border-color);padding-left:8px;">"${n.verseText}"</div>` : ""}
-        <div style="margin-top:4px;line-height:1.5;white-space:pre-wrap;">${formatNoteLinks(n.text)}</div>
-        ${(n.tags && n.tags.length) ? `<div style="margin-top:6px;">${n.tags.map(t => `<span class="tag-badge">#${t}</span>`).join("")}</div>` : ""}
-      </div>`).join("");
+        ${n.verseText ? `<div style="font-size:12.5px;color:var(--text-muted);font-style:italic;margin:6px 0 8px 0;border-left:3px solid var(--primary-light);padding-left:8px;">"${n.verseText}"</div>` : ""}
+        <div style="margin-top:6px;line-height:1.55;white-space:pre-wrap;font-weight:500;">${formatNoteLinks(n.text)}</div>
+        ${(n.tags && n.tags.length) ? `<div style="margin-top:8px;">${n.tags.map(t => `<span class="tag-badge">#${t}</span>`).join("")}</div>` : ""}
+      </div>`;
+    }).join("");
 }
 
 function deleteNote(idx) {
   state.notes.splice(idx, 1);
   localStorage.setItem("bm_notes", JSON.stringify(state.notes));
   showNotesView();
+    }
+    // Ricerca immediata nella Concordanza Biblica quando si tocca una parola nello strumento Strong/Paralleli
+function searchWordInConcordance(word) {
+  if (typeof closeProModal === "function") closeProModal();
+  closeActionBar();
+  showSearchView();
+  const inp = document.getElementById("searchInput");
+  if (inp) {
+    inp.value = word;
+    executeSearch();
+  }
 }
 
 async function showCatalogView() {
   closeActionBar();
   setActiveTab("tabCatalog");
   const main = document.getElementById("mainContainer");
-  main.innerHTML = `<div class="loader">Caricamento catalogo globale (oltre 110 versioni)...</div>`;
+  main.innerHTML = `<div class="loader">Caricamento catalogo globale (oltre 110 versioni + edizioni Strong)...</div>`;
 
   await loadFullGlobalCatalog();
   const langs = ["Tutte le lingue", ...new Set(dynamicCatalog.map(b => b.lang))];
 
   main.innerHTML = `
     <div class="section-title">
-      <span>Catalogo Globale Traduzioni</span>
-      <span>${dynamicCatalog.length} Bibbie</span>
+      <span>Catalogo Globale Traduzioni & Strong</span>
+      <span>${dynamicCatalog.length} Edizioni</span>
     </div>
     <div style="font-size:13px;color:var(--text-muted);margin-bottom:10px;line-height:1.4;">
-      Tocca <b>⬇ Scarica / Attiva</b> per aggiungere qualsiasi versione ai menu a tendina in alto e salvarla per l'uso offline.
+      Tocca <b>⬇ Scarica / Attiva</b> per aggiungere qualsiasi Bibbia o versione con <b>Numeri Strong (es. kjv_strongs)</b> ai menu in alto e salvarla offline.
     </div>
     <div class="search-box">
-      <input type="text" id="catFilter" class="search-input" placeholder="🔍 Cerca lingua o versione (es. English, Greek, Luther)..." oninput="filterCatalogList()">
+      <input type="text" id="catFilter" class="search-input" placeholder="🔍 Cerca lingua, Strong, Greco, Ebraico..." oninput="filterCatalogList()">
       <select id="catLangFilter" class="trans-select" style="max-width:155px;" onchange="filterCatalogList()">
         ${langs.map(l => `<option value="${l}">${l}</option>`).join("")}
       </select>
@@ -1357,13 +1552,13 @@ async function toggleDownload(id) {
     }
     state.downloadedBibles = state.downloadedBibles.filter(item => item !== id);
     await removeOfflineBible(id);
-    localStorage.setItem("bm_v10_bibles", JSON.stringify(state.downloadedBibles));
+    localStorage.setItem("bm_v10_pro_bibles", JSON.stringify(state.downloadedBibles));
     await populateSelects();
     filterCatalogList();
   } else {
     if (btn) { btn.textContent = "⏳ Scarico..."; btn.classList.add("downloading"); }
     if (!state.downloadedBibles.includes(id)) state.downloadedBibles.push(id);
-    localStorage.setItem("bm_v10_bibles", JSON.stringify(state.downloadedBibles));
+    localStorage.setItem("bm_v10_pro_bibles", JSON.stringify(state.downloadedBibles));
     try {
       const code = id.split(":")[1];
       const res = await fetch(`https://api.getbible.net/v2/${code}.json`);
@@ -1382,7 +1577,7 @@ function showSearchView() {
   setActiveTab("tabSearch");
   const main = document.getElementById("mainContainer");
   main.innerHTML = `
-    <div class="section-title"><span>Ricerca Avanzata nei 66 Libri</span></div>
+    <div class="section-title"><span>Concordanza & Ricerca nei 66 Libri</span></div>
     <div class="search-box">
       <input type="text" id="searchInput" class="search-input" placeholder="Parola o operatori (es. fede AND opere, luce NOT tenebre)..." onkeydown="if(event.key==='Enter') executeSearch()">
       <select id="searchScope" class="trans-select" style="max-width:195px;">
@@ -1394,7 +1589,7 @@ function showSearchView() {
       </select>
       <button class="search-btn" onclick="executeSearch()">Cerca</button>
     </div>
-    <div id="searchResults"><div class="loader">Inserisci una parola o usa <b>AND</b>, <b>OR</b>, <b>NOT</b> nella traduzione attiva.</div></div>
+    <div id="searchResults"><div class="loader">Inserisci una parola per cercare tutte le occorrenze nella Concordanza della Bibbia attiva.</div></div>
   `;
 }
 
@@ -1403,7 +1598,7 @@ async function executeSearch() {
   const scope = document.getElementById("searchScope")?.value || "all";
   if (!rawQuery) return;
   const resDiv = document.getElementById("searchResults");
-  resDiv.innerHTML = `<div class="loader">Ricerca di "<b>${rawQuery}</b>" in corso...</div>`;
+  resDiv.innerHTML = `<div class="loader">Ricerca nella Concordanza di "<b>${rawQuery}</b>" in corso...</div>`;
 
   const matchLogic = (txt, q) => {
     const low = txt.toLowerCase();
@@ -1440,30 +1635,71 @@ async function executeSearch() {
           for (const v of (c.verses || [])) {
             if (v.text && matchLogic(v.text, rawQuery)) {
               matches.push({ bookId: bNum, bookName: bMeta.name, ch: c.chapter, v: v.verse, text: v.text });
-              if (matches.length >= 120) break;
+              if (matches.length >= 150) break;
             }
           }
-          if (matches.length >= 120) break;
+          if (matches.length >= 150) break;
         }
-        if (matches.length >= 120) break;
+        if (matches.length >= 150) break;
       }
       if (!matches.length) {
         resDiv.innerHTML = `<div class="loader">Nessun risultato trovato per "<b>${rawQuery}</b>".</div>`;
         return;
       }
-      resDiv.innerHTML = `<div style="margin-bottom:10px;font-size:13px;color:var(--text-muted);">Trovati <b>${matches.length}</b> risultati:</div>` +
+      resDiv.innerHTML = `<div style="margin-bottom:10px;font-size:13px;color:var(--text-muted);">Trovate <b>${matches.length}</b> occorrenze nella Concordanza:</div>` +
         matches.map(m => `
           <div class="result-card" onclick="openRef(${m.bookId}, ${m.ch})">
             <div class="result-ref">${m.bookName} ${m.ch}:${m.v}</div>
             <div>${m.text}</div>
           </div>`).join("");
     } else {
-      resDiv.innerHTML = `<div class="loader">Errore di connessione all'indice di ricerca.</div>`;
+      resDiv.innerHTML = `<div class="loader">Errore di connessione all'indice della Concordanza.</div>`;
     }
   } catch (e) {
     resDiv.innerHTML = `<div class="loader">Errore durante la ricerca.</div>`;
   }
-    }
+}
+
+// Potenzia automaticamente le finestre Strong (🏛️) e Passi Paralleli (🔗) con la Concordanza interattiva per ogni parola del versetto!
+window.addEventListener("load", function() {
+  window.openStrongModalForVerse = function() {
+    const book = getBook(state.bookId);
+    const rawVerse = state.selectedVerseText || "";
+    const text = rawVerse.toLowerCase();
+    const matches = [];
+
+    Object.keys(PRO_STRONG_DICT).forEach(k => {
+      if (text.includes(k)) {
+        const d = PRO_STRONG_DICT[k];
+        matches.push(`
+          <div class="result-card" style="cursor:default;">
+            <div class="result-ref" style="display:flex;justify-content:space-between;align-items:center;">
+              <span>${k.toUpperCase()} — <span class="tag-badge">${d.code}</span></span>
+              <span class="tag-badge" onclick="searchWordInConcordance('${k}')">🔍 Cerca nella Concordanza</span>
+            </div>
+            <div style="font-weight:700; margin:4px 0;">${d.orig}</div>
+            <div style="font-size:13.5px; line-height:1.45;">${d.def}</div>
+          </div>
+        `);
+      }
+    });
+
+    const words = [...new Set(rawVerse.replace(/[.,;:!?"'«»()0-9]/g, " ").split(/\s+/).filter(w => w.length >= 4))];
+    const wordPills = words.map(w => `<span class="tag-badge" style="font-size:13px;padding:5px 10px;" onclick="searchWordInConcordance('${w.replace(/'/g, "")}')">🔍 ${w}</span>`).join(" ");
+
+    document.getElementById("proModalTitle").textContent = `🏛️ Lessico Strong & Concordanza (${book.name} ${state.chapter}:${state.selectedVerse})`;
+    document.getElementById("proModalBody").innerHTML = `
+      <div style="font-size:13px;color:var(--text-muted);font-style:italic;margin-bottom:10px;border-left:3px solid var(--primary-light);padding-left:8px;">
+        "${rawVerse}"
+      </div>
+      ${matches.length ? `<div class="section-title"><span>Radici Ebraico/Greche Rilevate</span></div>` + matches.join("") : ""}
+      <div class="section-title"><span>Concordanza Immediata Parole del Versetto</span></div>
+      <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:8px;">Tocca qualsiasi parola di questo versetto per trovare tutti i passi paralleli in cui ricorre nella Bibbia:</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">${wordPills}</div>
+    `;
+    document.getElementById("proModal").style.display = "flex";
+  };
+});
     function showSavedView() {
   closeActionBar();
   setActiveTab("tabSaved");
@@ -1938,4 +2174,10 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 </body>
-</html>
+</html>  
+
+
+
+  
+        
+  
