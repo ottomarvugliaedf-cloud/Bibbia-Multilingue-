@@ -1937,6 +1937,27 @@ window.addEventListener("load", function() {
     }
   };
 });
+    // Avvio di sicurezza e rimozione forzata dello Splash Screen
+window.addEventListener("DOMContentLoaded", async function() {
+  try {
+    if (typeof populateSelects === "function") {
+      await populateSelects();
+    }
+    if (typeof loadChapterView === "function") {
+      await loadChapterView();
+    }
+  } catch (e) {
+    // Fallback di emergenza se qualcosa fallisce
+    const splash = document.getElementById("splashScreen");
+    if (splash) {
+      splash.style.opacity = "0";
+      setTimeout(() => { splash.style.display = "none"; }, 350);
+    }
+    if (typeof showBooksView === "function") {
+      showBooksView();
+    }
+  }
+});
     function showSavedView() {
   closeActionBar();
   setActiveTab("tabSaved");
