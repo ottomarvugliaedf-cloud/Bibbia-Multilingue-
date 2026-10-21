@@ -847,11 +847,21 @@ const PRO_TOPIC_REFS = [
   { keys: ["figlio", "padre", "cristo", "gesù", "messia", "son", "father", "christ", "jesus", "hijo", "padre", "sohn", "vater", "fils"], refs: ["Salmi 2:7", "Isaia 9:6", "Matteo 3:17", "Matteo 16:16", "Giovanni 1:14", "Giovanni 14:9", "Colossesi 1:15"] },
   { keys: ["sangue", "croce", "sacrificio", "agnello", "patto", "blood", "cross", "lamb", "covenant", "sangre", "blut", "sang"], refs: ["Esodo 12:13", "Isaia 53:7", "Matteo 26:28", "Giovanni 1:29", "Ebrei 9:22", "1 Pietro 1:19", "Rivelazione 5:9"] }
 ];
-    let dynamicCatalog = [...CORE_BIBLES];
+     let dynamicCatalog = Array.isArray(CORE_BIBLES) ? [...CORE_BIBLES] : [];
 let catalogLoaded = false;
 
-// Attiva immediatamente tutte le Bibbie reali nel menu a tendina
-const DEFAULT_ACTIVE_IDS = CORE_BIBLES.map(b => b.id);
+const DEFAULT_ACTIVE_IDS = dynamicCatalog.map(b => b.id);
+
+function safeLoadStorage(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw);
+    return parsed !== null && parsed !== undefined ? parsed : fallback;
+  } catch (e) {
+    return fallback;
+  }
+}
 
 let state = {
   bookId: 1,
@@ -866,23 +876,34 @@ let state = {
   selectedVerse: null,
   selectedVerseText: "",
   activeTagFilter: null,
-  downloadedBibles: JSON.parse(localStorage.getItem("bm_v10_pro_bibles") || JSON.stringify(DEFAULT_ACTIVE_IDS)),
-  highlights: JSON.parse(localStorage.getItem("bm_hl") || "{}"),
-  bookmarks: JSON.parse(localStorage.getItem("bm_bm") || "[]"),
-  notes: JSON.parse(localStorage.getItem("bm_notes") || "[]")
+  downloadedBibles: safeLoadStorage("bm_v10_pro_bibles", safeLoadStorage("bm_v10_bibles", [...DEFAULT_ACTIVE_IDS])),
+  highlights: safeLoadStorage("bm_hl", {}),
+  bookmarks: safeLoadStorage("bm_bm", []),
+  notes: safeLoadStorage("bm_notes", [])
 };
+
+if (!Array.isArray(state.downloadedBibles) || state.downloadedBibles.length === 0) {
+  state.downloadedBibles = [...DEFAULT_ACTIVE_IDS];
+}
+if (!Array.isArray(state.bookmarks)) state.bookmarks = [];
+if (!Array.isArray(state.notes)) state.notes = [];
+if (typeof state.highlights !== "object" || state.highlights === null) state.highlights = {};
 
 function openDB() {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open("BM_OfflineDB_v10", 1);
-    req.onupgradeneeded = e => {
-      const db = e.target.result;
-      if (!db.objectStoreNames.contains("bibles")) {
-        db.createObjectStore("bibles");
-      }
-    };
-    req.onsuccess = e => resolve(e.target.result);
-    req.onerror = e => reject(e);
+    try {
+      const req = indexedDB.open("BM_OfflineDB_v10", 1);
+      req.onupgradeneeded = e => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains("bibles")) {
+          db.createObjectStore("bibles");
+        }
+      };
+      req.onsuccess = e => resolve(e.target.result);
+      req.onerror = e => reject(e);
+    } catch (err) {
+      reject(err);
+    }
   });
 }
 
@@ -895,17 +916,21 @@ async function getOfflineBible(id) {
       req.onsuccess = () => res(req.result || null);
       req.onerror = () => res(null);
     });
-  } catch(e) { return null; }
+  } catch (e) {
+    return null;
+  }
 }
 
 async function saveOfflineBible(id, data) {
-  const db = await openDB();
-  return new Promise((res, rej) => {
-    const tx = db.transaction("bibles", "readwrite");
-    tx.objectStore("bibles").put(data, id);
-    tx.oncomplete = () => res();
-    tx.onerror = e => rej(e);
-  });
+  try {
+    const db = await openDB();
+    return new Promise((res, rej) => {
+      const tx = db.transaction("bibles", "readwrite");
+      tx.objectStore("bibles").put(data, id);
+      tx.oncomplete = () => res();
+      tx.onerror = e => rej(e);
+    });
+  } catch (e) {}
 }
 
 async function removeOfflineBible(id) {
@@ -917,13 +942,17 @@ async function removeOfflineBible(id) {
       tx.oncomplete = () => res();
       tx.onerror = e => rej(e);
     });
-  } catch(e) {}
+  } catch (e) {}
 }
 
 async function loadFullGlobalCatalog() {
   if (catalogLoaded) return dynamicCatalog;
   try {
-    const res = await fetch("https://api.getbible.net/v2/translations.json");
+    const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+    const timeoutId = controller ? setTimeout(() => controller.abort(), 2500) : null;
+    const res = await fetch("https://api.getbible.net/v2/translations.json", controller ? { signal: controller.signal } : {});
+    if (timeoutId) clearTimeout(timeoutId);
+
     if (res.ok) {
       const data = await res.json();
       const map = new Map();
@@ -944,22 +973,26 @@ async function loadFullGlobalCatalog() {
       dynamicCatalog = Array.from(map.values());
       catalogLoaded = true;
     }
-  } catch(e) {}
+  } catch (e) {}
   return dynamicCatalog;
 }
 
-async function populateSelects() {
-  await loadFullGlobalCatalog();
+function renderSelectOptions() {
   let activeList = dynamicCatalog.filter(b => state.downloadedBibles.includes(b.id));
   if (activeList.length < 2) {
     state.downloadedBibles = [...DEFAULT_ACTIVE_IDS];
-    localStorage.setItem("bm_v10_pro_bibles", JSON.stringify(state.downloadedBibles));
+    try {
+      localStorage.setItem("bm_v10_pro_bibles", JSON.stringify(state.downloadedBibles));
+      localStorage.setItem("bm_v10_bibles", JSON.stringify(state.downloadedBibles));
+    } catch (e) {}
     activeList = dynamicCatalog.filter(b => state.downloadedBibles.includes(b.id));
   }
 
   const s1 = document.getElementById("trans1");
   const s2 = document.getElementById("trans2");
   const s3 = document.getElementById("trans3");
+  if (!s1 || !s2 || !s3 || !activeList.length) return;
+
   const html = activeList.map(t => `<option value="${t.id}">${t.name}</option>`).join("");
   s1.innerHTML = html;
   s2.innerHTML = html;
@@ -975,6 +1008,24 @@ async function populateSelects() {
   else { state.trans3 = (activeList[2] || activeList[0]).id; s3.value = state.trans3; }
 }
 
+async function populateSelects() {
+  // 1) Popola istantaneamente i menu con le Bibbie principali senza attendere la rete
+  renderSelectOptions();
+
+  // 2) Sblocca subito lo splash screen per evitare qualsiasi congelamento iniziale
+  const splash = document.getElementById("splashScreen");
+  if (splash) {
+    setTimeout(() => {
+      splash.style.opacity = "0";
+      setTimeout(() => { splash.style.display = "none"; }, 350);
+    }, 600);
+  }
+
+  // 3) Carica il catalogo esteso in modo sicuro con timeout di 2.5 secondi
+  await loadFullGlobalCatalog();
+  renderSelectOptions();
+}
+
 function setActiveTab(tabId) {
   document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
   const el = document.getElementById(tabId);
@@ -986,7 +1037,7 @@ function getBook(id) {
 }
 
 function showBooksView() {
-  closeActionBar();
+  if (typeof closeActionBar === "function") closeActionBar();
   setActiveTab("tabBooks");
   const main = document.getElementById("mainContainer");
   const ot = BIBLE_BOOKS.filter(b => b.sec === "OT");
@@ -1023,7 +1074,7 @@ function showChaptersView(bookId) {
 function selectChapter(ch) {
   state.chapter = ch;
   loadChapterView();
-    }
+  }
     async function fetchChapterData(transId, bookId, chapter) {
   const fullOffline = await getOfflineBible(transId);
   if (fullOffline && fullOffline.books) {
