@@ -1044,13 +1044,13 @@ async function loadChapterView() {
         const hlClass = state.highlights[key] || "";
         const refStr = `${book.name} ${state.chapter}:${v.verse}`;
         const hasNote = state.notes.some(n => n.ref === refStr);
-        const hasCross = PRO_CROSS_REFS[key];
         const cleanText = (v.text || "").replace(/<[^>]*>?/gm, "").replace(/"/g, "&quot;");
         const formattedText = formatInlineStrongs(v.text, v.verse);
 
+        // Badge sempre attivi e visibili su OGNI versetto di tutta la Bibbia
         const badges =
           (hasNote ? ` <span class="tag-badge" title="Apri il tuo Appunto" onclick="event.stopPropagation(); openVerseNoteDirectly(${v.verse})">📝 Nota</span>` : "") +
-          (hasCross ? ` <span class="tag-badge" title="Apri Passi Paralleli e Concordanza" onclick="event.stopPropagation(); openVerseCrossDirectly(${v.verse})">🔗 Paralleli</span>` : "");
+          ` <span class="tag-badge" title="Apri Passi Paralleli e Concordanza" onclick="event.stopPropagation(); openVerseCrossDirectly(${v.verse})">🔗 Paralleli</span>`;
 
         return `
           <div class="verse-row ${hlClass}" id="v_${v.verse}" data-text="${cleanText}" onclick="onVerseClick(${v.verse}, this.getAttribute('data-text'))">
@@ -1174,7 +1174,7 @@ function toggleDiffMode() {
   btn.textContent = state.diffMode ? "🔍 Diff: ON" : "🔍 Diff: OFF";
   btn.classList.toggle("highlight", state.diffMode);
   loadChapterView();
-    }
+                                           }
     let activeNoteTarget = null;
 
 function onVerseClick(verseNum, text) {
