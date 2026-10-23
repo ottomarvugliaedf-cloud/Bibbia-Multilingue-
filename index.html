@@ -795,9 +795,8 @@ const PRO_CROSS_REFS = {
   "45_8_28": ["Genesi 50:20", "Efesini 1:11", "1 Pietro 1:5"],
   "58_11_1": ["Romani 8:24", "2 Corinti 4:18", "2 Corinti 5:7"]
 };
-let dynamicCatalog = [...CORE_BIBLES];
+    let dynamicCatalog = [...CORE_BIBLES];
 let catalogLoaded = false;
-
 const DEFAULT_ACTIVE_IDS = CORE_BIBLES.map(b => b.id);
 
 let state = {
@@ -869,18 +868,20 @@ async function removeOfflineBible(id) {
 
 async function loadFullGlobalCatalog() {
   if (catalogLoaded) return dynamicCatalog;
+  const map = new Map();
+  CORE_BIBLES.forEach(b => map.set(b.id, b));
+
+  // 1. Carica il catalogo da GetBible
   try {
-    const res = await fetch("https://api.getbible.net/v2/translations.json");
-    if (res.ok) {
-      const data = await res.json();
-      const map = new Map();
-      CORE_BIBLES.forEach(b => map.set(b.id, b));
-      Object.keys(data).forEach(code => {
-        const item = data[code];
+    const res1 = await fetch("https://api.getbible.net/v2/translations.json");
+    if (res1.ok) {
+      const data1 = await res1.json();
+      Object.keys(data1).forEach(code => {
+        const item = data1[code];
         const id = `gb:${code}`;
         if (!map.has(id)) {
           const langLabel = item.language || "Global";
-          const hasStrongs = code.toLowerCase().includes("strong") ? " 🏛️ [Con Codici Strong]" : "";
+          const hasStrongs = code.toLowerCase().includes("strong") ? " 🏛️[Con Codici Strong]" : "";
           map.set(id, {
             id: id,
             name: `🌐 ${langLabel}: ${item.translation || code}${hasStrongs}`,
@@ -888,22 +889,44 @@ async function loadFullGlobalCatalog() {
           });
         }
       });
-      dynamicCatalog = Array.from(map.values());
-      catalogLoaded = true;
     }
   } catch(e) {}
+
+  // 2. Carica il mega-catalogo globale da HelloAO (oltre 1.250 traduzioni mondiali)
+  try {
+    const res2 = await fetch("https://bible.helloao.org/api/available_translations.json");
+    if (res2.ok) {
+      const data2 = await res2.json();
+      (data2.translations || []).forEach(t => {
+        const id = `helloao:${t.id}`;
+        if (!map.has(id)) {
+          const langLabel = t.languageEnglishName || t.languageName || t.language || "Global";
+          map.set(id, {
+            id: id,
+            name: `🌍 ${langLabel}: ${t.name || t.englishName || t.id} (${t.shortName || t.id})`,
+            lang: langLabel
+          });
+        }
+      });
+    }
+  } catch(e) {}
+
+  dynamicCatalog = Array.from(map.values());
+  catalogLoaded = true;
   return dynamicCatalog;
 }
 
 async function populateSelects() {
-  await loadFullGlobalCatalog();
+  const hasExtraBibles = state.downloadedBibles.some(id => !DEFAULT_ACTIVE_IDS.includes(id));
+  if (hasExtraBibles && !catalogLoaded) {
+    await loadFullGlobalCatalog();
+  }
   let activeList = dynamicCatalog.filter(b => state.downloadedBibles.includes(b.id));
   if (activeList.length < 2) {
     state.downloadedBibles = [...DEFAULT_ACTIVE_IDS];
     localStorage.setItem("bm_v10_pro_bibles", JSON.stringify(state.downloadedBibles));
     activeList = dynamicCatalog.filter(b => state.downloadedBibles.includes(b.id));
   }
-
   const s1 = document.getElementById("trans1");
   const s2 = document.getElementById("trans2");
   const s3 = document.getElementById("trans3");
@@ -911,13 +934,10 @@ async function populateSelects() {
   s1.innerHTML = html;
   s2.innerHTML = html;
   s3.innerHTML = html;
-
   if (activeList.some(b => b.id === state.trans1)) s1.value = state.trans1;
   else { state.trans1 = activeList[0].id; s1.value = state.trans1; }
-
   if (activeList.some(b => b.id === state.trans2)) s2.value = state.trans2;
   else { state.trans2 = (activeList[1] || activeList[0]).id; s2.value = state.trans2; }
-
   if (activeList.some(b => b.id === state.trans3)) s3.value = state.trans3;
   else { state.trans3 = (activeList[2] || activeList[0]).id; s3.value = state.trans3; }
 }
@@ -970,8 +990,22 @@ function showChaptersView(bookId) {
 function selectChapter(ch) {
   state.chapter = ch;
   loadChapterView();
-  }
-    async function fetchChapterData(transId, bookId, chapter) {
+    }
+    const HELLOAO_BOOK_MAP = ["", "GEN", "EXO", "LEV", "NUM", "DEU", "JOS", "JDG", "RUT", "1SA", "2SA", "1KI", "2KI", "1CH", "2CH", "EZR", "NEH", "EST", "JOB", "PSA", "PRO", "ECC", "SNG", "ISA", "JER", "LAM", "EZK", "DAN", "HOS", "JOL", "AMO", "OBA", "JON", "MIC", "NAM", "HAB", "ZEP", "HAG", "ZEC", "MAL", "MAT", "MRK", "LUK", "JHN", "ACT", "ROM", "1CO", "2CO", "GAL", "EPH", "PHP", "COL", "1TH", "2TH", "1TI", "2TI", "TIT", "PHM", "HEB", "JAS", "1PE", "2PE", "1JN", "2JN", "3JN", "JUD", "REV"];
+
+function extractHelloAOVerseText(contentArr) {
+  if (!contentArr) return "";
+  if (typeof contentArr === "string") return contentArr;
+  if (!Array.isArray(contentArr)) return "";
+  return contentArr.map(part => {
+    if (typeof part === "string") return part;
+    if (part && typeof part.text === "string") return part.text;
+    if (part && Array.isArray(part.items)) return part.items.map(i => i.text || "").join(" ");
+    return "";
+  }).join(" ").replace(/\s+/g, " ").trim();
+}
+
+async function fetchChapterData(transId, bookId, chapter) {
   const fullOffline = await getOfflineBible(transId);
   if (fullOffline && fullOffline.books) {
     const bObj = fullOffline.books.find(b => Number(b.nr) === Number(bookId));
@@ -990,11 +1024,27 @@ function selectChapter(ch) {
     } catch(e) {}
   }
 
-  const code = transId.includes(":") ? transId.split(":")[1] : transId;
-  const res = await fetch(`https://api.getbible.net/v2/${code}/${bookId}/${chapter}.json`);
-  if (!res.ok) throw new Error("Capitolo non disponibile");
-  const data = await res.json();
-  const verses = (data.verses || []).map(v => ({ verse: Number(v.verse), text: v.text }));
+  let verses = [];
+  if (transId.startsWith("helloao:")) {
+    const code = transId.split(":")[1];
+    const bookCode = HELLOAO_BOOK_MAP[Number(bookId)] || "GEN";
+    const res = await fetch(`https://bible.helloao.org/api/${code}/${bookCode}/${chapter}.json`);
+    if (!res.ok) throw new Error("Capitolo non disponibile in questa edizione");
+    const data = await res.json();
+    const contentList = (data.chapter && data.chapter.content) ? data.chapter.content : [];
+    contentList.forEach(item => {
+      if (item.type === "verse") {
+        const txt = item.text || extractHelloAOVerseText(item.content);
+        if (txt) verses.push({ verse: Number(item.number), text: txt });
+      }
+    });
+  } else {
+    const code = transId.includes(":") ? transId.split(":")[1] : transId;
+    const res = await fetch(`https://api.getbible.net/v2/${code}/${bookId}/${chapter}.json`);
+    if (!res.ok) throw new Error("Capitolo non disponibile");
+    const data = await res.json();
+    verses = (data.verses || []).map(v => ({ verse: Number(v.verse), text: v.text }));
+  }
 
   if (verses.length > 0) {
     try { localStorage.setItem(cacheKey, JSON.stringify(verses)); } catch(e) {}
@@ -1049,8 +1099,8 @@ async function loadChapterView() {
 
         // Badge sempre attivi e visibili su OGNI versetto di tutta la Bibbia
         const badges =
-          (hasNote ? ` <span class="tag-badge" title="Apri il tuo Appunto" onclick="event.stopPropagation(); openVerseNoteDirectly(${v.verse})">📝 Nota</span>` : "") +
-          ` <span class="tag-badge" title="Apri Passi Paralleli e Concordanza" onclick="event.stopPropagation(); openVerseCrossDirectly(${v.verse})">🔗 Paralleli</span>`;
+          (hasNote ? ` <span class="tag-badge" title="Apri il tuo Appunto" onclick="event.stopPropagation(); openVerseNoteDirectly(${v.verse})">📝Nota</span>` : "") +
+          ` <span class="tag-badge" title="Apri Passi Paralleli e Concordanza" onclick="event.stopPropagation(); openVerseCrossDirectly(${v.verse})">🔗Paralleli</span>`;
 
         return `
           <div class="verse-row ${hlClass}" id="v_${v.verse}" data-text="${cleanText}" onclick="onVerseClick(${v.verse}, this.getAttribute('data-text'))">
@@ -1092,16 +1142,16 @@ async function loadChapterView() {
 
     main.innerHTML = `
       <div class="chapter-header">
-        <div class="chapter-title" onclick="showChaptersView(${state.bookId})" style="cursor:pointer;">${book.name} ${state.chapter} ▾</div>
+        <div class="chapter-title" onclick="showChaptersView(${state.bookId})" style="cursor:pointer;">${book.name} ${state.chapter}▾</div>
         <div class="chapter-nav-btns">
-          <button class="nav-btn" onclick="prevChapter()">◀ Prec</button>
-          <button class="nav-btn" onclick="nextChapter()">Succ ▶</button>
+          <button class="nav-btn" onclick="prevChapter()">◀Prec</button>
+          <button class="nav-btn" onclick="nextChapter()">Succ▶</button>
         </div>
       </div>
       <div>${versesHtml}</div>
       <div style="display:flex; justify-content:space-between; margin-top:20px; padding-top:12px; border-top:1px solid var(--border-color);">
-        <button class="nav-btn" onclick="prevChapter()">◀ Capitolo Prec.</button>
-        <button class="nav-btn" onclick="nextChapter()">Capitolo Succ. ▶</button>
+        <button class="nav-btn" onclick="prevChapter()">◀Capitolo Prec.</button>
+        <button class="nav-btn" onclick="nextChapter()">Capitolo Succ.▶</button>
       </div>
     `;
     main.scrollTop = 0;
@@ -1147,19 +1197,19 @@ function toggleParallel() {
   const sel3 = document.getElementById("trans3");
 
   if (state.parallelCount === 1) {
-    btn.textContent = "⚖️ Parallelo: 1x";
+    btn.textContent = "⚖️Parallelo: 1x";
     btn.classList.remove("highlight");
     sel2.style.display = "none";
     sel3.style.display = "none";
     diffBtn.style.display = "none";
   } else if (state.parallelCount === 2) {
-    btn.textContent = "⚖️ Parallelo: 2x";
+    btn.textContent = "⚖️Parallelo: 2x";
     btn.classList.add("highlight");
     sel2.style.display = "block";
     sel3.style.display = "none";
     diffBtn.style.display = "inline-flex";
   } else {
-    btn.textContent = "⚖️ Parallelo: 3x";
+    btn.textContent = "⚖️Parallelo: 3x";
     btn.classList.add("highlight");
     sel2.style.display = "block";
     sel3.style.display = "block";
@@ -1171,10 +1221,10 @@ function toggleParallel() {
 function toggleDiffMode() {
   state.diffMode = !state.diffMode;
   const btn = document.getElementById("diffBtn");
-  btn.textContent = state.diffMode ? "🔍 Diff: ON" : "🔍 Diff: OFF";
+  btn.textContent = state.diffMode ? "🔍Diff: ON" : "🔍Diff: OFF";
   btn.classList.toggle("highlight", state.diffMode);
   loadChapterView();
-                                           }
+}
     let activeNoteTarget = null;
 
 function onVerseClick(verseNum, text) {
@@ -1479,21 +1529,14 @@ async function showCatalogView() {
   closeActionBar();
   setActiveTab("tabCatalog");
   const main = document.getElementById("mainContainer");
-  main.innerHTML = `<div class="loader">Caricamento catalogo globale (oltre 110 versioni + edizioni Strong)...</div>`;
-
+  main.innerHTML = `<div class="loader">Caricamento catalogo globale (oltre 1.350 versioni + edizioni Strong)...</div>`;
   await loadFullGlobalCatalog();
   const langs = ["Tutte le lingue", ...new Set(dynamicCatalog.map(b => b.lang))];
-
   main.innerHTML = `
-    <div class="section-title">
-      <span>Catalogo Globale Traduzioni & Strong</span>
-      <span>${dynamicCatalog.length} Edizioni</span>
-    </div>
-    <div style="font-size:13px;color:var(--text-muted);margin-bottom:10px;line-height:1.4;">
-      Tocca <b>⬇ Scarica / Attiva</b> per aggiungere qualsiasi Bibbia o versione con <b>Numeri Strong (es. kjv_strongs)</b> ai menu in alto e salvarla offline.
-    </div>
+    <div class="section-title"><span>Catalogo Globale Traduzioni & Strong</span><span>${dynamicCatalog.length} Edizioni</span></div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:10px;line-height:1.4;">Tocca <b>⬇Scarica / Attiva</b> per aggiungere qualsiasi Bibbia mondiale (GetBible + HelloAO) o versione con <b>Numeri Strong (es. kjv_strongs)</b> ai menu in alto.</div>
     <div class="search-box">
-      <input type="text" id="catFilter" class="search-input" placeholder="🔍 Cerca lingua, Strong, Greco, Ebraico..." oninput="filterCatalogList()">
+      <input type="text" id="catFilter" class="search-input" placeholder="🔍Cerca lingua, Strong, Berean, Greco, Ebraico..." oninput="filterCatalogList()">
       <select id="catLangFilter" class="trans-select" style="max-width:155px;" onchange="filterCatalogList()">
         ${langs.map(l => `<option value="${l}">${l}</option>`).join("")}
       </select>
@@ -1508,7 +1551,7 @@ function renderCatalogItems(list) {
   if (!container) return;
   container.innerHTML = list.map(b => {
     const isDown = state.downloadedBibles.includes(b.id);
-    const safeId = b.id.replace(":", "_");
+    const safeId = b.id.replace(/[^a-zA-Z0-9_-]/g, "_");
     return `
       <div class="result-card" style="display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:default;">
         <div>
@@ -1516,7 +1559,7 @@ function renderCatalogItems(list) {
           <div style="font-size:12px;color:var(--text-muted);">Lingua: ${b.lang} • Codice: <code>${b.id.split(':')[1]}</code></div>
         </div>
         <button id="btn_${safeId}" class="badge-btn ${isDown ? 'downloaded' : ''}" onclick="toggleDownload('${b.id}')">
-          ${isDown ? '✔ Attiva' : '⬇ Scarica'}
+          ${isDown ? '✔Attiva' : '⬇Scarica'}
         </button>
       </div>`;
   }).join("");
@@ -1534,9 +1577,8 @@ function filterCatalogList() {
 }
 
 async function toggleDownload(id) {
-  const safeId = id.replace(":", "_");
+  const safeId = id.replace(/[^a-zA-Z0-9_-]/g, "_");
   const btn = document.getElementById(`btn_${safeId}`);
-
   if (state.downloadedBibles.includes(id)) {
     if (state.downloadedBibles.length <= 1) {
       alert("Devi mantenere almeno una traduzione attiva!");
@@ -1548,17 +1590,19 @@ async function toggleDownload(id) {
     await populateSelects();
     filterCatalogList();
   } else {
-    if (btn) { btn.textContent = "⏳ Scarico..."; btn.classList.add("downloading"); }
+    if (btn) { btn.textContent = "⏳Scarico..."; btn.classList.add("downloading"); }
     if (!state.downloadedBibles.includes(id)) state.downloadedBibles.push(id);
     localStorage.setItem("bm_v10_pro_bibles", JSON.stringify(state.downloadedBibles));
-    try {
-      const code = id.split(":")[1];
-      const res = await fetch(`https://api.getbible.net/v2/${code}.json`);
-      if (res.ok) {
-        const data = await res.json();
-        await saveOfflineBible(id, data);
-      }
-    } catch(e) {}
+    if (!id.startsWith("helloao:")) {
+      try {
+        const code = id.split(":")[1];
+        const res = await fetch(`https://api.getbible.net/v2/${code}.json`);
+        if (res.ok) {
+          const data = await res.json();
+          await saveOfflineBible(id, data);
+        }
+      } catch(e) {}
+    }
     await populateSelects();
     filterCatalogList();
   }
@@ -1604,13 +1648,15 @@ async function executeSearch() {
   };
 
   try {
-    let fullBible = await getOfflineBible(state.trans1);
+    // Se l'utente ha attiva una versione HelloAO, cerca prima nei capitoli in cache; se serve l'indice completo 66 libri usa il motore GetBible attivo o Riveduta/KJV
+    const searchTransId = state.trans1.startsWith("helloao:") ? "gb:riveduta" : state.trans1;
+    let fullBible = await getOfflineBible(searchTransId);
     if (!fullBible) {
-      const code = state.trans1.split(":")[1];
+      const code = searchTransId.split(":")[1];
       const res = await fetch(`https://api.getbible.net/v2/${code}.json`);
       if (res.ok) {
         fullBible = await res.json();
-        await saveOfflineBible(state.trans1, fullBible);
+        await saveOfflineBible(searchTransId, fullBible);
       }
     }
     if (fullBible && fullBible.books) {
@@ -1621,7 +1667,6 @@ async function executeSearch() {
         if (scope === "nt" && bNum < 40) continue;
         if (scope === "pent" && bNum > 5) continue;
         if (scope === "gosp" && (bNum < 40 || bNum > 44)) continue;
-
         const bMeta = getBook(bNum);
         for (const c of (b.chapters || [])) {
           for (const v of (c.verses || [])) {
@@ -1639,11 +1684,7 @@ async function executeSearch() {
         return;
       }
       resDiv.innerHTML = `<div style="margin-bottom:10px;font-size:13px;color:var(--text-muted);">Trovate <b>${matches.length}</b> occorrenze nella Concordanza:</div>` +
-        matches.map(m => `
-          <div class="result-card" onclick="openRef(${m.bookId}, ${m.ch})">
-            <div class="result-ref">${m.bookName} ${m.ch}:${m.v}</div>
-            <div>${m.text}</div>
-          </div>`).join("");
+        matches.map(m => `<div class="result-card" onclick="openRef(${m.bookId}, ${m.ch})"><div class="result-ref">${m.bookName} ${m.ch}:${m.v}</div><div>${m.text}</div></div>`).join("");
     } else {
       resDiv.innerHTML = `<div class="loader">Errore di connessione all'indice della Concordanza.</div>`;
     }
@@ -1661,7 +1702,6 @@ function buildUniversalRefsForVerse(bookId, chapter, verseNum, rawText) {
   const curBook = getBook(bId);
   const selfRef = `${curBook.name} ${ch}:${v}`;
   const list = [];
-
   const add = (r) => {
     if (r && r !== selfRef && !list.includes(r)) list.push(r);
   };
@@ -1683,7 +1723,6 @@ function buildUniversalRefsForVerse(bookId, chapter, verseNum, rawText) {
     { w: ["parola", "legge", "scritto", "word", "law", "palabra", "wort"], r: ["Salmi 119:105", "Isaia 40:8", "Giovanni 1:1", "2 Timoteo 3:16", "Ebrei 4:12"] },
     { w: ["vita", "eterna", "life", "eternal", "vida", "leben"], r: ["Salmi 16:11", "Giovanni 3:16", "Giovanni 11:25", "Giovanni 14:6", "Romani 6:23"] }
   ];
-
   themes.forEach(t => {
     if (t.w.some(k => low.includes(k))) t.r.forEach(add);
   });
@@ -1708,7 +1747,6 @@ window.addEventListener("load", function() {
     const rawVerse = state.selectedVerseText || "";
     const text = rawVerse.toLowerCase();
     const matches = [];
-
     Object.keys(PRO_STRONG_DICT).forEach(k => {
       if (text.includes(k)) {
         const d = PRO_STRONG_DICT[k];
@@ -1716,23 +1754,20 @@ window.addEventListener("load", function() {
           <div class="result-card" style="cursor:default;">
             <div class="result-ref" style="display:flex;justify-content:space-between;align-items:center;">
               <span>${k.toUpperCase()} — <span class="tag-badge">${d.code}</span></span>
-              <span class="tag-badge" onclick="searchWordInConcordance('${k}')">🔍 Cerca nella Concordanza</span>
+              <span class="tag-badge" onclick="searchWordInConcordance('${k}')">🔍Cerca nella Concordanza</span>
             </div>
             <div style="font-weight:700; margin:4px 0;">${d.orig}</div>
             <div style="font-size:13.5px; line-height:1.45;">${d.def}</div>
-          </div>
-        `);
+          </div>`);
       }
     });
 
     const words = [...new Set(rawVerse.replace(/[.,;:!?"'«»()0-9]/g, " ").split(/\s+/).filter(w => w.length >= 4))];
-    const wordPills = words.map(w => `<span class="tag-badge" style="font-size:13px;padding:5px 10px;" onclick="searchWordInConcordance('${w.replace(/'/g, "")}')">🔍 ${w}</span>`).join(" ");
+    const wordPills = words.map(w => `<span class="tag-badge" style="font-size:13px;padding:5px 10px;" onclick="searchWordInConcordance('${w.replace(/'/g, "")}')">🔍${w}</span>`).join(" ");
 
-    document.getElementById("proModalTitle").textContent = `🏛️ Lessico Strong & Concordanza (${book.name} ${state.chapter}:${state.selectedVerse})`;
+    document.getElementById("proModalTitle").textContent = `🏛️Lessico Strong & Concordanza (${book.name} ${state.chapter}:${state.selectedVerse})`;
     document.getElementById("proModalBody").innerHTML = `
-      <div style="font-size:13px;color:var(--text-muted);font-style:italic;margin-bottom:10px;border-left:3px solid var(--primary-light);padding-left:8px;">
-        "${rawVerse}"
-      </div>
+      <div style="font-size:13px;color:var(--text-muted);font-style:italic;margin-bottom:10px;border-left:3px solid var(--primary-light);padding-left:8px;">"${rawVerse}"</div>
       ${matches.length ? `<div class="section-title"><span>Radici Ebraico/Greche Rilevate</span></div>` + matches.join("") : ""}
       <div class="section-title"><span>Concordanza Immediata Parole del Versetto</span></div>
       <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:8px;">Tocca qualsiasi parola di questo versetto per trovare tutti i passi paralleli in cui ricorre nella Bibbia:</div>
@@ -1741,7 +1776,6 @@ window.addEventListener("load", function() {
     document.getElementById("proModal").style.display = "flex";
   };
 
-  // Sovrascrive la vecchia funzione del Blocco 7 e abilita i Passi Paralleli su TUTTI i versetti e in ogni lingua!
   window.openCrossRefsModalForVerse = function() {
     const book = getBook(state.bookId);
     const vNum = state.selectedVerse || 1;
@@ -1749,19 +1783,17 @@ window.addEventListener("load", function() {
     const refs = buildUniversalRefsForVerse(state.bookId, state.chapter, vNum, rawVerse);
     const words = [...new Set(rawVerse.replace(/[.,;:!?"'«»()0-9]/g, " ").split(/\s+/).filter(w => w.length >= 4))];
 
-    document.getElementById("proModalTitle").textContent = `🔗 Passi Paralleli & Riferimenti (${book.name} ${state.chapter}:${vNum})`;
+    document.getElementById("proModalTitle").textContent = `🔗Passi Paralleli & Riferimenti (${book.name} ${state.chapter}:${vNum})`;
     document.getElementById("proModalBody").innerHTML = `
-      <div style="font-size:13px;color:var(--text-muted);font-style:italic;margin-bottom:10px;border-left:3px solid var(--primary-light);padding-left:8px;">
-        "${rawVerse}"
-      </div>
+      <div style="font-size:13px;color:var(--text-muted);font-style:italic;margin-bottom:10px;border-left:3px solid var(--primary-light);padding-left:8px;">"${rawVerse}"</div>
       <div class="section-title"><span>Passi Paralleli Consigliati (Tocca per aprire)</span></div>
       <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
-        ${refs.map(r => `<span class="tag-badge" style="font-size:14px; padding:7px 12px;" onclick="jumpToRefString('${r}')">📖 ${r}</span>`).join("")}
+        ${refs.map(r => `<span class="tag-badge" style="font-size:14px; padding:7px 12px;" onclick="jumpToRefString('${r}')">📖${r}</span>`).join("")}
       </div>
       <div class="section-title"><span>Concordanza Parallela per Parola Chiave</span></div>
       <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:8px;">Tocca una parola del versetto per cercare tutti i versetti paralleli nella traduzione attiva:</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;">
-        ${words.map(w => `<span class="tag-badge" style="font-size:13px;padding:5px 10px;" onclick="searchWordInConcordance('${w.replace(/'/g, "")}')">🔍 ${w}</span>`).join(" ")}
+        ${words.map(w => `<span class="tag-badge" style="font-size:13px;padding:5px 10px;" onclick="searchWordInConcordance('${w.replace(/'/g, "")}')">🔍${w}</span>`).join(" ")}
       </div>
     `;
     closeActionBar();
