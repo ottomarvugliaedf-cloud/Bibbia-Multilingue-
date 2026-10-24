@@ -1823,6 +1823,16 @@ window.addEventListener("load", function() {
         <div>${b.text}</div>
       </div>`).join("");
 }
+    function deleteBookmark(idx) {
+  state.bookmarks.splice(idx, 1);
+  localStorage.setItem("bm_bm", JSON.stringify(state.bookmarks));
+  showSavedView();
+}
+
+function changeFontSize(delta) {
+  state.fontSize = Math.min(30, Math.max(14, state.fontSize + delta));
+  document.documentElement.style.setProperty("--font-size-verse", state.fontSize + "px");
+}
 
 function applySavedTheme() {
   document.body.classList.remove("dark-mode", "oled-mode");
