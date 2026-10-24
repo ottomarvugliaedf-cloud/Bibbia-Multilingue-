@@ -1880,6 +1880,13 @@ function changeFontSize(delta) {
   document.documentElement.style.setProperty("--font-size-verse", state.fontSize + "px");
 }
 
+    function toggleDarkMode() {
+  const order = ["light", "dark", "oled"];
+  state.themeMode = order[(order.indexOf(state.themeMode) + 1) % 3];
+  localStorage.setItem("bm_theme", state.themeMode);
+  applySavedTheme();
+    }
+
 function applySavedTheme() {
   document.body.classList.remove("dark-mode", "oled-mode");
   if (state.themeMode === "dark") document.body.classList.add("dark-mode");
