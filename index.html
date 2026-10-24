@@ -1829,6 +1829,52 @@ window.addEventListener("load", function() {
   showSavedView();
 }
 
+    function saveCurrentPositionToHistory(targetBookId, targetCh) {
+  if (state.bookId !== Number(targetBookId) || state.chapter !== Number(targetCh)) {
+    const curBook = getBook(state.bookId);
+    const vNum = state.selectedVerse || 1;
+    const label = `${curBook.abbr} ${state.chapter}${state.selectedVerse ? ':' + state.selectedVerse : ''}`;
+    navHistory.push({
+      bookId: state.bookId,
+      chapter: state.chapter,
+      verse: vNum,
+      label: label
+    });
+    if (navHistory.length > 25) navHistory.shift();
+  }
+}
+
+function scrollToVerseAndHighlight(v) {
+  if (v > 0) {
+    setTimeout(() => {
+      const vEl = document.getElementById(`v_${v}`);
+      if (vEl) {
+        vEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        vEl.style.outline = "2px solid var(--primary-light)";
+        setTimeout(() => vEl.style.outline = "none", 2500);
+      }
+    }, 300);
+  }
+}
+
+function goBackHistory() {
+  if (!navHistory.length) return;
+  const prev = navHistory.pop();
+  state.bookId = prev.bookId;
+  state.chapter = prev.chapter;
+  state.selectedVerse = prev.verse || null;
+  loadChapterView().then(() => {
+    if (prev.verse) scrollToVerseAndHighlight(prev.verse);
+  });
+}
+
+function openRef(bookId, chapter) {
+  saveCurrentPositionToHistory(bookId, chapter);
+  state.bookId = Number(bookId);
+  state.chapter = Number(chapter);
+  loadChapterView();
+}
+
 function changeFontSize(delta) {
   state.fontSize = Math.min(30, Math.max(14, state.fontSize + delta));
   document.documentElement.style.setProperty("--font-size-verse", state.fontSize + "px");
