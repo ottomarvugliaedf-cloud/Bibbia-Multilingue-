@@ -2143,43 +2143,6 @@ function speakSelectedVerse() {
   startUniversalSpeech(state.selectedVerseText, false);
 }
 
-function openStrongModalForVerse() {
-  const book = getBook(state.bookId);
-  const text = (state.selectedVerseText || "").toLowerCase();
-  const matches = [];
-  Object.keys(PRO_STRONG_DICT).forEach(k => {
-    if (text.includes(k)) {
-      const d = PRO_STRONG_DICT[k];
-      matches.push(`
-        <div class="result-card" style="cursor:default;">
-          <div class="result-ref">${k.toUpperCase()} — <span class="tag-badge">${d.code}</span></div>
-          <div style="font-weight:700; margin:4px 0;">${d.orig}</div>
-          <div style="font-size:13.5px;">${d.def}</div>
-        </div>
-      `);
-    }
-  });
-  document.getElementById("proModalTitle").textContent = `🏛️ Lessico Strong (${book.name} ${state.chapter}:${state.selectedVerse})`;
-  document.getElementById("proModalBody").innerHTML = matches.length
-    ? matches.join("")
-    : `<div class="loader">Versetto: "${state.selectedVerseText}"<br><br>Radici chiave Strong presenti per termini biblici primari (es. Dio, Signore, Principio, Luce, Parola, Spirito, Vita, Fede, Amore, Pastore, Anima).</div>`;
-  document.getElementById("proModal").style.display = "flex";
-}
-
-function openCrossRefsModalForVerse() {
-  const book = getBook(state.bookId);
-  const key = `${state.bookId}_${state.chapter}_${state.selectedVerse}`;
-  const refs = PRO_CROSS_REFS[key] || ["Salmi 119:105", "Romani 15:4", "2 Timoteo 3:16"];
-  document.getElementById("proModalTitle").textContent = `🔗 Passi Paralleli (${book.name} ${state.chapter}:${state.selectedVerse})`;
-  document.getElementById("proModalBody").innerHTML = `
-    <div style="margin-bottom:10px; font-size:13px; color:var(--text-muted);">Tocca un riferimento per aprire subito il passo corrispondente:</div>
-    <div style="display:flex; flex-wrap:wrap; gap:6px;">
-      ${refs.map(r => `<span class="tag-badge" style="font-size:14px; padding:6px 12px;" onclick="jumpToRefString('${r}')">📖 ${r}</span>`).join("")}
-    </div>
-  `;
-  document.getElementById("proModal").style.display = "flex";
-}
-
 function generateVerseCardModal() {
   const book = getBook(state.bookId);
   const ref = `${book.name} ${state.chapter}:${state.selectedVerse}`;
