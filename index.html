@@ -798,7 +798,7 @@ const PRO_CROSS_REFS = {
     let dynamicCatalog = [...CORE_BIBLES];
 let catalogLoaded = false;
 const DEFAULT_ACTIVE_IDS = CORE_BIBLES.map(b => b.id);
-
+let navHistory = [];
 let state = {
   bookId: 1,
   chapter: 1,
@@ -1140,10 +1140,15 @@ async function loadChapterView() {
       }).join("");
     }
 
+        const lastNav = navHistory.length > 0 ? navHistory[navHistory.length - 1] : null;
+    const backBtnHtml = lastNav
+      ? `<button class="nav-btn" style="background:var(--primary-main);color:#fff;border-color:var(--primary-main);" onclick="goBackHistory()">⬅️ ${lastNav.label}</button>`
+      : "";
     main.innerHTML = `
       <div class="chapter-header">
         <div class="chapter-title" onclick="showChaptersView(${state.bookId})" style="cursor:pointer;">${book.name} ${state.chapter}▾</div>
         <div class="chapter-nav-btns">
+          ${backBtnHtml}
           <button class="nav-btn" onclick="prevChapter()">◀Prec</button>
           <button class="nav-btn" onclick="nextChapter()">Succ▶</button>
         </div>
@@ -1819,30 +1824,6 @@ window.addEventListener("load", function() {
       </div>`).join("");
 }
 
-function deleteBookmark(idx) {
-  state.bookmarks.splice(idx, 1);
-  localStorage.setItem("bm_bm", JSON.stringify(state.bookmarks));
-  showSavedView();
-}
-
-function openRef(bookId, chapter) {
-  state.bookId = Number(bookId);
-  state.chapter = Number(chapter);
-  loadChapterView();
-}
-
-function changeFontSize(delta) {
-  state.fontSize = Math.min(30, Math.max(14, state.fontSize + delta));
-  document.documentElement.style.setProperty("--font-size-verse", state.fontSize + "px");
-}
-
-function toggleDarkMode() {
-  const order = ["light", "dark", "oled"];
-  state.themeMode = order[(order.indexOf(state.themeMode) + 1) % 3];
-  localStorage.setItem("bm_theme", state.themeMode);
-  applySavedTheme();
-}
-
 function applySavedTheme() {
   document.body.classList.remove("dark-mode", "oled-mode");
   if (state.themeMode === "dark") document.body.classList.add("dark-mode");
@@ -1889,6 +1870,8 @@ function jumpToRefString(str) {
     b.abbr.toLowerCase() === qBook
   );
   if (found) {
+    const targetCh = Math.min(found.ch, Math.max(1, ch));
+    saveCurrentPositionToHistory(found.id, targetCh);
     state.bookId = found.id;
     state.chapter = Math.min(found.ch, Math.max(1, ch));
     closeProModal();
