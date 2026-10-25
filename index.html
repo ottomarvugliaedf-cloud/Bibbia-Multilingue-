@@ -689,7 +689,6 @@ const CORE_BIBLES = [
   { id: "gb:nwt", name: "🇮🇹 Italiano: Traduzione del Nuovo Mondo (TNM 2017)", lang: "Italian" },
   { id: "gb:bi12", name: "🇮🇹 Italiano: Traduzione del Nuovo Mondo (Ed. 1987)", lang: "Italian" },
   { id: "gb:riveduta", name: "🇮🇹 Italiano: Riveduta 1927 (Luzzi)", lang: "Italian" },
-  { id: "gb:riveduta", name: "🇮🇹 Italiano: Riveduta 1927 (Luzzi)", lang: "Italian" },
   { id: "gb:giovanni", name: "🇮🇹 Italiano: Giovanni Diodati (1649)", lang: "Italian" },
   { id: "gb:kjv", name: "🇬🇧 English: King James Version (KJV)", lang: "English" },
   { id: "gb:kjv_strongs", name: "🇬🇧🏛️ English: KJV + Numeri Strong Integrati", lang: "English" },
@@ -1027,7 +1026,10 @@ async function fetchChapterData(transId, bookId, chapter) {
       if (parsed && parsed.length > 0) return parsed;
     } catch(e) {}
   }
-
+    if (transId === "gb:nwt" || transId === "gb:bi12") {
+    throw new Error("EPUB_NOT_IMPORTED");
+    }
+  
   let verses = [];
   if (transId.startsWith("helloao:")) {
     const code = transId.split(":")[1];
@@ -2248,26 +2250,41 @@ async function importTnmEpubFile(event, targetId, labelName) {
   if (!file) return;
   const statusEl = document.getElementById("epubImportStatus");
   if (typeof JSZip === "undefined") {
-    alert("Libreria JSZip non caricata. Verifica la connessione internet per il primo avvio.");
+    alert("Libreria JSZip non caricata. Verifica la connessione internet.");
     return;
   }
-
   try {
     statusEl.innerHTML = `⏳ Apertura di <b>${file.name}</b> in corso...`;
     const zip = await JSZip.loadAsync(file);
     const allFiles = Object.keys(zip.files);
     const booksData = [];
 
+    // Codici ufficiali inglesi usati nei file EPUB JW (da Genesi a Rivelazione)
+    const JW_BOOK_CODES = ["", "GE", "EX", "LE", "NU", "DE", "JOS", "JG", "RU", "1SA", "2SA", "1KI", "2KI", "1CH", "2CH", "EZR", "NE", "ES", "JOB", "PS", "PR", "EC", "CA", "ISA", "JER", "LA", "EZE", "DA", "HOS", "JOE", "AM", "OB", "JON", "MIC", "NAH", "HAB", "ZEP", "HAG", "ZEC", "MAL", "MT", "MR", "LU", "JOH", "AC", "RO", "1CO", "2CO", "GA", "EPH", "PHP", "COL", "1TH", "2TH", "1TI", "2TI", "TIT", "PHM", "HEB", "JAS", "1PE", "2PE", "1JO", "2JO", "3JO", "JUD", "RE"];
+
     for (let bId = 1; bId <= 66; bId++) {
-      const prefixNum = String(bId + 4).padStart(2, "0"); // Da 05 (Genesi) a 70 (Rivelazione)
+      const prefixNum = String(bId + 4).padStart(2, "0");
+      const jwCode = JW_BOOK_CODES[bId];
       const bookMeta = getBook(bId);
       statusEl.innerHTML = `⚙️ Estrazione <b>${labelName}</b>: ${bookMeta.name} (${bId}/66)...`;
 
-      // Trova tutti i file dei capitoli di questo libro (es. 05_...xhtml e 05_...-split2.xhtml)
-      const bookFiles = allFiles.filter(f => {
+      // Cerca i file del libro sia nel formato bi12 (es. 05_BI12_.GE.xhtml) sia nel formato nwt (es. _GE.xhtml / 1001061109.xhtml)
+      let bookFiles = allFiles.filter(f => {
         const base = f.split("/").pop();
-        return base.startsWith(prefixNum + "_") && base.endsWith(".xhtml") && !base.includes("extracted");
+        if (!base.endsWith(".xhtml") || base.includes("extracted") || base.includes("outline")) return false;
+        const matchBi12 = base.startsWith(prefixNum + "_") && base.includes("." + jwCode);
+        const matchNwtCode = new RegExp(`[_. ]${jwCode}(?:-split\\d+)?\\.xhtml$`, "i").test(base);
+        return matchBi12 || matchNwtCode;
       });
+
+      // Fallback per nwt_I.epub se usa numerazione progressiva 10010611xx (dove 1001061105 = Genesi [id + 1001061104])
+      if (bookFiles.length === 0) {
+        const nwtDocNum = String(1001061104 + bId);
+        bookFiles = allFiles.filter(f => {
+          const base = f.split("/").pop();
+          return base.startsWith(nwtDocNum) && base.endsWith(".xhtml") && !base.includes("extracted") && !base.includes("outline");
+        });
+      }
 
       const chaptersArr = [];
       for (const fPath of bookFiles) {
@@ -2275,14 +2292,12 @@ async function importTnmEpubFile(event, targetId, labelName) {
         let chNum = 1;
         const splitMatch = base.match(/-split(\d+)\.xhtml$/i);
         if (splitMatch) chNum = parseInt(splitMatch[1], 10);
-
         const rawXhtml = await zip.files[fPath].async("string");
         const versesArr = parseJwEpubChapterXhtml(rawXhtml);
         if (versesArr.length > 0) {
           chaptersArr.push({ chapter: chNum, verses: versesArr });
         }
       }
-
       chaptersArr.sort((a, b) => a.chapter - b.chapter);
       booksData.push({ nr: bId, name: bookMeta.name, chapters: chaptersArr });
     }
@@ -2290,17 +2305,14 @@ async function importTnmEpubFile(event, targetId, labelName) {
     statusEl.innerHTML = `💾 Salvataggio permanente nel database Offline...`;
     const fullBibleObj = { id: targetId, name: labelName, books: booksData };
     await saveOfflineBible(targetId, fullBibleObj);
-
     if (!state.downloadedBibles.includes(targetId)) {
       state.downloadedBibles.unshift(targetId);
       localStorage.setItem("bm_v10_pro_bibles", JSON.stringify(state.downloadedBibles));
     }
-
     await populateSelects();
     state.trans1 = targetId;
     document.getElementById("trans1").value = targetId;
     localStorage.setItem("bm_trans1", targetId);
-
     statusEl.innerHTML = `✔ <b>${labelName}</b> importata con successo (66 libri)!`;
     setTimeout(() => {
       closeProModal();
