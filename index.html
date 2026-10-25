@@ -1025,9 +1025,9 @@ async function fetchChapterData(transId, bookId, chapter) {
       if (parsed && parsed.length > 0) return parsed;
     } catch(e) {}
   }
-    if (transId === "gb:nwt" || transId === "gb:bi12") {
+      if (transId === "gb:nwt") {
     throw new Error("EPUB_NOT_IMPORTED");
-    }
+  }
   
   let verses = [];
   if (transId.startsWith("helloao:")) {
