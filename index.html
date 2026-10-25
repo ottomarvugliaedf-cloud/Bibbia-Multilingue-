@@ -556,7 +556,7 @@
       </div>
     </div>
   </div>
-<!-- Finestra Modale Universale Pro (Salto Rapido, Strong, Passi Paralleli, Card Immagine, Backup) -->
+  <!-- Finestra Modale Universale Pro (Salto Rapido, Strong, Passi Paralleli, Card Immagine, Backup) -->
   <div id="proModal" class="modal-overlay" onclick="if(event.target.id==='proModal') closeProModal()">
     <div class="modal-card">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
@@ -656,7 +656,7 @@ const BIBLE_BOOKS = [
   { id: 65, name: "Giuda", abbr: "Gda", ch: 1, sec: "NT", cat: 4 },
   { id: 66, name: "Rivelazione", abbr: "Riv", ch: 22, sec: "NT", cat: 4 }
 ];
-    const CORE_BIBLES = [
+const CORE_BIBLES = [
   { id: "gb:nwt", name: "🇮🇹 Italiano: Traduzione del Nuovo Mondo (TNM 2017)", lang: "Italian" },
   { id: "gb:riveduta", name: "🇮🇹 Italiano: Riveduta 1927 (Luzzi)", lang: "Italian" },
   { id: "gb:giovanni", name: "🇮🇹 Italiano: Giovanni Diodati (1649)", lang: "Italian" },
@@ -774,7 +774,7 @@ const PRO_CROSS_REFS = {
   "58_11_1": ["Romani 8:24", "2 Corinti 4:18", "2 Corinti 5:7"],
   "66_21_4": ["Isaia 25:8", "Isaia 35:10", "Rivelazione 7:17"]
 };
-    function escapeHtml(str) {
+function escapeHtml(str) {
   if (str === null || str === undefined) return "";
   return String(str)
     .replace(/&/g, "&amp;")
@@ -827,7 +827,7 @@ let catalogLoaded = false;
 const DEFAULT_ACTIVE_IDS = CORE_BIBLES.map(b => b.id);
 let navHistory = [];
 let currentChapterReqId = 0;
-let memoryBibleCache = { id: null, data: null };
+const memoryBibleCache = new Map();
 let dbInstancePromise = null;
 
 let state = {
@@ -869,7 +869,8 @@ function openDB() {
     };
     req.onsuccess = e => {
       const db = e.target.result;
-      db.onClose = () => { dbInstancePromise = null; };
+      db.onclose = () => { dbInstancePromise = null; };
+      db.onversionchange = () => { db.close(); dbInstancePromise = null; };
       resolve(db);
     };
     req.onerror = e => {
@@ -880,8 +881,8 @@ function openDB() {
   return dbInstancePromise;
 }
 async function getOfflineBible(id) {
-  if (memoryBibleCache.id === id && memoryBibleCache.data) {
-    return memoryBibleCache.data;
+  if (memoryBibleCache.has(id)) {
+    return memoryBibleCache.get(id);
   }
   try {
     const db = await openDB();
@@ -889,7 +890,13 @@ async function getOfflineBible(id) {
       const tx = db.transaction("bibles", "readonly");
       const req = tx.objectStore("bibles").get(id);
       req.onsuccess = () => {
-        if (req.result) memoryBibleCache = { id: id, data: req.result };
+        if (req.result) {
+          if (memoryBibleCache.size >= 4) {
+            const oldestKey = memoryBibleCache.keys().next().value;
+            memoryBibleCache.delete(oldestKey);
+          }
+          memoryBibleCache.set(id, req.result);
+        }
         res(req.result || null);
       };
       req.onerror = () => res(null);
@@ -897,7 +904,11 @@ async function getOfflineBible(id) {
   } catch(e) { return null; }
 }
 async function saveOfflineBible(id, data) {
-  memoryBibleCache = { id: id, data: data };
+  if (memoryBibleCache.size >= 4 && !memoryBibleCache.has(id)) {
+    const oldestKey = memoryBibleCache.keys().next().value;
+    memoryBibleCache.delete(oldestKey);
+  }
+  memoryBibleCache.set(id, data);
   const db = await openDB();
   return new Promise((res, rej) => {
     const tx = db.transaction("bibles", "readwrite");
@@ -907,7 +918,7 @@ async function saveOfflineBible(id, data) {
   });
 }
 async function removeOfflineBible(id) {
-  if (memoryBibleCache.id === id) memoryBibleCache = { id: null, data: null };
+  memoryBibleCache.delete(id);
   try {
     const db = await openDB();
     return new Promise((res, rej) => {
@@ -1034,7 +1045,7 @@ function showChaptersView(bookId) {
 function selectChapter(ch) {
   state.chapter = ch;
   loadChapterView();
-            }
+                 }
     const HELLOAO_BOOK_MAP = ["", "GEN", "EXO", "LEV", "NUM", "DEU", "JOS", "JDG", "RUT", "1SA", "2SA", "1KI", "2KI", "1CH", "2CH", "EZR", "NEH", "EST", "JOB", "PSA", "PRO", "ECC", "SNG", "ISA", "JER", "LAM", "EZK", "DAN", "HOS", "JOL", "AMO", "OBA", "JON", "MIC", "NAM", "HAB", "ZEP", "HAG", "ZEC", "MAL", "MAT", "MRK", "LUK", "JHN", "ACT", "ROM", "1CO", "2CO", "GAL", "EPH", "PHP", "COL", "1TH", "2TH", "1TI", "2TI", "TIT", "PHM", "HEB", "JAS", "1PE", "2PE", "1JN", "2JN", "3JN", "JUD", "REV"];
 function extractHelloAOVerseText(contentArr) {
   if (!contentArr) return "";
@@ -1462,10 +1473,11 @@ function saveNoteFromModal() {
 function formatNoteLinks(txt) {
   if (!txt) return "";
   const escaped = escapeHtml(txt);
-  return escaped.replace(/([1-3]?\s?[A-Za-zÀ-ÿ]+)\s+(\d+)(?::(\d+))?/g, (m) => {
+  return escaped.replace(/([1-3]?\s?[A-Za-zÀ-ÿ]+)\s+(\d+)(?::(\d+))?/g, (m, bookPart) => {
+    const cleanBook = (bookPart || "").trim().toLowerCase().replace(/\s+/g, " ");
     const matchedBook = BIBLE_BOOKS.some(b =>
-      m.toLowerCase().startsWith(b.name.toLowerCase()) ||
-      m.toLowerCase().startsWith(b.abbr.toLowerCase() + " ")
+      b.name.toLowerCase() === cleanBook ||
+      b.abbr.toLowerCase() === cleanBook.replace(/\s+/g, "")
     );
     if (!matchedBook) return m;
     return `<span class="tag-badge" onclick="event.stopPropagation(); jumpToRefString('${escapeJsStr(m)}')">📖 ${m}</span>`;
@@ -1755,11 +1767,13 @@ async function executeSearch() {
     { w: ["regno", "re", "governo", "kingdom", "king"], r: ["Daniele 2:44", "Matteo 6:10", "Matteo 6:33", "Matteo 24:14", "Luca 4:43", "Rivelazione 11:15"] }
   ];
   themes.forEach(t => {
-    if (t.w.some(k => new RegExp(`\\b${k}\\b`, "i").test(low))) {
+    if (t.w.some(k => {
+      const escapedK = k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      return new RegExp(`(?:^|[^a-zA-ZÀ-ÿ])${escapedK}(?:$|[^a-zA-ZÀ-ÿ])`, "i").test(low);
+    })) {
       t.r.forEach(add);
     }
   });
-  // Se il versetto non ha corrispondenze dirette nei temi, propone passi chiave reali attinenti alla sezione biblica
   if (list.length === 0) {
     if (bId <= 5) ["Genesi 1:1", "Deuteronomio 6:4", "Giosuè 1:8", "Salmi 19:7", "Romani 15:4"].forEach(add);
     else if (bId <= 17) ["Giosuè 1:8", "1 Samuele 16:7", "2 Cronache 16:9", "Salmi 37:5", "Romani 15:4"].forEach(add);
@@ -1801,7 +1815,7 @@ window.openStrongModalForVerse = function(clickedCode) {
         <div style="margin-top:8px;"><span class="tag-badge" onclick="searchWordInConcordance('${escapeJsStr(clickedCode)}')">🔍 Cerca ${escapeHtml(clickedCode)} nella Concordanza</span></div>
       </div>`);
   }
-  const words = [...new Set(rawVerse.replace(/[.,;:!?"'«»()0-9]/g, " ").split(/\s+/).filter(w => w.length >= 4))];
+  const words = [...new Set(rawVerse.replace(/[^a-zA-ZÀ-ÿ\s]/g, " ").split(/\s+/).filter(w => w.length >= 4))];
   const wordPills = words.map(w => `<span class="tag-badge" style="font-size:13px;padding:5px 10px;" onclick="searchWordInConcordance('${escapeJsStr(w)}')">🔍${escapeHtml(w)}</span>`).join(" ");
   document.getElementById("proModalTitle").textContent = `🏛️Lessico Strong & Concordanza (${book.name} ${state.chapter}:${vNum})`;
   document.getElementById("proModalBody").innerHTML = `
@@ -1820,7 +1834,7 @@ window.openCrossRefsModalForVerse = function() {
   const vNum = state.selectedVerse || 1;
   const rawVerse = state.selectedVerseText || "";
   const refs = buildUniversalRefsForVerse(state.bookId, state.chapter, vNum, rawVerse);
-  const words = [...new Set(rawVerse.replace(/[.,;:!?"'«»()0-9]/g, " ").split(/\s+/).filter(w => w.length >= 4))];
+  const words = [...new Set(rawVerse.replace(/[^a-zA-ZÀ-ÿ\s]/g, " ").split(/\s+/).filter(w => w.length >= 4))];
   document.getElementById("proModalTitle").textContent = `🔗Passi Paralleli & Riferimenti (${book.name} ${state.chapter}:${vNum})`;
   document.getElementById("proModalBody").innerHTML = `
     <div style="font-size:13px;color:var(--text-muted);font-style:italic;margin-bottom:10px;border-left:3px solid var(--primary-light);padding-left:8px;">"${escapeHtml(rawVerse)}"</div>
@@ -1971,8 +1985,8 @@ function jumpToRefString(str) {
       if (v > 0) scrollToVerseAndHighlight(v);
     });
   }
-          }
-    // ============================================================================
+    }
+  // ============================================================================
 // MOTORE AUDIO UNIVERSALE PRO (Chrome Nativo + Stream WebView con <meta no-referrer>)
 // ============================================================================
 let bmAudioPlayer = null;
