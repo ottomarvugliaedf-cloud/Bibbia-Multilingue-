@@ -2304,33 +2304,40 @@ function openBackupModal() {
    function matchItalianBookNameToId(rawTitle, isStrictFromBody = false) {
   if (!rawTitle) return null;
   const lower = rawTitle.toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Rimuove accenti (giosuè -> giosue, qoèlet -> qoelet)
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/\s+/g, " ")
     .trim();
 
-  // Esclude indice/sommario o libri deuterocanonici (così in CEI/TILC ferma il libro precedente senza inquinarlo)
-  if (/^(?:indice|sommario|vecchio testamento|nuovo testamento|antico testamento|pentateuco|libri storici|libri sapienziali|libri profetici|vangeli|tobia|giuditta|1\s*maccabei|2\s*maccabei|i+\s*maccabei|primo\s+libro\s+dei\s+maccabei|secondo\s+libro\s+dei\s+maccabei|sapienza|libro\s+della\s+sapienza|siracide|ecclesiastico|baruc|lettera\s+di\s+geremia)\b/i.test(lower)) {
+  // 1. Sezioni/Categorie generali: ritornano null (non interrompono e non azzerano i libri)
+  if (/^(?:indice|sommario|vecchio\s+testamento|nuovo\s+testamento|antico\s+testamento|pentateuco|libri\s+storici|libri\s+sapienziali|libri\s+profetici|profeti\s+maggiori|profeti\s+minori|vangeli|lettere\s+paoline|lettere\s+cattoliche|appendice|note|prefazione|introduzione)\b/i.test(lower)) {
+    return null;
+  }
+
+  // 2. Libri deuterocanonici / apocrifi: ritornano -1 per fermare la raccolta del libro canonico precedente
+  if (/^(?:tobia|giuditta|1\s*maccabei|2\s*maccabei|3\s*maccabei|4\s*maccabei|i+\.?\s*maccabei|primo\s+libro\s+dei\s+maccabei|secondo\s+libro\s+dei\s+maccabei|sapienza|libro\s+della\s+sapienza|siracide|ecclesiastico|baruc|lettera\s+di\s+geremia|preghiera\s+di\s+manasse|aggiunte\s+a\s+ester|aggiunte\s+a\s+daniele)\b/i.test(lower)) {
     return -1;
   }
 
-  // Se viene dal corpo del testo (e non dal toc.ncx), ignora frasi con punteggiatura da discorso
   if (isStrictFromBody && /[.;:!?«»"“”]/.test(lower)) return null;
 
-  const clean = lower
-    .replace(/^(?:il\s+|la\s+|i\s+|le\s+)?(?:santo\s+)?(?:vangelo\s+(?:secondo\s+|di\s+)?|lettera\s+(?:di\s+san\s+paolo\s+apostolo\s+|cattolica\s+di\s+san\s+|agli\s+|ai\s+|a\s+|di\s+)?|atti\s+degli\s+|libro\s+(?:del\s+profeta\s+|del\s+|della\s+|dei\s+|delle\s+|di\s+)?|profeta\s+|apocalisse\s+di\s+(?:san\s+)?)/g, "")
-    .replace(/^(?:primo|prima)\s+(?:libro\s+(?:di|dei|delle)\s+|lettera\s+(?:ai|a|di)\s+)?/, "1")
-    .replace(/^(?:secondo|seconda)\s+(?:libro\s+(?:di|dei|delle)\s+|lettera\s+(?:ai|a|di)\s+)?/, "2")
-    .replace(/^(?:terzo|terza)\s+(?:lettera\s+(?:ai|a|di)\s+)?/, "3")
-    .replace(/^iii\s+/, "3")
-    .replace(/^ii\s+/, "2")
-    .replace(/^i\s+/, "1")
+  // IMPORTANTE: Prima convertiamo i numeri romani/ordinali all'inizio (prima di rimuovere gli articoli "i " o "il "!)
+  let step1 = lower
+    .replace(/^(?:primo|prima)\s+(?:libro\s+(?:di|dei|delle)\s+|lettera\s+(?:di\s+san\s+paolo\s+apostolo\s+|cattolica\s+di\s+san\s+)?(?:ai|agli|a|di)\s+)?/, "1 ")
+    .replace(/^(?:secondo|seconda)\s+(?:libro\s+(?:di|dei|delle)\s+|lettera\s+(?:di\s+san\s+paolo\s+apostolo\s+|cattolica\s+di\s+san\s+)?(?:ai|agli|a|di)\s+)?/, "2 ")
+    .replace(/^(?:terzo|terza)\s+(?:lettera\s+(?:di\s+san\s+giovanni\s+apostolo\s+)?(?:ai|agli|a|di)\s+)?/, "3 ")
+    .replace(/^iii\.?\s+/, "3 ")
+    .replace(/^ii\.?\s+/, "2 ")
+    .replace(/^i\.?\s+(?=[a-z])/, "1 ");
+
+  const clean = step1
+    .replace(/^(?:1|2|3)\s+(?:libro\s+(?:di|dei|delle)\s+|lettera\s+(?:di\s+san\s+paolo\s+apostolo\s+|cattolica\s+di\s+san\s+)?(?:ai|agli|a|di)\s+)/, m => m[0] + " ")
+    .replace(/^(?:il\s+|la\s+|le\s+|l\s*'\s*)?(?:santo\s+)?(?:vangelo\s+(?:secondo\s+|di\s+)?|lettera\s+(?:di\s+san\s+paolo\s+apostolo\s+|cattolica\s+di\s+san\s+|agli\s+|ai\s+|a\s+|di\s+)?|atti\s+degli\s+|libro\s+(?:del\s+profeta\s+|del\s+|della\s+|dei\s+|delle\s+|di\s+)?|profeta\s+|apocalisse\s+di\s+(?:san\s+)?)/g, "")
     .replace(/\s+\d+\.?\s*$/, "")
     .replace(/[^a-z0-9]/g, "")
     .trim();
 
   if (!clean) return null;
 
-  // Mappa rigorosa (SOLO corrispondenza esatta ===, così nessun titolo breve viene mai confuso con un libro!)
   const exactBookMap = {
     "genesi": 1, "gn": 1, "gen": 1,
     "esodo": 2, "es": 2, "eso": 2,
@@ -2342,25 +2349,25 @@ function openBackupModal() {
     "rut": 8, "rt": 8,
     "1samuele": 9, "1sam": 9, "1sa": 9,
     "2samuele": 10, "2sam": 10, "2sa": 10,
-    "1re": 11, "1libroideire": 11,
-    "2re": 12, "2libroideire": 12,
-    "1cronache": 13, "1cr": 13,
-    "2cronache": 14, "2cr": 14,
+    "1re": 11, "1librodeire": 11,
+    "2re": 12, "2librodeire": 12,
+    "1cronache": 13, "1cr": 13, "1cron": 13,
+    "2cronache": 14, "2cr": 14, "2cron": 14,
     "esdra": 15, "esd": 15,
     "neemia": 16, "ne": 16, "nee": 16,
     "ester": 17, "est": 17,
     "giobbe": 18, "gb": 18,
-    "salmi": 19, "salmo": 19, "sal": 19, "sl": 19,
-    "proverbi": 20, "pr": 20, "prv": 20, "pro": 20,
+    "salmi": 19, "salmo": 19, "sal": 19, "sl": 19, "librodeisalmi": 19,
+    "proverbi": 20, "pr": 20, "prv": 20, "pro": 20, "librodeiproverbi": 20,
     "ecclesiaste": 21, "qoelet": 21, "qohelet": 21, "qo": 21, "ec": 21, "ecc": 21,
-    "canticodeicantici": 22, "cantici": 22, "cantico": 22, "ct": 22, "can": 22,
+    "canticodeicantici": 22, "cantici": 22, "cantico": 22, "ct": 22, "can": 22, "cnt": 22,
     "isaia": 23, "is": 23, "isa": 23,
     "geremia": 24, "ger": 24,
-    "lamentazioni": 25, "lam": 25,
+    "lamentazioni": 25, "lamentazionidigeremia": 25, "lam": 25,
     "ezechiele": 26, "ez": 26, "eze": 26,
     "daniele": 27, "dn": 27, "dan": 27,
     "osea": 28, "os": 28, "ose": 28,
-    "gioele": 29, "gl": 29,
+    "gioele": 29, "gl": 29, "gioe": 29,
     "amos": 30, "am": 30, "amo": 30,
     "abdia": 31, "abd": 31,
     "giona": 32, "gion": 32, "gio": 32,
@@ -2374,7 +2381,7 @@ function openBackupModal() {
     "matteo": 40, "mt": 40, "mat": 40,
     "marco": 41, "mc": 41, "mar": 41,
     "luca": 42, "lc": 42, "luc": 42,
-    "giovanni": 43, "gv": 43,
+    "giovanni": 43, "gv": 43, "giov": 43,
     "atti": 44, "attidegliapostoli": 44, "apostoli": 44, "at": 44,
     "romani": 45, "rm": 45, "rom": 45,
     "1corinzi": 46, "1corinti": 46, "1co": 46, "1cor": 46,
@@ -2391,18 +2398,18 @@ function openBackupModal() {
     "filemone": 57, "flm": 57, "fm": 57,
     "ebrei": 58, "eb": 58, "ebr": 58,
     "giacomo": 59, "gc": 59, "giac": 59,
-    "1pietro": 60, "1pt": 60,
-    "2pietro": 61, "2pt": 61,
-    "1giovanni": 62, "1gv": 62,
-    "2giovanni": 63, "2gv": 63,
-    "3giovanni": 64, "3gv": 64,
+    "1pietro": 60, "1pt": 60, "1pi": 60,
+    "2pietro": 61, "2pt": 61, "2pi": 61,
+    "1giovanni": 62, "1gv": 62, "1giov": 62,
+    "2giovanni": 63, "2gv": 63, "2giov": 63,
+    "3giovanni": 64, "3gv": 64, "3giov": 64,
     "giuda": 65, "gd": 65, "gda": 65,
-    "apocalisse": 66, "rivelazione": 66, "giovanniapocalisse": 66, "ap": 66
+    "apocalisse": 66, "rivelazione": 66, "giovanniapocalisse": 66, "apocalissedigiovanni": 66, "ap": 66, "riv": 66
   };
 
   if (isStrictFromBody && clean.length <= 3 && clean !== "rut") return null;
   return exactBookMap[clean] || null;
-   }
+    }
 async function importUniversalEpubFiles(event, targetId, labelName) {
   const files = Array.from(event.target.files || []);
   if (!files.length) return;
@@ -2585,7 +2592,6 @@ function parseJwEpubChapterXhtml(xhtml) {
   }
   return fbVerses;
 }
-
     async function extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, labelName) {
   const tocFile = allFiles.find(f => f.endsWith("toc.ncx"));
   const opfFile = allFiles.find(f => f.endsWith("content.opf"));
@@ -2610,7 +2616,6 @@ function parseJwEpubChapterXhtml(xhtml) {
     } catch (e) {}
   }
 
-  // Costruisce la mappa ricorsiva dal toc.ncx (legge i navPoint annidati Libro -> Capitoli "1.", "2.", ecc.)
   const anchorMarkers = new Map();
   if (tocFile) {
     const tocTxt = await zip.files[tocFile].async("string");
@@ -2639,11 +2644,13 @@ function parseJwEpubChapterXhtml(xhtml) {
       const bookAndChMatch = label.match(/^(.+?)\s+(\d{1,3})\.?$/);
       if (matchedBId === -1) {
         currentBookId = null;
-        anchorMarkers.set(src, { bookId: null, chapter: 1 });
+        anchorMarkers.set(src, { bookId: -1, chapter: 1 });
       } else if (matchedBId && matchedBId > 0) {
         currentBookId = matchedBId;
         const chFromLabel = bookAndChMatch ? parseInt(bookAndChMatch[2], 10) : 1;
-        anchorMarkers.set(src, { bookId: currentBookId, chapter: chFromLabel });
+        if (!anchorMarkers.has(src)) {
+          anchorMarkers.set(src, { bookId: currentBookId, chapter: chFromLabel });
+        }
       }
     });
   }
@@ -2688,8 +2695,8 @@ function parseJwEpubChapterXhtml(xhtml) {
     if (anchorMarkers.has(fPath) || anchorMarkers.has(fBase)) {
       flushCurrentChapter();
       const mk = anchorMarkers.get(fPath) || anchorMarkers.get(fBase);
-      activeBookId = mk.bookId;
-      activeChapter = mk.chapter;
+      activeBookId = mk.bookId > 0 ? mk.bookId : null;
+      activeChapter = mk.chapter || 1;
     }
 
     const rawHtml = await zip.files[fPath].async("string");
@@ -2698,27 +2705,38 @@ function parseJwEpubChapterXhtml(xhtml) {
     const body = doc.body || doc.documentElement;
     if (!body) continue;
 
-    // Rimuove link all'indice e note a piè di pagina
     body.querySelectorAll('a[href*="index_split_000"], a[href*="index_split_001"], .footnote, .footnotes').forEach(a => {
-      if (/^(?:indice|sommario|\[|\d+\.?$)/i.test((a.textContent || "").trim())) {
-        // Non rimuovere se ha un id di ancora del toc.ncx!
+      if (/^(?:indice|sommario|\[)/i.test((a.textContent || "").trim())) {
         if (!a.getAttribute("id")) a.remove();
       }
     });
 
-    // 1. Inserisce un nodo paragrafo <p> marker per ogni id presente in anchorMarkers (così funziona anche se l'id è su un <div> o <a>!)
+    // FONDAMENTALE PER CEI 2008 E NR: Normalizza i numeri di versetto dentro sup/span/b/strong aggiungendo il punto e lo spazio
+    body.querySelectorAll("sup, span.num, span.v, span.versetto, b, strong").forEach(sp => {
+      if (sp.getAttribute("id")) return;
+      const t = (sp.textContent || "").trim();
+      if (/^\d{1,3}\.?$/.test(t)) {
+        sp.textContent = " " + t.replace(/\.$/, "") + ". ";
+      }
+    });
+
+    // Inserisce il token d'ancora come nodo di testo nel punto esatto del DOM (funziona sia dentro <p>/<h2> sia su <div>)
     body.querySelectorAll("[id]").forEach(el => {
       const idAttr = el.getAttribute("id");
       if (!idAttr) return;
       const mk = anchorMarkers.get(`${fPath}#${idAttr}`) || anchorMarkers.get(`${fBase}#${idAttr}`);
       if (mk) {
-        const markerP = doc.createElement("p");
-        markerP.textContent = `%%%ANCHOR_${mk.bookId || 0}_${mk.chapter || 1}%%%`;
-        el.insertBefore(markerP, el.firstChild);
+        const tokenNode = doc.createTextNode(` %%%ANCHOR_${mk.bookId || -1}_${mk.chapter || 1}%%% `);
+        if (el.tagName.toLowerCase() === "div") {
+          const markerP = doc.createElement("p");
+          markerP.textContent = `%%%ANCHOR_${mk.bookId || -1}_${mk.chapter || 1}%%%`;
+          el.insertBefore(markerP, el.firstChild);
+        } else {
+          el.parentNode.insertBefore(tokenNode, el);
+        }
       }
     });
 
-    // 2. Scansiona tutti i blocchi foglia (h1..h4, p, o div senza figli di blocco)
     const blocks = body.querySelectorAll("h1, h2, h3, h4, p, div");
     blocks.forEach(el => {
       const tag = el.tagName.toLowerCase();
@@ -2740,7 +2758,6 @@ function parseJwEpubChapterXhtml(xhtml) {
         let txt = (anchorParts[aIdx] || "").trim();
         if (!txt) continue;
 
-        // Riconosce intestazioni di capitolo ("1.", "Capitolo 1") o titoli di libro ("Genesi")
         if (tag.startsWith("h") || txt.length < 32) {
           const chOnly = txt.match(/^(?:capitolo|cap\.?|salmo)\s*(\d{1,3})\.?$|^(\d{1,3})\.?$/i);
           if (chOnly && activeBookId) {
@@ -2751,7 +2768,6 @@ function parseJwEpubChapterXhtml(xhtml) {
             }
             continue;
           }
-          // Solo per veri tag titolo (h1-h4), controlla se cambia libro
           if (tag.startsWith("h")) {
             const maybeBId = matchItalianBookNameToId(txt, true);
             if (maybeBId === -1) {
@@ -2770,7 +2786,6 @@ function parseJwEpubChapterXhtml(xhtml) {
 
         if (!activeBookId || activeBookId < 1) continue;
 
-        // Estrazione versetti col punto ("1. In principio...", "2. La terra...") o senza punto
         const normalizedTxt = txt.replace(/(?:^|\s)(\d{1,3})\.\s*(?=[A-Za-zÀ-ÿ«"“'‘(—–-])/g, " %%%V_$1%%% ");
         if (normalizedTxt.includes("%%%V_")) {
           const vParts = normalizedTxt.split(/%%%V_(\d{1,3})%%%/);
