@@ -2757,7 +2757,7 @@ function parseJwEpubChapterXhtml(xhtml) {
     });
 
     // 4. Scansiona tutti i blocchi testuali (incluso <blockquote> usato nei poetici di NR!)
-    const blocks = body.querySelectorAll("h1, h2, h3, h4, p, blockquote, div");
+    const blocks = body.querySelectorAll("h1, h2, h3, h4, h5, h6, p, blockquote, div");
     blocks.forEach(el => {
       const tag = el.tagName.toLowerCase();
       if (tag === "div" && el.querySelector("p, h1, h2, h3, h4, blockquote, div")) return;
