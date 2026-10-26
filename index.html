@@ -2025,7 +2025,7 @@ function jumpToRefString(str) {
     });
   }
     }
-    // ============================================================================
+// ============================================================================
 // MOTORE AUDIO UNIVERSALE PRO (Chrome Nativo + Stream WebView con <meta no-referrer>)
 // ============================================================================
 let bmAudioPlayer = null;
@@ -2285,30 +2285,30 @@ function downloadCanvasCard() {
 }
 
 // ============================================================================
-// IMPORTATORE UNIVERSALE MULTI-EPUB (TNM 2017 + NR, CEI 2008, TILC anche divisi VT/NT)
+// IMPORTATORE UNIVERSALE MULTI-EPUB ROBUSTO (TNM + NR + CEI + TILC)
 // ============================================================================
 function openBackupModal() {
   document.getElementById("proModalTitle").textContent = "💾 Backup & Importazione EPUB Offline";
   document.getElementById("proModalBody").innerHTML = `
     <div class="section-title"><span>📗 Importa Bibbie Offline da file EPUB</span></div>
     <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px; line-height:1.45;">
-      Puoi selezionare il file singolo (es. <b>nwt_I.epub</b>) oppure selezionare <b>insieme o uno alla volta i 2 file VT + NT</b> (es. Nuova Riveduta, CEI 2008, TILC): l'app li unirà automaticamente in un'unica Bibbia completa di 66 libri!
+      Seleziona i file <b>.epub</b> (puoi selezionare VT e NT insieme o uno alla volta): l'app riconoscerà tutti i 66 libri e li unirà automaticamente!
     </p>
     <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;">
-      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0d47a1;">
+      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0a367e;">
         📘 Carica EPUB TNM 2017 (nwt_I.epub)
         <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:nwt', 'TNM 2017')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#1565c0;">
-        📗 Carica Nuova Riveduta (Seleziona VT e/o NT .epub)
+        📗 Carica Nuova Riveduta (NR - VT e/o NT)
         <input type="file" accept=".epub,application/epub+zip" multiple style="display:none;" onchange="importUniversalEpubFiles(event, 'epub:nr', 'Nuova Riveduta')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0277bd;">
-        📙 Carica Bibbia CEI 2008 (Seleziona VT e/o NT .epub)
+        📙 Carica Bibbia CEI 2008 (VT e/o NT)
         <input type="file" accept=".epub,application/epub+zip" multiple style="display:none;" onchange="importUniversalEpubFiles(event, 'epub:cei', 'CEI 2008')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#00838f;">
-        📕 Carica Parola del Signore TILC (Seleziona VT e/o NT .epub)
+        📕 Carica Parola del Signore TILC (VT e/o NT)
         <input type="file" accept=".epub,application/epub+zip" multiple style="display:none;" onchange="importUniversalEpubFiles(event, 'epub:tilc', 'Parola del Signore (TILC)')">
       </label>
       <div id="epubImportStatus" style="font-size:13px; font-weight:700; color:var(--primary-light); text-align:center; padding:4px;"></div>
@@ -2325,92 +2325,51 @@ function openBackupModal() {
   document.getElementById("proModal").style.display = "flex";
 }
 
+const CANONICAL_BOOK_MAP = {
+  // AT
+  "genesi": 1, "esodo": 2, "levitico": 3, "numeri": 4, "deuteronomio": 5,
+  "giosue": 6, "giudici": 7, "rut": 8, "1samuele": 9, "2samuele": 10,
+  "1re": 11, "2re": 12, "1cronache": 13, "2cronache": 14, "esdra": 15,
+  "neemia": 16, "ester": 17, "giobbe": 18, "salmi": 19, "proverbi": 20,
+  "ecclesiaste": 21, "qoelet": 21, "qohelet": 21, "canticodeicantici": 22, "cantico": 22,
+  "isaia": 23, "geremia": 24, "lamentazioni": 25, "ezechiele": 26, "daniele": 27,
+  "osea": 28, "gioele": 29, "amos": 30, "abdia": 31, "giona": 32,
+  "michea": 33, "naum": 34, "nahum": 34, "abacuc": 35, "sofonia": 36,
+  "aggeo": 37, "zaccaria": 38, "malachia": 39,
+  // NT
+  "matteo": 40, "marco": 41, "luca": 42, "giovanni": 43, "attidegliapostoli": 44, "atti": 44,
+  "romani": 45, "1corinzi": 46, "2corinzi": 47, "galati": 48, "efesini": 49,
+  "filippesi": 50, "colossesi": 51, "1tessalonicesi": 52, "2tessalonicesi": 53,
+  "1timoteo": 54, "2timoteo": 55, "tito": 56, "filemone": 57, "ebrei": 58,
+  "giacomo": 59, "1pietro": 60, "2pietro": 61, "1giovanni": 62, "2giovanni": 63,
+  "3giovanni": 64, "giuda": 65, "apocalisse": 66, "rivelazione": 66
+};
+
 function matchItalianBookNameToId(rawTitle) {
   if (!rawTitle) return null;
   const lower = rawTitle.toLowerCase().trim();
-
-  // Salta i libri deuterocanonici eventualmente presenti nella CEI/TILC
   if (/^(?:tobia|giuditta|1\s*maccabei|2\s*maccabei|i+\s*maccabei|sapienza|siracide|ecclesiastico|baruc|lettera\s+di\s+geremia)/i.test(lower)) {
-    return -1;
+    return -1; // Deuterocanonico da saltare
   }
+  const cleaned = lower
+    .replace(/prima\s+/g, "1 ")
+    .replace(/seconda\s+/g, "2 ")
+    .replace(/terza\s+/g, "3 ")
+    .replace(/1ª/g, "1")
+    .replace(/2ª/g, "2")
+    .replace(/3ª/g, "3")
+    .replace(/1°/g, "1")
+    .replace(/2°/g, "2")
+    .replace(/3°/g, "3");
 
-  const clean = lower
-    .replace(/^(?:il\s+|la\s+|i\s+|le\s+)?(?:santo\s+)?(?:vangelo\s+(?:secondo\s+)?|lettera\s+(?:di\s+san\s+paolo\s+apostolo\s+|cattolica\s+di\s+san\s+|agli\s+|ai\s+|a\s+|di\s+)?|atti\s+degli\s+|libro\s+(?:del\s+|della\s+|dei\s+|delle\s+|di\s+)?|profeta\s+|cantico\s+dei\s+|apocalisse\s+di\s+(?:san\s+)?)/g, "")
-    .replace(/\s+\d+\s*$/, "")
-    .replace(/[^a-z0-9à-ÿ]/g, "")
-    .trim();
-  if (!clean) return null;
+  const cleanWords = cleaned.match(/[a-z0-9à-ÿ]+/g) || [];
+  const filtered = cleanWords.filter(w => !['il', 'la', 'i', 'le', 'di', 'del', 'della', 'dei', 'delle', 'da', 'in', 'su', 'per', 'con', 'tra', 'fra', 'e', 'san', 'santo', 'apostolo', 'vangelo', 'lettera', 'atti', 'libro', 'profeta', 'capitolo', 'cap', 'ai', 'agli', 'a'].includes(w));
+  const joined = filtered.join("");
 
-  const aliasMap = [
-    { id: 66, keys: ["apocalisse", "rivelazione", "giovanniapocalisse", "ap"] },
-    { id: 65, keys: ["giuda", "gd", "gda"] },
-    { id: 64, keys: ["3giovanni", "iiiigiovanni", "iiigiovanni", "terzagiovanni", "3gv"] },
-    { id: 63, keys: ["2giovanni", "iigiovanni", "secondagiovanni", "2gv"] },
-    { id: 62, keys: ["1giovanni", "igiovanni", "primagiovanni", "1gv"] },
-    { id: 61, keys: ["2pietro", "iipietro", "secondapietro", "2pt"] },
-    { id: 60, keys: ["1pietro", "ipietro", "primapietro", "1pt"] },
-    { id: 59, keys: ["giacomo", "gc", "giac"] },
-    { id: 58, keys: ["ebrei", "eb", "ebr"] },
-    { id: 57, keys: ["filemone", "flm", "fm"] },
-    { id: 56, keys: ["tito", "tit", "tt"] },
-    { id: 55, keys: ["2timoteo", "iitimoteo", "secondatimoteo", "2tm"] },
-    { id: 54, keys: ["1timoteo", "itimoteo", "primatimoteo", "1tm"] },
-    { id: 53, keys: ["2tessalonicesi", "iitessalonicesi", "secondatessalonicesi", "2ts"] },
-    { id: 52, keys: ["1tessalonicesi", "itessalonicesi", "primatessalonicesi", "1ts"] },
-    { id: 51, keys: ["colossesi", "col"] },
-    { id: 50, keys: ["filippesi", "fil", "flp"] },
-    { id: 49, keys: ["efesini", "ef", "efe"] },
-    { id: 48, keys: ["galati", "gal"] },
-    { id: 47, keys: ["2corinzi", "2corinti", "iicorinzi", "iicorinti", "secondacorinzi", "2co"] },
-    { id: 46, keys: ["1corinzi", "1corinti", "icorinzi", "icorinti", "primacorinzi", "1co"] },
-    { id: 45, keys: ["romani", "rm", "rom"] },
-    { id: 44, keys: ["atti", "apostoli", "at"] },
-    { id: 43, keys: ["giovanni", "gv"] },
-    { id: 42, keys: ["luca", "lc", "luc"] },
-    { id: 41, keys: ["marco", "mc", "mar"] },
-    { id: 40, keys: ["matteo", "mt", "mat"] },
-    { id: 39, keys: ["malachia", "ml", "mal"] },
-    { id: 38, keys: ["zaccaria", "zc", "zac"] },
-    { id: 37, keys: ["aggeo", "ag", "agg"] },
-    { id: 36, keys: ["sofonia", "sof", "sf"] },
-    { id: 35, keys: ["abacuc", "ab", "aba"] },
-    { id: 34, keys: ["naum", "nahum", "na"] },
-    { id: 33, keys: ["michea", "mi", "mic"] },
-    { id: 32, keys: ["giona", "gion", "gio"] },
-    { id: 31, keys: ["abdia", "abd"] },
-    { id: 30, keys: ["amos", "am", "amo"] },
-    { id: 29, keys: ["gioele", "gl"] },
-    { id: 28, keys: ["osea", "os", "ose"] },
-    { id: 27, keys: ["daniele", "dn", "dan"] },
-    { id: 26, keys: ["ezechiele", "ez", "eze"] },
-    { id: 25, keys: ["lamentazioni", "lam"] },
-    { id: 24, keys: ["geremia", "ger"] },
-    { id: 23, keys: ["isaia", "is", "isa"] },
-    { id: 22, keys: ["cantici", "cantico", "canticodeicantici", "ct", "can"] },
-    { id: 21, keys: ["ecclesiaste", "qoelet", "qohelet", "ec", "ecc"] },
-    { id: 20, keys: ["proverbi", "pr", "prv", "pro"] },
-    { id: 19, keys: ["salmi", "salmo", "sal", "sl"] },
-    { id: 18, keys: ["giobbe", "gb"] },
-    { id: 17, keys: ["ester", "est"] },
-    { id: 16, keys: ["neemia", "ne", "nee"] },
-    { id: 15, keys: ["esdra", "esd"] },
-    { id: 14, keys: ["2cronache", "iicronache", "secondocronache", "2cr"] },
-    { id: 13, keys: ["1cronache", "icronache", "primocronache", "1cr"] },
-    { id: 12, keys: ["2re", "iire", "secondore"] },
-    { id: 11, keys: ["1re", "ire", "primore"] },
-    { id: 10, keys: ["2samuele", "iisamuele", "secondosamuele", "2sam", "2sa"] },
-    { id: 9,  keys: ["1samuele", "isamuele", "primosamuele", "1sam", "1sa"] },
-    { id: 8,  keys: ["rut", "rt"] },
-    { id: 7,  keys: ["giudici", "gdc", "giud"] },
-    { id: 6,  keys: ["giosuè", "giosue", "gs", "gios"] },
-    { id: 5,  keys: ["deuteronomio", "dt", "deu"] },
-    { id: 4,  keys: ["numeri", "nm", "num"] },
-    { id: 3,  keys: ["levitico", "lv", "lev"] },
-    { id: 2,  keys: ["esodo", "es", "eso"] },
-    { id: 1,  keys: ["genesi", "gn", "gen"] }
-  ];
-  for (const item of aliasMap) {
-    if (item.keys.some(k => clean === k || clean.startsWith(k))) return item.id;
+  if (CANONICAL_BOOK_MAP[joined]) return CANONICAL_BOOK_MAP[joined];
+
+  for (const [k, v] of Object.entries(CANONICAL_BOOK_MAP)) {
+    if (joined.includes(k) || k.includes(joined)) return v;
   }
   return null;
 }
@@ -2433,20 +2392,17 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
         }
       });
     }
-
     for (const file of files) {
       statusEl.innerHTML = `⏳ Analisi di <b>${escapeHtml(file.name)}</b> in corso...`;
       const zip = await JSZip.loadAsync(file);
       const allFiles = Object.keys(zip.files);
       const isCalibreSplit = allFiles.some(f => f.includes("index_split_")) && allFiles.some(f => f.endsWith("toc.ncx"));
-
       if (isCalibreSplit && targetId !== "gb:nwt") {
         await extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, labelName);
       } else {
         await extractJwFormatEpub(zip, allFiles, mergedBooksMap, statusEl, labelName);
       }
     }
-
     const finalBooksData = [];
     let importedCount = 0;
     for (let bId = 1; bId <= 66; bId++) {
@@ -2459,7 +2415,6 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
         finalBooksData.push({ nr: bId, name: bMeta.name, chapters: [] });
       }
     }
-
     statusEl.innerHTML = `💾 Salvataggio permanente nel database Offline...`;
     const fullBibleObj = { id: targetId, name: labelName, books: finalBooksData };
     await saveOfflineBible(targetId, fullBibleObj);
@@ -2481,9 +2436,8 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
     statusEl.innerHTML = `❌ Errore durante l'importazione: ${escapeHtml(err.message)}`;
   }
 }
-
 async function extractJwFormatEpub(zip, allFiles, mergedBooksMap, statusEl, labelName) {
-  const JW_BOOK_CODES = ["", "GE", "EX", "LE", "NU", "DE", "JOS", "JG", "RU", "1SA", "2SA", "1KI", "2KI", "1CH", "2CH", "EZR", "NE", "ES", "JOB", "PS", "PR", "EC", "CA", "ISA", "JER", "LA", "EZE", "DA", "HOS", "JOE", "AM", "OB", "JON", "MIC", "NAH", "HAB", "ZEP", "HAG", "ZEC", "MAL", "MT", "MR", "LU", "JOH", "AC", "RO", "1CO", "2CO", "GA", "EPH", "PHP", "COL", "1TH", "2TH", "1TI", "2TI", "TIT", "PHM", "HEB", "JAS", "1PE", "2PE", "1JO", "2JO", "3JO", "JUD", "RE"];
+  const JW_BOOK_CODES = ["", "GE", "EX", "LE", "NU", "DE", "JOS", "JG", "RU", "1SA", "2SA", "1KI", "2KI", "1CH", "2CH", "EZR", "NE", "ES", "JOB", "PS", "PR", "EC", "CA", "ISA", "GER", "LA", "EZE", "DA", "HOS", "JOE", "AM", "OB", "JON", "MIC", "NAH", "HAB", "ZEP", "HAG", "ZEC", "MAL", "MT", "MR", "LU", "JOH", "AC", "RO", "1CO", "2CO", "GA", "EPH", "PHP", "COL", "1TH", "2TH", "1TI", "2TI", "TIT", "PHM", "HEB", "JAS", "1PE", "2PE", "1JO", "2JO", "3JO", "JUD", "RE"];
   for (let bId = 1; bId <= 66; bId++) {
     const prefixNum = String(bId + 4).padStart(2, "0");
     const jwCode = JW_BOOK_CODES[bId];
@@ -2509,288 +2463,4 @@ async function extractJwFormatEpub(zip, allFiles, mergedBooksMap, statusEl, labe
       let chNum = 1;
       const splitMatch = base.match(/-split(\d+)\.xhtml$/i);
       if (splitMatch) chNum = parseInt(splitMatch[1], 10);
-      const rawXhtml = await zip.files[fPath].async("string");
-      const versesArr = parseJwEpubChapterXhtml(rawXhtml);
-      if (versesArr.length > 0) {
-        chaptersArr.push({ chapter: chNum, verses: versesArr });
-      }
-    }
-    if (chaptersArr.length > 0) {
-      chaptersArr.sort((a, b) => a.chapter - b.chapter);
-      mergedBooksMap.set(bId, { nr: bId, name: bookMeta.name, chapters: chaptersArr });
-    }
-  }
-}
-
-async function extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, labelName) {
-  const tocFile = allFiles.find(f => f.endsWith("toc.ncx"));
-  const opfFile = allFiles.find(f => f.endsWith("content.opf"));
-  let orderedHtmlFiles = allFiles
-    .filter(f => (f.endsWith(".html") || f.endsWith(".xhtml")) && !f.includes("titlepage"))
-    .sort();
-
-  if (opfFile) {
-    try {
-      const opfTxt = await zip.files[opfFile].async("string");
-      const parser = new DOMParser();
-      const opfDoc = parser.parseFromString(opfTxt, "text/xml");
-      const manifestMap = {};
-      opfDoc.querySelectorAll("manifest > item").forEach(it => {
-        manifestMap[it.getAttribute("id")] = it.getAttribute("href");
-      });
-      const spineOrder = [];
-      opfDoc.querySelectorAll("spine > itemref").forEach(ref => {
-        const href = manifestMap[ref.getAttribute("idref")];
-        if (href && zip.files[href] && !href.includes("titlepage")) spineOrder.push(href);
-      });
-      if (spineOrder.length > 0) orderedHtmlFiles = spineOrder;
-    } catch (e) {}
-  }
-
-  const anchorMarkers = new Map();
-  if (tocFile) {
-    const tocTxt = await zip.files[tocFile].async("string");
-    const parser = new DOMParser();
-    const tocDoc = parser.parseFromString(tocTxt, "text/xml");
-    let currentBookId = null;
-
-    tocDoc.querySelectorAll("navPoint").forEach(np => {
-      const labelEl = np.querySelector("navLabel > text");
-      const contentEl = np.querySelector("content");
-      if (!labelEl || !contentEl) return;
-      const label = (labelEl.textContent || "").replace(/\s+/g, " ").trim();
-      const src = (contentEl.getAttribute("src") || "").trim();
-      if (!src) return;
-
-      const matchedBId = matchItalianBookNameToId(label);
-      const chMatch = label.match(/(?:capitolo|cap\.?|salmo)\s*(\d+)|^(\d{1,3})$/i);
-      const bookAndChMatch = label.match(/^(.+?)\s+(\d{1,3})$/);
-
-      if (matchedBId === -1) {
-        currentBookId = null;
-        anchorMarkers.set(src, { bookId: null, chapter: 1 });
-      } else if (matchedBId && matchedBId > 0) {
-        currentBookId = matchedBId;
-        const chFromLabel = bookAndChMatch ? parseInt(bookAndChMatch[2], 10) : 1;
-        anchorMarkers.set(src, { bookId: currentBookId, chapter: chFromLabel });
-      } else if (chMatch && currentBookId) {
-        const chNum = parseInt(chMatch[1] || chMatch[2], 10);
-        anchorMarkers.set(src, { bookId: currentBookId, chapter: chNum });
-      }
-    });
-  }
-
-  let activeBookId = null;
-  let activeChapter = 1;
-  let activeVersesMap = new Map();
-
-  const flushCurrentChapter = () => {
-    if (!activeBookId || activeBookId < 1 || activeVersesMap.size === 0) {
-      activeVersesMap = new Map();
-      return;
-    }
-    const bookMeta = getBook(activeBookId);
-    if (!mergedBooksMap.has(activeBookId)) {
-      mergedBooksMap.set(activeBookId, { nr: activeBookId, name: bookMeta.name, chapters: [] });
-    }
-    const bObj = mergedBooksMap.get(activeBookId);
-    const versesArr = Array.from(activeVersesMap.entries())
-      .map(([verse, text]) => ({ verse, text: text.replace(/\s+/g, " ").trim() }))
-      .filter(v => v.text.length > 0)
-      .sort((a, b) => a.verse - b.verse);
-
-    if (versesArr.length > 0) {
-      const existingChIdx = bObj.chapters.findIndex(c => Number(c.chapter) === Number(activeChapter));
-      if (existingChIdx > -1) {
-        if (versesArr.length >= bObj.chapters[existingChIdx].verses.length) {
-          bObj.chapters[existingChIdx].verses = versesArr;
-        }
-      } else {
-        bObj.chapters.push({ chapter: activeChapter, verses: versesArr });
-        bObj.chapters.sort((a, b) => a.chapter - b.chapter);
-      }
-    }
-    activeVersesMap = new Map();
-  };
-
-  for (let fIdx = 0; fIdx < orderedHtmlFiles.length; fIdx++) {
-    const fPath = orderedHtmlFiles[fIdx];
-    statusEl.innerHTML = `⚙️ Lettura <b>${escapeHtml(labelName)}</b> (${fIdx + 1}/${orderedHtmlFiles.length})...`;
-    if (anchorMarkers.has(fPath)) {
-      flushCurrentChapter();
-      const mk = anchorMarkers.get(fPath);
-      activeBookId = mk.bookId;
-      activeChapter = mk.chapter;
-    }
-    const rawHtml = await zip.files[fPath].async("string");
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(rawHtml, "text/html");
-
-    doc.querySelectorAll("sup, span.num, span.v, span.versetto, b, strong").forEach(sp => {
-      if (/^\d{1,3}$/.test((sp.textContent || "").trim())) {
-        sp.textContent = " " + sp.textContent.trim() + " ";
-      }
-    });
-
-    const blocks = doc.querySelectorAll("h1, h2, h3, h4, p, div");
-    blocks.forEach(el => {
-      const idAttr = el.getAttribute("id") || "";
-      if (idAttr && anchorMarkers.has(`${fPath}#${idAttr}`)) {
-        flushCurrentChapter();
-        const mk = anchorMarkers.get(`${fPath}#${idAttr}`);
-        activeBookId = mk.bookId;
-        activeChapter = mk.chapter;
-      }
-      el.querySelectorAll("[id]").forEach(sub => {
-        const subId = sub.getAttribute("id");
-        if (subId && anchorMarkers.has(`${fPath}#${subId}`)) {
-          flushCurrentChapter();
-          const mk = anchorMarkers.get(`${fPath}#${subId}`);
-          activeBookId = mk.bookId;
-          activeChapter = mk.chapter;
-        }
-      });
-
-      const tag = el.tagName.toLowerCase();
-      if (tag === "div" && el.querySelector("p, h1, h2, h3, h4, div")) return;
-
-      const txt = (el.textContent || "").replace(/\s+/g, " ").trim();
-      if (!txt) return;
-
-      if (tag.startsWith("h") || txt.length < 38) {
-        const chOnly = txt.match(/^(?:capitolo|cap\.?|salmo)\s*(\d{1,3})$|^(\d{1,3})$/i);
-        const maybeBId = matchItalianBookNameToId(txt);
-        if (maybeBId === -1 && txt.length < 35) {
-          flushCurrentChapter();
-          activeBookId = null;
-          return;
-        } else if (maybeBId && maybeBId > 0 && txt.length < 35 && !/^\d/.test(txt)) {
-          flushCurrentChapter();
-          activeBookId = maybeBId;
-          const inlineCh = txt.match(/\s+(\d{1,3})$/);
-          activeChapter = inlineCh ? parseInt(inlineCh[1], 10) : 1;
-          return;
-        } else if (chOnly && activeBookId) {
-          flushCurrentChapter();
-          activeChapter = parseInt(chOnly[1] || chOnly[2], 10);
-          return;
-        }
-      }
-
-      if (!activeBookId || activeBookId < 1) return;
-
-      const verseRegex = /(?:^|\s)(\d{1,3})(?:\s+|(?=[A-ZÀ-Ý«"“'‘]))([^\d]+?)(?=(?:\s+\d{1,3}(?:\s+|(?=[A-ZÀ-Ý«"“'‘])))|$)/g;
-      const matches = [...txt.matchAll(verseRegex)];
-      if (matches.length > 0 && /^\d{1,3}(?:\s|[A-ZÀ-Ý«"“'‘])/.test(txt)) {
-        matches.forEach(m => {
-          const vNum = parseInt(m[1], 10);
-          const vText = (m[2] || "").trim();
-          if (vNum > 0 && vNum <= 176 && vText.length > 1) {
-            const prev = activeVersesMap.get(vNum);
-            activeVersesMap.set(vNum, prev ? (prev + " " + vText) : vText);
-          }
-        });
-      } else if (activeVersesMap.size > 0) {
-        const lastKey = Array.from(activeVersesMap.keys()).pop();
-        if (lastKey && txt.length > 2 && !/^(?:capitolo|nota|sommario|indice)/i.test(txt)) {
-          activeVersesMap.set(lastKey, activeVersesMap.get(lastKey) + " " + txt);
-        }
-      }
-    });
-  }
-  flushCurrentChapter();
-}
-
-function parseJwEpubChapterXhtml(xhtml) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(xhtml, "text/html");
-  doc.querySelectorAll(".footnote, .footnotes, .groupFootnote, .marginal, a.b, a.fn, .w_ch, strong.w_ch, rt, sup.xrefLink").forEach(el => el.remove());
-  const bodyHtml = doc.body ? doc.body.innerHTML : xhtml;
-  const parts = bodyHtml.split(/<span[^>]*id="chapter\d+_verse(\d+)"[^>]*><\/span>/i);
-  const verses = [];
-  for (let i = 1; i < parts.length; i += 2) {
-    const vNum = parseInt(parts[i], 10);
-    let vHtml = parts[i + 1] || "";
-    vHtml = vHtml.split(/<div[^>]*class="[^"]*(?:groupFootnote|footnote|ext)[^"]*"/i)[0];
-    const tmp = document.createElement("div");
-    tmp.innerHTML = vHtml;
-    tmp.querySelectorAll("sup, a.fn, a.b, .w_ch").forEach(el => el.remove());
-    let cleanTxt = (tmp.textContent || "")
-      .replace(/^[\s\d\u00A0]+/, "")
-      .replace(/[\+\*]/g, "")
-      .replace(/\s+/g, " ")
-      .trim();
-    if (vNum > 0 && cleanTxt) {
-      verses.push({ verse: vNum, text: cleanTxt });
-    }
-  }
-  return verses;
-}
-function exportBackupJson() {
-  const data = {
-    app: "BibbiaMultilingue_PRO",
-    date: new Date().toISOString(),
-    highlights: state.highlights,
-    bookmarks: state.bookmarks,
-    notes: state.notes
-  };
-  const jsonStr = JSON.stringify(data, null, 2);
-  const fileName = `BM_PRO_Backup_${new Date().toISOString().slice(0,10)}.json`;
-  const blob = new Blob([jsonStr], { type: "application/json" });
-  if (navigator.canShare) {
-    try {
-      const file = new File([blob], fileName, { type: "application/json" });
-      if (navigator.canShare({ files: [file] })) {
-        navigator.share({ files: [file], title: "Backup Bibbia Multilingue PRO" }).catch(() => {});
-        return;
-      }
-    } catch (e) {}
-  }
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = fileName;
-  a.click();
-}
-async function importBackupJson(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  try {
-    const parsed = JSON.parse(await file.text());
-    if (parsed.highlights && typeof parsed.highlights === "object") {
-      state.highlights = parsed.highlights;
-      safeSaveStorage("bm_hl", JSON.stringify(state.highlights));
-    }
-    if (Array.isArray(parsed.bookmarks)) {
-      state.bookmarks = parsed.bookmarks;
-      safeSaveStorage("bm_bm", JSON.stringify(state.bookmarks));
-    }
-    if (Array.isArray(parsed.notes)) {
-      state.notes = parsed.notes.map((n, idx) => ({ ...n, id: n.id || (Date.now() + idx) }));
-      safeSaveStorage("bm_notes", JSON.stringify(state.notes));
-    }
-    closeProModal();
-    loadChapterView();
-    alert("✔ Backup ripristinato con successo!");
-  } catch (err) {
-    alert("Errore nel file di backup.");
-  }
-}
-function dismissSplashScreen() {
-  const splash = document.getElementById("splashScreen");
-  if (splash) {
-    splash.style.opacity = "0";
-    setTimeout(() => splash.remove(), 400);
-  }
-}
-setTimeout(dismissSplashScreen, 1800);
-applySavedTheme();
-populateSelects()
-  .catch(() => {})
-  .finally(() => {
-    loadChapterView().finally(() => {
-      setTimeout(dismissSplashScreen, 400);
-    });
-  });
-</script>
-</body>
-</html>
+      const rawXh
