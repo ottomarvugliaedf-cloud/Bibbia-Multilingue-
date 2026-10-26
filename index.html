@@ -2301,12 +2301,11 @@ function openBackupModal() {
   `;
   document.getElementById("proModal").style.display = "flex";
 }
-
-function matchItalianBookNameToId(rawTitle) {
+    function matchItalianBookNameToId(rawTitle) {
   if (!rawTitle) return null;
   const lower = rawTitle.toLowerCase().replace(/\s+/g, " ").trim();
   // Esclude sommario/indice generale o libri deuterocanonici
-  if (/^(?:indice|sommario| Vecchio testamento|nuovo testamento|tobia|giuditta|1\s*maccabei|2\s*maccabei|i+\s*maccabei|sapienza|siracide|ecclesiastico|baruc|lettera\s+di\s+geremia)/i.test(lower)) {
+  if (/^(?:indice|sommario|vecchio testamento|nuovo testamento|antico testamento|tobia|giuditta|1\s*maccabei|2\s*maccabei|i+\s*maccabei|sapienza|siracide|ecclesiastico|baruc|lettera\s+di\s+geremia)/i.test(lower)) {
     return -1;
   }
   const clean = lower
@@ -2411,8 +2410,9 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
       statusEl.innerHTML = `⏳ Analisi di <b>${escapeHtml(file.name)}</b> in corso...`;
       const zip = await JSZip.loadAsync(file);
       const allFiles = Object.keys(zip.files);
-      const isCalibreSplit = allFiles.some(f => f.includes("index_split_")) && allFiles.some(f => f.endsWith("toc.ncx"));
-      if (isCalibreSplit && targetId !== "gb:nwt" && targetId !== "gb:bi12") {
+      const isJwEpub = (targetId === "gb:nwt" || targetId === "gb:bi12") ||
+        allFiles.some(f => /_BI12_\.|\.GE-split/i.test(f));
+      if (!isJwEpub) {
         await extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, labelName);
       } else {
         await extractJwFormatEpub(zip, allFiles, mergedBooksMap, statusEl, labelName);
@@ -2461,23 +2461,23 @@ async function extractJwFormatEpub(zip, allFiles, mergedBooksMap, statusEl, labe
     statusEl.innerHTML = `⚙️ Estrazione <b>${escapeHtml(labelName)}</b>: ${escapeHtml(bookMeta.name)} (${bId}/66)...`;
     let bookFiles = allFiles.filter(f => {
       const base = f.split("/").pop();
-      if (!base.endsWith(".xhtml") || base.includes("extracted") || base.includes("outline")) return false;
-      const matchPrefix = base.startsWith(prefixNum + "_") && base.includes("." + jwCode);
-      const matchNwtCode = new RegExp(`[_. ]${jwCode}(?:-split\\d+)?\\.xhtml$`, "i").test(base);
+      if ((!base.endsWith(".xhtml") && !base.endsWith(".html")) || base.includes("extracted") || base.includes("outline") || base.startsWith("BIBLE_")) return false;
+      const matchPrefix = base.startsWith(prefixNum + "_") && base.toUpperCase().includes("." + jwCode);
+      const matchNwtCode = new RegExp(`[_. ]${jwCode}(?:-split\\d+)?\\.x?html$`, "i").test(base);
       return matchPrefix || matchNwtCode;
     });
     if (bookFiles.length === 0) {
       const nwtDocNum = String(1001061104 + bId);
       bookFiles = allFiles.filter(f => {
         const base = f.split("/").pop();
-        return base.startsWith(nwtDocNum) && base.endsWith(".xhtml") && !base.includes("extracted") && !base.includes("outline");
+        return base.startsWith(nwtDocNum) && (base.endsWith(".xhtml") || base.endsWith(".html")) && !base.includes("extracted") && !base.includes("outline");
       });
     }
     const chaptersArr = [];
     for (const fPath of bookFiles) {
       const base = fPath.split("/").pop();
       let chNum = 1;
-      const splitMatch = base.match(/-split(\d+)\.xhtml$/i);
+      const splitMatch = base.match(/-split(\d+)\.x?html$/i);
       if (splitMatch) chNum = parseInt(splitMatch[1], 10);
       const rawXhtml = await zip.files[fPath].async("string");
       const versesArr = parseJwEpubChapterXhtml(rawXhtml);
@@ -2490,6 +2490,85 @@ async function extractJwFormatEpub(zip, allFiles, mergedBooksMap, statusEl, labe
       mergedBooksMap.set(bId, { nr: bId, name: bookMeta.name, chapters: chaptersArr });
     }
   }
+}
+
+function parseJwEpubChapterXhtml(xhtml) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xhtml, "text/html");
+  // Rimuove note a piè di pagina, riferimenti marginali, intestazioni e link di rimando
+  doc.querySelectorAll(".footnote, .footnotes, .groupFootnote, .marginal, a.b, a.fn, rt, sup.xrefLink, .du-color--textSubdued").forEach(el => el.remove());
+
+  const body = doc.body || doc.documentElement;
+  if (!body) return [];
+
+  // Metodo 1: Span con id="chapterX_verseY" o id="vX_Y" (usato in nwt_I.epub e bi12_I.epub)
+  const verseSpans = body.querySelectorAll('span[id*="verse"], span[id^="v"], a[id*="verse"]');
+  if (verseSpans.length > 0) {
+    // Inserisce marcatori testuali univoci prima di estrarre il textContent
+    verseSpans.forEach(sp => {
+      const idVal = sp.getAttribute("id") || "";
+      const m = idVal.match(/verse(\d+)$/i) || idVal.match(/^v\d+_(\d+)$/i) || idVal.match(/(\d+)$/);
+      if (m) {
+        const vNum = parseInt(m[1], 10);
+        const marker = doc.createTextNode(` %%%VERSE_${vNum}%%% `);
+        sp.parentNode.insertBefore(marker, sp);
+      }
+    });
+    // Rimuove il numero grande del capitolo (w_ch) dopo aver piazzato i marker dei versetti
+    body.querySelectorAll(".w_ch, strong.w_ch, sup").forEach(el => el.remove());
+
+    const fullText = body.textContent || "";
+    const parts = fullText.split(/%%%VERSE_(\d+)%%%/);
+    if (parts.length > 1) {
+      const versesMap = new Map();
+      for (let i = 1; i < parts.length; i += 2) {
+        const vNum = parseInt(parts[i], 10);
+        let cleanTxt = (parts[i + 1] || "")
+          .replace(/^[\s\d\u00A0.,;:]+/, "")
+          .replace(/[\+\*]/g, "")
+          .replace(/\s+/g, " ")
+          .trim();
+        if (vNum > 0 && cleanTxt) {
+          const prev = versesMap.get(vNum);
+          versesMap.set(vNum, prev ? (prev + " " + cleanTxt) : cleanTxt);
+        }
+      }
+      const result = Array.from(versesMap.entries())
+        .map(([verse, text]) => ({ verse, text }))
+        .sort((a, b) => a.verse - b.verse);
+      if (result.length > 0) return result;
+    }
+  }
+
+  // Metodo 2 (Fallback universale per bi12 / TNM 1987 se i versetti sono marcati tramite <strong>w_ch</strong> e <sup>/<strong>)
+  body.querySelectorAll(".w_ch, strong.w_ch").forEach(chEl => {
+    const m1 = doc.createTextNode(" %%%VERSE_1%%% ");
+    chEl.parentNode.insertBefore(m1, chEl);
+    chEl.remove();
+  });
+  body.querySelectorAll("sup, span.v, strong.v").forEach(supEl => {
+    const numTxt = (supEl.textContent || "").trim();
+    if (/^\d{1,3}$/.test(numTxt)) {
+      const mv = doc.createTextNode(` %%%VERSE_${numTxt}%%% `);
+      supEl.parentNode.insertBefore(mv, supEl);
+      supEl.remove();
+    }
+  });
+  const fallbackText = body.textContent || "";
+  const fbParts = fallbackText.split(/%%%VERSE_(\d+)%%%/);
+  const fbVerses = [];
+  for (let i = 1; i < fbParts.length; i += 2) {
+    const vNum = parseInt(fbParts[i], 10);
+    let cleanTxt = (fbParts[i + 1] || "")
+      .replace(/^[\s\d\u00A0]+/, "")
+      .replace(/[\+\*]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (vNum > 0 && cleanTxt) {
+      fbVerses.push({ verse: vNum, text: cleanTxt });
+    }
+  }
+  return fbVerses;
 }
 
 async function extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, labelName) {
@@ -2516,8 +2595,7 @@ async function extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, 
     } catch (e) {}
   }
 
-  // Mappa ogni src e ogni anchor "file.html#id" -> { bookId, chapter }
-  // Supporta sia etichette "Capitolo 1" sia etichette numeriche col punto "1.", "2.", "150." tipiche di NR, CEI2008 e TILC
+  // Costruisce la mappa esatta di tutte le ancore dal toc.ncx (Gerarchia Libro -> Capitoli "1.", "2.", ecc.)
   const anchorMarkers = new Map();
   if (tocFile) {
     const tocTxt = await zip.files[tocFile].async("string");
@@ -2533,7 +2611,6 @@ async function extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, 
       const src = (contentEl.getAttribute("src") || "").trim();
       if (!src) return;
 
-      // Riconosce "1.", "2.", "Capitolo 1", "Salmo 1"
       const chMatch = label.match(/^(?:capitolo|cap\.?|salmo)\s*(\d{1,3})\.?$|^(\d{1,3})\.?$/i);
       if (chMatch) {
         if (currentBookId && currentBookId > 0) {
@@ -2551,7 +2628,6 @@ async function extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, 
       } else if (matchedBId && matchedBId > 0) {
         currentBookId = matchedBId;
         const chFromLabel = bookAndChMatch ? parseInt(bookAndChMatch[2], 10) : 1;
-        // Se lo stesso anchor è già usato dal capitolo 1, non sovrascrivere
         if (!anchorMarkers.has(src)) {
           anchorMarkers.set(src, { bookId: currentBookId, chapter: chFromLabel });
         }
@@ -2591,6 +2667,7 @@ async function extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, 
     activeVersesMap = new Map();
   };
 
+  // Scansione sequenziale con iniezione di token per ancore e versetti (non perde mai versetti in minuscolo o con numeri)
   for (let fIdx = 0; fIdx < orderedHtmlFiles.length; fIdx++) {
     const fPath = orderedHtmlFiles[fIdx];
     statusEl.innerHTML = `⚙️ Lettura <b>${escapeHtml(labelName)}</b> (${fIdx + 1}/${orderedHtmlFiles.length})...`;
@@ -2603,111 +2680,118 @@ async function extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, 
     const rawHtml = await zip.files[fPath].async("string");
     const parser = new DOMParser();
     const doc = parser.parseFromString(rawHtml, "text/html");
+    const body = doc.body || doc.documentElement;
+    if (!body) continue;
 
-    // Normalizza numeri di versetto in apice o grassetto (es. "1." o "1")
-    doc.querySelectorAll("sup, span.num, span.v, span.versetto, b, strong").forEach(sp => {
-      const t = (sp.textContent || "").trim();
-      if (/^\d{1,3}\.?$/.test(t)) {
-        sp.textContent = " " + t.replace(/\.$/, "") + ". ";
+    // Rimuove eventuali link di ritorno all'indice o note
+    body.querySelectorAll('a[href*="index_split_000"], a[href*="index_split_001"], .footnote, .footnotes').forEach(a => {
+      if (/^(?:indice|sommario|\[)/i.test((a.textContent || "").trim())) a.remove();
+    });
+
+    // 1. Inietta un token esatto nel punto di ogni elemento con id corrispondente al toc.ncx
+    body.querySelectorAll("[id]").forEach(el => {
+      const idAttr = el.getAttribute("id");
+      const fullAnchor = `${fPath}#${idAttr}`;
+      if (idAttr && anchorMarkers.has(fullAnchor)) {
+        const mk = anchorMarkers.get(fullAnchor);
+        const token = doc.createTextNode(` %%%ANCHOR_${mk.bookId || 0}_${mk.chapter || 1}%%% `);
+        el.parentNode.insertBefore(token, el);
       }
     });
 
-    const blocks = doc.querySelectorAll("h1, h2, h3, h4, p, div");
+    // 2. Scansiona tutti i blocchi testuali nell'ordine esatto di lettura
+    const blocks = body.querySelectorAll("h1, h2, h3, h4, p, div");
     blocks.forEach(el => {
-      const idAttr = el.getAttribute("id") || "";
-      if (idAttr && anchorMarkers.has(`${fPath}#${idAttr}`)) {
-        flushCurrentChapter();
-        const mk = anchorMarkers.get(`${fPath}#${idAttr}`);
-        activeBookId = mk.bookId;
-        activeChapter = mk.chapter;
-      }
-      el.querySelectorAll("[id]").forEach(sub => {
-        const subId = sub.getAttribute("id");
-        if (subId && anchorMarkers.has(`${fPath}#${subId}`)) {
-          flushCurrentChapter();
-          const mk = anchorMarkers.get(`${fPath}#${subId}`);
-          activeBookId = mk.bookId;
-          activeChapter = mk.chapter;
-        }
-      });
-
       const tag = el.tagName.toLowerCase();
       if (tag === "div" && el.querySelector("p, h1, h2, h3, h4, div")) return;
 
-      const txt = (el.textContent || "").replace(/\s+/g, " ").trim();
-      if (!txt) return;
+      const rawBlockText = (el.textContent || "").replace(/\s+/g, " ").trim();
+      if (!rawBlockText) return;
 
-      // Rileva intestazioni di libro o di capitolo ("1.", "Capitolo 1", "Genesi")
-      if (tag.startsWith("h") || txt.length < 38) {
-        const chOnly = txt.match(/^(?:capitolo|cap\.?|salmo)\s*(\d{1,3})\.?$|^(\d{1,3})\.?$/i);
-        if (chOnly && activeBookId) {
+      // Divide il blocco se al suo interno ci sono uno o più token %%%ANCHOR_book_ch%%%
+      const anchorParts = rawBlockText.split(/%%%ANCHOR_(-?\d+)_(\d+)%%%/);
+      for (let aIdx = 0; aIdx < anchorParts.length; aIdx += 3) {
+        if (aIdx > 0) {
+          const newBId = parseInt(anchorParts[aIdx - 2], 10);
+          const newCh = parseInt(anchorParts[aIdx - 1], 10);
           flushCurrentChapter();
-          activeChapter = parseInt(chOnly[1] || chOnly[2], 10);
-          return;
+          activeBookId = newBId > 0 ? newBId : null;
+          activeChapter = newCh > 0 ? newCh : 1;
         }
-        const maybeBId = matchItalianBookNameToId(txt);
-        if (maybeBId === -1 && txt.length < 35) {
-          flushCurrentChapter();
-          activeBookId = null;
-          return;
-        } else if (maybeBId && maybeBId > 0 && txt.length < 35 && !/^\d/.test(txt)) {
-          flushCurrentChapter();
-          activeBookId = maybeBId;
-          const inlineCh = txt.match(/\s+(\d{1,3})\.?$/);
-          activeChapter = inlineCh ? parseInt(inlineCh[1], 10) : 1;
-          return;
-        }
-      }
 
-      if (!activeBookId || activeBookId < 1) return;
+        let txt = (anchorParts[aIdx] || "").trim();
+        if (!txt) continue;
 
-      // Estrae i versetti sia col punto ("1. In principio...") sia senza punto ("1 In principio...")
-      const verseRegex = /(?:^|\s)(\d{1,3})\.?(?:\s+|(?=[A-ZÀ-Ý«"“'‘]))([^\d]+?)(?=(?:\s+\d{1,3}\.?(?:\s+|(?=[A-ZÀ-Ý«"“'‘])))|$)/g;
-      const matches = [...txt.matchAll(verseRegex)];
-      if (matches.length > 0 && /^\d{1,3}\.?(?:\s|[A-ZÀ-Ý«"“'‘])/.test(txt)) {
-        matches.forEach(m => {
-          const vNum = parseInt(m[1], 10);
-          const vText = (m[2] || "").trim();
-          if (vNum > 0 && vNum <= 176 && vText.length > 1) {
-            const prev = activeVersesMap.get(vNum);
-            activeVersesMap.set(vNum, prev ? (prev + " " + vText) : vText);
+        // Controlla se la riga è un'intestazione di capitolo ("1.", "Capitolo 1") o di libro ("Genesi")
+        if (tag.startsWith("h") || txt.length < 35) {
+          const chOnly = txt.match(/^(?:capitolo|cap\.?|salmo)\s*(\d{1,3})\.?$|^(\d{1,3})\.?$/i);
+          if (chOnly && activeBookId) {
+            const parsedCh = parseInt(chOnly[1] || chOnly[2], 10);
+            if (parsedCh !== activeChapter) {
+              flushCurrentChapter();
+              activeChapter = parsedCh;
+            }
+            continue;
           }
-        });
-      } else if (activeVersesMap.size > 0) {
-        const lastKey = Array.from(activeVersesMap.keys()).pop();
-        if (lastKey && txt.length > 2 && !/^(?:capitolo|nota|sommario|indice|\[)/i.test(txt)) {
-          activeVersesMap.set(lastKey, activeVersesMap.get(lastKey) + " " + txt);
+          const maybeBId = matchItalianBookNameToId(txt);
+          if (maybeBId === -1 && txt.length < 30) {
+            flushCurrentChapter();
+            activeBookId = null;
+            continue;
+          } else if (maybeBId && maybeBId > 0 && txt.length < 30 && !/^\d/.test(txt)) {
+            if (maybeBId !== activeBookId) {
+              flushCurrentChapter();
+              activeBookId = maybeBId;
+              const inlineCh = txt.match(/\s+(\d{1,3})\.?$/);
+              activeChapter = inlineCh ? parseInt(inlineCh[1], 10) : 1;
+            }
+            continue;
+          }
+        }
+
+        if (!activeBookId || activeBookId < 1) continue;
+
+        // Estrazione universale dei versetti:
+        // Riconosce "1. Testo", "2. testo minuscolo", "3 Testo" anche con più versetti nello stesso paragrafo
+        // e anche quando il testo del versetto contiene numeri (es. "visse 130 anni")!
+        const normalizedTxt = txt.replace(/(?:^|\s)(\d{1,3})\.\s+(?=[A-Za-zÀ-ÿ«"“'‘(])/g, " %%%V_$1%%% ");
+        if (normalizedTxt.includes("%%%V_")) {
+          const vParts = normalizedTxt.split(/%%%V_(\d{1,3})%%%/);
+          const leadingTxt = (vParts[0] || "").trim();
+          if (leadingTxt && activeVersesMap.size > 0) {
+            const lastKey = Array.from(activeVersesMap.keys()).pop();
+            activeVersesMap.set(lastKey, activeVersesMap.get(lastKey) + " " + leadingTxt);
+          }
+          for (let vIdx = 1; vIdx < vParts.length; vIdx += 2) {
+            const vNum = parseInt(vParts[vIdx], 10);
+            const vText = (vParts[vIdx + 1] || "").trim();
+            if (vNum > 0 && vNum <= 176 && vText.length > 0) {
+              const prev = activeVersesMap.get(vNum);
+              activeVersesMap.set(vNum, prev ? (prev + " " + vText) : vText);
+            }
+          }
+        } else {
+          // Caso versetti senza punto (es. "1 In principio...")
+          const noDotMatch = txt.match(/^(\d{1,3})\s+([A-Za-zÀ-ÿ«"“'‘(].*)$/);
+          if (noDotMatch) {
+            const vNum = parseInt(noDotMatch[1], 10);
+            const vText = noDotMatch[2].trim();
+            if (vNum > 0 && vNum <= 176 && vText.length > 0) {
+              const prev = activeVersesMap.get(vNum);
+              activeVersesMap.set(vNum, prev ? (prev + " " + vText) : vText);
+            }
+          } else if (activeVersesMap.size > 0) {
+            // Continuazione a capo dello stesso versetto (es. poesia nei Salmi / Profeti)
+            const lastKey = Array.from(activeVersesMap.keys()).pop();
+            if (lastKey && txt.length > 1 && !/^(?:capitolo|nota|sommario|indice)/i.test(txt)) {
+              activeVersesMap.set(lastKey, activeVersesMap.get(lastKey) + " " + txt);
+            }
+          }
         }
       }
     });
   }
   flushCurrentChapter();
-}
-
-function parseJwEpubChapterXhtml(xhtml) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(xhtml, "text/html");
-  doc.querySelectorAll(".footnote, .footnotes, .groupFootnote, .marginal, a.b, a.fn, .w_ch, strong.w_ch, rt, sup.xrefLink").forEach(el => el.remove());
-  const bodyHtml = doc.body ? doc.body.innerHTML : xhtml;
-  const parts = bodyHtml.split(/<span[^>]*id="chapter\d+_verse(\d+)"[^>]*><\/span>/i);
-  const verses = [];
-  for (let i = 1; i < parts.length; i += 2) {
-    const vNum = parseInt(parts[i], 10);
-    let vHtml = parts[i + 1] || "";
-    vHtml = vHtml.split(/<div[^>]*class="[^"]*(?:groupFootnote|footnote|ext)[^"]*"/i)[0];
-    const tmp = document.createElement("div");
-    tmp.innerHTML = vHtml;
-    tmp.querySelectorAll("sup, a.fn, a.b, .w_ch").forEach(el => el.remove());
-    let cleanTxt = (tmp.textContent || "")
-      .replace(/^[\s\d\u00A0]+/, "")
-      .replace(/[\+\*]/g, "")
-      .replace(/\s+/g, " ")
-      .trim();
-    if (vNum > 0 && cleanTxt) {
-      verses.push({ verse: vNum, text: cleanTxt });
-    }
-  }
-  return verses;
 }
 function exportBackupJson() {
   const data = {
