@@ -2325,18 +2325,18 @@ function openBackupModal() {
   document.getElementById("proModal").style.display = "flex";
 }
 
-    function matchItalianBookNameToId(rawTitle) {
+function matchItalianBookNameToId(rawTitle) {
   if (!rawTitle) return null;
   const lower = rawTitle.toLowerCase().trim();
 
-  // Ignora esplicitamente i libri deuterocanonici presenti nella CEI / TILC per non corrompere i 66 libri
+  // Salta i libri deuterocanonici eventualmente presenti nella CEI/TILC
   if (/^(?:tobia|giuditta|1\s*maccabei|2\s*maccabei|i+\s*maccabei|sapienza|siracide|ecclesiastico|baruc|lettera\s+di\s+geremia)/i.test(lower)) {
-    return -1; // -1 indica libro deuterocanonico da saltare in sicurezza
+    return -1;
   }
 
   const clean = lower
     .replace(/^(?:il\s+|la\s+|i\s+|le\s+)?(?:santo\s+)?(?:vangelo\s+(?:secondo\s+)?|lettera\s+(?:di\s+san\s+paolo\s+apostolo\s+|cattolica\s+di\s+san\s+|agli\s+|ai\s+|a\s+|di\s+)?|atti\s+degli\s+|libro\s+(?:del\s+|della\s+|dei\s+|delle\s+|di\s+)?|profeta\s+|cantico\s+dei\s+|apocalisse\s+di\s+(?:san\s+)?)/g, "")
-    .replace(/\s+\d+\s*$/, "") // Rimuove eventuale numero di capitolo finale (es. "Genesi 1" -> "Genesi")
+    .replace(/\s+\d+\s*$/, "")
     .replace(/[^a-z0-9à-ÿ]/g, "")
     .trim();
   if (!clean) return null;
@@ -2415,6 +2415,113 @@ function openBackupModal() {
   return null;
 }
 
+async function importUniversalEpubFiles(event, targetId, labelName) {
+  const files = Array.from(event.target.files || []);
+  if (!files.length) return;
+  const statusEl = document.getElementById("epubImportStatus");
+  if (typeof JSZip === "undefined") {
+    alert("Libreria JSZip non caricata. Verifica la connessione internet.");
+    return;
+  }
+  try {
+    const existingBible = await getOfflineBible(targetId);
+    const mergedBooksMap = new Map();
+    if (existingBible && Array.isArray(existingBible.books)) {
+      existingBible.books.forEach(b => {
+        if (b && b.chapters && b.chapters.length > 0) {
+          mergedBooksMap.set(Number(b.nr), b);
+        }
+      });
+    }
+
+    for (const file of files) {
+      statusEl.innerHTML = `⏳ Analisi di <b>${escapeHtml(file.name)}</b> in corso...`;
+      const zip = await JSZip.loadAsync(file);
+      const allFiles = Object.keys(zip.files);
+      const isCalibreSplit = allFiles.some(f => f.includes("index_split_")) && allFiles.some(f => f.endsWith("toc.ncx"));
+
+      if (isCalibreSplit && targetId !== "gb:nwt") {
+        await extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, labelName);
+      } else {
+        await extractJwFormatEpub(zip, allFiles, mergedBooksMap, statusEl, labelName);
+      }
+    }
+
+    const finalBooksData = [];
+    let importedCount = 0;
+    for (let bId = 1; bId <= 66; bId++) {
+      const bMeta = getBook(bId);
+      const existing = mergedBooksMap.get(bId);
+      if (existing && existing.chapters && existing.chapters.length > 0) {
+        importedCount++;
+        finalBooksData.push(existing);
+      } else {
+        finalBooksData.push({ nr: bId, name: bMeta.name, chapters: [] });
+      }
+    }
+
+    statusEl.innerHTML = `💾 Salvataggio permanente nel database Offline...`;
+    const fullBibleObj = { id: targetId, name: labelName, books: finalBooksData };
+    await saveOfflineBible(targetId, fullBibleObj);
+    if (!state.downloadedBibles.includes(targetId)) {
+      state.downloadedBibles.unshift(targetId);
+      safeSaveStorage("bm_v10_pro_bibles", JSON.stringify(state.downloadedBibles));
+    }
+    await populateSelects();
+    state.trans1 = targetId;
+    document.getElementById("trans1").value = targetId;
+    safeSaveStorage("bm_trans1", targetId);
+    statusEl.innerHTML = `✔ <b>${escapeHtml(labelName)}</b> salvata Offline (${importedCount}/66 libri pronti)!`;
+    setTimeout(() => {
+      closeProModal();
+      loadChapterView();
+    }, 1000);
+  } catch (err) {
+    console.error(err);
+    statusEl.innerHTML = `❌ Errore durante l'importazione: ${escapeHtml(err.message)}`;
+  }
+}
+
+async function extractJwFormatEpub(zip, allFiles, mergedBooksMap, statusEl, labelName) {
+  const JW_BOOK_CODES = ["", "GE", "EX", "LE", "NU", "DE", "JOS", "JG", "RU", "1SA", "2SA", "1KI", "2KI", "1CH", "2CH", "EZR", "NE", "ES", "JOB", "PS", "PR", "EC", "CA", "ISA", "JER", "LA", "EZE", "DA", "HOS", "JOE", "AM", "OB", "JON", "MIC", "NAH", "HAB", "ZEP", "HAG", "ZEC", "MAL", "MT", "MR", "LU", "JOH", "AC", "RO", "1CO", "2CO", "GA", "EPH", "PHP", "COL", "1TH", "2TH", "1TI", "2TI", "TIT", "PHM", "HEB", "JAS", "1PE", "2PE", "1JO", "2JO", "3JO", "JUD", "RE"];
+  for (let bId = 1; bId <= 66; bId++) {
+    const prefixNum = String(bId + 4).padStart(2, "0");
+    const jwCode = JW_BOOK_CODES[bId];
+    const bookMeta = getBook(bId);
+    statusEl.innerHTML = `⚙️ Estrazione <b>${escapeHtml(labelName)}</b>: ${escapeHtml(bookMeta.name)} (${bId}/66)...`;
+    let bookFiles = allFiles.filter(f => {
+      const base = f.split("/").pop();
+      if (!base.endsWith(".xhtml") || base.includes("extracted") || base.includes("outline")) return false;
+      const matchPrefix = base.startsWith(prefixNum + "_") && base.includes("." + jwCode);
+      const matchNwtCode = new RegExp(`[_. ]${jwCode}(?:-split\\d+)?\\.xhtml$`, "i").test(base);
+      return matchPrefix || matchNwtCode;
+    });
+    if (bookFiles.length === 0) {
+      const nwtDocNum = String(1001061104 + bId);
+      bookFiles = allFiles.filter(f => {
+        const base = f.split("/").pop();
+        return base.startsWith(nwtDocNum) && base.endsWith(".xhtml") && !base.includes("extracted") && !base.includes("outline");
+      });
+    }
+    const chaptersArr = [];
+    for (const fPath of bookFiles) {
+      const base = fPath.split("/").pop();
+      let chNum = 1;
+      const splitMatch = base.match(/-split(\d+)\.xhtml$/i);
+      if (splitMatch) chNum = parseInt(splitMatch[1], 10);
+      const rawXhtml = await zip.files[fPath].async("string");
+      const versesArr = parseJwEpubChapterXhtml(rawXhtml);
+      if (versesArr.length > 0) {
+        chaptersArr.push({ chapter: chNum, verses: versesArr });
+      }
+    }
+    if (chaptersArr.length > 0) {
+      chaptersArr.sort((a, b) => a.chapter - b.chapter);
+      mergedBooksMap.set(bId, { nr: bId, name: bookMeta.name, chapters: chaptersArr });
+    }
+  }
+}
+
 async function extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, labelName) {
   const tocFile = allFiles.find(f => f.endsWith("toc.ncx"));
   const opfFile = allFiles.find(f => f.endsWith("content.opf"));
@@ -2440,7 +2547,6 @@ async function extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, 
     } catch (e) {}
   }
 
-  // Legge il file toc.ncx per mappare con precisione libri e capitoli (inclusa CEI 2008 VT/NT)
   const anchorMarkers = new Map();
   if (tocFile) {
     const tocTxt = await zip.files[tocFile].async("string");
@@ -2461,7 +2567,7 @@ async function extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, 
       const bookAndChMatch = label.match(/^(.+?)\s+(\d{1,3})$/);
 
       if (matchedBId === -1) {
-        currentBookId = null; // Salta libro deuterocanonico
+        currentBookId = null;
         anchorMarkers.set(src, { bookId: null, chapter: 1 });
       } else if (matchedBId && matchedBId > 0) {
         currentBookId = matchedBId;
@@ -2520,7 +2626,6 @@ async function extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, 
     const parser = new DOMParser();
     const doc = parser.parseFromString(rawHtml, "text/html");
 
-    // Assicura uno spazio dopo i numeri in apice o span (tipico di CEI 2008 e TILC)
     doc.querySelectorAll("sup, span.num, span.v, span.versetto, b, strong").forEach(sp => {
       if (/^\d{1,3}$/.test((sp.textContent || "").trim())) {
         sp.textContent = " " + sp.textContent.trim() + " ";
@@ -2552,7 +2657,6 @@ async function extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, 
       const txt = (el.textContent || "").replace(/\s+/g, " ").trim();
       if (!txt) return;
 
-      // Riconoscimento intestazioni Libro / Capitolo anche se sono in <p class="calibre...">
       if (tag.startsWith("h") || txt.length < 38) {
         const chOnly = txt.match(/^(?:capitolo|cap\.?|salmo)\s*(\d{1,3})$|^(\d{1,3})$/i);
         const maybeBId = matchItalianBookNameToId(txt);
@@ -2575,7 +2679,6 @@ async function extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, 
 
       if (!activeBookId || activeBookId < 1) return;
 
-      // Estrae i versetti sia con spazio ("1 In principio") sia attaccati ("1In principio")
       const verseRegex = /(?:^|\s)(\d{1,3})(?:\s+|(?=[A-ZÀ-Ý«"“'‘]))([^\d]+?)(?=(?:\s+\d{1,3}(?:\s+|(?=[A-ZÀ-Ý«"“'‘])))|$)/g;
       const matches = [...txt.matchAll(verseRegex)];
       if (matches.length > 0 && /^\d{1,3}(?:\s|[A-ZÀ-Ý«"“'‘])/.test(txt)) {
@@ -2596,8 +2699,8 @@ async function extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, 
     });
   }
   flushCurrentChapter();
-                     }
-        
+}
+
 function parseJwEpubChapterXhtml(xhtml) {
   const parser = new DOMParser();
   const doc = parser.parseFromString(xhtml, "text/html");
@@ -2679,7 +2782,6 @@ function dismissSplashScreen() {
     setTimeout(() => splash.remove(), 400);
   }
 }
-// Timer di sicurezza anti-blocco Splash Screen + Inizializzazione
 setTimeout(dismissSplashScreen, 1800);
 applySavedTheme();
 populateSelects()
@@ -2692,4 +2794,3 @@ populateSelects()
 </script>
 </body>
 </html>
-    
