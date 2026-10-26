@@ -2632,7 +2632,6 @@ function parseJwEpubChapterXhtml(xhtml) {
       const src = decodeURIComponent((contentEl.getAttribute("src") || "").trim());
       if (!src) return;
 
-      // Se l'ancora contiene già #bm_book_X (come nei file NR preparati da Claude), estrae direttamente il numero del libro!
       const bmBookMatch = src.match(/#bm_book_(\d+)$/i);
       if (bmBookMatch) {
         currentBookId = parseInt(bmBookMatch[1], 10);
@@ -2732,15 +2731,19 @@ function parseJwEpubChapterXhtml(xhtml) {
       }
     });
 
-    // 2. Trasforma ogni <sup> numerico di versetto direttamente nel token " %%%V_num%%% " (risolve l'assenza di spazio in CEI 2008!)
-    body.querySelectorAll("sup, span.num, span.v, span.versetto").forEach(sp => {
+    // 2. Trasforma ogni <sup>, <span>, <b> o <strong> che contiene SOLO un numero di versetto (dentro un paragrafo) nel token %%%V_num%%%
+    body.querySelectorAll("p sup, blockquote sup, div sup, p span, blockquote span, p b, p strong").forEach(sp => {
+      if (sp.children && sp.children.length > 0) return;
       const t = (sp.textContent || "").trim().replace(/\.$/, "");
       if (/^\d{1,3}$/.test(t)) {
-        sp.textContent = ` %%%V_${t}%%% `;
+        const n = parseInt(t, 10);
+        if (n >= 1 && n <= 176) {
+          sp.textContent = ` %%%V_${n}%%% `;
+        }
       }
     });
 
-    // 3. Inietta i marker di cambio libro/capitolo (supporta anche <div id="bm_book_X"></div> vuoto!)
+    // 3. Inietta i marker di cambio libro/capitolo dal toc.ncx
     body.querySelectorAll("[id]").forEach(el => {
       const idAttr = el.getAttribute("id");
       if (!idAttr) return;
@@ -2756,7 +2759,7 @@ function parseJwEpubChapterXhtml(xhtml) {
       }
     });
 
-    // 4. Scansiona tutti i blocchi testuali (incluso <blockquote> usato nei poetici di NR!)
+    // 4. Scansiona tutti i blocchi testuali
     const blocks = body.querySelectorAll("h1, h2, h3, h4, p, blockquote, div");
     blocks.forEach(el => {
       const tag = el.tagName.toLowerCase();
@@ -2778,7 +2781,7 @@ function parseJwEpubChapterXhtml(xhtml) {
         let txt = (anchorParts[aIdx] || "").trim();
         if (!txt) continue;
 
-        if (tag.startsWith("h") || (!txt.includes("%%%V_") && txt.length < 32)) {
+        if (tag.startsWith("h") || (!txt.includes("%%%V_") && txt.length < 35)) {
           const chOnly = txt.match(/^(?:capitolo|cap\.?|salmo)\s*(\d{1,3})\.?$|^(\d{1,3})\.?$/i);
           if (chOnly && activeBookId) {
             const parsedCh = parseInt(chOnly[1] || chOnly[2], 10);
@@ -2806,7 +2809,11 @@ function parseJwEpubChapterXhtml(xhtml) {
 
         if (!activeBookId || activeBookId < 1) continue;
 
-        const normalizedTxt = txt.replace(/(?:^|\s)(\d{1,3})\.\s*(?=[A-Za-zÀ-ÿ«"“'‘(—–-])/g, " %%%V_$1%%% ");
+        // Riconosce sia "1. Testo" sia numeri a inizio riga attaccati o con spazio
+        const normalizedTxt = txt
+          .replace(/(?:^|\s)(\d{1,3})\.\s*(?=[A-Za-zÀ-ÿ«"“'‘(—–-])/g, " %%%V_$1%%% ")
+          .replace(/^(\d{1,3})\s*(?=[A-ZÀ-Ý«"“'‘(—–-])/g, " %%%V_$1%%% ");
+
         if (normalizedTxt.includes("%%%V_")) {
           const vParts = normalizedTxt.split(/%%%V_(\d{1,3})%%%/);
           const leadingTxt = (vParts[0] || "").trim();
@@ -2822,28 +2829,21 @@ function parseJwEpubChapterXhtml(xhtml) {
               activeVersesMap.set(vNum, prev ? (prev + " " + vText) : vText);
             }
           }
-        } else {
-          const noDotMatch = txt.match(/^(\d{1,3})\s+([A-Za-zÀ-ÿ«"“'‘(—–-].*)$/);
-          if (noDotMatch) {
-            const vNum = parseInt(noDotMatch[1], 10);
-            const vText = noDotMatch[2].trim();
-            if (vNum > 0 && vNum <= 176 && vText.length > 0) {
-              const prev = activeVersesMap.get(vNum);
-              activeVersesMap.set(vNum, prev ? (prev + " " + vText) : vText);
-            }
-          } else if (activeVersesMap.size > 0) {
-            const lastKey = Array.from(activeVersesMap.keys()).pop();
-            if (lastKey && txt.length > 1 && !/^(?:capitolo|nota|sommario|indice)/i.test(txt)) {
-              activeVersesMap.set(lastKey, activeVersesMap.get(lastKey) + " " + txt);
-            }
+        } else if (activeVersesMap.size > 0) {
+          const lastKey = Array.from(activeVersesMap.keys()).pop();
+          if (lastKey && txt.length > 1 && !/^(?:capitolo|nota|sommario|indice)/i.test(txt)) {
+            activeVersesMap.set(lastKey, activeVersesMap.get(lastKey) + " " + txt);
           }
+        } else if (!tag.startsWith("h") && txt.length > 25 && !/^(?:capitolo|nota|sommario|indice|prologo|introduzione)/i.test(txt)) {
+          // Fallback per libri brevi da 1 capitolo in cui il versetto 1 non ha il numero "1" in apice
+          activeVersesMap.set(1, txt);
         }
       }
     });
   }
   flushCurrentChapter();
-          }
-          
+}
+                                                         }
 function exportBackupJson() {
   const data = {
     app: "BibbiaMultilingue_PRO",
