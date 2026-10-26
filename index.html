@@ -2305,16 +2305,18 @@ function openBackupModal() {
   if (!rawTitle) return null;
   const lower = rawTitle.toLowerCase()
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/\([^)]*\)/g, " ") // Rimuove "(testo greco)" / "(testo ebraico)" in Ester CEI 2008
+    .replace(/^[a-z0-9]{1,4}\s*[–—-]\s*/i, "") // Rimuove prefissi tipo "Gs – Giosuè", "Gb – Giobbe", "Gl – Gioele" di NR
     .replace(/\s+/g, " ")
     .trim();
 
-  // 1. Sezioni/Intestazioni generali: ritornano null
+  // 1. Sezioni/Intestazioni non-libro: ritornano null
   if (/^(?:web\s*site|dedica|indice|sommario|prologo|vecchio\s+testamento|nuovo\s+testamento|antico\s+testamento|pentateuco|libri\s+storici|libri\s+sapienziali|libri\s+profetici|vangeli|lettere\s+paoline|lettere\s+cattoliche|appendice|note|prefazione|introduzione)\b/i.test(lower)) {
     return null;
   }
 
-  // 2. Libri deuterocanonici (incluso Ester Testo Greco e Maccabei): ritornano -1
-  if (/^(?:tobia|giuditta|ester\s*\(\s*testo\s+greco\s*\)|(?:1|2|3|4|i+|primo|secondo)\s*(?:libro\s+dei\s+)?maccabei|sapienza|libro\s+della\s+sapienza|siracide|ecclesiastico|baruc|lettera\s+di\s+geremia)\b/i.test(lower)) {
+  // 2. Libri deuterocanonici (inclusi "PRIMO MACCABEI" e "SECONDO MACCABEI" della CEI 2008): ritornano -1
+  if (/^(?:tobia|giuditta|(?:1|2|3|4|i+|primo|secondo)\s*(?:libro\s+dei\s+)?maccabei|sapienza|libro\s+della\s+sapienza|siracide|ecclesiastico|baruc|lettera\s+di\s+geremia)\b/i.test(lower)) {
     return -1;
   }
 
@@ -2330,8 +2332,7 @@ function openBackupModal() {
 
   const clean = step1
     .replace(/^(?:1|2|3)\s+(?:libro\s+(?:di|dei|delle)\s+|lettera\s+(?:di\s+san\s+paolo\s+apostolo\s+|cattolica\s+di\s+san\s+)?(?:ai|agli|a|di)\s+)/, m => m[0] + " ")
-    .replace(/\s*\([^)]*\)/g, "") // Rimuove eventuali parentesi residue (es. testo ebraico)
-    .replace(/^(?:il\s+|la\s+|le\s+|l\s*['’]\s*)?(?:santo\s+)?(?:vangelo\s+(?:secondo\s+|di\s+)?|lettera\s+(?:di\s+san\s+paolo\s+apostolo\s+|cattolica\s+di\s+san\s+|agli\s+|ai\s+|a\s+|di\s+)?|atti\s+degli\s+|libro\s+(?:del\s+profeta\s+|dell?['’]\s*|del\s+|della\s+|dei\s+|delle\s+|di\s+)?|profeta\s+|apocalisse\s+di\s+(?:san\s+)?)/g, "")
+    .replace(/^(?:il\s+|la\s+|le\s+|l\s*['’]\s*)?(?:santo\s+)?(?:vangelo\s+(?:secondo\s+|di\s+)?|lettera\s+(?:di\s+san\s+paolo\s+apostolo\s+|cattolica\s+di\s+san\s+|agli\s+|ai\s+|a\s+|di\s+)?|atti\s+degli\s+|libro\s+(?:del\s+profeta\s+|dell\s*['’]\s*|del\s+|della\s+|dei\s+|delle\s+|di\s+)?|profeta\s+|apocalisse\s+di\s+(?:san\s+)?)/g, "")
     .replace(/\s+\d+\.?\s*$/, "")
     .replace(/[^a-z0-9]/g, "")
     .trim();
@@ -2355,7 +2356,7 @@ function openBackupModal() {
     "2cronache": 14, "2cr": 14, "2cron": 14,
     "esdra": 15, "esd": 15,
     "neemia": 16, "ne": 16, "nee": 16,
-    "ester": 17, "est": 17, "testoebraico": 17,
+    "ester": 17, "est": 17,
     "giobbe": 18, "gb": 18,
     "salmi": 19, "salmo": 19, "sal": 19, "sl": 19, "librodeisalmi": 19,
     "proverbi": 20, "pr": 20, "prv": 20, "pro": 20, "librodeiproverbi": 20,
@@ -2409,7 +2410,7 @@ function openBackupModal() {
 
   if (isStrictFromBody && clean.length <= 3 && clean !== "rut") return null;
   return exactBookMap[clean] || null;
-      }
+    }
 async function importUniversalEpubFiles(event, targetId, labelName) {
   const files = Array.from(event.target.files || []);
   if (!files.length) return;
