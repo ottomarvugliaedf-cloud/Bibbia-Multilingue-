@@ -658,6 +658,10 @@ const BIBLE_BOOKS = [
 ];
 const CORE_BIBLES = [
   { id: "gb:nwt", name: "🇮🇹 Italiano: Traduzione del Nuovo Mondo (TNM 2017)", lang: "Italian" },
+  { id: "gb:bi12", name: "🇮🇹 Italiano: Traduzione del Nuovo Mondo (TNM 1987 - bi12)", lang: "Italian" },
+  { id: "epub:nr", name: "🇮🇹 Italiano: Bibbia Nuova Riveduta (NR)", lang: "Italian" },
+  { id: "epub:cei", name: "🇮🇹 Italiano: Bibbia CEI (Ed. 2008)", lang: "Italian" },
+  { id: "epub:tilc", name: "🇮🇹 Italiano: Parola del Signore (TILC)", lang: "Italian" },
   { id: "gb:riveduta", name: "🇮🇹 Italiano: Riveduta 1927 (Luzzi)", lang: "Italian" },
   { id: "gb:giovanni", name: "🇮🇹 Italiano: Giovanni Diodati (1649)", lang: "Italian" },
   { id: "gb:kjv", name: "🇬🇧 English: King James Version (KJV)", lang: "English" },
@@ -715,6 +719,7 @@ const CORE_BIBLES = [
   { id: "gb:tagalog", name: "🇵🇭 Tagalog: Ang Dating Biblia", lang: "Tagalog" },
   { id: "gb:vietnamese", name: "🇻🇳 Tiếng Việt: Bibbia Vietnamita (1934)", lang: "Vietnamese" }
 ];
+const LOCAL_EPUB_IDS = ["gb:nwt", "gb:bi12", "epub:nr", "epub:cei", "epub:tilc"];
 const PRO_STRONG_DICT = {
   "principio": { code: "H7225 / G746", orig: "רֵאשִׁית (reshith) / ἀρχή (archē)", def: "Inizio, origine, primizia, fondamento temporale o d'autorità." },
   "beginning": { code: "H7225 / G746", orig: "רֵאשִׁית (reshith) / ἀρχή (archē)", def: "Origin, firstfruits, commencement, chief cornerstone." },
@@ -851,7 +856,9 @@ let state = {
 if (!Array.isArray(state.downloadedBibles) || state.downloadedBibles.length === 0) {
   state.downloadedBibles = [...DEFAULT_ACTIVE_IDS];
 } else {
-  state.downloadedBibles = state.downloadedBibles.filter(id => id !== "gb:bi12");
+  ["gb:nwt", "gb:bi12", "epub:nr", "epub:cei", "epub:tilc"].forEach(id => {
+    if (!state.downloadedBibles.includes(id)) state.downloadedBibles.unshift(id);
+  });
 }
 if (!Array.isArray(state.bookmarks)) state.bookmarks = [];
 if (!Array.isArray(state.notes)) state.notes = [];
@@ -1062,10 +1069,16 @@ async function fetchChapterData(transId, bookId, chapter) {
   const fullOffline = await getOfflineBible(transId);
   if (fullOffline && fullOffline.books) {
     const bObj = fullOffline.books.find(b => Number(b.nr) === Number(bookId));
-    if (bObj && bObj.chapters) {
+    if (bObj && bObj.chapters && bObj.chapters.length > 0) {
       const cObj = bObj.chapters.find(c => Number(c.chapter) === Number(chapter));
-      if (cObj && cObj.verses) return cObj.verses;
+      if (cObj && cObj.verses && cObj.verses.length > 0) return cObj.verses;
     }
+    if (LOCAL_EPUB_IDS.includes(transId)) {
+      throw new Error("EPUB_NOT_IMPORTED");
+    }
+  }
+  if (LOCAL_EPUB_IDS.includes(transId)) {
+    throw new Error("EPUB_NOT_IMPORTED");
   }
   const cacheKey = `bm_ch_${transId}_${bookId}_${chapter}`;
   const cached = localStorage.getItem(cacheKey);
@@ -1074,9 +1087,6 @@ async function fetchChapterData(transId, bookId, chapter) {
       const parsed = JSON.parse(cached);
       if (parsed && parsed.length > 0) return parsed;
     } catch(e) {}
-  }
-  if (transId === "gb:nwt") {
-    throw new Error("EPUB_NOT_IMPORTED");
   }
   let verses = [];
   if (transId.startsWith("helloao:")) {
@@ -1217,12 +1227,14 @@ async function loadChapterView() {
     main.scrollTop = 0;
   } catch (err) {
     if (reqId !== currentChapterReqId) return;
-    if (err && err.message === "EPUB_NOT_IMPORTED") {
+        if (err && err.message === "EPUB_NOT_IMPORTED") {
+      const bMeta = CORE_BIBLES.find(b => b.id === state.trans1);
+      const bTitle = bMeta ? bMeta.name : "Edizione EPUB Offline";
       main.innerHTML = `
         <div class="loader">
-          📘 <b>Traduzione del Nuovo Mondo (TNM 2017)</b><br><br>
-          Per leggere la TNM offline, importa una sola volta il tuo file <b>nwt_I.epub</b> dal telefono:<br><br>
-          <button class="search-btn" onclick="openBackupModal()">📘 Carica ora il file nwt_I.epub</button>
+          📘 <b>${escapeHtml(bTitle)}</b><br><br>
+          Per leggere questo libro offline, importa una sola volta il relativo file <b>.epub</b> (VT e/o NT) dal telefono:<br><br>
+          <button class="search-btn" onclick="openBackupModal()">📘 Apri Importazione EPUB</button>
         </div>`;
       return;
     }
@@ -1690,7 +1702,7 @@ async function executeSearch() {
   try {
     const searchTransId = state.trans1.startsWith("helloao:") ? "gb:riveduta" : state.trans1;
     let fullBible = await getOfflineBible(searchTransId);
-    if (!fullBible && searchTransId !== "gb:nwt") {
+    if (!fullBible && !LOCAL_EPUB_IDS.includes(searchTransId)) {
       const code = searchTransId.split(":")[1];
       const res = await fetch(`https://api.getbible.net/v2/${code}.json`);
       if (res.ok) {
@@ -2246,19 +2258,23 @@ function downloadCanvasCard() {
 }
 
 // ============================================================================
-// IMPORTATORE UNIVERSALE MULTI-EPUB (TNM 2017 + NR, CEI 2008, TILC anche divisi VT/NT)
+// IMPORTATORE UNIVERSALE MULTI-EPUB (TNM 2017, TNM 1987 bi12, NR, CEI 2008, TILC)
 // ============================================================================
 function openBackupModal() {
   document.getElementById("proModalTitle").textContent = "💾 Backup & Importazione EPUB Offline";
   document.getElementById("proModalBody").innerHTML = `
     <div class="section-title"><span>📗 Importa Bibbie Offline da file EPUB</span></div>
     <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px; line-height:1.45;">
-      Puoi selezionare il file singolo (es. <b>nwt_I.epub</b>) oppure selezionare <b>insieme o uno alla volta i 2 file VT + NT</b> (es. Nuova Riveduta, CEI 2008, TILC): l'app li unirà automaticamente in un'unica Bibbia completa di 66 libri!
+      Puoi selezionare il file singolo (es. <b>nwt_I.epub</b> o <b>bi12_I.epub</b>) oppure selezionare <b>insieme o uno alla volta i 2 file VT + NT</b> (Nuova Riveduta, CEI 2008, TILC): l'app li unirà automaticamente in un'unica Bibbia completa di 66 libri!
     </p>
     <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;">
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0d47a1;">
         📘 Carica EPUB TNM 2017 (nwt_I.epub)
         <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:nwt', 'TNM 2017')">
+      </label>
+      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0a367e;">
+        📘 Carica EPUB TNM 1987 (bi12_I.epub)
+        <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:bi12', 'TNM 1987 (bi12)')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#1565c0;">
         📗 Carica Nuova Riveduta (Seleziona VT e/o NT .epub)
@@ -2288,20 +2304,17 @@ function openBackupModal() {
 
 function matchItalianBookNameToId(rawTitle) {
   if (!rawTitle) return null;
-  const lower = rawTitle.toLowerCase().trim();
-
-  // Salta i libri deuterocanonici eventualmente presenti nella CEI/TILC
-  if (/^(?:tobia|giuditta|1\s*maccabei|2\s*maccabei|i+\s*maccabei|sapienza|siracide|ecclesiastico|baruc|lettera\s+di\s+geremia)/i.test(lower)) {
+  const lower = rawTitle.toLowerCase().replace(/\s+/g, " ").trim();
+  // Esclude sommario/indice generale o libri deuterocanonici
+  if (/^(?:indice|sommario| Vecchio testamento|nuovo testamento|tobia|giuditta|1\s*maccabei|2\s*maccabei|i+\s*maccabei|sapienza|siracide|ecclesiastico|baruc|lettera\s+di\s+geremia)/i.test(lower)) {
     return -1;
   }
-
   const clean = lower
     .replace(/^(?:il\s+|la\s+|i\s+|le\s+)?(?:santo\s+)?(?:vangelo\s+(?:secondo\s+)?|lettera\s+(?:di\s+san\s+paolo\s+apostolo\s+|cattolica\s+di\s+san\s+|agli\s+|ai\s+|a\s+|di\s+)?|atti\s+degli\s+|libro\s+(?:del\s+|della\s+|dei\s+|delle\s+|di\s+)?|profeta\s+|cantico\s+dei\s+|apocalisse\s+di\s+(?:san\s+)?)/g, "")
-    .replace(/\s+\d+\s*$/, "")
+    .replace(/\s+\d+\.?\s*$/, "")
     .replace(/[^a-z0-9à-ÿ]/g, "")
     .trim();
   if (!clean) return null;
-
   const aliasMap = [
     { id: 66, keys: ["apocalisse", "rivelazione", "giovanniapocalisse", "ap"] },
     { id: 65, keys: ["giuda", "gd", "gda"] },
@@ -2325,7 +2338,7 @@ function matchItalianBookNameToId(rawTitle) {
     { id: 47, keys: ["2corinzi", "2corinti", "iicorinzi", "iicorinti", "secondacorinzi", "2co"] },
     { id: 46, keys: ["1corinzi", "1corinti", "icorinzi", "icorinti", "primacorinzi", "1co"] },
     { id: 45, keys: ["romani", "rm", "rom"] },
-    { id: 44, keys: ["atti", "apostoli", "at"] },
+    { id: 44, keys: ["atti", "attidegliapostoli", "apostoli", "at"] },
     { id: 43, keys: ["giovanni", "gv"] },
     { id: 42, keys: ["luca", "lc", "luc"] },
     { id: 41, keys: ["marco", "mc", "mar"] },
@@ -2394,20 +2407,17 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
         }
       });
     }
-
     for (const file of files) {
       statusEl.innerHTML = `⏳ Analisi di <b>${escapeHtml(file.name)}</b> in corso...`;
       const zip = await JSZip.loadAsync(file);
       const allFiles = Object.keys(zip.files);
       const isCalibreSplit = allFiles.some(f => f.includes("index_split_")) && allFiles.some(f => f.endsWith("toc.ncx"));
-
-      if (isCalibreSplit && targetId !== "gb:nwt") {
+      if (isCalibreSplit && targetId !== "gb:nwt" && targetId !== "gb:bi12") {
         await extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, labelName);
       } else {
         await extractJwFormatEpub(zip, allFiles, mergedBooksMap, statusEl, labelName);
       }
     }
-
     const finalBooksData = [];
     let importedCount = 0;
     for (let bId = 1; bId <= 66; bId++) {
@@ -2420,7 +2430,6 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
         finalBooksData.push({ nr: bId, name: bMeta.name, chapters: [] });
       }
     }
-
     statusEl.innerHTML = `💾 Salvataggio permanente nel database Offline...`;
     const fullBibleObj = { id: targetId, name: labelName, books: finalBooksData };
     await saveOfflineBible(targetId, fullBibleObj);
@@ -2489,7 +2498,6 @@ async function extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, 
   let orderedHtmlFiles = allFiles
     .filter(f => (f.endsWith(".html") || f.endsWith(".xhtml")) && !f.includes("titlepage"))
     .sort();
-
   if (opfFile) {
     try {
       const opfTxt = await zip.files[opfFile].async("string");
@@ -2508,6 +2516,8 @@ async function extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, 
     } catch (e) {}
   }
 
+  // Mappa ogni src e ogni anchor "file.html#id" -> { bookId, chapter }
+  // Supporta sia etichette "Capitolo 1" sia etichette numeriche col punto "1.", "2.", "150." tipiche di NR, CEI2008 e TILC
   const anchorMarkers = new Map();
   if (tocFile) {
     const tocTxt = await zip.files[tocFile].async("string");
@@ -2523,20 +2533,28 @@ async function extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, 
       const src = (contentEl.getAttribute("src") || "").trim();
       if (!src) return;
 
-      const matchedBId = matchItalianBookNameToId(label);
-      const chMatch = label.match(/(?:capitolo|cap\.?|salmo)\s*(\d+)|^(\d{1,3})$/i);
-      const bookAndChMatch = label.match(/^(.+?)\s+(\d{1,3})$/);
+      // Riconosce "1.", "2.", "Capitolo 1", "Salmo 1"
+      const chMatch = label.match(/^(?:capitolo|cap\.?|salmo)\s*(\d{1,3})\.?$|^(\d{1,3})\.?$/i);
+      if (chMatch) {
+        if (currentBookId && currentBookId > 0) {
+          const chNum = parseInt(chMatch[1] || chMatch[2], 10);
+          anchorMarkers.set(src, { bookId: currentBookId, chapter: chNum });
+        }
+        return;
+      }
 
+      const matchedBId = matchItalianBookNameToId(label);
+      const bookAndChMatch = label.match(/^(.+?)\s+(\d{1,3})\.?$/);
       if (matchedBId === -1) {
         currentBookId = null;
         anchorMarkers.set(src, { bookId: null, chapter: 1 });
       } else if (matchedBId && matchedBId > 0) {
         currentBookId = matchedBId;
         const chFromLabel = bookAndChMatch ? parseInt(bookAndChMatch[2], 10) : 1;
-        anchorMarkers.set(src, { bookId: currentBookId, chapter: chFromLabel });
-      } else if (chMatch && currentBookId) {
-        const chNum = parseInt(chMatch[1] || chMatch[2], 10);
-        anchorMarkers.set(src, { bookId: currentBookId, chapter: chNum });
+        // Se lo stesso anchor è già usato dal capitolo 1, non sovrascrivere
+        if (!anchorMarkers.has(src)) {
+          anchorMarkers.set(src, { bookId: currentBookId, chapter: chFromLabel });
+        }
       }
     });
   }
@@ -2559,7 +2577,6 @@ async function extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, 
       .map(([verse, text]) => ({ verse, text: text.replace(/\s+/g, " ").trim() }))
       .filter(v => v.text.length > 0)
       .sort((a, b) => a.verse - b.verse);
-
     if (versesArr.length > 0) {
       const existingChIdx = bObj.chapters.findIndex(c => Number(c.chapter) === Number(activeChapter));
       if (existingChIdx > -1) {
@@ -2587,9 +2604,11 @@ async function extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, 
     const parser = new DOMParser();
     const doc = parser.parseFromString(rawHtml, "text/html");
 
+    // Normalizza numeri di versetto in apice o grassetto (es. "1." o "1")
     doc.querySelectorAll("sup, span.num, span.v, span.versetto, b, strong").forEach(sp => {
-      if (/^\d{1,3}$/.test((sp.textContent || "").trim())) {
-        sp.textContent = " " + sp.textContent.trim() + " ";
+      const t = (sp.textContent || "").trim();
+      if (/^\d{1,3}\.?$/.test(t)) {
+        sp.textContent = " " + t.replace(/\.$/, "") + ". ";
       }
     });
 
@@ -2618,8 +2637,14 @@ async function extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, 
       const txt = (el.textContent || "").replace(/\s+/g, " ").trim();
       if (!txt) return;
 
+      // Rileva intestazioni di libro o di capitolo ("1.", "Capitolo 1", "Genesi")
       if (tag.startsWith("h") || txt.length < 38) {
-        const chOnly = txt.match(/^(?:capitolo|cap\.?|salmo)\s*(\d{1,3})$|^(\d{1,3})$/i);
+        const chOnly = txt.match(/^(?:capitolo|cap\.?|salmo)\s*(\d{1,3})\.?$|^(\d{1,3})\.?$/i);
+        if (chOnly && activeBookId) {
+          flushCurrentChapter();
+          activeChapter = parseInt(chOnly[1] || chOnly[2], 10);
+          return;
+        }
         const maybeBId = matchItalianBookNameToId(txt);
         if (maybeBId === -1 && txt.length < 35) {
           flushCurrentChapter();
@@ -2628,21 +2653,18 @@ async function extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, 
         } else if (maybeBId && maybeBId > 0 && txt.length < 35 && !/^\d/.test(txt)) {
           flushCurrentChapter();
           activeBookId = maybeBId;
-          const inlineCh = txt.match(/\s+(\d{1,3})$/);
+          const inlineCh = txt.match(/\s+(\d{1,3})\.?$/);
           activeChapter = inlineCh ? parseInt(inlineCh[1], 10) : 1;
-          return;
-        } else if (chOnly && activeBookId) {
-          flushCurrentChapter();
-          activeChapter = parseInt(chOnly[1] || chOnly[2], 10);
           return;
         }
       }
 
       if (!activeBookId || activeBookId < 1) return;
 
-      const verseRegex = /(?:^|\s)(\d{1,3})(?:\s+|(?=[A-ZÀ-Ý«"“'‘]))([^\d]+?)(?=(?:\s+\d{1,3}(?:\s+|(?=[A-ZÀ-Ý«"“'‘])))|$)/g;
+      // Estrae i versetti sia col punto ("1. In principio...") sia senza punto ("1 In principio...")
+      const verseRegex = /(?:^|\s)(\d{1,3})\.?(?:\s+|(?=[A-ZÀ-Ý«"“'‘]))([^\d]+?)(?=(?:\s+\d{1,3}\.?(?:\s+|(?=[A-ZÀ-Ý«"“'‘])))|$)/g;
       const matches = [...txt.matchAll(verseRegex)];
-      if (matches.length > 0 && /^\d{1,3}(?:\s|[A-ZÀ-Ý«"“'‘])/.test(txt)) {
+      if (matches.length > 0 && /^\d{1,3}\.?(?:\s|[A-ZÀ-Ý«"“'‘])/.test(txt)) {
         matches.forEach(m => {
           const vNum = parseInt(m[1], 10);
           const vText = (m[2] || "").trim();
@@ -2653,7 +2675,7 @@ async function extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, 
         });
       } else if (activeVersesMap.size > 0) {
         const lastKey = Array.from(activeVersesMap.keys()).pop();
-        if (lastKey && txt.length > 2 && !/^(?:capitolo|nota|sommario|indice)/i.test(txt)) {
+        if (lastKey && txt.length > 2 && !/^(?:capitolo|nota|sommario|indice|\[)/i.test(txt)) {
           activeVersesMap.set(lastKey, activeVersesMap.get(lastKey) + " " + txt);
         }
       }
