@@ -656,9 +656,14 @@ const BIBLE_BOOKS = [
   { id: 65, name: "Giuda", abbr: "Gda", ch: 1, sec: "NT", cat: 4 },
   { id: 66, name: "Rivelazione", abbr: "Riv", ch: 22, sec: "NT", cat: 4 }
 ];
-const CORE_BIBLES = [
+  const CORE_BIBLES = [
   { id: "gb:nwt", name: "🇮🇹 Italiano: Traduzione del Nuovo Mondo (TNM 2017)", lang: "Italian" },
   { id: "gb:bi12", name: "🇮🇹 Italiano: Traduzione del Nuovo Mondo (TNM 1987 - bi12)", lang: "Italian" },
+  { id: "gb:nwt_e", name: "🇬🇧 English: New World Translation (NWT 2013)", lang: "English" },
+  { id: "gb:bi12_e", name: "🇬🇧 English: New World Translation (NWT 1984 - bi12)", lang: "English" },
+  { id: "gb:nwt_s", name: "🇪🇸 Español: Traducción del Nuevo Mundo (TNM 2019)", lang: "Spanish" },
+  { id: "gb:bi12_s", name: "🇪🇸 Español: Traducción del Nuevo Mundo (TNM 1987 - bi12)", lang: "Spanish" },
+  { id: "gb:nwt_tpo", name: "🇵🇹🇧🇷 Português: Tradução do Novo Mundo (TNM)", lang: "Portuguese" },
   { id: "epub:nr", name: "🇮🇹 Italiano: Bibbia Nuova Riveduta (NR)", lang: "Italian" },
   { id: "epub:cei", name: "🇮🇹 Italiano: Bibbia CEI (Ed. 2008)", lang: "Italian" },
   { id: "epub:tilc", name: "🇮🇹 Italiano: Parola del Signore (TILC)", lang: "Italian" },
@@ -719,7 +724,13 @@ const CORE_BIBLES = [
   { id: "gb:tagalog", name: "🇵🇭 Tagalog: Ang Dating Biblia", lang: "Tagalog" },
   { id: "gb:vietnamese", name: "🇻🇳 Tiếng Việt: Bibbia Vietnamita (1934)", lang: "Vietnamese" }
 ];
-const LOCAL_EPUB_IDS = ["gb:nwt", "gb:bi12", "epub:nr", "epub:cei", "epub:tilc"];
+const LOCAL_EPUB_IDS = [
+  "gb:nwt", "gb:bi12",
+  "gb:nwt_e", "gb:bi12_e",
+  "gb:nwt_s", "gb:bi12_s",
+  "gb:nwt_tpo",
+  "epub:nr", "epub:cei", "epub:tilc"
+];
 const PRO_STRONG_DICT = {
   "principio": { code: "H7225 / G746", orig: "רֵאשִׁית (reshith) / ἀρχή (archē)", def: "Inizio, origine, primizia, fondamento temporale o d'autorità." },
   "beginning": { code: "H7225 / G746", orig: "רֵאשִׁית (reshith) / ἀρχή (archē)", def: "Origin, firstfruits, commencement, chief cornerstone." },
@@ -857,7 +868,7 @@ let state = {
 if (!Array.isArray(state.downloadedBibles) || state.downloadedBibles.length === 0) {
   state.downloadedBibles = [...DEFAULT_ACTIVE_IDS];
 } else {
-  ["gb:nwt", "gb:bi12", "epub:nr", "epub:cei", "epub:tilc"].forEach(id => {
+  [...LOCAL_EPUB_IDS].reverse().forEach(id => {
     if (!state.downloadedBibles.includes(id)) state.downloadedBibles.unshift(id);
   });
 }
@@ -1644,7 +1655,7 @@ async function toggleDownload(id) {
     if (btn) { btn.textContent = "⏳Scarico..."; btn.classList.add("downloading"); }
     if (!state.downloadedBibles.includes(id)) state.downloadedBibles.push(id);
     safeSaveStorage("bm_v10_pro_bibles", JSON.stringify(state.downloadedBibles));
-    if (!id.startsWith("helloao:") && id !== "gb:nwt") {
+    if (!id.startsWith("helloao:") && !LOCAL_EPUB_IDS.includes(id)) {
       try {
         const code = id.split(":")[1];
         const res = await fetch(`https://api.getbible.net/v2/${code}.json`);
@@ -2010,11 +2021,12 @@ function getActiveTTSLangCode(fullLocale = false) {
   const t = (state.trans1 || "").toLowerCase();
   const activeObj = dynamicCatalog.find(b => b.id === state.trans1);
   const langName = activeObj ? (activeObj.lang || "").toLowerCase() : "";
-  if (t.includes("riveduta") || t.includes("giovanni") || t.includes("nwt") || t.startsWith("epub:") || langName.includes("ital")) return fullLocale ? "it-IT" : "it";
-  if (t.includes("valera") || t.includes("sagradas") || t.includes("rvg") || langName.includes("span")) return fullLocale ? "es-ES" : "es";
+  if (t === "gb:nwt" || t === "gb:bi12" || t.includes("riveduta") || t.includes("giovanni") || t.startsWith("epub:") || langName.includes("ital")) return fullLocale ? "it-IT" : "it";
+  if (t.endsWith("_s") || t.includes("valera") || t.includes("sagradas") || t.includes("rvg") || langName.includes("span")) return fullLocale ? "es-ES" : "es";
+  if (t.endsWith("_tpo") || t.includes("almeida") || langName.includes("port")) return fullLocale ? "pt-BR" : "pt";
+  if (t.endsWith("_e") || langName.includes("engl")) return fullLocale ? "en-US" : "en";
   if (t.includes("luther") || t.includes("schlachter") || t.includes("elberfelder") || langName.includes("germ")) return fullLocale ? "de-DE" : "de";
   if (t.includes("ls1910") || t.includes("martin") || t.includes("ostervald") || langName.includes("fren")) return fullLocale ? "fr-FR" : "fr";
-  if (t.includes("almeida") || langName.includes("port")) return fullLocale ? "pt-BR" : "pt";
   if (t.includes("synodal") || t.includes("makarij") || langName.includes("russ")) return fullLocale ? "ru-RU" : "ru";
   if (langName.includes("greek") || t.includes("lxx") || t.includes("textus")) return fullLocale ? "el-GR" : "el";
   if (langName.includes("hebrew") || t.includes("wlc") || t.includes("aleppo")) return fullLocale ? "he-IL" : "iw";
@@ -2266,18 +2278,38 @@ function openBackupModal() {
   document.getElementById("proModalBody").innerHTML = `
     <div class="section-title"><span>📗 Importa Bibbie Offline da file EPUB</span></div>
     <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px; line-height:1.45;">
-      Puoi selezionare il file singolo (es. <b>nwt_I.epub</b> o <b>bi12_I.epub</b>) oppure selezionare <b>insieme o uno alla volta i 2 file VT + NT</b> (Nuova Riveduta, CEI 2008, TILC): l'app li unirà automaticamente in un'unica Bibbia completa di 66 libri!
+      Seleziona il file <b>.epub</b> corrispondente dal tuo dispositivo. L'app estrarrà e salverà offline tutti i 66 libri:
     </p>
     <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;">
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0d47a1;">
-        📘 Carica EPUB TNM 2017 (nwt_I.epub)
-        <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:nwt', 'TNM 2017')">
+        🇮🇹 Carica EPUB TNM 2017 (nwt_I.epub)
+        <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:nwt', 'TNM 2017 (IT)')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0a367e;">
-        📘 Carica EPUB TNM 1987 (bi12_I.epub)
-        <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:bi12', 'TNM 1987 (bi12)')">
+        🇮🇹 Carica EPUB TNM 1987 (bi12_I.epub)
+        <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:bi12', 'TNM 1987 (IT)')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#1565c0;">
+        🇬🇧 Carica EPUB NWT 2013 English (nwt_E.epub)
+        <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:nwt_e', 'NWT 2013 (EN)')">
+      </label>
+      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0a367e;">
+        🇬🇧 Carica EPUB NWT 1984 English (bi12_E.epub)
+        <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:bi12_e', 'NWT 1984 (EN)')">
+      </label>
+      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#1565c0;">
+        🇪🇸 Carica EPUB TNM 2019 Español (nwt_S.epub)
+        <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:nwt_s', 'TNM 2019 (ES)')">
+      </label>
+      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0a367e;">
+        🇪🇸 Carica EPUB TNM 1987 Español (bi12_S.epub)
+        <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:bi12_s', 'TNM 1987 (ES)')">
+      </label>
+      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#00695c;">
+        🇵🇹🇧🇷 Carica EPUB TNM Português (nwt_TPO.epub)
+        <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:nwt_tpo', 'TNM (PT)')">
+      </label>
+      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0277bd;">
         📗 Carica Nuova Riveduta (Seleziona VT e/o NT .epub)
         <input type="file" accept=".epub,application/epub+zip" multiple style="display:none;" onchange="importUniversalEpubFiles(event, 'epub:nr', 'Nuova Riveduta')">
       </label>
@@ -2434,8 +2466,8 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
       statusEl.innerHTML = `⏳ Analisi di <b>${escapeHtml(file.name)}</b> in corso...`;
       const zip = await JSZip.loadAsync(file);
       const allFiles = Object.keys(zip.files);
-      const isJwEpub = (targetId === "gb:nwt" || targetId === "gb:bi12") ||
-        allFiles.some(f => /_BI12_\.|\.GE-split/i.test(f));
+      const isJwEpub = targetId.startsWith("gb:nwt") || targetId.startsWith("gb:bi12") ||
+      allFiles.some(f => /_BI12_\.|\.GE-split|biblechapternav/i.test(f));
       if (!isJwEpub) {
         await extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, labelName);
       } else {
@@ -2478,18 +2510,47 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
 
 async function extractJwFormatEpub(zip, allFiles, mergedBooksMap, statusEl, labelName) {
   const JW_BOOK_CODES = ["", "GE", "EX", "LE", "NU", "DE", "JOS", "JG", "RU", "1SA", "2SA", "1KI", "2KI", "1CH", "2CH", "EZR", "NE", "ES", "JOB", "PS", "PR", "EC", "CA", "ISA", "JER", "LA", "EZE", "DA", "HOS", "JOE", "AM", "OB", "JON", "MIC", "NAH", "HAB", "ZEP", "HAG", "ZEC", "MAL", "MT", "MR", "LU", "JOH", "AC", "RO", "1CO", "2CO", "GA", "EPH", "PHP", "COL", "1TH", "2TH", "1TI", "2TI", "TIT", "PHM", "HEB", "JAS", "1PE", "2PE", "1JO", "2JO", "3JO", "JUD", "RE"];
+
+  // Mappa universale automatica per tutte le edizioni NWT moderne (IT, EN, ES, PT) tramite biblechapternav1..66.xhtml
+  const navBookPrefixMap = {};
   for (let bId = 1; bId <= 66; bId++) {
-    const prefixNum = String(bId + 4).padStart(2, "0");
+    const navFile = allFiles.find(f => f.split("/").pop().toLowerCase() === `biblechapternav${bId}.xhtml`);
+    if (navFile) {
+      try {
+        const navHtml = await zip.files[navFile].async("string");
+        const m = navHtml.match(/href=["']([^"']+?)\.xhtml["']/i);
+        if (m && m[1]) {
+          navBookPrefixMap[bId] = m[1].split("/").pop().replace(/-split\d+$/i, "");
+        }
+      } catch (e) {}
+    }
+  }
+
+  for (let bId = 1; bId <= 66; bId++) {
+    const prefixNum = String(bId + 4).padStart(2, "0"); // 05..70 per tutte le edizioni bi12 (1984/1987) in qualsiasi lingua
     const jwCode = JW_BOOK_CODES[bId];
     const bookMeta = getBook(bId);
     statusEl.innerHTML = `⚙️ Estrazione <b>${escapeHtml(labelName)}</b>: ${escapeHtml(bookMeta.name)} (${bId}/66)...`;
+
+    const navPrefix = navBookPrefixMap[bId] || null;
+
     let bookFiles = allFiles.filter(f => {
       const base = f.split("/").pop();
-      if ((!base.endsWith(".xhtml") && !base.endsWith(".html")) || base.includes("extracted") || base.includes("outline") || base.startsWith("BIBLE_")) return false;
-      const matchPrefix = base.startsWith(prefixNum + "_") && base.toUpperCase().includes("." + jwCode);
+      if ((!base.endsWith(".xhtml") && !base.endsWith(".html")) || base.includes("extracted") || base.includes("outline") || base.startsWith("BIBLE_") || base.startsWith("bible")) return false;
+
+      // 1. Serie moderna NWT (usa il prefisso esatto letto da biblechapternavX.xhtml, es. 1001060402 o 1001061105)
+      if (navPrefix && (base === `${navPrefix}.xhtml` || base.startsWith(`${navPrefix}-split`))) {
+        return true;
+      }
+      // 2. Serie storica BI12 (1984/1987): i 66 libri iniziano sempre con 05_BI12_ .. 70_BI12_ indipendentemente dalla lingua
+      if (base.startsWith(prefixNum + "_")) {
+        return true;
+      }
+      // 3. Fallback su sigla libro
       const matchNwtCode = new RegExp(`[_. ]${jwCode}(?:-split\\d+)?\\.x?html$`, "i").test(base);
-      return matchPrefix || matchNwtCode;
+      return matchNwtCode;
     });
+
     if (bookFiles.length === 0) {
       const nwtDocNum = String(1001061104 + bId);
       bookFiles = allFiles.filter(f => {
@@ -2497,6 +2558,7 @@ async function extractJwFormatEpub(zip, allFiles, mergedBooksMap, statusEl, labe
         return base.startsWith(nwtDocNum) && (base.endsWith(".xhtml") || base.endsWith(".html")) && !base.includes("extracted") && !base.includes("outline");
       });
     }
+
     const chaptersArr = [];
     for (const fPath of bookFiles) {
       const base = fPath.split("/").pop();
