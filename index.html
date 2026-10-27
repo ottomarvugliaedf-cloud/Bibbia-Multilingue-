@@ -791,6 +791,7 @@ const PRO_CROSS_REFS = {
 function escapeJsStr(str) {
   if (str === null || str === undefined) return "";
   return String(str)
+    .replace(/&/g, "&amp;")
     .replace(/\\/g, "\\\\")
     .replace(/'/g, "\\'")
     .replace(/"/g, "&quot;")
@@ -2872,6 +2873,7 @@ function exportBackupJson() {
 async function importBackupJson(e) {
   const file = e.target.files[0];
   if (!file) return;
+  if (!confirm("Vuoi importare questo file di backup? I dati attuali verranno aggiornati.")) return;
   try {
     const parsed = JSON.parse(await file.text());
     if (parsed.highlights && typeof parsed.highlights === "object") {
