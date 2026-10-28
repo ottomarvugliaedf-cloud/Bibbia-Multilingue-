@@ -1669,39 +1669,6 @@ async function toggleDownload(id) {
     filterCatalogList();
   }
 }
-async function executeSearch() {
-  const rawQuery = document.getElementById("searchInput").value.trim();
-  const scope = document.getElementById("searchScope")?.value || "all";
-  if (!rawQuery) return;
-  const resDiv = document.getElementById("searchResults");
-  resDiv.innerHTML = `<div class="loader">Ricerca nella Concordanza di "<b>${escapeHtml(rawQuery)}</b>" in corso...</div>`;
-  const matchLogic = (txt, q) => {
-    const low = txt.toLowerCase();
-    if (/\s+not\s+/i.test(q)) {
-      const parts = q.split(/\s+not\s+/i);
-      const inc = (parts[0] || "").trim().toLowerCase();
-      const exc = parts.slice(1).map(p => p.trim().toLowerCase()).filter(Boolean);
-      return (!inc || low.includes(inc)) && exc.every(e => !low.includes(e));
-    }
-    if (/\s+and\s+/i.test(q)) {
-      return q.split(/\s+and\s+/i).map(p => p.trim().toLowerCase()).filter(Boolean).every(p => low.includes(p));
-    }
-    if (/\s+or\s+/i.test(q)) {
-      return q.split(/\s+or\s+/i).map(p => p.trim().toLowerCase()).filter(Boolean).some(p => low.includes(p));
-    }
-    return low.includes(q.toLowerCase());
-  };
-  try {
-    const searchTransId = targetTrans.startsWith("helloao:") ? "gb:riveduta" : targetTrans;
-    let fullBible = await getOfflineBible(searchTransId);
-    if (!fullBible && !LOCAL_EPUB_IDS.includes(searchTransId)) {
-      const code = searchTransId.split(":")[1];
-      const res = await fetch(`https://api.getbible.net/v2/${code}.json`);
-      if (res.ok) {
-        fullBible = await res.json();
-        await saveOfflineBible(searchTransId, fullBible);
-      }
-    }
     if (fullBible && fullBible.books && fullBible.books.some(b => b.chapters && b.chapters.length > 0)) {
       let matches = [];
       let totalFound = 0;
