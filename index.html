@@ -1669,7 +1669,8 @@ async function toggleDownload(id) {
     filterCatalogList();
   }
 }
-   function showSearchView() {
+
+function showSearchView() {
   closeActionBar();
   setActiveTab("tabSearch");
   const main = document.getElementById("mainContainer");
@@ -1803,12 +1804,11 @@ async function executeSearch() {
       const bibleLabel = selectedBibleObj ? selectedBibleObj.name : searchTransId;
       resDiv.innerHTML = `<div class="loader">Per cercare in <b>${escapeHtml(bibleLabel)}</b> importa prima il relativo file <b>.epub</b> dalla sezione 💾 Backup:<br><br><button class="search-btn" onclick="openBackupModal()">📘 Apri Importazione EPUB</button></div>`;
     }
-  } catch (e) {
+ } catch (e) {
     resDiv.innerHTML = `<div class="loader">Errore durante la ricerca.</div>`;
   }
 }
-    
-    function buildUniversalRefsForVerse(bookId, chapter, verseNum, rawText) {
+  function buildUniversalRefsForVerse(bookId, chapter, verseNum, rawText) {
   const bId = Number(bookId);
   const ch = Number(chapter);
   const v = Number(verseNum);
