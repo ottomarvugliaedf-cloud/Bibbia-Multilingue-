@@ -1681,16 +1681,16 @@ function showSearchView() {
   main.innerHTML = `
     <div class="section-title"><span>Concordanza & Ricerca nei 66 Libri</span></div>
     <div class="search-box">
-      <input type="text" id="searchInput" class="search-input" placeholder="Scrivi una parola, piu parole o una frase che ricordi..." onkeydown="if(event.key==='Enter') executeSearch()">
-      <button class="search-btn" onclick="executeSearch()">Cerca</button>
+      <input type="text" id="searchInput" class="search-input" placeholder="Scrivi una parola, piu parole o una frase che ricordi..." onkeydown="if(event.key==='Enter') executeSearch(1)">
+      <button class="search-btn" onclick="executeSearch(1)">Cerca</button>
     </div>
     <div class="search-box" style="margin-top:-4px;">
-      <select id="searchBibleSelect" class="trans-select">${bibleOptionsHtml}</select>
-      <select id="searchMode" class="trans-select" style="max-width:195px;">
+      <select id="searchBibleSelect" class="trans-select" onchange="if(document.getElementById('searchInput').value.trim()) executeSearch(1)">${bibleOptionsHtml}</select>
+      <select id="searchMode" class="trans-select" style="max-width:195px;" onchange="if(document.getElementById('searchInput').value.trim()) executeSearch(1)">
         <option value="all_words">Tutte le parole (anche staccate)</option>
         <option value="exact_phrase">Frase esatta in sequenza</option>
       </select>
-      <select id="searchScope" class="trans-select" style="max-width:185px;">
+      <select id="searchScope" class="trans-select" style="max-width:185px;" onchange="if(document.getElementById('searchInput').value.trim()) executeSearch(1)">
         <option value="all">Tutta la Bibbia (66)</option>
         <option value="ot">Scritture Ebraico-Aramaiche</option>
         <option value="nt">Scritture Greche Cristiane</option>
@@ -1718,9 +1718,10 @@ async function executeSearch(page = 1) {
   const targetTrans = bibleEl ? bibleEl.value : "gb:bi12";
   if (!rawQuery) return;
 
+  const searchTransId = targetTrans.startsWith("helloao:") ? "gb:riveduta" : targetTrans;
   const isNewSearch = (page === 1) ||
     cachedSearchMeta.query !== rawQuery ||
-    cachedSearchMeta.transId !== targetTrans ||
+    cachedSearchMeta.transId !== searchTransId ||
     cachedSearchMeta.scope !== scope ||
     cachedSearchMeta.mode !== mode;
 
@@ -1729,12 +1730,10 @@ async function executeSearch(page = 1) {
 
   if (isNewSearch) {
     resDiv.innerHTML = `<div class="loader">Ricerca nella Concordanza di "<b>${escapeHtml(rawQuery)}</b>" in corso...</div>`;
-
     const normalizeForPhrase = (str) => String(str || "").toLowerCase()
       .replace(/[^a-z0-9\u00C0-\u017F\s]/gi, " ")
       .replace(/\s+/g, " ")
       .trim();
-
     const queryNorm = normalizeForPhrase(rawQuery);
     const queryWords = queryNorm.split(" ").filter(Boolean);
 
@@ -1760,7 +1759,6 @@ async function executeSearch(page = 1) {
     };
 
     try {
-      const searchTransId = targetTrans.startsWith("helloao:") ? "gb:riveduta" : targetTrans;
       let fullBible = await getOfflineBible(searchTransId);
       if (!fullBible && !LOCAL_EPUB_IDS.includes(searchTransId)) {
         const code = searchTransId.split(":")[1];
@@ -1801,7 +1799,6 @@ async function executeSearch(page = 1) {
       return;
     }
   }
-
   renderSearchResultsPage();
 }
 
@@ -1813,11 +1810,9 @@ function renderSearchResultsPage() {
     resDiv.innerHTML = `<div class="loader">Nessun risultato trovato per "<b>${escapeHtml(cachedSearchMeta.query)}</b>".</div>`;
     return;
   }
-
   const totalPages = Math.ceil(totalFound / RESULTS_PER_PAGE);
   if (currentSearchPage > totalPages) currentSearchPage = totalPages;
   if (currentSearchPage < 1) currentSearchPage = 1;
-
   const startIdx = (currentSearchPage - 1) * RESULTS_PER_PAGE;
   const endIdx = Math.min(startIdx + RESULTS_PER_PAGE, totalFound);
   const pageItems = cachedSearchMatches.slice(startIdx, endIdx);
