@@ -1669,6 +1669,103 @@ async function toggleDownload(id) {
     filterCatalogList();
   }
 }
+   function showSearchView() {
+  closeActionBar();
+  setActiveTab("tabSearch");
+  const main = document.getElementById("mainContainer");
+  const defaultSearchBible = state.downloadedBibles.includes("gb:bi12") ? "gb:bi12" : state.trans1;
+  const bibleOptionsHtml = CORE_BIBLES.map(b =>
+    `<option value="${escapeHtml(b.id)}" ${b.id === defaultSearchBible ? "selected" : ""}>Cerca in: ${escapeHtml(b.name)}</option>`
+  ).join("");
+  main.innerHTML = `
+    <div class="section-title"><span>Concordanza & Ricerca nei 66 Libri</span></div>
+    <div class="search-box">
+      <input type="text" id="searchInput" class="search-input" placeholder="Scrivi una parola, piu parole o una frase che ricordi..." onkeydown="if(event.key==='Enter') executeSearch()">
+      <button class="search-btn" onclick="executeSearch()">Cerca</button>
+    </div>
+    <div class="search-box" style="margin-top:-4px;">
+      <select id="searchBibleSelect" class="trans-select">${bibleOptionsHtml}</select>
+      <select id="searchMode" class="trans-select" style="max-width:195px;">
+        <option value="all_words">Tutte le parole (anche staccate)</option>
+        <option value="exact_phrase">Frase esatta in sequenza</option>
+      </select>
+      <select id="searchScope" class="trans-select" style="max-width:185px;">
+        <option value="all">Tutta la Bibbia (66)</option>
+        <option value="ot">Scritture Ebraico-Aramaiche</option>
+        <option value="nt">Scritture Greche Cristiane</option>
+        <option value="pent">Pentateuco (Gen-Deu)</option>
+        <option value="gosp">Vangeli e Atti</option>
+      </select>
+    </div>
+    <div id="searchResults"><div class="loader">Inserisci una parola o una frase (preimpostata su <b>TNM 1987</b>) per trovare subito il versetto.</div></div>
+  `;
+}
+
+async function executeSearch() {
+  const inpEl = document.getElementById("searchInput");
+  const rawQuery = inpEl ? inpEl.value.trim() : "";
+  const scopeEl = document.getElementById("searchScope");
+  const scope = scopeEl ? scopeEl.value : "all";
+  const modeEl = document.getElementById("searchMode");
+  const mode = modeEl ? modeEl.value : "all_words";
+  const bibleEl = document.getElementById("searchBibleSelect");
+  const targetTrans = bibleEl ? bibleEl.value : "gb:bi12";
+  if (!rawQuery) return;
+
+  const resDiv = document.getElementById("searchResults");
+  resDiv.innerHTML = `<div class="loader">Ricerca nella Concordanza di "<b>${escapeHtml(rawQuery)}</b>" in corso...</div>`;
+
+  const normalizeForPhrase = (str) => String(str || "").toLowerCase()
+    .replace(/[^a-z0-9\u00C0-\u017F\s]/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const queryNorm = normalizeForPhrase(rawQuery);
+  const queryWords = queryNorm.split(" ").filter(Boolean);
+
+  const matchLogic = (txt, qRaw) => {
+    const low = txt.toLowerCase();
+    if (/\s+not\s+/i.test(qRaw)) {
+      const parts = qRaw.split(/\s+not\s+/i);
+      const inc = (parts[0] || "").trim().toLowerCase();
+      const exc = parts.slice(1).map(p => p.trim().toLowerCase()).filter(Boolean);
+      return (!inc || low.includes(inc)) && exc.every(e => !low.includes(e));
+    }
+    if (/\s+and\s+/i.test(qRaw)) {
+      return qRaw.split(/\s+and\s+/i).map(p => p.trim().toLowerCase()).filter(Boolean).every(p => low.includes(p));
+    }
+    if (/\s+or\s+/i.test(qRaw)) {
+      return qRaw.split(/\s+or\s+/i).map(p => p.trim().toLowerCase()).filter(Boolean).some(p => low.includes(p));
+    }
+    const normTxt = normalizeForPhrase(txt);
+    if (mode === "exact_phrase") {
+      return normTxt.includes(queryNorm);
+    }
+    return queryWords.every(w => normTxt.includes(w));
+  };
+
+  const highlightSearchMatches = (plainText) => {
+    let safeTxt = escapeHtml(plainText);
+    queryWords.forEach(w => {
+      if (w.length < 2) return;
+      const escW = w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const rgx = new RegExp("(" + escW + ")", "gi");
+      safeTxt = safeTxt.replace(rgx, '<span class="diff-word" style="font-weight:700;">$1</span>');
+    });
+    return safeTxt;
+  };
+
+  try {
+    const searchTransId = targetTrans.startsWith("helloao:") ? "gb:riveduta" : targetTrans;
+    let fullBible = await getOfflineBible(searchTransId);
+    if (!fullBible && !LOCAL_EPUB_IDS.includes(searchTransId)) {
+      const code = searchTransId.split(":")[1];
+      const res = await fetch(`https://api.getbible.net/v2/${code}.json`);
+      if (res.ok) {
+        fullBible = await res.json();
+        await saveOfflineBible(searchTransId, fullBible);
+      }
+    }
     if (fullBible && fullBible.books && fullBible.books.some(b => b.chapters && b.chapters.length > 0)) {
       let matches = [];
       let totalFound = 0;
@@ -1693,31 +1790,24 @@ async function toggleDownload(id) {
         }
       }
       if (!matches.length) {
-        resDiv.innerHTML = `<div class="loader">Nessun versetto trovato per "<b>${escapeHtml(rawQuery)}</b>". Prova a usare meno parole o verifica l'ortografia.</div>`;
+        resDiv.innerHTML = `<div class="loader">Nessun risultato trovato per "<b>${escapeHtml(rawQuery)}</b>".</div>`;
         return;
       }
       const limitNotice = totalFound > MAX_RESULTS
         ? ` (mostrati i primi <b>${MAX_RESULTS}</b> su <b>${totalFound}</b> totali)`
         : "";
-      resDiv.innerHTML = `<div style="margin-bottom:10px;font-size:13px;color:var(--text-muted);">Trovati <b>${totalFound}</b> versetti${limitNotice}:</div>` +
-        matches.map(m => `
-          <div class="result-card" onclick="state.trans1='${escapeJsStr(searchTransId)}'; document.getElementById('trans1').value='${escapeJsStr(searchTransId)}'; openRef(${m.bookId}, ${m.ch}, ${m.v})">
-            <div class="result-ref">${escapeHtml(m.bookName)} ${m.ch}:${m.v}</div>
-            <div>${highlightSearchMatches(m.text)}</div>
-          </div>`).join("");
+      resDiv.innerHTML = `<div style="margin-bottom:10px;font-size:13px;color:var(--text-muted);">Trovate <b>${totalFound}</b> occorrenze nella Concordanza${limitNotice}:</div>` +
+        matches.map(m => `<div class="result-card" onclick="state.trans1='${escapeJsStr(searchTransId)}'; document.getElementById('trans1').value='${escapeJsStr(searchTransId)}'; openRef(${m.bookId}, ${m.ch}, ${m.v})"><div class="result-ref">${escapeHtml(m.bookName)} ${m.ch}:${m.v}</div><div>${highlightSearchMatches(m.text)}</div></div>`).join("");
     } else {
       const selectedBibleObj = CORE_BIBLES.find(b => b.id === searchTransId);
       const bibleLabel = selectedBibleObj ? selectedBibleObj.name : searchTransId;
-      resDiv.innerHTML = `
-        <div class="loader">
-          Per cercare in tutto il testo di <b>${escapeHtml(bibleLabel)}</b>, importa prima una sola volta il relativo file EPUB dalla sezione 💾 Backup:<br><br>
-          <button class="search-btn" onclick="openBackupModal()">📘 Apri Importazione EPUB</button>
-        </div>`;
+      resDiv.innerHTML = `<div class="loader">Per cercare in <b>${escapeHtml(bibleLabel)}</b> importa prima il relativo file <b>.epub</b> dalla sezione 💾 Backup:<br><br><button class="search-btn" onclick="openBackupModal()">📘 Apri Importazione EPUB</button></div>`;
     }
   } catch (e) {
     resDiv.innerHTML = `<div class="loader">Errore durante la ricerca.</div>`;
   }
 }
+    
     function buildUniversalRefsForVerse(bookId, chapter, verseNum, rawText) {
   const bId = Number(bookId);
   const ch = Number(chapter);
