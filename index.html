@@ -1669,26 +1669,6 @@ async function toggleDownload(id) {
     filterCatalogList();
   }
 }
-function showSearchView() {
-  closeActionBar();
-  setActiveTab("tabSearch");
-  const main = document.getElementById("mainContainer");
-  main.innerHTML = `
-    <div class="section-title"><span>Concordanza & Ricerca nei 66 Libri</span></div>
-    <div class="search-box">
-      <input type="text" id="searchInput" class="search-input" placeholder="Parola o operatori (es. fede AND opere, luce NOT tenebre)..." onkeydown="if(event.key==='Enter') executeSearch()">
-      <select id="searchScope" class="trans-select" style="max-width:195px;">
-        <option value="all">Tutta la Bibbia (66)</option>
-        <option value="ot">Scritture Ebraico-Aramaiche</option>
-        <option value="nt">Scritture Greche Cristiane</option>
-        <option value="pent">Pentateuco (Gen-Deu)</option>
-        <option value="gosp">Vangeli e Atti</option>
-      </select>
-      <button class="search-btn" onclick="executeSearch()">Cerca</button>
-    </div>
-    <div id="searchResults"><div class="loader">Inserisci una parola per cercare tutte le occorrenze nella Concordanza della Bibbia attiva.</div></div>
-  `;
-}
 async function executeSearch() {
   const rawQuery = document.getElementById("searchInput").value.trim();
   const scope = document.getElementById("searchScope")?.value || "all";
@@ -1712,7 +1692,7 @@ async function executeSearch() {
     return low.includes(q.toLowerCase());
   };
   try {
-    const searchTransId = state.trans1.startsWith("helloao:") ? "gb:riveduta" : state.trans1;
+    const searchTransId = targetTrans.startsWith("helloao:") ? "gb:riveduta" : targetTrans;
     let fullBible = await getOfflineBible(searchTransId);
     if (!fullBible && !LOCAL_EPUB_IDS.includes(searchTransId)) {
       const code = searchTransId.split(":")[1];
@@ -1722,10 +1702,10 @@ async function executeSearch() {
         await saveOfflineBible(searchTransId, fullBible);
       }
     }
-    if (fullBible && fullBible.books) {
+    if (fullBible && fullBible.books && fullBible.books.some(b => b.chapters && b.chapters.length > 0)) {
       let matches = [];
       let totalFound = 0;
-      const MAX_RESULTS = 200;
+      const MAX_RESULTS = 250;
       for (const b of fullBible.books) {
         const bNum = Number(b.nr);
         if (scope === "ot" && bNum >= 40) continue;
@@ -1746,21 +1726,31 @@ async function executeSearch() {
         }
       }
       if (!matches.length) {
-        resDiv.innerHTML = `<div class="loader">Nessun risultato trovato per "<b>${escapeHtml(rawQuery)}</b>".</div>`;
+        resDiv.innerHTML = `<div class="loader">Nessun versetto trovato per "<b>${escapeHtml(rawQuery)}</b>". Prova a usare meno parole o verifica l'ortografia.</div>`;
         return;
       }
       const limitNotice = totalFound > MAX_RESULTS
         ? ` (mostrati i primi <b>${MAX_RESULTS}</b> su <b>${totalFound}</b> totali)`
         : "";
-      resDiv.innerHTML = `<div style="margin-bottom:10px;font-size:13px;color:var(--text-muted);">Trovate <b>${totalFound}</b> occorrenze nella Concordanza${limitNotice}:</div>` +
-        matches.map(m => `<div class="result-card" onclick="openRef(${m.bookId}, ${m.ch}, ${m.v})"><div class="result-ref">${escapeHtml(m.bookName)} ${m.ch}:${m.v}</div><div>${escapeHtml(m.text)}</div></div>`).join("");
+      resDiv.innerHTML = `<div style="margin-bottom:10px;font-size:13px;color:var(--text-muted);">Trovati <b>${totalFound}</b> versetti${limitNotice}:</div>` +
+        matches.map(m => `
+          <div class="result-card" onclick="state.trans1='${escapeJsStr(searchTransId)}'; document.getElementById('trans1').value='${escapeJsStr(searchTransId)}'; openRef(${m.bookId}, ${m.ch}, ${m.v})">
+            <div class="result-ref">${escapeHtml(m.bookName)} ${m.ch}:${m.v}</div>
+            <div>${highlightSearchMatches(m.text)}</div>
+          </div>`).join("");
     } else {
-      resDiv.innerHTML = `<div class="loader">Per cercare nella TNM 2017 importa prima il file <b>nwt_I.epub</b> dalla sezione 💾 Backup.</div>`;
+      const selectedBibleObj = CORE_BIBLES.find(b => b.id === searchTransId);
+      const bibleLabel = selectedBibleObj ? selectedBibleObj.name : searchTransId;
+      resDiv.innerHTML = `
+        <div class="loader">
+          Per cercare in tutto il testo di <b>${escapeHtml(bibleLabel)}</b>, importa prima una sola volta il relativo file EPUB dalla sezione 💾 Backup:<br><br>
+          <button class="search-btn" onclick="openBackupModal()">📘 Apri Importazione EPUB</button>
+        </div>`;
     }
   } catch (e) {
     resDiv.innerHTML = `<div class="loader">Errore durante la ricerca.</div>`;
   }
-    }
+}
     function buildUniversalRefsForVerse(bookId, chapter, verseNum, rawText) {
   const bId = Number(bookId);
   const ch = Number(chapter);
