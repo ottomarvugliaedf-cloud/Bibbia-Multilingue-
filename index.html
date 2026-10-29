@@ -3231,6 +3231,7 @@ function exportBackupJson() {
   a.download = fileName;
   a.click();
 }
+
 async function importBackupJson(e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -3256,6 +3257,7 @@ async function importBackupJson(e) {
     alert("Errore nel file di backup.");
   }
 }
+
 function dismissSplashScreen() {
   const splash = document.getElementById("splashScreen");
   if (splash) {
@@ -3263,9 +3265,11 @@ function dismissSplashScreen() {
     setTimeout(() => splash.remove(), 400);
   }
 }
+
 setTimeout(dismissSplashScreen, 1800);
 applySavedTheme();
-    populateSelects()
+
+populateSelects()
   .catch(() => {})
   .finally(() => {
     showDailyTextView(0).finally(() => {
