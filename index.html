@@ -3112,21 +3112,17 @@ async function showDailyTextView(dayOffset = 0) {
   closeActionBar();
   stopAllAudio();
   currentDailyOffset = dayOffset;
-
   document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
   const main = document.getElementById("mainContainer");
-
   const targetDate = new Date();
   targetDate.setDate(targetDate.getDate() + currentDailyOffset);
   const mm = String(targetDate.getMonth() + 1).padStart(2, "0");
   const dd = String(targetDate.getDate()).padStart(2, "0");
   const dayKey = `${mm}-${dd}`;
-
   const dateFormatted = targetDate.toLocaleDateString("it-IT", {
     weekday: "long", day: "numeric", month: "long"
   });
   document.getElementById("currentRefLabel").textContent = "☀️ Scrittura del Giorno";
-
   const savedDaily = await getOfflineBible("bm:daily_text");
   if (!savedDaily || !savedDaily.days || !savedDaily.days[dayKey]) {
     main.innerHTML = `
@@ -3136,11 +3132,11 @@ async function showDailyTextView(dayOffset = 0) {
           Benvenuto in Bibbia Multilingue PRO
         </div>
         <p style="font-size:14px; color:var(--text-muted); line-height:1.55; margin-bottom:16px;">
-          Per visualizzare automaticamente ogni giorno la <b>Scrittura del Giorno</b> con il relativo commento, carica una sola volta il tuo file <b>es27_I.epub</b>:
+          Per visualizzare automaticamente ogni giorno la <b>Scrittura del Giorno</b> con il relativo commento, carica una sola volta il tuo file <b>.epub</b> universale:
         </p>
         <div style="display:flex; flex-direction:column; gap:10px; max-width:320px; margin:0 auto;">
           <label class="search-btn" style="text-align:center; padding:11px; cursor:pointer; background:linear-gradient(135deg, #e65100, #f57c00);">
-            ☀️ Carica ora es27_I.epub
+            ☀️ Carica ora il file .epub
             <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importDailyTextEpub(event)">
           </label>
           <button class="nav-btn" style="padding:10px;" onclick="loadChapterView()">
@@ -3152,7 +3148,35 @@ async function showDailyTextView(dayOffset = 0) {
     `;
     return;
   }
-
+  const entry = savedDaily.days[dayKey];
+  window.currentDailySpeechText = `${entry.dateTitle}. ${entry.theme}. ${entry.comment}`;
+  main.innerHTML = `
+    <div class="chapter-header">
+      <div class="chapter-title">☀️ ${escapeHtml(entry.dateTitle || dateFormatted)}</div>
+      <div class="chapter-nav-btns">
+        <button class="nav-btn" onclick="showDailyTextView(${currentDailyOffset - 1})">◀ Ieri</button>
+        <button class="nav-btn" onclick="showDailyTextView(0)">Oggi</button>
+        <button class="nav-btn" onclick="showDailyTextView(${currentDailyOffset + 1})">Domani ▶</button>
+      </div>
+    </div>
+    <div class="result-card" style="cursor:default; border-left:4px solid var(--primary-light); padding:14px; margin-bottom:12px; font-size:var(--font-size-verse); line-height:1.55;">
+      <div style="font-style:italic; font-weight:700; color:var(--primary-light);">
+        ${formatNoteLinks(entry.theme)}
+      </div>
+    </div>
+    <div class="result-card" style="cursor:default; padding:14px; font-size:var(--font-size-verse); line-height:1.62; white-space:pre-wrap;">${formatNoteLinks(entry.comment)}</div>
+    <div style="display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;">
+      <button class="search-btn" style="flex:1; padding:12px;" onclick="loadChapterView()">
+        📖 Apri la Bibbia (${escapeHtml(getBook(state.bookId).name)} ${state.chapter})
+      </button>
+      <button class="nav-btn" style="padding:12px;" onclick="toggleChapterTTS()">
+        🔊 Ascolta Giorno
+      </button>
+    </div>
+  `;
+  main.scrollTop = 0;
+}
+    
     const entry = savedDaily.days[dayKey];
   window.currentDailySpeechText = `${entry.dateTitle}. ${entry.theme}. ${entry.comment}`;
   main.innerHTML = `
