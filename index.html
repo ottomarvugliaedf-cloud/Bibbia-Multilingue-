@@ -2285,9 +2285,14 @@ function toggleChapterTTS() {
     return;
   }
   const rows = [...document.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3")];
-  const fullText = rows.map(r => r.getAttribute("data-text") || "").join(" ");
-  if (!fullText.trim()) return;
-  startUniversalSpeech(fullText, true);
+  if (rows.length > 0) {
+    const fullText = rows.map(r => r.getAttribute("data-text") || "").join(" ");
+    if (fullText.trim()) startUniversalSpeech(fullText, true);
+    return;
+  }
+  if (typeof currentDailySpeechText === "string" && currentDailySpeechText.trim()) {
+    startUniversalSpeech(currentDailySpeechText, true);
+  }
 }
 function speakSelectedVerse() {
   if (!state.selectedVerseText) return;
@@ -3148,9 +3153,8 @@ async function showDailyTextView(dayOffset = 0) {
     return;
   }
 
-  const entry = savedDaily.days[dayKey];
-  const fullSpeechText = `${entry.dateTitle}. ${entry.theme}. ${entry.comment}`;
-
+    const entry = savedDaily.days[dayKey];
+  window.currentDailySpeechText = `${entry.dateTitle}. ${entry.theme}. ${entry.comment}`;
   main.innerHTML = `
     <div class="chapter-header">
       <div class="chapter-title">☀️ ${escapeHtml(entry.dateTitle || dateFormatted)}</div>
@@ -3170,7 +3174,7 @@ async function showDailyTextView(dayOffset = 0) {
       <button class="search-btn" style="flex:1; padding:12px;" onclick="loadChapterView()">
         📖 Apri la Bibbia (${escapeHtml(getBook(state.bookId).name)} ${state.chapter})
       </button>
-      <button class="nav-btn" style="padding:12px;" onclick="startUniversalSpeech('${escapeJsStr(fullSpeechText)}', true)">
+      <button class="nav-btn" style="padding:12px;" onclick="toggleChapterTTS()">
         🔊 Ascolta Giorno
       </button>
     </div>
