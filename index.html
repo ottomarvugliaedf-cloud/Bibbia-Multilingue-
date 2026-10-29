@@ -513,9 +513,10 @@
     <select id="trans2" class="trans-select" style="display:none;" onchange="onTranslationChange()"></select>
     <select id="trans3" class="trans-select" style="display:none;" onchange="onTranslationChange()"></select>
   </div>
-  <!-- Barra Menu Rapida Sempre Visibile (PRO) -->
+    <!-- Barra Menu Rapida Sempre Visibile (PRO) -->
   <div class="quick-menu-bar">
-    <button class="quick-pill highlight" onclick="showCatalogView()">⬇️ +1397 Bibbie / Lingue</button>
+    <button id="dailyTabBtn" class="quick-pill highlight" onclick="showDailyTextView()">☀️ Scrittura del Giorno</button>
+    <button class="quick-pill" onclick="showCatalogView()">⬇️ +1397 Bibbie / Lingue</button>
     <button id="parallelBtn" class="quick-pill" onclick="toggleParallel()">⚖️ Parallelo: 1x</button>
     <button id="diffBtn" class="quick-pill" style="display:none;" onclick="toggleDiffMode()">🔍 Diff: OFF</button>
     <button id="ttsChapterBtn" class="quick-pill" onclick="toggleChapterTTS()">🔊 Ascolta</button>
@@ -2380,6 +2381,10 @@ function openBackupModal() {
       Seleziona il file <b>.epub</b> corrispondente dal tuo dispositivo. L'app estrarrà e salverà offline tutti i 66 libri:
     </p>
     <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;">
+      <label class="search-btn" style="text-align:center; padding:10px; cursor:pointer; background:linear-gradient(135deg, #e65100, #f57c00);">
+      ☀️ Carica Scrittura del Giorno (es27_I.epub / es_I.epub)
+      <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importDailyTextEpub(event)">
+      </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0d47a1;">
         🇮🇹 Carica EPUB TNM 2017 (nwt_I.epub)
         <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:nwt', 'TNM 2017 (IT)')">
@@ -3005,7 +3010,174 @@ function parseJwEpubChapterXhtml(xhtml) {
   }
   flushCurrentChapter();
         }
-                             
+    // ============================================================================
+// MODULO SCRITTURA DEL GIORNO (Importazione EPUB es27_I.epub & Dashboard Giornaliera)
+// ============================================================================
+let currentDailyOffset = 0;
+
+async function importDailyTextEpub(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  const statusEl = document.getElementById("epubImportStatus");
+  if (typeof JSZip === "undefined") {
+    alert("Libreria JSZip non caricata.");
+    return;
+  }
+  try {
+    statusEl.innerHTML = `⏳ Estrazione dei 365 giorni da <b>${escapeHtml(file.name)}</b>...`;
+    const zip = await JSZip.loadAsync(file);
+    const allFiles = Object.keys(zip.files);
+
+    // Individua i file principali dei 12 mesi (es. 1102027200.xhtml .. 1102027211.xhtml)
+    // che hanno almeno un corrispondente -split15.xhtml e NON contengono "-extracted"
+    const monthBasePrefixes = [];
+    allFiles.forEach(f => {
+      const m = f.match(/^(.*\/(\d+))-split15\.x?html$/i);
+      if (m && !f.includes("-extracted")) {
+        monthBasePrefixes.push(m[1]);
+      }
+    });
+    monthBasePrefixes.sort();
+
+    if (monthBasePrefixes.length < 12) {
+      throw new Error("Struttura mensile non trovata nel file EPUB selezionato.");
+    }
+
+    const dailyMap = {};
+    const parser = new DOMParser();
+
+    for (let mIdx = 0; mIdx < 12; mIdx++) {
+      const monthNum = mIdx + 1;
+      const basePrefix = monthBasePrefixes[mIdx];
+      statusEl.innerHTML = `⏳ Estrazione mese ${monthNum}/12...`;
+
+      for (let dayNum = 1; dayNum <= 31; dayNum++) {
+        const candidatePath = dayNum === 1
+          ? `${basePrefix}.xhtml`
+          : `${basePrefix}-split${dayNum}.xhtml`;
+        const zipEntry = zip.files[candidatePath];
+        if (!zipEntry) continue;
+
+        const rawXhtml = await zipEntry.async("string");
+        const doc = parser.parseFromString(rawXhtml, "text/html");
+        doc.querySelectorAll("script, style, rt, .footnote").forEach(el => el.remove());
+
+        const body = doc.body || doc.documentElement;
+        if (!body) continue;
+
+        const hEl = body.querySelector("h1, h2, header h2");
+        const themeEl = body.querySelector(".themeScrp, p.themeScrp, em");
+        const commentEls = body.querySelectorAll(".bodyTxt p, p.sb, p");
+
+        const dateTitle = hEl ? hEl.textContent.replace(/\s+/g, " ").trim() : `${dayNum}/${monthNum}`;
+        let themeScripture = themeEl ? themeEl.textContent.replace(/\s+/g, " ").trim() : "";
+
+        const paragraphs = [];
+        commentEls.forEach(p => {
+          const txt = p.textContent.replace(/\s+/g, " ").trim();
+          if (!txt || txt === dateTitle || txt === themeScripture) return;
+          if (!themeScripture && paragraphs.length === 0) {
+            themeScripture = txt;
+          } else {
+            paragraphs.push(txt);
+          }
+        });
+
+        const key = `${String(monthNum).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
+        dailyMap[key] = {
+          dateTitle,
+          theme: themeScripture,
+          comment: paragraphs.join("\n\n")
+        };
+      }
+    }
+
+    await saveOfflineBible("bm:daily_text", { updated: Date.now(), days: dailyMap });
+    statusEl.innerHTML = `✔ Scrittura del Giorno salvata offline con successo!`;
+    setTimeout(() => {
+      closeProModal();
+      showDailyTextView(0);
+    }, 800);
+  } catch (err) {
+    statusEl.innerHTML = `❌ Errore: ${escapeHtml(err.message)}`;
+  }
+}
+
+async function showDailyTextView(dayOffset = 0) {
+  closeActionBar();
+  stopAllAudio();
+  currentDailyOffset = dayOffset;
+
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  const main = document.getElementById("mainContainer");
+
+  const targetDate = new Date();
+  targetDate.setDate(targetDate.getDate() + currentDailyOffset);
+  const mm = String(targetDate.getMonth() + 1).padStart(2, "0");
+  const dd = String(targetDate.getDate()).padStart(2, "0");
+  const dayKey = `${mm}-${dd}`;
+
+  const dateFormatted = targetDate.toLocaleDateString("it-IT", {
+    weekday: "long", day: "numeric", month: "long"
+  });
+  document.getElementById("currentRefLabel").textContent = "☀️ Scrittura del Giorno";
+
+  const savedDaily = await getOfflineBible("bm:daily_text");
+  if (!savedDaily || !savedDaily.days || !savedDaily.days[dayKey]) {
+    main.innerHTML = `
+      <div class="section-title"><span>☀️ Scrittura del Giorno (${escapeHtml(dateFormatted)})</span></div>
+      <div class="result-card" style="cursor:default; text-align:center; padding:22px 14px;">
+        <div style="font-size:16px; font-weight:800; color:var(--primary-light); margin-bottom:10px;">
+          Benvenuto in Bibbia Multilingue PRO
+        </div>
+        <p style="font-size:14px; color:var(--text-muted); line-height:1.55; margin-bottom:16px;">
+          Per visualizzare automaticamente ogni giorno la <b>Scrittura del Giorno</b> con il relativo commento, carica una sola volta il tuo file <b>es27_I.epub</b>:
+        </p>
+        <div style="display:flex; flex-direction:column; gap:10px; max-width:320px; margin:0 auto;">
+          <label class="search-btn" style="text-align:center; padding:11px; cursor:pointer; background:linear-gradient(135deg, #e65100, #f57c00);">
+            ☀️ Carica ora es27_I.epub
+            <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importDailyTextEpub(event)">
+          </label>
+          <button class="nav-btn" style="padding:10px;" onclick="loadChapterView()">
+            📖 Vai direttamente alla Bibbia
+          </button>
+        </div>
+        <div id="epubImportStatus" style="margin-top:12px; font-size:13px; font-weight:700; color:var(--primary-light);"></div>
+      </div>
+    `;
+    return;
+  }
+
+  const entry = savedDaily.days[dayKey];
+  const fullSpeechText = `${entry.dateTitle}. ${entry.theme}. ${entry.comment}`;
+
+  main.innerHTML = `
+    <div class="chapter-header">
+      <div class="chapter-title">☀️ ${escapeHtml(entry.dateTitle || dateFormatted)}</div>
+      <div class="chapter-nav-btns">
+        <button class="nav-btn" onclick="showDailyTextView(${currentDailyOffset - 1})">◀ Ieri</button>
+        <button class="nav-btn" onclick="showDailyTextView(0)">Oggi</button>
+        <button class="nav-btn" onclick="showDailyTextView(${currentDailyOffset + 1})">Domani ▶</button>
+      </div>
+    </div>
+    <div class="result-card" style="cursor:default; border-left:4px solid var(--primary-light); padding:14px; margin-bottom:12px; font-size:var(--font-size-verse); line-height:1.55;">
+      <div style="font-style:italic; font-weight:700; color:var(--primary-light);">
+        ${formatNoteLinks(entry.theme)}
+      </div>
+    </div>
+    <div class="result-card" style="cursor:default; padding:14px; font-size:var(--font-size-verse); line-height:1.62; white-space:pre-wrap;">${formatNoteLinks(entry.comment)}</div>
+    <div style="display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;">
+      <button class="search-btn" style="flex:1; padding:12px;" onclick="loadChapterView()">
+        📖 Apri la Bibbia (${escapeHtml(getBook(state.bookId).name)} ${state.chapter})
+      </button>
+      <button class="nav-btn" style="padding:12px;" onclick="startUniversalSpeech('${escapeJsStr(fullSpeechText)}', true)">
+        🔊 Ascolta Giorno
+      </button>
+    </div>
+  `;
+  main.scrollTop = 0;
+    }
+                
 function exportBackupJson() {
   const data = {
     app: "BibbiaMultilingue_PRO",
@@ -3068,7 +3240,10 @@ applySavedTheme();
 populateSelects()
   .catch(() => {})
   .finally(() => {
-    loadChapterView().finally(() => {
+    populateSelects()
+  .catch(() => {})
+  .finally(() => {
+    showDailyTextView(0).finally(() => {
       setTimeout(dismissSplashScreen, 400);
     });
   });
