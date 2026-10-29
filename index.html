@@ -3176,35 +3176,6 @@ async function showDailyTextView(dayOffset = 0) {
   `;
   main.scrollTop = 0;
 }
-    
-    const entry = savedDaily.days[dayKey];
-  window.currentDailySpeechText = `${entry.dateTitle}. ${entry.theme}. ${entry.comment}`;
-  main.innerHTML = `
-    <div class="chapter-header">
-      <div class="chapter-title">☀️ ${escapeHtml(entry.dateTitle || dateFormatted)}</div>
-      <div class="chapter-nav-btns">
-        <button class="nav-btn" onclick="showDailyTextView(${currentDailyOffset - 1})">◀ Ieri</button>
-        <button class="nav-btn" onclick="showDailyTextView(0)">Oggi</button>
-        <button class="nav-btn" onclick="showDailyTextView(${currentDailyOffset + 1})">Domani ▶</button>
-      </div>
-    </div>
-    <div class="result-card" style="cursor:default; border-left:4px solid var(--primary-light); padding:14px; margin-bottom:12px; font-size:var(--font-size-verse); line-height:1.55;">
-      <div style="font-style:italic; font-weight:700; color:var(--primary-light);">
-        ${formatNoteLinks(entry.theme)}
-      </div>
-    </div>
-    <div class="result-card" style="cursor:default; padding:14px; font-size:var(--font-size-verse); line-height:1.62; white-space:pre-wrap;">${formatNoteLinks(entry.comment)}</div>
-    <div style="display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;">
-      <button class="search-btn" style="flex:1; padding:12px;" onclick="loadChapterView()">
-        📖 Apri la Bibbia (${escapeHtml(getBook(state.bookId).name)} ${state.chapter})
-      </button>
-      <button class="nav-btn" style="padding:12px;" onclick="toggleChapterTTS()">
-        🔊 Ascolta Giorno
-      </button>
-    </div>
-  `;
-  main.scrollTop = 0;
-    }
                 
 function exportBackupJson() {
   const data = {
