@@ -3194,6 +3194,8 @@ async function showDailyTextView(dayOffset = 0) {
 let insightMemCache = null;
 let insightActiveLetter = "TUTTE";
 let insightSearchQuery = "";
+let searchTimeout = null;
+let currentHitIdx = 0;
 
 function parseRtfToCleanText(rtfRaw) {
   if (!rtfRaw) return "";
@@ -3345,6 +3347,65 @@ async function getInsightData() {
   } catch (e) { return null; }
 }
 
+function normalizeForSearch(str) {
+  return (str || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+function buildAccentInsensitiveRegex(term) {
+  const clean = normalizeForSearch(term.trim()).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const map = {
+    a: "[aàáâãäå]",
+    e: "[eèéêë]",
+    i: "[iìíîï]",
+    o: "[oòóôõö]",
+    u: "[uùúûü]"
+  };
+  const pattern = clean.replace(/[aeiou]/g, ch => map[ch] || ch);
+  return new RegExp(`(${pattern})`, "gi");
+}
+
+function highlightHtmlSafe(htmlStr, term) {
+  if (!term || term.trim().length < 2) return { html: htmlStr, count: 0 };
+  const rgx = buildAccentInsensitiveRegex(term);
+  let count = 0;
+  const safeHtml = htmlStr.replace(/(<[^>]+>)|([^<]+)/g, (match, tag, textNode) => {
+    if (tag) return tag;
+    return textNode.replace(rgx, (m) => {
+      count++;
+      return `<mark class="insight-hit" id="insight-hit-${count - 1}" style="background:#ffd54f; color:#111; font-weight:800; padding:1px 4px; border-radius:4px; text-decoration:underline; text-decoration-thickness:2px;">${m}</mark>`;
+    });
+  });
+  return { html: safeHtml, count };
+}
+
+function jumpToInsightHit(step) {
+  const hits = document.querySelectorAll(".insight-hit");
+  if (!hits.length) return;
+  hits.forEach(el => { el.style.outline = "none"; el.style.background = "#ffd54f"; });
+  currentHitIdx = (currentHitIdx + step + hits.length) % hits.length;
+  const target = hits[currentHitIdx];
+  if (target) {
+    target.style.background = "#ff9800";
+    target.style.outline = "2px solid #fff";
+    target.scrollIntoView({ behavior: "smooth", block: "center" });
+    const counterEl = document.getElementById("insightHitCounter");
+    if (counterEl) counterEl.textContent = `${currentHitIdx + 1} / ${hits.length}`;
+  }
+}
+
+function filterInsightByLetter(letter) {
+  insightActiveLetter = letter;
+  showInsightView(null);
+}
+
+function onInsightSearchInput(val) {
+  insightSearchQuery = val || "";
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    renderInsightFilteredList();
+  }, 140);
+}
+
 async function showInsightView(selectedIndex = null) {
   closeActionBar();
   stopAllAudio();
@@ -3362,7 +3423,7 @@ async function showInsightView(selectedIndex = null) {
           Enciclopedia Biblica Offline (it)
         </div>
         <p style="font-size:14px; color:var(--text-muted); line-height:1.55; margin-bottom:16px;">
-          Carica una sola volta l'archivio originale <b>it_I.zip</b> (contenente i 26 file <i>it_I_00.rtf .. it_I_25.rtf</i>) o l'edizione <b>.epub</b> per consultare offline tutte le voci con i versetti cliccabili:
+          Carica l'archivio originale <b>it_I.zip</b> per consultare offline tutte le voci di Perspicacia:
         </p>
         <div style="display:flex; flex-direction:column; gap:10px; max-width:320px; margin:0 auto;">
           <label class="search-btn" style="text-align:center; padding:11px; cursor:pointer; background:linear-gradient(135deg, #2e7d32, #43a047);">
@@ -3382,22 +3443,45 @@ async function showInsightView(selectedIndex = null) {
   if (selectedIndex !== null && data.entries[selectedIndex]) {
     const item = data.entries[selectedIndex];
     window.currentInsightSpeechText = `${item.title}. ${item.body}`;
+    
+    const baseHtml = formatNoteLinks(item.body);
+    const { html: highlightedBody, count: hitCount } = highlightHtmlSafe(baseHtml, insightSearchQuery);
+    currentHitIdx = 0;
+
+    const hitNavBar = hitCount > 0 ? `
+      <div style="display:flex; align-items:center; justify-content:space-between; background:var(--bg-card); border:1px solid var(--primary-light); padding:8px 12px; border-radius:10px; margin-bottom:10px; position:sticky; top:0; z-index:15;">
+        <span style="font-size:13px; font-weight:700; color:var(--primary-light);">
+          🔍 "${escapeHtml(insightSearchQuery.trim())}": <b id="insightHitCounter">1 / ${hitCount}</b>
+        </span>
+        <div style="display:flex; gap:6px;">
+          <button class="nav-btn" style="padding:4px 10px;" onclick="jumpToInsightHit(-1)">▲ Prec</button>
+          <button class="nav-btn" style="padding:4px 10px;" onclick="jumpToInsightHit(1)">▼ Succ</button>
+        </div>
+      </div>
+    ` : "";
+
     main.innerHTML = `
       <div class="chapter-header" style="flex-wrap:wrap; gap:8px;">
         <div class="chapter-title">📚 ${escapeHtml(item.title)}</div>
         <div class="chapter-nav-btns">
-          <button class="nav-btn" onclick="showInsightView(null)">← Indice Voci</button>
+          <button class="nav-btn" onclick="showInsightView(null)">← Risultati</button>
           <button class="nav-btn" onclick="toggleChapterTTS()">🔊 Ascolta</button>
         </div>
       </div>
-      <div class="result-card" style="cursor:default; padding:15px; font-size:var(--font-size-verse); line-height:1.64; white-space:pre-wrap;">${formatNoteLinks(item.body)}</div>
+      ${hitNavBar}
+      <div class="result-card" style="cursor:default; padding:15px; font-size:var(--font-size-verse); line-height:1.64; white-space:pre-wrap;">${highlightedBody}</div>
       <div style="display:flex; justify-content:space-between; margin-top:14px; gap:8px;">
         <button class="nav-btn" ${selectedIndex <= 0 ? 'disabled style="opacity:0.4"' : ''} onclick="showInsightView(${selectedIndex - 1})">◀ Voce Prec.</button>
-        <button class="search-btn" onclick="showInsightView(null)">📚 Tutte le Voci</button>
+        <button class="search-btn" onclick="showInsightView(null)">📚 Torna alla Lista</button>
         <button class="nav-btn" ${selectedIndex >= data.entries.length - 1 ? 'disabled style="opacity:0.4"' : ''} onclick="showInsightView(${selectedIndex + 1})">Voce Succ. ▶</button>
       </div>
     `;
-    main.scrollTop = 0;
+
+    if (hitCount > 0) {
+      setTimeout(() => jumpToInsightHit(0), 80);
+    } else {
+      main.scrollTop = 0;
+    }
     return;
   }
 
@@ -3413,7 +3497,7 @@ async function showInsightView(selectedIndex = null) {
       <span>${data.entries.length} Voci</span>
     </div>
     <div class="search-box">
-      <input type="text" id="insightSearchInput" class="search-input" value="${escapeHtml(insightSearchQuery)}" placeholder="🔍 Cerca voce o argomento (es. Geova, Gerusalemme, Patto)..." oninput="onInsightSearchInput(this.value)">
+      <input type="text" id="insightSearchInput" class="search-input" value="${escapeHtml(insightSearchQuery)}" placeholder="🔍 Cerca voce o parola nel testo (es. Incorruzione)..." oninput="onInsightSearchInput(this.value)">
     </div>
     <div style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:12px;">${letterPills}</div>
     <div id="insightListContainer"></div>
@@ -3422,49 +3506,85 @@ async function showInsightView(selectedIndex = null) {
   main.scrollTop = 0;
 }
 
-function filterInsightByLetter(letter) {
-  insightActiveLetter = letter;
-  showInsightView(null);
-}
-
-function onInsightSearchInput(val) {
-  insightSearchQuery = val || "";
-  renderInsightFilteredList();
-}
-
 async function renderInsightFilteredList() {
   const container = document.getElementById("insightListContainer");
   if (!container) return;
   const data = await getInsightData();
-  if (!data || !data.entries) return;
+  if (!data || !Array.isArray(data.entries)) return;
 
-  const q = insightSearchQuery.trim().toLowerCase();
-  const matched = [];
-  for (let i = 0; i < data.entries.length; i++) {
-    const e = data.entries[i];
+  const rawQ = insightSearchQuery.trim();
+  const q = normalizeForSearch(rawQ);
+  const entries = data.entries;
+
+  const exactTitleHits = [];
+  const startsTitleHits = [];
+  const bodyHits = [];
+
+  for (let i = 0; i < entries.length; i++) {
+    const e = entries[i];
     if (insightActiveLetter !== "TUTTE" && e.letter !== insightActiveLetter) continue;
-    if (!q || e.title.toLowerCase().includes(q) || (q.length >= 4 && e.body.toLowerCase().includes(q))) {
-      matched.push({ idx: i, entry: e });
-      if (matched.length >= 200) break;
+
+    if (!q) {
+      bodyHits.push({ idx: i, entry: e, matchType: "none", pos: 0 });
+      if (bodyHits.length >= 150) break;
+      continue;
     }
+
+    const normTitle = normalizeForSearch(e.title);
+    if (normTitle === q) {
+      exactTitleHits.push({ idx: i, entry: e, matchType: "exact", pos: 0 });
+    } else if (normTitle.startsWith(q) || normTitle.includes(q)) {
+      startsTitleHits.push({ idx: i, entry: e, matchType: "title", pos: 0 });
+    } else if (q.length >= 2) {
+      const normBody = normalizeForSearch(e.body);
+      const pos = normBody.indexOf(q);
+      if (pos !== -1) {
+        bodyHits.push({ idx: i, entry: e, matchType: "body", pos });
+      }
+    }
+
+    if (exactTitleHits.length + startsTitleHits.length + bodyHits.length >= 200) break;
   }
 
-  if (matched.length === 0) {
-    container.innerHTML = `<div class="loader">Nessuna voce trovata per "<b>${escapeHtml(insightSearchQuery)}</b>".</div>`;
+  const combined = [...exactTitleHits, ...startsTitleHits, ...bodyHits];
+
+  if (combined.length === 0) {
+    container.innerHTML = `<div class="loader">Nessun risultato trovato per "<b>${escapeHtml(rawQ)}</b>".</div>`;
     return;
   }
 
-  container.innerHTML = matched.map(({ idx, entry }) => {
-    const preview = entry.body.slice(0, 145).replace(/\s+/g, " ") + (entry.body.length > 145 ? "…" : "");
+  const snippetRgx = q.length >= 2 ? buildAccentInsensitiveRegex(rawQ) : null;
+
+  container.innerHTML = combined.map(({ idx, entry, matchType, pos }) => {
+    let rawSnippet = "";
+    if (matchType === "body" && pos > 40) {
+      const start = Math.max(0, pos - 45);
+      const end = Math.min(entry.body.length, pos + 110);
+      rawSnippet = (start > 0 ? "…" : "") + entry.body.slice(start, end).replace(/\s+/g, " ") + (end < entry.body.length ? "…" : "");
+    } else {
+      rawSnippet = entry.body.slice(0, 145).replace(/\s+/g, " ") + (entry.body.length > 145 ? "…" : "");
+    }
+
+    let snippetHtml = escapeHtml(rawSnippet);
+    if (snippetRgx) {
+      snippetHtml = snippetHtml.replace(snippetRgx, '<mark style="background:#ffd54f; color:#111; font-weight:700; padding:0 3px; border-radius:3px;">$1</mark>');
+    }
+
+    const badge = matchType === "exact"
+      ? `<span class="tag-badge" style="background:#2e7d32; color:#fff; font-size:11px; margin-left:6px;">★ Esponente Principale</span>`
+      : matchType === "title"
+      ? `<span class="tag-badge" style="background:var(--primary-main); color:#fff; font-size:11px; margin-left:6px;">Nel Titolo</span>`
+      : q ? `<span class="tag-badge" style="font-size:11px; margin-left:6px;">Nel testo</span>` : "";
+
     return `
       <div class="result-card" onclick="showInsightView(${idx})">
-        <div class="result-ref">📘 ${escapeHtml(entry.title)}</div>
-        <div style="font-size:13.5px; color:var(--text-muted); line-height:1.45;">${escapeHtml(preview)}</div>
+        <div class="result-ref">📘 ${escapeHtml(entry.title)} ${badge}</div>
+        <div style="font-size:13.5px; color:var(--text-muted); line-height:1.45;">${snippetHtml}</div>
       </div>
     `;
   }).join("");
-        }
-      
+}
+
 function exportBackupJson() {
   const data = {
     app: "BibbiaMultilingue_PRO",
