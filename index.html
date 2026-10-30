@@ -513,17 +513,17 @@
     <select id="trans2" class="trans-select" style="display:none;" onchange="onTranslationChange()"></select>
     <select id="trans3" class="trans-select" style="display:none;" onchange="onTranslationChange()"></select>
   </div>
-  <!-- Barra Menu Rapida Sempre Visibile (PRO) -->
+    <!-- Barra Menu Rapida Sempre Visibile (PRO) -->
   <div class="quick-menu-bar">
     <button id="dailyTabBtn" class="quick-pill highlight" onclick="showDailyTextView()">☀️ Scrittura del Giorno</button>
     <button id="insightTabBtn" class="quick-pill" onclick="showInsightView()">📚 Perspicacia (it)</button>
-    <button class="quick-pill" onclick="showCatalogView()">⬇️ +1397 Bibbie / Lingue</button>
-    <button id="parallelBtn" class="quick-pill" onclick="toggleParallel()">⚖️ Parallelo: 1x</button>
-    <button id="diffBtn" class="quick-pill" style="display:none;" onclick="toggleDiffMode()">🔍 Diff: OFF</button>
     <button id="ttsChapterBtn" class="quick-pill" onclick="toggleChapterTTS()">🔊 Ascolta</button>
-    <button class="quick-pill" onclick="showNotesView()">📝 Appunti Studio</button>
-    <button class="quick-pill" onclick="showSavedView()">🔖 Preferiti</button>
+    <button id="parallelBtn" class="quick-pill" onclick="toggleParallel()">⚖️ Parallelo: 1x</button>
     <button class="quick-pill" onclick="showSearchView()">🔍 Cerca</button>
+    <button class="quick-pill" onclick="showSavedView()">🔖 Preferiti</button>
+    <button class="quick-pill" onclick="showNotesView()">📝 Appunti Studio</button>
+    <button class="quick-pill" onclick="showCatalogView()">⬇️ +1397 Bibbie / Lingue</button>
+    <button id="diffBtn" class="quick-pill" style="display:none;" onclick="toggleDiffMode()">🔍 Diff: OFF</button>
     <button class="quick-pill" onclick="openBackupModal()">💾 Backup</button>
   </div>
   <!-- Contenitore Principale (Lettura, Griglia 66 Libri, Ricerca, Note, Catalogo) -->
