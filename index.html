@@ -3516,9 +3516,15 @@ async function renderInsightFilteredList() {
   const q = normalizeForSearch(rawQ);
   const entries = data.entries;
 
-  const exactTitleHits = [];
-  const startsTitleHits = [];
-  const bodyHits = [];
+  const exactTitleHits = [];   // 1° Esponente esatto o numerato (es. "GIOVANNI" o "GIOVANNI, I")
+  const startsWordHits = [];   // 2° Titolo che inizia con quella parola intera (es. "GIOVANNI BATTISTA")
+  const containsTitleHits = []; // 3° Titolo che contiene la parola (es. "VANGELO DI GIOVANNI")
+  const bodyHits = [];         // 4° Parola presente nel testo della voce
+
+  const escapedQ = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  // Riconosce "PAROLA", "PAROLA, I", "PAROLA (I)", "PAROLA 1" come Esponente Principale
+  const exactOrNumberedRgx = q ? new RegExp(`^${escapedQ}(?:\\s*[,\\(\\s]\\s*(?:[ivx]+|\\d+)\\)?)?$`, "i") : null;
+  const startsWordRgx = q ? new RegExp(`^${escapedQ}\\b`, "i") : null;
 
   for (let i = 0; i < entries.length; i++) {
     const e = entries[i];
@@ -3530,23 +3536,27 @@ async function renderInsightFilteredList() {
       continue;
     }
 
-    const normTitle = normalizeForSearch(e.title);
-    if (normTitle === q) {
+    const normTitle = normalizeForSearch(e.title).trim();
+
+    if (normTitle === q || (exactOrNumberedRgx && exactOrNumberedRgx.test(normTitle))) {
       exactTitleHits.push({ idx: i, entry: e, matchType: "exact", pos: 0 });
+    } else if (startsWordRgx && startsWordRgx.test(normTitle)) {
+      startsWordHits.push({ idx: i, entry: e, matchType: "starts", pos: 0 });
     } else if (normTitle.startsWith(q) || normTitle.includes(q)) {
-      startsTitleHits.push({ idx: i, entry: e, matchType: "title", pos: 0 });
-    } else if (q.length >= 2) {
+      containsTitleHits.push({ idx: i, entry: e, matchType: "title", pos: 0 });
+    } else if (q.length >= 2 && bodyHits.length < 150) {
       const normBody = normalizeForSearch(e.body);
       const pos = normBody.indexOf(q);
       if (pos !== -1) {
         bodyHits.push({ idx: i, entry: e, matchType: "body", pos });
       }
     }
-
-    if (exactTitleHits.length + startsTitleHits.length + bodyHits.length >= 200) break;
   }
 
-  const combined = [...exactTitleHits, ...startsTitleHits, ...bodyHits];
+  // Ordina i titoli del 2° gruppo dal più corto (più specifico) al più lungo
+  startsWordHits.sort((a, b) => a.entry.title.length - b.entry.title.length);
+
+  const combined = [...exactTitleHits, ...startsWordHits, ...containsTitleHits, ...bodyHits].slice(0, 150);
 
   if (combined.length === 0) {
     container.innerHTML = `<div class="loader">Nessun risultato trovato per "<b>${escapeHtml(rawQ)}</b>".</div>`;
@@ -3554,7 +3564,6 @@ async function renderInsightFilteredList() {
   }
 
   const snippetRgx = q.length >= 2 ? buildAccentInsensitiveRegex(rawQ) : null;
-
   container.innerHTML = combined.map(({ idx, entry, matchType, pos }) => {
     let rawSnippet = "";
     if (matchType === "body" && pos > 40) {
@@ -3564,18 +3573,15 @@ async function renderInsightFilteredList() {
     } else {
       rawSnippet = entry.body.slice(0, 145).replace(/\s+/g, " ") + (entry.body.length > 145 ? "…" : "");
     }
-
     let snippetHtml = escapeHtml(rawSnippet);
     if (snippetRgx) {
       snippetHtml = snippetHtml.replace(snippetRgx, '<mark style="background:#ffd54f; color:#111; font-weight:700; padding:0 3px; border-radius:3px;">$1</mark>');
     }
-
     const badge = matchType === "exact"
       ? `<span class="tag-badge" style="background:#2e7d32; color:#fff; font-size:11px; margin-left:6px;">★ Esponente Principale</span>`
-      : matchType === "title"
+      : (matchType === "starts" || matchType === "title")
       ? `<span class="tag-badge" style="background:var(--primary-main); color:#fff; font-size:11px; margin-left:6px;">Nel Titolo</span>`
       : q ? `<span class="tag-badge" style="font-size:11px; margin-left:6px;">Nel testo</span>` : "";
-
     return `
       <div class="result-card" onclick="showInsightView(${idx})">
         <div class="result-ref">📘 ${escapeHtml(entry.title)} ${badge}</div>
@@ -3584,7 +3590,7 @@ async function renderInsightFilteredList() {
     `;
   }).join("");
 }
-
+  
 function exportBackupJson() {
   const data = {
     app: "BibbiaMultilingue_PRO",
