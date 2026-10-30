@@ -513,9 +513,10 @@
     <select id="trans2" class="trans-select" style="display:none;" onchange="onTranslationChange()"></select>
     <select id="trans3" class="trans-select" style="display:none;" onchange="onTranslationChange()"></select>
   </div>
-    <!-- Barra Menu Rapida Sempre Visibile (PRO) -->
+  <!-- Barra Menu Rapida Sempre Visibile (PRO) -->
   <div class="quick-menu-bar">
     <button id="dailyTabBtn" class="quick-pill highlight" onclick="showDailyTextView()">☀️ Scrittura del Giorno</button>
+    <button id="insightTabBtn" class="quick-pill" onclick="showInsightView()">📚 Perspicacia (it)</button>
     <button class="quick-pill" onclick="showCatalogView()">⬇️ +1397 Bibbie / Lingue</button>
     <button id="parallelBtn" class="quick-pill" onclick="toggleParallel()">⚖️ Parallelo: 1x</button>
     <button id="diffBtn" class="quick-pill" style="display:none;" onclick="toggleDiffMode()">🔍 Diff: OFF</button>
@@ -1154,6 +1155,7 @@ async function loadChapterView() {
   setActiveTab("tabRead");
   state.selectedVerse = null;
   state.selectedVerseText = "";
+  window.currentInsightSpeechText = "";
   const book = getBook(state.bookId);
   document.getElementById("currentRefLabel").textContent = `${book.name} ${state.chapter}`;
   const main = document.getElementById("mainContainer");
@@ -2290,6 +2292,10 @@ function toggleChapterTTS() {
     if (fullText.trim()) startUniversalSpeech(fullText, true);
     return;
   }
+  if (typeof currentInsightSpeechText === "string" && currentInsightSpeechText.trim()) {
+    startUniversalSpeech(currentInsightSpeechText, true);
+    return;
+  }
   if (typeof currentDailySpeechText === "string" && currentDailySpeechText.trim()) {
     startUniversalSpeech(currentDailySpeechText, true);
   }
@@ -2389,6 +2395,10 @@ function openBackupModal() {
       <label class="search-btn" style="text-align:center; padding:10px; cursor:pointer; background:linear-gradient(135deg, #e65100, #f57c00);">
       ☀️ Carica Scrittura del Giorno (.epub Universale)
       <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importDailyTextEpub(event)">
+      </label>
+      <label class="search-btn" style="text-align:center; padding:10px; cursor:pointer; background:linear-gradient(135deg, #2e7d32, #43a047);">
+      📚 Carica Perspicacia — it_I (.zip / .rtf / .epub)
+      <input type="file" accept=".zip,.epub,.rtf,application/zip,application/epub+zip" multiple style="display:none;" onchange="importInsightFiles(event)">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0d47a1;">
         🇮🇹 Carica EPUB TNM 2017 (nwt_I.epub)
@@ -3111,6 +3121,7 @@ async function importDailyTextEpub(event) {
 async function showDailyTextView(dayOffset = 0) {
   closeActionBar();
   stopAllAudio();
+  window.currentInsightSpeechText = "";
   currentDailyOffset = dayOffset;
   document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
   const main = document.getElementById("mainContainer");
@@ -3176,7 +3187,284 @@ async function showDailyTextView(dayOffset = 0) {
   `;
   main.scrollTop = 0;
 }
-                
+
+// ============================================================================
+// MODULO PERSPICACIA NELLO STUDIO DELLE SCRITTURE (it_I ZIP/RTF & EPUB)
+// ============================================================================
+let insightMemCache = null;
+let insightActiveLetter = "TUTTE";
+let insightSearchQuery = "";
+
+function parseRtfToCleanText(rtfRaw) {
+  if (!rtfRaw) return "";
+  let s = rtfRaw.replace(/\\par\b\s*/g, "\n").replace(/\\line\b\s*/g, "\n").replace(/\\tab\b\s*/g, " ");
+  s = s.replace(/\{\\(?:fonttbl|colortbl|stylesheet|info|pict|object|header|footer|\*\\)[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/gi, "");
+  s = s.replace(/\\'[0-9a-fA-F]{2}/g, m => {
+    const code = parseInt(m.slice(2), 16);
+    try { return new TextDecoder("windows-1252").decode(new Uint8Array([code])); }
+    catch (e) { return String.fromCharCode(code); }
+  });
+  s = s.replace(/\\u(-?\d+)\??/g, (_, d) => {
+    let c = parseInt(d, 10);
+    if (c < 0) c += 65536;
+    return String.fromCharCode(c);
+  });
+  s = s.replace(/\\[a-zA-Z]+-?\d*\s?/g, "");
+  s = s.replace(/[{}]/g, "");
+  return s.replace(/\r/g, "").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+}
+
+function splitCleanTextIntoEntries(rawText, entriesArray) {
+  const lines = rawText.split("\n").map(l => l.trim()).filter(Boolean);
+  let curTitle = "";
+  let curBody = [];
+  const flush = () => {
+    if (curTitle && curBody.length > 0) {
+      const bodyStr = curBody.join("\n\n").trim();
+      if (bodyStr.length > 15) {
+        const firstChar = curTitle.normalize("NFD").replace(/[\u0300-\u036f]/g, "").charAt(0).toUpperCase();
+        const letter = /[A-Z]/.test(firstChar) ? firstChar : "#";
+        entriesArray.push({ title: curTitle, letter, body: bodyStr });
+      }
+    }
+    curTitle = "";
+    curBody = [];
+  };
+  for (const line of lines) {
+    const isHeading = line.length >= 2 && line.length <= 75 &&
+      line === line.toUpperCase() && /[A-ZÀ-Ý]/.test(line) &&
+      !/^\d/.test(line) && !/[.;:!?]$/.test(line);
+    if (isHeading) {
+      flush();
+      curTitle = line;
+    } else if (curTitle) {
+      curBody.push(line);
+    }
+  }
+  flush();
+}
+
+async function importInsightFiles(event) {
+  const files = Array.from(event.target.files || []);
+  if (!files.length) return;
+  const statusEl = document.getElementById("epubImportStatus");
+  if (typeof JSZip === "undefined") {
+    alert("Libreria JSZip non caricata.");
+    return;
+  }
+  try {
+    const entries = [];
+    const parser = new DOMParser();
+
+    for (const file of files) {
+      const fName = file.name.toLowerCase();
+      statusEl.innerHTML = `⏳ Analisi di <b>${escapeHtml(file.name)}</b> in corso...`;
+
+      if (fName.endsWith(".rtf") && !fName.endsWith(".zip")) {
+        const buf = await file.arrayBuffer();
+        const head = new Uint8Array(buf.slice(0, 4));
+        const isZip = head[0] === 0x50 && head[1] === 0x4B;
+        if (!isZip) {
+          const rawRtf = new TextDecoder("windows-1252").decode(buf);
+          const clean = parseRtfToCleanText(rawRtf);
+          splitCleanTextIntoEntries(clean, entries);
+          continue;
+        }
+      }
+
+      const zip = await JSZip.loadAsync(file);
+      const allPaths = Object.keys(zip.files).sort();
+      const rtfFiles = allPaths.filter(p => p.toLowerCase().endsWith(".rtf") && !zip.files[p].dir);
+      const htmlFiles = allPaths.filter(p => /\.(?:xhtml|html|htm)$/i.test(p) && !p.includes("toc") && !p.includes("nav") && !p.includes("cover") && !zip.files[p].dir);
+
+      if (rtfFiles.length > 0) {
+        for (let i = 0; i < rtfFiles.length; i++) {
+          statusEl.innerHTML = `⚙️ Decodifica volume RTF ${i + 1}/${rtfFiles.length}...`;
+          const uint8 = await zip.files[rtfFiles[i]].async("uint8array");
+          const rawRtf = new TextDecoder("windows-1252").decode(uint8);
+          const clean = parseRtfToCleanText(rawRtf);
+          splitCleanTextIntoEntries(clean, entries);
+        }
+      } else if (htmlFiles.length > 0) {
+        for (let i = 0; i < htmlFiles.length; i++) {
+          if (i % 25 === 0) statusEl.innerHTML = `⚙️ Estrazione voci (${i + 1}/${htmlFiles.length})...`;
+          const rawHtml = await zip.files[htmlFiles[i]].async("string");
+          const doc = parser.parseFromString(rawHtml, "text/html");
+          doc.querySelectorAll("script, style, rt, .footnote").forEach(el => el.remove());
+          const body = doc.body || doc.documentElement;
+          if (!body) continue;
+          const hEl = body.querySelector("h1, h2, h3, strong");
+          const title = hEl ? hEl.textContent.replace(/\s+/g, " ").trim() : "";
+          const paras = [];
+          body.querySelectorAll("p, div.p, li").forEach(p => {
+            const t = p.textContent.replace(/\s+/g, " ").trim();
+            if (t && t !== title) paras.push(t);
+          });
+          const bodyTxt = paras.length ? paras.join("\n\n") : body.textContent.replace(/\s+/g, " ").trim();
+          if (title && bodyTxt.length > 20 && !/[\x00-\x08\x0E-\x1F]/.test(bodyTxt)) {
+            const firstChar = title.normalize("NFD").replace(/[\u0300-\u036f]/g, "").charAt(0).toUpperCase();
+            const letter = /[A-Z]/.test(firstChar) ? firstChar : "#";
+            entries.push({ title, letter, body: bodyTxt });
+          }
+        }
+      }
+    }
+
+    if (entries.length === 0) {
+      throw new Error("Nessuna voce valida trovata. Assicurati di caricare l'archivio ZIP/RTF originale (it_I.zip) o un EPUB non corrotto.");
+    }
+
+    entries.sort((a, b) => a.title.localeCompare(b.title, "it"));
+    const payload = { updated: Date.now(), count: entries.length, entries };
+    insightMemCache = payload;
+    statusEl.innerHTML = `💾 Salvataggio di ${entries.length} voci nel database offline...`;
+    await saveOfflineBible("bm:insight_it", payload);
+    statusEl.innerHTML = `✔ Perspicacia salvata offline (${entries.length} voci pronte)!`;
+    setTimeout(() => {
+      closeProModal();
+      showInsightView();
+    }, 900);
+  } catch (err) {
+    statusEl.innerHTML = `❌ Errore: ${escapeHtml(err.message)}`;
+  }
+}
+
+async function getInsightData() {
+  if (insightMemCache && Array.isArray(insightMemCache.entries)) return insightMemCache;
+  try {
+    const db = await openDB();
+    return new Promise(res => {
+      const tx = db.transaction("bibles", "readonly");
+      const req = tx.objectStore("bibles").get("bm:insight_it");
+      req.onsuccess = () => {
+        if (req.result) insightMemCache = req.result;
+        res(req.result || null);
+      };
+      req.onerror = () => res(null);
+    });
+  } catch (e) { return null; }
+}
+
+async function showInsightView(selectedIndex = null) {
+  closeActionBar();
+  stopAllAudio();
+  window.currentInsightSpeechText = "";
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById("currentRefLabel").textContent = "📚 Perspicacia (it)";
+  const main = document.getElementById("mainContainer");
+
+  const data = await getInsightData();
+  if (!data || !Array.isArray(data.entries) || data.entries.length === 0) {
+    main.innerHTML = `
+      <div class="section-title"><span>📚 Perspicacia nello studio delle Scritture</span></div>
+      <div class="result-card" style="cursor:default; text-align:center; padding:22px 14px;">
+        <div style="font-size:16px; font-weight:800; color:var(--primary-light); margin-bottom:10px;">
+          Enciclopedia Biblica Offline (it)
+        </div>
+        <p style="font-size:14px; color:var(--text-muted); line-height:1.55; margin-bottom:16px;">
+          Carica una sola volta l'archivio originale <b>it_I.zip</b> (contenente i 26 file <i>it_I_00.rtf .. it_I_25.rtf</i>) o l'edizione <b>.epub</b> per consultare offline tutte le voci con i versetti cliccabili:
+        </p>
+        <div style="display:flex; flex-direction:column; gap:10px; max-width:320px; margin:0 auto;">
+          <label class="search-btn" style="text-align:center; padding:11px; cursor:pointer; background:linear-gradient(135deg, #2e7d32, #43a047);">
+            📚 Carica ora Perspicacia (ZIP / RTF / EPUB)
+            <input type="file" accept=".zip,.epub,.rtf,application/zip,application/epub+zip" multiple style="display:none;" onchange="importInsightFiles(event)">
+          </label>
+          <button class="nav-btn" style="padding:10px;" onclick="loadChapterView()">
+            📖 Torna alla Bibbia
+          </button>
+        </div>
+        <div id="epubImportStatus" style="margin-top:12px; font-size:13px; font-weight:700; color:var(--primary-light);"></div>
+      </div>
+    `;
+    return;
+  }
+
+  if (selectedIndex !== null && data.entries[selectedIndex]) {
+    const item = data.entries[selectedIndex];
+    window.currentInsightSpeechText = `${item.title}. ${item.body}`;
+    main.innerHTML = `
+      <div class="chapter-header" style="flex-wrap:wrap; gap:8px;">
+        <div class="chapter-title">📚 ${escapeHtml(item.title)}</div>
+        <div class="chapter-nav-btns">
+          <button class="nav-btn" onclick="showInsightView(null)">← Indice Voci</button>
+          <button class="nav-btn" onclick="toggleChapterTTS()">🔊 Ascolta</button>
+        </div>
+      </div>
+      <div class="result-card" style="cursor:default; padding:15px; font-size:var(--font-size-verse); line-height:1.64; white-space:pre-wrap;">${formatNoteLinks(item.body)}</div>
+      <div style="display:flex; justify-content:space-between; margin-top:14px; gap:8px;">
+        <button class="nav-btn" ${selectedIndex <= 0 ? 'disabled style="opacity:0.4"' : ''} onclick="showInsightView(${selectedIndex - 1})">◀ Voce Prec.</button>
+        <button class="search-btn" onclick="showInsightView(null)">📚 Tutte le Voci</button>
+        <button class="nav-btn" ${selectedIndex >= data.entries.length - 1 ? 'disabled style="opacity:0.4"' : ''} onclick="showInsightView(${selectedIndex + 1})">Voce Succ. ▶</button>
+      </div>
+    `;
+    main.scrollTop = 0;
+    return;
+  }
+
+  const alphabet = ["TUTTE", ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")];
+  const letterPills = alphabet.map(l => {
+    const active = insightActiveLetter === l ? "background:var(--primary-main);color:#fff;" : "";
+    return `<span class="tag-badge" style="padding:5px 9px; font-size:12.5px; ${active}" onclick="filterInsightByLetter('${l}')">${l}</span>`;
+  }).join("");
+
+  main.innerHTML = `
+    <div class="section-title">
+      <span>📚 Perspicacia nello studio delle Scritture</span>
+      <span>${data.entries.length} Voci</span>
+    </div>
+    <div class="search-box">
+      <input type="text" id="insightSearchInput" class="search-input" value="${escapeHtml(insightSearchQuery)}" placeholder="🔍 Cerca voce o argomento (es. Geova, Gerusalemme, Patto)..." oninput="onInsightSearchInput(this.value)">
+    </div>
+    <div style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:12px;">${letterPills}</div>
+    <div id="insightListContainer"></div>
+  `;
+  renderInsightFilteredList();
+  main.scrollTop = 0;
+}
+
+function filterInsightByLetter(letter) {
+  insightActiveLetter = letter;
+  showInsightView(null);
+}
+
+function onInsightSearchInput(val) {
+  insightSearchQuery = val || "";
+  renderInsightFilteredList();
+}
+
+async function renderInsightFilteredList() {
+  const container = document.getElementById("insightListContainer");
+  if (!container) return;
+  const data = await getInsightData();
+  if (!data || !data.entries) return;
+
+  const q = insightSearchQuery.trim().toLowerCase();
+  const matched = [];
+  for (let i = 0; i < data.entries.length; i++) {
+    const e = data.entries[i];
+    if (insightActiveLetter !== "TUTTE" && e.letter !== insightActiveLetter) continue;
+    if (!q || e.title.toLowerCase().includes(q) || (q.length >= 4 && e.body.toLowerCase().includes(q))) {
+      matched.push({ idx: i, entry: e });
+      if (matched.length >= 200) break;
+    }
+  }
+
+  if (matched.length === 0) {
+    container.innerHTML = `<div class="loader">Nessuna voce trovata per "<b>${escapeHtml(insightSearchQuery)}</b>".</div>`;
+    return;
+  }
+
+  container.innerHTML = matched.map(({ idx, entry }) => {
+    const preview = entry.body.slice(0, 145).replace(/\s+/g, " ") + (entry.body.length > 145 ? "…" : "");
+    return `
+      <div class="result-card" onclick="showInsightView(${idx})">
+        <div class="result-ref">📘 ${escapeHtml(entry.title)}</div>
+        <div style="font-size:13.5px; color:var(--text-muted); line-height:1.45;">${escapeHtml(preview)}</div>
+      </div>
+    `;
+  }).join("");
+        }
+      
 function exportBackupJson() {
   const data = {
     app: "BibbiaMultilingue_PRO",
