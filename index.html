@@ -3199,7 +3199,10 @@ let currentHitIdx = 0;
 
 function parseRtfToCleanText(rtfRaw) {
   if (!rtfRaw) return "";
-  let s = rtfRaw.replace(/\\par\b\s*/g, "\n").replace(/\\line\b\s*/g, "\n").replace(/\\tab\b\s*/g, " ");
+  let s = rtfRaw
+    .replace(/\\(?:par|pard|sect|page|line|row)\b[ \t]*/gi, "\n")
+    .replace(/\\\r?\n/g, "\n")
+    .replace(/\\tab\b[ \t]*/gi, " ");
   s = s.replace(/\{\\(?:fonttbl|colortbl|stylesheet|info|pict|object|header|footer|\*\\)[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/gi, "");
   s = s.replace(/\\'[0-9a-fA-F]{2}/g, m => {
     const code = parseInt(m.slice(2), 16);
@@ -3211,7 +3214,8 @@ function parseRtfToCleanText(rtfRaw) {
     if (c < 0) c += 65536;
     return String.fromCharCode(c);
   });
-  s = s.replace(/\\[a-zA-Z]+-?\d*\s?/g, "");
+  s = s.replace(/\\[a-zA-Z]+-?\d*[ \t]?/g, "");
+  s = s.replace(/\\['\+\*\~\-_\\/]/g, "");
   s = s.replace(/[{}]/g, "");
   return s.replace(/\r/g, "").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
 }
@@ -3223,7 +3227,7 @@ function splitCleanTextIntoEntries(rawText, entriesArray) {
   const flush = () => {
     if (curTitle && curBody.length > 0) {
       const bodyStr = curBody.join("\n\n").trim();
-      if (bodyStr.length > 15) {
+      if (bodyStr.length > 10) {
         const firstChar = curTitle.normalize("NFD").replace(/[\u0300-\u036f]/g, "").charAt(0).toUpperCase();
         const letter = /[A-Z]/.test(firstChar) ? firstChar : "#";
         entriesArray.push({ title: curTitle, letter, body: bodyStr });
@@ -3232,20 +3236,43 @@ function splitCleanTextIntoEntries(rawText, entriesArray) {
     curTitle = "";
     curBody = [];
   };
+
   for (const line of lines) {
-    const isHeading = line.length >= 2 && line.length <= 75 &&
-      line === line.toUpperCase() && /[A-ZÀ-Ý]/.test(line) &&
-      !/^\d/.test(line) && !/[.;:!?]$/.test(line);
-    if (isHeading) {
+    const headCandidate = line.replace(/\s*[\(\[][^)\]]*[\)\]]\s*$/, "").trim();
+    const isAllCapsHeading = headCandidate.length >= 2 && headCandidate.length <= 75 &&
+      headCandidate === headCandidate.toUpperCase() &&
+      /[A-ZÀ-Ý]/.test(headCandidate) &&
+      !/^\d/.test(headCandidate) &&
+      !/[.;:!?]$/.test(headCandidate);
+
+    if (isAllCapsHeading) {
       flush();
-      curTitle = line;
-    } else if (curTitle) {
+      curTitle = headCandidate;
+      const extraPron = line.slice(headCandidate.length).trim();
+      if (extraPron) curBody.push(extraPron);
+      continue;
+    }
+
+    const inlineMatch = line.match(/^([A-ZÀ-Ý][A-ZÀ-Ý0-9\s,'’-]{1,50}?)(?:\s+(\([A-ZÀ-ÿa-z0-9\s,'’-]+\)|\b(?:I|II|III|IV|V|VI|VII|VIII|IX|X)\b))?\s+(\[.*|\(.*|[A-ZÀ-Ý][a-zà-ÿ].*)$/);
+    if (inlineMatch) {
+      const capPart = inlineMatch[1].trim();
+      const romOrPron = (inlineMatch[2] || "").trim();
+      const restBody = inlineMatch[3].trim();
+      if (capPart === capPart.toUpperCase() && capPart.length >= 2 && !/^(?:NOTA|VEDI|CAPITOLO|PARTE|TABELLA|CARTINA|ILLUSTRAZIONE)\b/.test(capPart)) {
+        flush();
+        curTitle = romOrPron && /^[IVX]+$/.test(romOrPron) ? `${capPart}, ${romOrPron}` : capPart;
+        curBody.push((romOrPron && !/^[IVX]+$/.test(romOrPron) ? romOrPron + " " : "") + restBody);
+        continue;
+      }
+    }
+
+    if (curTitle) {
       curBody.push(line);
     }
   }
   flush();
 }
-
+    
 async function importInsightFiles(event) {
   const files = Array.from(event.target.files || []);
   if (!files.length) return;
