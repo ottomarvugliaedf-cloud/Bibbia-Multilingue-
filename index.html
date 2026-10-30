@@ -3272,7 +3272,7 @@ function splitCleanTextIntoEntries(rawText, entriesArray) {
   }
   flush();
 }
-    
+
 async function importInsightFiles(event) {
   const files = Array.from(event.target.files || []);
   if (!files.length) return;
@@ -3284,11 +3284,9 @@ async function importInsightFiles(event) {
   try {
     const entries = [];
     const parser = new DOMParser();
-
     for (const file of files) {
       const fName = file.name.toLowerCase();
       statusEl.innerHTML = `⏳ Analisi di <b>${escapeHtml(file.name)}</b> in corso...`;
-
       if (fName.endsWith(".rtf") && !fName.endsWith(".zip")) {
         const buf = await file.arrayBuffer();
         const head = new Uint8Array(buf.slice(0, 4));
@@ -3300,12 +3298,10 @@ async function importInsightFiles(event) {
           continue;
         }
       }
-
       const zip = await JSZip.loadAsync(file);
       const allPaths = Object.keys(zip.files).sort();
       const rtfFiles = allPaths.filter(p => p.toLowerCase().endsWith(".rtf") && !zip.files[p].dir);
       const htmlFiles = allPaths.filter(p => /\.(?:xhtml|html|htm)$/i.test(p) && !p.includes("toc") && !p.includes("nav") && !p.includes("cover") && !zip.files[p].dir);
-
       if (rtfFiles.length > 0) {
         for (let i = 0; i < rtfFiles.length; i++) {
           statusEl.innerHTML = `⚙️ Decodifica volume RTF ${i + 1}/${rtfFiles.length}...`;
@@ -3338,11 +3334,9 @@ async function importInsightFiles(event) {
         }
       }
     }
-
     if (entries.length === 0) {
       throw new Error("Nessuna voce valida trovata. Assicurati di caricare l'archivio ZIP/RTF originale (it_I.zip) o un EPUB non corrotto.");
     }
-
     entries.sort((a, b) => a.title.localeCompare(b.title, "it"));
     const payload = { updated: Date.now(), count: entries.length, entries };
     insightMemCache = payload;
@@ -3440,7 +3434,6 @@ async function showInsightView(selectedIndex = null) {
   document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
   document.getElementById("currentRefLabel").textContent = "📚 Perspicacia (it)";
   const main = document.getElementById("mainContainer");
-
   const data = await getInsightData();
   if (!data || !Array.isArray(data.entries) || data.entries.length === 0) {
     main.innerHTML = `
@@ -3466,7 +3459,6 @@ async function showInsightView(selectedIndex = null) {
     `;
     return;
   }
-
   if (selectedIndex !== null && data.entries[selectedIndex]) {
     const item = data.entries[selectedIndex];
     window.currentInsightSpeechText = `${item.title}. ${item.body}`;
@@ -3474,7 +3466,6 @@ async function showInsightView(selectedIndex = null) {
     const baseHtml = formatNoteLinks(item.body);
     const { html: highlightedBody, count: hitCount } = highlightHtmlSafe(baseHtml, insightSearchQuery);
     currentHitIdx = 0;
-
     const hitNavBar = hitCount > 0 ? `
       <div style="display:flex; align-items:center; justify-content:space-between; background:var(--bg-card); border:1px solid var(--primary-light); padding:8px 12px; border-radius:10px; margin-bottom:10px; position:sticky; top:0; z-index:15;">
         <span style="font-size:13px; font-weight:700; color:var(--primary-light);">
@@ -3486,7 +3477,6 @@ async function showInsightView(selectedIndex = null) {
         </div>
       </div>
     ` : "";
-
     main.innerHTML = `
       <div class="chapter-header" style="flex-wrap:wrap; gap:8px;">
         <div class="chapter-title">📚 ${escapeHtml(item.title)}</div>
@@ -3503,7 +3493,6 @@ async function showInsightView(selectedIndex = null) {
         <button class="nav-btn" ${selectedIndex >= data.entries.length - 1 ? 'disabled style="opacity:0.4"' : ''} onclick="showInsightView(${selectedIndex + 1})">Voce Succ. ▶</button>
       </div>
     `;
-
     if (hitCount > 0) {
       setTimeout(() => jumpToInsightHit(0), 80);
     } else {
@@ -3511,13 +3500,11 @@ async function showInsightView(selectedIndex = null) {
     }
     return;
   }
-
   const alphabet = ["TUTTE", ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")];
   const letterPills = alphabet.map(l => {
     const active = insightActiveLetter === l ? "background:var(--primary-main);color:#fff;" : "";
     return `<span class="tag-badge" style="padding:5px 9px; font-size:12.5px; ${active}" onclick="filterInsightByLetter('${l}')">${l}</span>`;
   }).join("");
-
   main.innerHTML = `
     <div class="section-title">
       <span>📚 Perspicacia nello studio delle Scritture</span>
@@ -3538,33 +3525,26 @@ async function renderInsightFilteredList() {
   if (!container) return;
   const data = await getInsightData();
   if (!data || !Array.isArray(data.entries)) return;
-
   const rawQ = insightSearchQuery.trim();
   const q = normalizeForSearch(rawQ);
   const entries = data.entries;
-
   const exactTitleHits = [];   // 1° Esponente esatto o numerato (es. "GIOVANNI" o "GIOVANNI, I")
   const startsWordHits = [];   // 2° Titolo che inizia con quella parola intera (es. "GIOVANNI BATTISTA")
   const containsTitleHits = []; // 3° Titolo che contiene la parola (es. "VANGELO DI GIOVANNI")
   const bodyHits = [];         // 4° Parola presente nel testo della voce
-
   const escapedQ = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   // Riconosce "PAROLA", "PAROLA, I", "PAROLA (I)", "PAROLA 1" come Esponente Principale
   const exactOrNumberedRgx = q ? new RegExp(`^${escapedQ}(?:\\s*[,\\(\\s]\\s*(?:[ivx]+|\\d+)\\)?)?$`, "i") : null;
   const startsWordRgx = q ? new RegExp(`^${escapedQ}\\b`, "i") : null;
-
   for (let i = 0; i < entries.length; i++) {
     const e = entries[i];
     if (insightActiveLetter !== "TUTTE" && e.letter !== insightActiveLetter) continue;
-
     if (!q) {
       bodyHits.push({ idx: i, entry: e, matchType: "none", pos: 0 });
       if (bodyHits.length >= 150) break;
       continue;
     }
-
     const normTitle = normalizeForSearch(e.title).trim();
-
     if (normTitle === q || (exactOrNumberedRgx && exactOrNumberedRgx.test(normTitle))) {
       exactTitleHits.push({ idx: i, entry: e, matchType: "exact", pos: 0 });
     } else if (startsWordRgx && startsWordRgx.test(normTitle)) {
@@ -3579,17 +3559,13 @@ async function renderInsightFilteredList() {
       }
     }
   }
-
   // Ordina i titoli del 2° gruppo dal più corto (più specifico) al più lungo
   startsWordHits.sort((a, b) => a.entry.title.length - b.entry.title.length);
-
   const combined = [...exactTitleHits, ...startsWordHits, ...containsTitleHits, ...bodyHits].slice(0, 150);
-
   if (combined.length === 0) {
     container.innerHTML = `<div class="loader">Nessun risultato trovato per "<b>${escapeHtml(rawQ)}</b>".</div>`;
     return;
   }
-
   const snippetRgx = q.length >= 2 ? buildAccentInsensitiveRegex(rawQ) : null;
   container.innerHTML = combined.map(({ idx, entry, matchType, pos }) => {
     let rawSnippet = "";
@@ -3617,7 +3593,7 @@ async function renderInsightFilteredList() {
     `;
   }).join("");
 }
-  
+               
 function exportBackupJson() {
   const data = {
     app: "BibbiaMultilingue_PRO",
