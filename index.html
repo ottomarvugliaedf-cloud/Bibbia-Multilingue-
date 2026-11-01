@@ -1034,6 +1034,9 @@ function setActiveTab(tabId, quickPillId = null) {
     const qp = document.getElementById(quickPillId);
     if (qp) qp.classList.add("highlight");
   }
+  if (tabId && tabId !== "tabNotes") {
+    currentViewContext = { type: "bible" };
+  }
 }
 function getBook(id) {
   return BIBLE_BOOKS.find(b => b.id === Number(id)) || BIBLE_BOOKS[0];
@@ -1558,10 +1561,11 @@ function formatNoteLinks(txt, defaultBookId = null) {
     const firstRef = `${bookName} ${curCh}${firstVList ? ":" + firstVList : ""}`;
 
     let out = `<span class="tag-badge" onclick="event.stopPropagation(); jumpToRefString('${escapeJsStr(firstRef)}')">📖 ${firstToken}</span>`;
-
     if (!tailPart) return out;
-
+    const crossChMatch = firstToken.match(/[–-]\s*(\d{1,3}):\d{1,3}/);
+    if (crossChMatch) curCh = crossChMatch[1];
     let hasColons = Boolean(firstVList);
+    
     const segRegex = /(\s*([;,])\s*)(\d{1,3}[a-z]?)(?::(\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?(?:\s*,\s*(?!\d{1,3}\s*:)\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?)*))?(?:\s*[–-]\s*(\d{1,3}[a-z]?))?/g;
 
     out += tailPart.replace(segRegex, (segMatch, sepFull, sepChar, n1, vListAfterColon, rangeEndNoColon) => {
@@ -2121,10 +2125,10 @@ function parseVerseSpecToArray(vSpec) {
   if (typeof vSpec === "number") return vSpec > 0 ? [vSpec] : [];
   const res = [];
   String(vSpec).split(",").forEach(part => {
-    const m = part.trim().match(/^(\d{1,3})[a-z]?(?:\s*[–-]\s*(\d{1,3})[a-z]?)?$/i);
+    const m = part.trim().match(/^(\d{1,3})[a-z]?(?:\s*[–-]\s*(\d{1,3})[a-z]?(?::(\d{1,3})[a-z]?)?)?$/i);
     if (m) {
       const start = parseInt(m[1], 10);
-      const end = m[2] ? parseInt(m[2], 10) : start;
+      const end = m[3] ? start + 50 : (m[2] ? parseInt(m[2], 10) : start);
       for (let k = start; k <= Math.min(end, start + 60); k++) {
         if (!res.includes(k)) res.push(k);
       }
