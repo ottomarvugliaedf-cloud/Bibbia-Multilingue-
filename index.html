@@ -513,19 +513,15 @@
     <select id="trans2" class="trans-select" style="display:none;" onchange="onTranslationChange()"></select>
     <select id="trans3" class="trans-select" style="display:none;" onchange="onTranslationChange()"></select>
   </div>
-    <!-- Barra Menu Rapida Sempre Visibile (PRO) -->
+      <!-- Barra Menu Rapida Sempre Visibile (PRO — Biblioteca) -->
   <div class="quick-menu-bar">
-    <button id="dailyTabBtn" class="quick-pill highlight" onclick="showDailyTextView()">☀️ Scrittura del Giorno</button>
+    <button id="booksTabBtn" class="quick-pill" onclick="showBooksView()">🟦 Libri Biblici</button>
+    <button id="readTabBtn" class="quick-pill" onclick="loadChapterView()">📖 Lettura</button>
     <button id="insightTabBtn" class="quick-pill" onclick="showInsightView()">📚 Perspicacia (it)</button>
     <button id="siTabBtn" class="quick-pill" onclick="showSiView()">📘 Tutta la Scrittura</button>
-    <button id="ttsChapterBtn" class="quick-pill" onclick="toggleChapterTTS()">🔊 Ascolta</button>
-    <button id="parallelBtn" class="quick-pill" onclick="toggleParallel()">⚖️ Parallelo: 1x</button>
-    <button class="quick-pill" onclick="showSearchView()">🔍 Cerca</button>
-    <button class="quick-pill" onclick="showSavedView()">🔖 Preferiti</button>
-    <button class="quick-pill" onclick="showNotesView()">📝 Appunti Studio</button>
-    <button class="quick-pill" onclick="showCatalogView()">⬇️ +1397 Bibbie / Lingue</button>
+    <button id="dailyTabBtn" class="quick-pill highlight" onclick="showDailyTextView()">☀️ Scrittura del Giorno</button>
+    <button id="catalogTabBtn" class="quick-pill" onclick="showCatalogView()">⬇️ +1397 Bibbie / Lingue</button>
     <button id="diffBtn" class="quick-pill" style="display:none;" onclick="toggleDiffMode()">🔍 Diff: OFF</button>
-    <button class="quick-pill" onclick="openBackupModal()">💾 Backup</button>
   </div>
   <!-- Contenitore Principale (Lettura, Griglia 66 Libri, Ricerca, Note, Catalogo) -->
   <main id="mainContainer"></main>
@@ -569,25 +565,25 @@
       <div id="proModalBody"></div>
     </div>
   </div>
-  <!-- Barra Navigazione Inferiore Originale a 6 Schede -->
+    <!-- Barra Navigazione Inferiore a 6 Strumenti -->
   <nav class="bottom-nav">
-    <button class="tab-btn" id="tabBooks" onclick="showBooksView()">
-      <span class="tab-icon">🟦</span><span>Libri</span>
-    </button>
-    <button class="tab-btn active" id="tabRead" onclick="loadChapterView()">
-      <span class="tab-icon">📖</span><span>Lettura</span>
-    </button>
     <button class="tab-btn" id="tabSearch" onclick="showSearchView()">
       <span class="tab-icon">🔍</span><span>Cerca</span>
+    </button>
+    <button class="tab-btn" id="parallelBtn" onclick="toggleParallel()">
+      <span class="tab-icon">⚖️</span><span id="parallelLabel">Parallelo: 1x</span>
+    </button>
+    <button class="tab-btn" id="ttsChapterBtn" onclick="toggleChapterTTS()">
+      <span class="tab-icon" id="ttsIcon">🔊</span><span id="ttsLabel">Ascolta</span>
     </button>
     <button class="tab-btn" id="tabSaved" onclick="showSavedView()">
       <span class="tab-icon">🔖</span><span>Preferiti</span>
     </button>
     <button class="tab-btn" id="tabNotes" onclick="showNotesView()">
-      <span class="tab-icon">📝</span><span>Appunti</span>
+      <span class="tab-icon">📝</span><span>Appunti Studio</span>
     </button>
-    <button class="tab-btn" id="tabCatalog" onclick="showCatalogView()">
-      <span class="tab-icon">⬇️</span><span>Bibbie</span>
+    <button class="tab-btn" id="tabBackup" onclick="openBackupModal()">
+      <span class="tab-icon">💾</span><span>Backup</span>
     </button>
   </nav>
   <script>
@@ -1024,20 +1020,34 @@ async function populateSelects() {
   else { state.trans3 = (activeList[2] || activeList[0]).id; s3.value = state.trans3; }
 }
 function setActiveTab(tabId, quickPillId = null) {
-  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-  const el = document.getElementById(tabId);
-  if (el) el.classList.add("active");
-  document.querySelectorAll(".quick-menu-bar .quick-pill").forEach(b => {
-    if (b.id !== "parallelBtn" && b.id !== "diffBtn") b.classList.remove("highlight");
+  const topMap = {
+    tabBooks: "booksTabBtn",
+    tabRead: "readTabBtn",
+    tabCatalog: "catalogTabBtn"
+  };
+  const resolvedQuickPill = quickPillId || topMap[tabId] || null;
+
+  document.querySelectorAll(".tab-btn").forEach(b => {
+    if (b.id !== "parallelBtn" && b.id !== "ttsChapterBtn") {
+      b.classList.remove("active");
+    }
   });
-  if (quickPillId) {
-    const qp = document.getElementById(quickPillId);
+  if (tabId && !topMap[tabId]) {
+    const el = document.getElementById(tabId);
+    if (el) el.classList.add("active");
+  }
+
+  document.querySelectorAll(".quick-menu-bar .quick-pill").forEach(b => {
+    if (b.id !== "diffBtn") b.classList.remove("highlight");
+  });
+  if (resolvedQuickPill) {
+    const qp = document.getElementById(resolvedQuickPill);
     if (qp) qp.classList.add("highlight");
   }
   if (tabId && tabId !== "tabNotes") {
     currentViewContext = { type: "bible" };
   }
-}
+    }
 function getBook(id) {
   return BIBLE_BOOKS.find(b => b.id === Number(id)) || BIBLE_BOOKS[0];
 }
@@ -1297,30 +1307,31 @@ function onTranslationChange() {
 function toggleParallel() {
   state.parallelCount = (state.parallelCount % 3) + 1;
   const btn = document.getElementById("parallelBtn");
+  const lbl = document.getElementById("parallelLabel");
   const diffBtn = document.getElementById("diffBtn");
   const sel2 = document.getElementById("trans2");
   const sel3 = document.getElementById("trans3");
   if (state.parallelCount === 1) {
-    btn.textContent = "⚖️Parallelo: 1x";
-    btn.classList.remove("highlight");
+    if (lbl) lbl.textContent = "Parallelo: 1x";
+    btn.classList.remove("active");
     sel2.style.display = "none";
     sel3.style.display = "none";
     diffBtn.style.display = "none";
   } else if (state.parallelCount === 2) {
-    btn.textContent = "⚖️Parallelo: 2x";
-    btn.classList.add("highlight");
+    if (lbl) lbl.textContent = "Parallelo: 2x";
+    btn.classList.add("active");
     sel2.style.display = "block";
     sel3.style.display = "none";
     diffBtn.style.display = "inline-flex";
   } else {
-    btn.textContent = "⚖️Parallelo: 3x";
-    btn.classList.add("highlight");
+    if (lbl) lbl.textContent = "Parallelo: 3x";
+    btn.classList.add("active");
     sel2.style.display = "block";
     sel3.style.display = "block";
     diffBtn.style.display = "inline-flex";
   }
   loadChapterView();
-}
+      }
 function toggleDiffMode() {
   state.diffMode = !state.diffMode;
   const btn = document.getElementById("diffBtn");
@@ -2343,7 +2354,10 @@ function stopAllAudio() {
     try { window.speechSynthesis.cancel(); } catch (e) {}
   }
   const btn = document.getElementById("ttsChapterBtn");
-  if (btn) btn.innerHTML = "🔊 Ascolta";
+  if (btn) {
+    btn.classList.remove("active");
+    btn.innerHTML = '<span class="tab-icon">🔊</span><span>Ascolta</span>';
+  }
 }
 function playWebViewStream(chunks, idx, sessionId) {
   if (bmUserStopped || !bmAudioPlaying || sessionId !== bmSessionId || idx >= chunks.length) {
@@ -2396,7 +2410,12 @@ function startUniversalSpeech(rawText, updateMainBtn = true) {
   bmUserStopped = false;
   bmAudioPlaying = true;
   const btn = document.getElementById("ttsChapterBtn");
-  if (updateMainBtn && btn) btn.innerHTML = "⏹️ Ferma";
+  if (updateMainBtn && btn) {
+    btn.classList.add("active");
+    btn.innerHTML = '<span class="tab-icon">⏹️</span><span>Ferma</span>';
+  }
+}
+    
   if (!bmAudioPlayer) {
     bmAudioPlayer = new Audio();
   }
