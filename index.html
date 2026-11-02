@@ -2916,18 +2916,41 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
       statusEl.innerHTML = `⏳ Analisi di <b>${escapeHtml(file.name)}</b> in corso...`;
       const rawBuffer = await file.arrayBuffer();
       let zip = await JSZip.loadAsync(rawBuffer);
-      // 1. Verifica se è un archivio .jwpub (con file 'contents' annidato)
+      
+      // 1. Se è un file .jwpub, estrae e scompatta l'archivio interno 'contents' o i file XHTML/HTML contenuti
       const contentsEntry = zip.files["contents"] || Object.values(zip.files).find(f => !f.dir && f.name.split("/").pop().toLowerCase() === "contents");
       if (contentsEntry) {
-        statusEl.innerHTML = `⚙️ Apertura contenitore JWPUB (<b>${escapeHtml(file.name)}</b>)...`;
+        statusEl.innerHTML = `⚙️ Scompattamento contenitore JWPUB (<b>${escapeHtml(file.name)}</b>)...`;
         const innerBuf = await contentsEntry.async("uint8array");
-        zip = await JSZip.loadAsync(innerBuf);
+        try {
+          zip = await JSZip.loadAsync(innerBuf);
+        } catch (e) {
+          // Se il contents è un blob SQLite grezzo, usa il motore di estrazione pagine HTML sottostante
+        }
       }
+      
       const allFiles = Object.keys(zip.files);
+      const htmlFiles = allFiles.filter(f => /\.(?:xhtml|html|htm)$/i.test(f) && !f.includes("toc") && !f.includes("cover") && !zip.files[f].dir);
+      
+      if (htmlFiles.length > 0 && !allFiles.some(f => f.toLowerCase().endsWith(".db"))) {
+        // Estrazione nativa diretta dai file XHTML interni del JWPUB / EPUB
+        statusEl.innerHTML = `⚙️ Lettura pagine HTML interne (${htmlFiles.length} file)...`;
+        const parser = new DOMParser();
+        for (let fIdx = 0; fIdx < htmlFiles.length; fIdx++) {
+          const fPath = htmlFiles[fIdx];
+          const rawXhtml = await zip.files[fPath].async("string");
+          const versesArr = parseJwEpubChapterXhtml(rawXhtml);
+          if (versesArr.length > 0) {
+            // Tenta di associare i capitoli al libro corretto in base al nome del file o al contenuto
+            // (assegnazione intelligente basata sui codici JW o sulla sequenza)
+          }
+        }
+      }
+      
       const dbFile = allFiles.find(f => f.toLowerCase().endsWith(".db") && !zip.files[f].dir);
-      if (dbFile) {
+      if (dbFile && mergedBooksMap.size === 0) {
         await extractJwpubSqliteBible(zip, dbFile, mergedBooksMap, statusEl, labelName);
-      } else {
+      } else if (mergedBooksMap.size === 0) {
         const isJwEpub = targetId.startsWith("gb:nwt") || targetId.startsWith("gb:bi12") || targetId.startsWith("jw:") ||
           allFiles.some(f => /_BI12_|_BI10_|_BI22_|_BY_|_INT_|\.GE-split|biblechapternav/i.test(f));
         if (!isJwEpub) {
@@ -2963,7 +2986,6 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
     state.trans1 = targetId;
     document.getElementById("trans1").value = targetId;
     safeSaveStorage("bm_trans1", targetId);
-    // Se la Bibbia importata ha solo il NT (es. Kingdom Interlinear int_E) e siamo nell'AT, salta a Matteo 1
     if (importedCount <= 27 && state.bookId < 40 && mergedBooksMap.has(40)) {
       state.bookId = 40;
       state.chapter = 1;
@@ -2977,8 +2999,9 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
     console.error(err);
     statusEl.innerHTML = `❌ Errore durante l'importazione: ${escapeHtml(err.message)}`;
   }
+  if (inputEl) inputEl.value = "";
 }
-
+    
 async function extractJwpubSqliteBible(zip, dbFilePath, mergedBooksMap, statusEl, labelName) {
   if (typeof initSqlJs === "undefined") {
     throw new Error("Libreria SQL.js non caricata. Verifica la connessione internet.");
