@@ -806,6 +806,279 @@
       border-color: #4caf50 !important;
       background: rgba(76, 175, 80, 0.14) !important;
     }
+    .rp-check {
+      width: 22px;
+      height: 22px;
+      accent-color: #2e7d32;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+  </style>
+
+</head>
+<body>
+  <!-- Schermata Iniziale Splash Blu PRO con Blocco BM Bianco -->
+  <div id="splashScreen">
+    <div class="splash-box">
+      <span class="splash-text">BM</span>
+    </div>
+    <div class="splash-sub">Bibbia Multilingue PRO</div>
+  </div>
+    <!-- Header Superiore con Lettura Quotidiana Annuale e Salto Rapido ⚡ -->
+  <header>
+    <div>
+      <button class="book-selector-btn" onclick="openReadingPlanModal()" title="Piano di Lettura Annuale della Bibbia">
+        <span>📅</span>
+        <span id="readingPlanHeaderLabel">Lettura: Gen 1 - 3</span>
+        <span>▾</span>
+      </button>
+      <span id="currentRefLabel" style="display:none;"></span>
+    </div>
+    <div class="header-controls">
+      <button class="icon-btn" onclick="openQuickJumpModal()" title="Salto Rapido (es. Gv 3 16)">⚡</button>
+      <button class="icon-btn" onclick="changeFontSize(-2)" title="Riduci testo">A-</button>
+      <button class="icon-btn" onclick="changeFontSize(2)" title="Ingrandisci testo">A+</button>
+      <button class="icon-btn" id="themeBtn" onclick="toggleDarkMode()" title="Tema Chiaro / Scuro / OLED">🌙</button>
+    </div>
+  </header>
+  <!-- Selettori Traduzioni Attive (Supporta 1x, 2x e 3x) -->
+  <div class="trans-bar">
+    <select id="trans1" class="trans-select" onchange="onTranslationChange()"></select>
+    <select id="trans2" class="trans-select" style="display:none;" onchange="onTranslationChange()"></select>
+    <select id="trans3" class="trans-select" style="display:none;" onchange="onTranslationChange()"></select>
+  </div>
+      <!-- Barra Menu Rapida Sempre Visibile (PRO — Biblioteca) -->
+  <div class="quick-menu-bar">
+    <button id="booksTabBtn" class="quick-pill" onclick="showBooksView()">🟦 Libri Biblici</button>
+    <button id="readTabBtn" class="quick-pill" onclick="loadChapterView()">📖 Lettura</button>
+    <button id="insightTabBtn" class="quick-pill" onclick="showInsightView()">📚 Perspicacia (it)</button>
+    <button id="siTabBtn" class="quick-pill" onclick="showSiView()">📘 Tutta la Scrittura</button>
+    <button id="dailyTabBtn" class="quick-pill highlight" onclick="showDailyTextView()">☀️ Scrittura del Giorno</button>
+    <button id="catalogTabBtn" class="quick-pill" onclick="showCatalogView()">⬇️ +1397 Bibbie / Lingue</button>
+    <button id="diffBtn" class="quick-pill" style="display:none;" onclick="toggleDiffMode()">🔍 Diff: OFF</button>
+  </div>
+  <!-- Contenitore Principale (Lettura, Griglia 66 Libri, Ricerca, Note, Catalogo) -->
+  <main id="mainContainer"></main>
+  <!-- Barra Azioni Versetto (Colori + Copia + Preferiti + Appunti + Voce + Strong + Passi Paralleli + Card) -->
+  <div id="verseActionBar" class="verse-action-bar">
+    <div class="color-dot" style="background:#ffeb3b;" onclick="applyHighlight('hl-yellow')"></div>
+    <div class="color-dot" style="background:#03a9f4;" onclick="applyHighlight('hl-blue')"></div>
+    <div class="color-dot" style="background:#4caf50;" onclick="applyHighlight('hl-green')"></div>
+    <div class="color-dot" style="background:#e91e63;" onclick="applyHighlight('hl-pink')"></div>
+    <div class="color-dot" style="background:#9c27b0;" onclick="applyHighlight('hl-purple')"></div>
+    <button class="icon-btn" style="color:var(--text-main);" title="Rimuovi colore" onclick="applyHighlight('')">🚫</button>
+    <button class="icon-btn" style="color:var(--text-main);" title="Copia versetto" onclick="copySelectedVerse()">📋</button>
+    <button class="icon-btn" style="color:var(--primary-light);" title="Ascolta versetto" onclick="speakSelectedVerse()">🔊</button>
+    <button class="icon-btn" style="color:var(--primary-light);" title="Lessico Strong" onclick="openStrongModalForVerse()">🏛️</button>
+    <button class="icon-btn" style="coloashed var(--border-color);
+        padding-left: 0;
+        padding-top: 6px;
+      }
+    }
+    .diff-word {
+      background-color: var(--diff-bg);
+      border-radius: 4px;
+      padding: 0 2px;
+    }
+    .tag-badge {
+      display: inline-block;
+      background: rgba(2, 136, 209, 0.14);
+      color: var(--primary-light);
+      border: 1px solid var(--primary-light);
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11.5px;
+      font-weight: 700;
+      margin: 2px;
+      cursor: pointer;
+    }
+    .hl-yellow { background-color: rgba(255, 235, 59, 0.38) !important; }
+    .hl-blue   { background-color: rgba(3, 169, 244, 0.32) !important; }
+    .hl-green  { background-color: rgba(76, 175, 80, 0.32) !important; }
+    .hl-pink   { background-color: rgba(233, 30, 99, 0.28) !important; }
+    .hl-purple { background-color: rgba(156, 39, 176, 0.28) !important; }
+    .verse-action-bar {
+      position: fixed;
+      bottom: 74px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+      border-radius: 30px;
+      padding: 8px 14px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      z-index: 200;
+      max-width: 96vw;
+      overflow-x: auto;
+    }
+    .color-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid rgba(0,0,0,0.2);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    /* BARRA INFERIORE A 6 SCHEDE CON MARGINE SICURO ANTI-GESTURE ANDROID */
+    nav.bottom-nav {
+      background: var(--bg-card);
+      border-top: 1px solid var(--border-color);
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      padding: 6px 2px;
+      padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
+      flex-shrink: 0;
+      z-index: 150;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 10.5px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      cursor: pointer;
+      padding: 4px 2px;
+      font-weight: 700;
+    }
+    .tab-btn.active { color: var(--primary-light); font-weight: 800; }
+    .tab-icon { font-size: 17px; }
+    .search-box { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+    .search-input {
+      flex: 1;
+      min-width: 150px;
+      padding: 9px 11px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-card);
+      color: var(--text-main);
+      font-size: 14px;
+    }
+    .search-btn {
+      background: var(--primary-main);
+      color: #fff;
+      border: none;
+      padding: 9px 14px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .result-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 11px;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+    .result-ref { font-weight: 700; color: var(--primary-light); margin-bottom: 3px; font-size: 14px; }
+    .loader { text-align: center; padding: 26px 14px; color: var(--text-muted); line-height: 1.5; }
+    .badge-btn {
+      font-size: 12px;
+      padding: 7px 11px;
+      border-radius: 6px;
+      background: var(--primary-main);
+      color: #fff;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .badge-btn.downloaded { background: var(--success); }
+    .badge-btn.downloading { background: #f57c00; }
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 16px;
+    }
+    .modal-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 460px;
+      max-height: 86vh;
+      overflow-y: auto;
+      padding: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+    .modal-title { font-size: 16px; font-weight: 800; color: var(--primary-light); margin-bottom: 8px; }
+    .modal-textarea {
+      width: 100%;
+      height: 110px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-main);
+      color: var(--text-main);
+      font-size: 14.5px;
+      font-family: inherit;
+      resize: vertical;
+      margin-bottom: 8px;
+    }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+    .rp-banner {
+      background: linear-gradient(135deg, #2e7d32, #43a047);
+      color: #ffffff;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 13.5px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    .rp-scroll-window {
+      max-height: 174px;
+      overflow-y: auto;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 6px;
+      background: var(--bg-main);
+      scroll-behavior: smooth;
+    }
+    .rp-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 50px;
+      padding: 0 10px;
+      margin-bottom: 5px;
+      border-radius: 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .rp-row:last-child { margin-bottom: 0; }
+    .rp-row.rp-today {
+      outline: 2px solid var(--primary-light);
+      background: var(--verse-hover);
+    }
+        .rp-row.rp-done {
+      color: #4caf50 !important;
+      border-color: rgba(76, 175, 80, 0.45);
+    }
+    .rp-row.rp-done .tag-badge {
+      color: #4caf50 !important;
+      border-color: #4caf50 !important;
+      background: rgba(76, 175, 80, 0.14) !important;
+    }
         .rp-check {
       width: 22px;
       height: 22px;
