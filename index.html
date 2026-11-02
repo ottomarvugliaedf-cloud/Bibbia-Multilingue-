@@ -2685,103 +2685,104 @@ function downloadCanvasCard() {
 // IMPORTATORE UNIVERSALE MULTI-EPUB (TNM 2017, TNM 1987 bi12, NR, CEI 2008, TILC)
 // ============================================================================
 function openBackupModal() {
-  document.getElementById("proModalTitle").textContent = "💾 Backup & Importazione EPUB Offline";
+  document.getElementById("proModalTitle").textContent = "💾 Backup & Importazione EPUB / JWPUB Offline";
   document.getElementById("proModalBody").innerHTML = `
-    <div class="section-title"><span>📗 Importa Bibbie Offline da file EPUB</span></div>
+    <div class="section-title"><span>📗 Importa Bibbie Offline (.jwpub / .epub)</span></div>
     <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px; line-height:1.45;">
-      Seleziona il file <b>.epub</b> corrispondente dal tuo dispositivo. L'app estrarrà e salverà offline tutti i 66 libri:
+      Seleziona il file <b>.jwpub</b> o <b>.epub</b> corrispondente dal tuo dispositivo. L'app estrarrà e salverà offline tutti i libri:
     </p>
+    <div id="epubImportStatus" style="font-size:13px; font-weight:800; color:var(--primary-light); text-align:center; padding:8px; margin-bottom:10px; background:var(--verse-hover); border-radius:6px;">Pronto per l'importazione</div>
     <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;">
       <label class="search-btn" style="text-align:center; padding:10px; cursor:pointer; background:linear-gradient(135deg, #e65100, #f57c00);">
-      ☀️ Carica Scrittura del Giorno (.epub Universale)
-      <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importDailyTextEpub(event)">
+        ☀️ Carica Scrittura del Giorno (.epub / .jwpub)
+        <input type="file" style="display:none;" onchange="importDailyTextEpub(event)">
       </label>
       <label class="search-btn" style="text-align:center; padding:10px; cursor:pointer; background:linear-gradient(135deg, #2e7d32, #43a047);">
-      📚 Carica Perspicacia — it_I (.zip / .rtf / .epub)
-      <input type="file" accept=".zip,.epub,.rtf,application/zip,application/epub+zip" multiple style="display:none;" onchange="importInsightFiles(event)">
+        📚 Carica Perspicacia — it_I (.zip / .rtf / .epub)
+        <input type="file" multiple style="display:none;" onchange="importInsightFiles(event)">
       </label>
-            <label class="search-btn" style="text-align:center; padding:10px; cursor:pointer; background:linear-gradient(135deg, #2e7d32, #43a047);">
-      📘 Carica Tutta la Scrittura (.json)
-      <input type="file" accept=".json,application/json" style="display:none;" onchange="importSiFile(event)">
+      <label class="search-btn" style="text-align:center; padding:10px; cursor:pointer; background:linear-gradient(135deg, #2e7d32, #43a047);">
+        📘 Carica Tutta la Scrittura (.json)
+        <input type="file" style="display:none;" onchange="importSiFile(event)">
       </label>
       <label class="search-btn" style="text-align:center; padding:10px; cursor:pointer; background:linear-gradient(135deg, #00695c, #00897b);">
-      🗺️ Carica Cartine Bibliche — gl_I (.jwpub / .epub / .zip / .json)
-      <input type="file" style="display:none;" onchange="importMapsArchive(event)">
+        🗺️ Carica Cartine Bibliche — gl_I (.jwpub / .epub / .zip / .json)
+        <input type="file" style="display:none;" onchange="importMapsArchive(event)">
       </label>
       <div id="mapsImportStatusTop" style="font-size:13px; font-weight:800; color:var(--primary-light); text-align:center; display:none; padding:6px; background:var(--verse-hover); border-radius:6px;"></div>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0d47a1;">
-        🇮🇹 Carica EPUB TNM 2017 (nwt_I.epub)
-        <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:nwt', 'TNM 2017 (IT)')">
+        🇮🇹 Carica TNM 2017 (nwt_I .epub / .jwpub)
+        <input type="file" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:nwt', 'TNM 2017 (IT)')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0a367e;">
-        🇮🇹 Carica EPUB TNM 1987 (bi12_I.epub)
-        <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:bi12', 'TNM 1987 (IT)')">
+        🇮🇹 Carica TNM 1987 (bi12_I .epub / .jwpub)
+        <input type="file" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:bi12', 'TNM 1987 (IT)')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#1565c0;">
-        🇬🇧 Carica EPUB NWT 2013 English (nwt_E.epub)
-        <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:nwt_e', 'NWT 2013 (EN)')">
+        🇬🇧 Carica NWT 2013 English (nwt_E .epub / .jwpub)
+        <input type="file" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:nwt_e', 'NWT 2013 (EN)')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0a367e;">
-        🇬🇧 Carica EPUB NWT 1984 English (bi12_E.epub)
-        <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:bi12_e', 'NWT 1984 (EN)')">
+        🇬🇧 Carica NWT 1984 English (bi12_E .epub / .jwpub)
+        <input type="file" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:bi12_e', 'NWT 1984 (EN)')">
       </label>
-            <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#1b5e20;">
+      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#1b5e20;">
         🇬🇧 Carica Byington — Living English (by_E .jwpub / .epub)
-        <input type="file" accept=".jwpub,.epub,.zip,application/epub+zip,application/zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'jw:by_e', 'Byington (by_E)')">
+        <input type="file" style="display:none;" onchange="importUniversalEpubFiles(event, 'jw:by_e', 'Byington (by_E)')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#1b5e20;">
         🇬🇧 Carica American Standard — ASV (bi10_E .jwpub / .epub)
-        <input type="file" accept=".jwpub,.epub,.zip,application/epub+zip,application/zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'jw:bi10_e', 'ASV (bi10_E)')">
+        <input type="file" style="display:none;" onchange="importUniversalEpubFiles(event, 'jw:bi10_e', 'ASV (bi10_E)')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#1b5e20;">
         🇬🇧 Carica King James Version — KJV (bi22_E .jwpub / .epub)
-        <input type="file" accept=".jwpub,.epub,.zip,application/epub+zip,application/zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'jw:bi22_e', 'KJV (bi22_E)')">
+        <input type="file" style="display:none;" onchange="importUniversalEpubFiles(event, 'jw:bi22_e', 'KJV (bi22_E)')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#4a148c;">
         🇬🇧📜 Carica Kingdom Interlinear — KIT (int_E .jwpub / .epub)
-        <input type="file" accept=".jwpub,.epub,.zip,application/epub+zip,application/zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'jw:int_e', 'Kingdom Interlinear (int_E)')">
+        <input type="file" style="display:none;" onchange="importUniversalEpubFiles(event, 'jw:int_e', 'Kingdom Interlinear (int_E)')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0d47a1;">
         🇬🇧 Carica NWT Reference / Study (bi8_E / nwtsty_E .jwpub / .epub)
-        <input type="file" accept=".jwpub,.epub,.zip,application/epub+zip,application/zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'jw:bi8_e', 'NWT Study / Ref (EN)')">
+        <input type="file" style="display:none;" onchange="importUniversalEpubFiles(event, 'jw:bi8_e', 'NWT Study / Ref (EN)')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#1565c0;">
-        🇪🇸 Carica EPUB TNM 2019 Español (nwt_S.epub)
-        <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:nwt_s', 'TNM 2019 (ES)')">
+        🇪🇸 Carica TNM 2019 Español (nwt_S .epub / .jwpub)
+        <input type="file" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:nwt_s', 'TNM 2019 (ES)')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0a367e;">
-        🇪🇸 Carica EPUB TNM 1987 Español (bi12_S.epub)
-        <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:bi12_s', 'TNM 1987 (ES)')">
+        🇪🇸 Carica TNM 1987 Español (bi12_S .epub / .jwpub)
+        <input type="file" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:bi12_s', 'TNM 1987 (ES)')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#00695c;">
-        🇵🇹🇧🇷 Carica EPUB TNM Português (nwt_TPO.epub)
-        <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:nwt_tpo', 'TNM (PT)')">
+        🇵🇹🇧🇷 Carica TNM Português (nwt_TPO .epub / .jwpub)
+        <input type="file" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:nwt_tpo', 'TNM (PT)')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0277bd;">
         📗 Carica Nuova Riveduta (Seleziona VT e/o NT .epub)
-        <input type="file" accept=".epub,application/epub+zip" multiple style="display:none;" onchange="importUniversalEpubFiles(event, 'epub:nr', 'Nuova Riveduta')">
+        <input type="file" multiple style="display:none;" onchange="importUniversalEpubFiles(event, 'epub:nr', 'Nuova Riveduta')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0277bd;">
         📙 Carica Bibbia CEI 2008 (Seleziona VT e/o NT .epub)
-        <input type="file" accept=".epub,application/epub+zip" multiple style="display:none;" onchange="importUniversalEpubFiles(event, 'epub:cei', 'CEI 2008')">
+        <input type="file" multiple style="display:none;" onchange="importUniversalEpubFiles(event, 'epub:cei', 'CEI 2008')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#00838f;">
         📕 Carica Parola del Signore TILC (Seleziona VT e/o NT .epub)
-        <input type="file" accept=".epub,application/epub+zip" multiple style="display:none;" onchange="importUniversalEpubFiles(event, 'epub:tilc', 'Parola del Signore (TILC)')">
+        <input type="file" multiple style="display:none;" onchange="importUniversalEpubFiles(event, 'epub:tilc', 'Parola del Signore (TILC)')">
       </label>
-      <div id="epubImportStatus" style="font-size:13px; font-weight:700; color:var(--primary-light); text-align:center; padding:4px;"></div>
     </div>
     <div class="section-title"><span>💾 Backup & Ripristino Dati Studio</span></div>
     <div style="display:flex; flex-direction:column; gap:10px;">
       <button class="search-btn" onclick="exportBackupJson()">📤 Esporta / Condividi File di Backup (.json)</button>
       <label class="nav-btn" style="text-align:center; padding:10px; cursor:pointer;">
         📥 Importa File di Backup (.json)
-        <input type="file" accept=".json,application/json" style="display:none;" onchange="importBackupJson(event)">
+        <input type="file" style="display:none;" onchange="importBackupJson(event)">
       </label>
     </div>
   `;
   document.getElementById("proModal").style.display = "flex";
 }
+    
   function matchItalianBookNameToId(rawTitle, isStrictFromBody = false) {
   if (!rawTitle) return null;
   const lower = rawTitle.toLowerCase()
@@ -2893,7 +2894,8 @@ function openBackupModal() {
   return exactBookMap[clean] || null;
     }
 async function importUniversalEpubFiles(event, targetId, labelName) {
-  const files = Array.from(event.target.files || []);
+  const inputEl = event.target;
+  const files = Array.from((inputEl && inputEl.files) || []);
   if (!files.length) return;
   const statusEl = document.getElementById("epubImportStatus");
   if (typeof JSZip === "undefined") {
@@ -2912,7 +2914,8 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
     }
     for (const file of files) {
       statusEl.innerHTML = `⏳ Analisi di <b>${escapeHtml(file.name)}</b> in corso...`;
-      let zip = await JSZip.loadAsync(file);
+      const rawBuffer = await file.arrayBuffer();
+      let zip = await JSZip.loadAsync(rawBuffer);
       // 1. Verifica se è un archivio .jwpub (con file 'contents' annidato)
       const contentsEntry = zip.files["contents"] || Object.values(zip.files).find(f => !f.dir && f.name.split("/").pop().toLowerCase() === "contents");
       if (contentsEntry) {
