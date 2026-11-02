@@ -503,7 +503,6 @@
       border-radius: 10px;
       padding: 6px;
       background: var(--bg-main);
-      scroll-behavior: smooth;
     }
     .rp-row {
       display: flex;
@@ -4704,7 +4703,7 @@ function renderReadingPlanModalContent(scrollToToday = true) {
     ${pickerHtml}
     <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--text-muted); margin-bottom:6px;">
       <span id="rpProgressText">Completati: ${doneCount} / 365 giorni (${pct}%)</span>
-      <span style="color:var(--primary-light); cursor:pointer; font-weight:700;" onclick="scrollRpToToday()">🎯 Vai a Oggi</span>
+      <span style="color:var(--primary-light); cursor:pointer; font-weight:700;" onclick="scrollRpToToday(true)">🎯 Vai a Oggi</span>
     </div>
     <div id="rpScrollContainer" class="rp-scroll-window">
       ${rowsHtml}
@@ -4715,19 +4714,22 @@ function renderReadingPlanModalContent(scrollToToday = true) {
   `;
 
   if (scrollToToday) {
-    setTimeout(scrollRpToToday, 60);
+    scrollRpToToday(false);
   }
 }
 
-function scrollRpToToday() {
+function scrollRpToToday(smooth = false) {
   const cont = document.getElementById("rpScrollContainer");
   const todayIdx = getDayOfYearIndex();
   const prevIdx = Math.max(0, todayIdx - 1);
   const topRow = document.getElementById(`rp_row_${prevIdx}`);
   if (cont && topRow) {
-    cont.scrollTop = topRow.offsetTop - cont.offsetTop - 4;
+    cont.scrollTo({
+      top: topRow.offsetTop - cont.offsetTop - 4,
+      behavior: smooth ? "smooth" : "auto"
+    });
   }
-  }
+}
 function exportBackupJson() {
   const data = {
     app: "BibbiaMultilingue_PRO",
