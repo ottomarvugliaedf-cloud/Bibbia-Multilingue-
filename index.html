@@ -2990,17 +2990,19 @@ async function extractJwpubSqliteBible(zip, dbFilePath, mergedBooksMap, statusEl
   const dbBytes = await zip.files[dbFilePath].async("uint8array");
   const db = new SQL.Database(dbBytes);
 
-  const tryDecompressJwBlob = (u8) => {
-    if (!u8 || !u8.length) return "";
-    if (typeof pako !== "undefined") {
-      try { return new TextDecoder("utf-8").decode(pako.inflate(u8)); } catch (e) {}
-      try { return new TextDecoder("utf-8").decode(pako.inflateRaw(u8)); } catch (e) {}
-      for (let off = 1; off <= 16 && off < u8.length - 2; off++) {
-        try { return new TextDecoder("utf-8").decode(pako.inflate(u8.subarray(off))); } catch (e) {}
-        try { return new TextDecoder("utf-8").decode(pako.inflateRaw(u8.subarray(off))); } catch (e) {}
+  const tryDecodeText = (rawVal) => {
+    if (!rawVal) return "";
+    if (typeof rawVal === "string") return rawVal;
+    try {
+      const u8 = rawVal instanceof Uint8Array ? rawVal : new Uint8Array(Object.values(rawVal));
+      if (typeof pako !== "undefined") {
+        try { return new TextDecoder("utf-8").decode(pako.inflate(u8)); } catch (e) {}
+        try { return new TextDecoder("utf-8").decode(pako.inflateRaw(u8)); } catch (e) {}
       }
+      return new TextDecoder("utf-8", { fatal: false }).decode(u8);
+    } catch (e) {
+      return String(rawVal);
     }
-    return new TextDecoder("utf-8", { fatal: false }).decode(u8);
   };
 
   const cleanJwVerseHtml = (rawHtml) => {
@@ -3020,8 +3022,6 @@ async function extractJwpubSqliteBible(zip, dbFilePath, mergedBooksMap, statusEl
   };
 
   let extractedAnyVerse = false;
-
-  // 1. Estrae l'elenco delle tabelle nel DB SQLite
   let tables = [];
   try {
     const tRes = db.exec("SELECT name FROM sqlite_master WHERE type='table';");
@@ -3030,9 +3030,9 @@ async function extractJwpubSqliteBible(zip, dbFilePath, mergedBooksMap, statusEl
     }
   } catch (e) {}
 
-  // 2. Tenta la query standard JW (BibleVerse / BibleChapter)
   const hasTable = (name) => tables.some(t => t.toLowerCase() === name.toLowerCase());
-  
+
+  // 1. Tentativo con schema standard BibleVerse / BibleChapter
   if (hasTable("BibleVerse") && hasTable("BibleChapter")) {
     try {
       const stmt = db.prepare(`
@@ -3042,23 +3042,19 @@ async function extractJwpubSqliteBible(zip, dbFilePath, mergedBooksMap, statusEl
         ORDER BY bc.BookNumber, bc.ChapterNumber, bv.VerseNumber
       `);
       const booksTemp = new Map();
-      let rowCount = 0;
       while (stmt.step()) {
         const row = stmt.get();
         const bId = Number(row[0]);
         const chNum = Number(row[1]);
         const vNum = Number(row[2]);
-        const rawContent = row[3];
-        if (bId < 1 || bId > 66 || chNum < 1 || vNum < 1 || !rawContent) continue;
-        const htmlStr = typeof rawContent === "string" ? rawContent : tryDecompressJwBlob(rawContent);
+        const htmlStr = tryDecodeText(row[3]);
         const cleanTxt = cleanJwVerseHtml(htmlStr);
-        if (!cleanTxt) continue;
+        if (!cleanTxt || bId < 1 || bId > 66) continue;
         extractedAnyVerse = true;
         if (!booksTemp.has(bId)) booksTemp.set(bId, new Map());
         const chMap = booksTemp.get(bId);
         if (!chMap.has(chNum)) chMap.set(chNum, []);
         chMap.get(chNum).push({ verse: vNum, text: cleanTxt });
-        rowCount++;
       }
       stmt.free();
       booksTemp.forEach((chMap, bId) => {
@@ -3074,69 +3070,45 @@ async function extractJwpubSqliteBible(zip, dbFilePath, mergedBooksMap, statusEl
     } catch (e) {}
   }
 
-  // 3. Metodo Universale di Fallback: Scansiona qualsiasi tabella che contenga colonne di testo o capitoli
-  if (!extractedAnyVerse) {
-    for (const tbl of tables) {
-      try {
-        const colRes = db.exec(`PRAGMA table_info("${tbl}");`);
-        if (!colRes.length || !colRes[0].values) continue;
-        const cols = colRes[0].values.map(c => c[1].toLowerCase());
-        
-        // Cerca tabelle che sembrano contenere versetti o contenuti testuali
-        if (cols.some(c => c.includes("content") || c.includes("text") || c.includes("verse"))) {
-          const rows = db.exec(`SELECT * FROM "${tbl}";`);
-          if (!rows.length || !rows[0].values) continue;
-          const dataRows = rows[0].values;
-          const colNames = rows[0].columns.map(c => c.toLowerCase());
-          
-          const idxBook = colNames.findIndex(c => c.includes("book"));
-          const idxChap = colNames.findIndex(c => c.includes("chap"));
-          const idxVers = colNames.findIndex(c => c.includes("vers"));
-          const idxCont = colNames.findIndex(c => c.includes("content") || c.includes("text") || c.includes("html"));
-
-          if (idxCont !== -1) {
-            const booksTemp = new Map();
-            dataRows.forEach((row, rIdx) => {
-              const bId = idxBook !== -1 ? Number(row[idxBook]) : (Math.floor(rIdx / 100) + 1);
-              const chNum = idxChap !== -1 ? Number(row[idxChap]) : 1;
-              const vNum = idxVers !== -1 ? Number(row[idxVers]) : (rIdx % 50 + 1);
-              const rawContent = row[idxCont];
-              if (!rawContent || bId < 1 || bId > 66) return;
-              
-              const htmlStr = typeof rawContent === "string" ? rawContent : tryDecompressJwBlob(rawContent);
-              const cleanTxt = cleanJwVerseHtml(htmlStr);
-              if (!cleanTxt) return;
-              
-              extractedAnyVerse = true;
-              if (!booksTemp.has(bId)) booksTemp.set(bId, new Map());
-              const chMap = booksTemp.get(bId);
-              if (!chMap.has(chNum)) chMap.set(chNum, []);
-              chMap.get(chNum).push({ verse: vNum, text: cleanTxt });
-            });
-
-            booksTemp.forEach((chMap, bId) => {
-              const bMeta = getBook(bId);
-              const chaptersArr = [];
-              chMap.forEach((versesArr, chNum) => {
-                versesArr.sort((a, b) => a.verse - b.verse);
-                chaptersArr.push({ chapter: chNum, verses: versesArr });
-              });
-              chaptersArr.sort((a, b) => a.chapter - b.chapter);
-              mergedBooksMap.set(bId, { nr: bId, name: bMeta.name, chapters: chaptersArr });
-            });
-            if (extractedAnyVerse) break;
+  // 2. Fallback avanzato: se è un jwpub di studio basato su Document / Text
+  if (!extractedAnyVerse && (hasTable("Document") || hasTable("TextDocument"))) {
+    try {
+      const docStmt = db.prepare("SELECT Text FROM Document WHERE Text IS NOT NULL;");
+      const booksTemp = new Map();
+      let currentDetectedBook = 1;
+      let currentDetectedChap = 1;
+      while (docStmt.step()) {
+        const row = docStmt.get();
+        const htmlStr = tryDecodeText(row[0]);
+        if (!htmlStr) continue;
+        const versesArr = parseJwEpubChapterXhtml(htmlStr);
+        if (versesArr.length > 0) {
+          extractedAnyVerse = true;
+          if (!booksTemp.has(currentDetectedBook)) {
+            booksTemp.set(currentDetectedBook, { nr: currentDetectedBook, name: getBook(currentDetectedBook).name, chapters: [] });
+          }
+          const bObj = booksTemp.get(currentDetectedBook);
+          bObj.chapters.push({ chapter: currentDetectedChap, verses: versesArr });
+          currentDetectedChap++;
+          if (currentDetectedChap > getBook(currentDetectedBook).ch) {
+            currentDetectedChap = 1;
+            currentDetectedBook++;
           }
         }
-      } catch (e) {}
-    }
+      }
+      docStmt.free();
+      booksTemp.forEach((bObj, bId) => {
+        mergedBooksMap.set(bId, bObj);
+      });
+    } catch (e) {}
   }
 
   db.close();
 
   if (!extractedAnyVerse && mergedBooksMap.size === 0) {
-    throw new Error("Il file JWPUB non contiene tabelle di versetti compatibili.");
+    throw new Error("Il file JWPUB non contiene formati di versetti decodificabili.");
   }
-  }
+}
     
 async function extractJwFormatEpub(zip, allFiles, mergedBooksMap, statusEl, labelName) {
   const JW_BOOK_CODES = ["", "GE", "EX", "LE", "NU", "DE", "JOS", "JG", "RU", "1SA", "2SA", "1KI", "2KI", "1CH", "2CH", "EZR", "NE", "ES", "JOB", "PS", "PR", "EC", "CA", "ISA", "JER", "LA", "EZE", "DA", "HOS", "JOE", "AM", "OB", "JON", "MIC", "NAH", "HAB", "ZEP", "HAG", "ZEC", "MAL", "MT", "MR", "LU", "JOH", "AC", "RO", "1CO", "2CO", "GA", "EPH", "PHP", "COL", "1TH", "2TH", "1TI", "2TI", "TIT", "PHM", "HEB", "JAS", "1PE", "2PE", "1JO", "2JO", "3JO", "JUD", "RE"];
