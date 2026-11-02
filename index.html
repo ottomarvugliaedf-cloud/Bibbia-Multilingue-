@@ -3021,17 +3021,19 @@ async function extractJwpubSqliteBible(zip, dbFilePath, mergedBooksMap, statusEl
 
   let extractedAnyVerse = false;
 
-  // 1. Ispeziona le tabelle esistenti nel DB SQLite del .jwpub
+  // 1. Estrae l'elenco delle tabelle nel DB SQLite
   let tables = [];
   try {
     const tRes = db.exec("SELECT name FROM sqlite_master WHERE type='table';");
     if (tRes.length > 0 && tRes[0].values) {
-      tables = tRes[0].values.map(v => v[0].toLowerCase());
+      tables = tRes[0].values.map(v => v[0]);
     }
   } catch (e) {}
 
-  // 2. Tentativo con schema standard JW (.jwpub moderni: BibleVerse / BibleChapter)
-  if (tables.includes("bibleverse") && tables.includes("biblechapter")) {
+  // 2. Tenta la query standard JW (BibleVerse / BibleChapter)
+  const hasTable = (name) => tables.some(t => t.toLowerCase() === name.toLowerCase());
+  
+  if (hasTable("BibleVerse") && hasTable("BibleChapter")) {
     try {
       const stmt = db.prepare(`
         SELECT bc.BookNumber, bc.ChapterNumber, bv.VerseNumber, bv.Content
@@ -3072,44 +3074,69 @@ async function extractJwpubSqliteBible(zip, dbFilePath, mergedBooksMap, statusEl
     } catch (e) {}
   }
 
-  // 3. Tentativo con schema alternativo o tabelle Document / Block di alcune pubblicazioni/bibbie jwpub
-  if (!extractedAnyVerse) {
-    try {
-      const allColsQuery = db.exec("SELECT * FROM Document LIMIT 5;");
-      // Se esiste la tabella Document o simili, estrae i blocchi di testo
-      const docStmt = db.prepare("SELECT Id, Title, Text FROM Document WHERE Text IS NOT NULL;");
-      const booksTemp = new Map();
-      while (docStmt.step()) {
-        const row = docStmt.get();
-        const rawHtml = row[2];
-        const htmlStr = typeof rawHtml === "string" ? rawHtml : tryDecompressJwBlob(rawHtml);
-        const versesArr = parseJwEpubChapterXhtml(htmlStr);
-        // Tenta di dedurre il libro dal titolo o dal nome del documento
-        // (Se fallisce, prova a mappare i capitoli sequenzialmente)
-      }
-      docStmt.free();
-    } catch (e) {}
-  }
-
-  // 4. Fallco generico su qualsiasi tabella contenente testo o capitoli biblici
+  // 3. Metodo Universale di Fallback: Scansiona qualsiasi tabella che contenga colonne di testo o capitoli
   if (!extractedAnyVerse) {
     for (const tbl of tables) {
-      if (tbl.includes("verse") || tbl.includes("chapter") || tbl.includes("content")) {
-        try {
-          const res = db.exec(`SELECT * FROM ${tbl} LIMIT 10;`);
-          // Analizza dinamicamente le colonne per trovare BookNumber, ChapterNumber, VerseNumber e Content
-          // ...
-        } catch (e) {}
-      }
+      try {
+        const colRes = db.exec(`PRAGMA table_info("${tbl}");`);
+        if (!colRes.length || !colRes[0].values) continue;
+        const cols = colRes[0].values.map(c => c[1].toLowerCase());
+        
+        // Cerca tabelle che sembrano contenere versetti o contenuti testuali
+        if (cols.some(c => c.includes("content") || c.includes("text") || c.includes("verse"))) {
+          const rows = db.exec(`SELECT * FROM "${tbl}";`);
+          if (!rows.length || !rows[0].values) continue;
+          const dataRows = rows[0].values;
+          const colNames = rows[0].columns.map(c => c.toLowerCase());
+          
+          const idxBook = colNames.findIndex(c => c.includes("book"));
+          const idxChap = colNames.findIndex(c => c.includes("chap"));
+          const idxVers = colNames.findIndex(c => c.includes("vers"));
+          const idxCont = colNames.findIndex(c => c.includes("content") || c.includes("text") || c.includes("html"));
+
+          if (idxCont !== -1) {
+            const booksTemp = new Map();
+            dataRows.forEach((row, rIdx) => {
+              const bId = idxBook !== -1 ? Number(row[idxBook]) : (Math.floor(rIdx / 100) + 1);
+              const chNum = idxChap !== -1 ? Number(row[idxChap]) : 1;
+              const vNum = idxVers !== -1 ? Number(row[idxVers]) : (rIdx % 50 + 1);
+              const rawContent = row[idxCont];
+              if (!rawContent || bId < 1 || bId > 66) return;
+              
+              const htmlStr = typeof rawContent === "string" ? rawContent : tryDecompressJwBlob(rawContent);
+              const cleanTxt = cleanJwVerseHtml(htmlStr);
+              if (!cleanTxt) return;
+              
+              extractedAnyVerse = true;
+              if (!booksTemp.has(bId)) booksTemp.set(bId, new Map());
+              const chMap = booksTemp.get(bId);
+              if (!chMap.has(chNum)) chMap.set(chNum, []);
+              chMap.get(chNum).push({ verse: vNum, text: cleanTxt });
+            });
+
+            booksTemp.forEach((chMap, bId) => {
+              const bMeta = getBook(bId);
+              const chaptersArr = [];
+              chMap.forEach((versesArr, chNum) => {
+                versesArr.sort((a, b) => a.verse - b.verse);
+                chaptersArr.push({ chapter: chNum, verses: versesArr });
+              });
+              chaptersArr.sort((a, b) => a.chapter - b.chapter);
+              mergedBooksMap.set(bId, { nr: bId, name: bMeta.name, chapters: chaptersArr });
+            });
+            if (extractedAnyVerse) break;
+          }
+        }
+      } catch (e) {}
     }
   }
 
   db.close();
 
   if (!extractedAnyVerse && mergedBooksMap.size === 0) {
-    throw new Error("Il file JWPUB contiene un database SQLite con uno schema non riconosciuto o privo di versetti standard.");
+    throw new Error("Il file JWPUB non contiene tabelle di versetti compatibili.");
   }
-}
+  }
     
 async function extractJwFormatEpub(zip, allFiles, mergedBooksMap, statusEl, labelName) {
   const JW_BOOK_CODES = ["", "GE", "EX", "LE", "NU", "DE", "JOS", "JG", "RU", "1SA", "2SA", "1KI", "2KI", "1CH", "2CH", "EZR", "NE", "ES", "JOB", "PS", "PR", "EC", "CA", "ISA", "JER", "LA", "EZE", "DA", "HOS", "JOE", "AM", "OB", "JON", "MIC", "NAH", "HAB", "ZEP", "HAG", "ZEC", "MAL", "MT", "MR", "LU", "JOH", "AC", "RO", "1CO", "2CO", "GA", "EPH", "PHP", "COL", "1TH", "2TH", "1TI", "2TI", "TIT", "PHM", "HEB", "JAS", "1PE", "2PE", "1JO", "2JO", "3JO", "JUD", "RE"];
