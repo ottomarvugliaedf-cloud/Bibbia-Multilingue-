@@ -13,6 +13,8 @@
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3004/3004458.png">
   <link rel="manifest" href='data:application/manifest+json,{"name":"Bibbia Multilingue PRO","short_name":"BM PRO","start_url":".","display":"standalone","background_color":"%23072a60","theme_color":"%230d47a1","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3004/3004458.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}'>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
   <style>
     :root {
       --bg-main: #f0f6fc;
@@ -764,10 +766,16 @@ const BIBLE_BOOKS = [
   { id: 66, name: "Rivelazione", abbr: "Riv", ch: 22, sec: "NT", cat: 4 }
 ];
   const CORE_BIBLES = [
+  const CORE_BIBLES = [
   { id: "gb:nwt", name: "🇮🇹 Italiano: Traduzione del Nuovo Mondo (TNM 2017)", lang: "Italian" },
   { id: "gb:bi12", name: "🇮🇹 Italiano: Traduzione del Nuovo Mondo (TNM 1987 - bi12)", lang: "Italian" },
   { id: "gb:nwt_e", name: "🇬🇧 English: New World Translation (NWT 2013)", lang: "English" },
   { id: "gb:bi12_e", name: "🇬🇧 English: New World Translation (NWT 1984 - bi12)", lang: "English" },
+  { id: "jw:by_e", name: "🇬🇧 English: The Bible in Living English (Byington - by_E)", lang: "English" },
+  { id: "jw:bi10_e", name: "🇬🇧 English: American Standard Version (1901 - bi10_E)", lang: "English" },
+  { id: "jw:bi22_e", name: "🇬🇧 English: King James Version (Authorized - bi22_E)", lang: "English" },
+  { id: "jw:int_e", name: "🇬🇧📜 English/Greek: The Kingdom Interlinear Translation (int_E)", lang: "English" },
+  { id: "jw:bi8_e", name: "🇬🇧 English: NWT Reference / Study Edition (bi8 / nwtsty_E)", lang: "English" },
   { id: "gb:nwt_s", name: "🇪🇸 Español: Traducción del Nuevo Mundo (TNM 2019)", lang: "Spanish" },
   { id: "gb:bi12_s", name: "🇪🇸 Español: Traducción del Nuevo Mundo (TNM 1987 - bi12)", lang: "Spanish" },
   { id: "gb:nwt_tpo", name: "🇵🇹🇧🇷 Português: Tradução do Novo Mundo (TNM)", lang: "Portuguese" },
@@ -834,6 +842,7 @@ const BIBLE_BOOKS = [
 const LOCAL_EPUB_IDS = [
   "gb:nwt", "gb:bi12",
   "gb:nwt_e", "gb:bi12_e",
+  "jw:by_e", "jw:bi10_e", "jw:bi22_e", "jw:int_e", "jw:bi8_e",
   "gb:nwt_s", "gb:bi12_s",
   "gb:nwt_tpo",
   "epub:nr", "epub:cei", "epub:tilc"
@@ -2411,7 +2420,7 @@ function getActiveTTSLangCode(fullLocale = false) {
   if (t === "gb:nwt" || t === "gb:bi12" || t.includes("riveduta") || t.includes("giovanni") || t.startsWith("epub:") || langName.includes("ital")) return fullLocale ? "it-IT" : "it";
   if (t.endsWith("_s") || t.includes("valera") || t.includes("sagradas") || t.includes("rvg") || langName.includes("span")) return fullLocale ? "es-ES" : "es";
   if (t.endsWith("_tpo") || t.includes("almeida") || langName.includes("port")) return fullLocale ? "pt-BR" : "pt";
-  if (t.endsWith("_e") || langName.includes("engl")) return fullLocale ? "en-US" : "en";
+  if (t.endsWith("_e") || t.startsWith("jw:") || langName.includes("engl")) return fullLocale ? "en-US" : "en";
   if (t.includes("luther") || t.includes("schlachter") || t.includes("elberfelder") || langName.includes("germ")) return fullLocale ? "de-DE" : "de";
   if (t.includes("ls1910") || t.includes("martin") || t.includes("ostervald") || langName.includes("fren")) return fullLocale ? "fr-FR" : "fr";
   if (t.includes("synodal") || t.includes("makarij") || langName.includes("russ")) return fullLocale ? "ru-RU" : "ru";
@@ -2717,6 +2726,26 @@ function openBackupModal() {
         🇬🇧 Carica EPUB NWT 1984 English (bi12_E.epub)
         <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:bi12_e', 'NWT 1984 (EN)')">
       </label>
+            <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#1b5e20;">
+        🇬🇧 Carica Byington — Living English (by_E .jwpub / .epub)
+        <input type="file" accept=".jwpub,.epub,.zip,application/epub+zip,application/zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'jw:by_e', 'Byington (by_E)')">
+      </label>
+      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#1b5e20;">
+        🇬🇧 Carica American Standard — ASV (bi10_E .jwpub / .epub)
+        <input type="file" accept=".jwpub,.epub,.zip,application/epub+zip,application/zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'jw:bi10_e', 'ASV (bi10_E)')">
+      </label>
+      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#1b5e20;">
+        🇬🇧 Carica King James Version — KJV (bi22_E .jwpub / .epub)
+        <input type="file" accept=".jwpub,.epub,.zip,application/epub+zip,application/zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'jw:bi22_e', 'KJV (bi22_E)')">
+      </label>
+      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#4a148c;">
+        🇬🇧📜 Carica Kingdom Interlinear — KIT (int_E .jwpub / .epub)
+        <input type="file" accept=".jwpub,.epub,.zip,application/epub+zip,application/zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'jw:int_e', 'Kingdom Interlinear (int_E)')">
+      </label>
+      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0d47a1;">
+        🇬🇧 Carica NWT Reference / Study (bi8_E / nwtsty_E .jwpub / .epub)
+        <input type="file" accept=".jwpub,.epub,.zip,application/epub+zip,application/zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'jw:bi8_e', 'NWT Study / Ref (EN)')">
+      </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#1565c0;">
         🇪🇸 Carica EPUB TNM 2019 Español (nwt_S.epub)
         <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:nwt_s', 'TNM 2019 (ES)')">
@@ -2884,14 +2913,26 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
     }
     for (const file of files) {
       statusEl.innerHTML = `⏳ Analisi di <b>${escapeHtml(file.name)}</b> in corso...`;
-      const zip = await JSZip.loadAsync(file);
+      let zip = await JSZip.loadAsync(file);
+      // 1. Verifica se è un archivio .jwpub (con file 'contents' annidato)
+      const contentsEntry = zip.files["contents"] || Object.values(zip.files).find(f => !f.dir && f.name.split("/").pop().toLowerCase() === "contents");
+      if (contentsEntry) {
+        statusEl.innerHTML = `⚙️ Apertura contenitore JWPUB (<b>${escapeHtml(file.name)}</b>)...`;
+        const innerBuf = await contentsEntry.async("uint8array");
+        zip = await JSZip.loadAsync(innerBuf);
+      }
       const allFiles = Object.keys(zip.files);
-      const isJwEpub = targetId.startsWith("gb:nwt") || targetId.startsWith("gb:bi12") ||
-      allFiles.some(f => /_BI12_\.|\.GE-split|biblechapternav/i.test(f));
-      if (!isJwEpub) {
-        await extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, labelName);
+      const dbFile = allFiles.find(f => f.toLowerCase().endsWith(".db") && !zip.files[f].dir);
+      if (dbFile) {
+        await extractJwpubSqliteBible(zip, dbFile, mergedBooksMap, statusEl, labelName);
       } else {
-        await extractJwFormatEpub(zip, allFiles, mergedBooksMap, statusEl, labelName);
+        const isJwEpub = targetId.startsWith("gb:nwt") || targetId.startsWith("gb:bi12") || targetId.startsWith("jw:") ||
+          allFiles.some(f => /_BI12_|_BI10_|_BI22_|_BY_|_INT_|\.GE-split|biblechapternav/i.test(f));
+        if (!isJwEpub) {
+          await extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, labelName);
+        } else {
+          await extractJwFormatEpub(zip, allFiles, mergedBooksMap, statusEl, labelName);
+        }
       }
     }
     const finalBooksData = [];
@@ -2906,6 +2947,9 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
         finalBooksData.push({ nr: bId, name: bMeta.name, chapters: [] });
       }
     }
+    if (importedCount === 0) {
+      throw new Error("Nessun capitolo biblico trovato nel file selezionato.");
+    }
     statusEl.innerHTML = `💾 Salvataggio permanente nel database Offline...`;
     const fullBibleObj = { id: targetId, name: labelName, books: finalBooksData };
     await saveOfflineBible(targetId, fullBibleObj);
@@ -2917,16 +2961,129 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
     state.trans1 = targetId;
     document.getElementById("trans1").value = targetId;
     safeSaveStorage("bm_trans1", targetId);
-    statusEl.innerHTML = `✔ <b>${escapeHtml(labelName)}</b> salvata Offline (${importedCount}/66 libri pronti)!`;
+    // Se la Bibbia importata ha solo il NT (es. Kingdom Interlinear int_E) e siamo nell'AT, salta a Matteo 1
+    if (importedCount <= 27 && state.bookId < 40 && mergedBooksMap.has(40)) {
+      state.bookId = 40;
+      state.chapter = 1;
+    }
+    statusEl.innerHTML = `✔ <b>${escapeHtml(labelName)}</b> salvata Offline (${importedCount} libri pronti)!`;
     setTimeout(() => {
       closeProModal();
       loadChapterView();
-    }, 1000);
+    }, 900);
   } catch (err) {
     console.error(err);
     statusEl.innerHTML = `❌ Errore durante l'importazione: ${escapeHtml(err.message)}`;
   }
 }
+
+async function extractJwpubSqliteBible(zip, dbFilePath, mergedBooksMap, statusEl, labelName) {
+  if (typeof initSqlJs === "undefined") {
+    throw new Error("Libreria SQL.js non caricata. Verifica la connessione internet.");
+  }
+  statusEl.innerHTML = `⚙️ Caricamento motore SQLite per <b>${escapeHtml(labelName)}</b>...`;
+  const SQL = await initSqlJs({
+    locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`
+  });
+  const dbBytes = await zip.files[dbFilePath].async("uint8array");
+  const db = new SQL.Database(dbBytes);
+
+  const tryDecompressJwBlob = (u8) => {
+    if (!u8 || !u8.length) return "";
+    if (typeof pako !== "undefined") {
+      try { return new TextDecoder("utf-8").decode(pako.inflate(u8)); } catch (e) {}
+      try { return new TextDecoder("utf-8").decode(pako.inflateRaw(u8)); } catch (e) {}
+      for (let off = 1; off <= 16 && off < u8.length - 2; off++) {
+        try { return new TextDecoder("utf-8").decode(pako.inflate(u8.subarray(off))); } catch (e) {}
+        try { return new TextDecoder("utf-8").decode(pako.inflateRaw(u8.subarray(off))); } catch (e) {}
+      }
+    }
+    return new TextDecoder("utf-8", { fatal: false }).decode(u8);
+  };
+
+  const cleanJwVerseHtml = (rawHtml) => {
+    if (!rawHtml) return "";
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(rawHtml, "text/html");
+    doc.querySelectorAll(".footnote, .footnotes, .groupFootnote, .marginal, a.b, a.fn, sup.xrefLink, .w_ch, strong.w_ch").forEach(el => el.remove());
+    // Per la Kingdom Interlinear (int_E), formatta con eleganza Greco + traduzione letterale sottostante
+    doc.querySelectorAll("rt").forEach(rt => {
+      rt.textContent = ` [${rt.textContent.trim()}] `;
+    });
+    const body = doc.body || doc.documentElement;
+    return (body ? body.textContent : rawHtml)
+      .replace(/^[\s\d\u00A0.,;:]+/, "")
+      .replace(/[\+\*]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  };
+
+  let extractedAnyVerse = false;
+  try {
+    const stmt = db.prepare(`
+      SELECT bc.BookNumber, bc.ChapterNumber, bv.VerseNumber, bv.Content
+      FROM BibleVerse bv
+      JOIN BibleChapter bc ON bv.BibleChapterId = bc.BibleChapterId
+      ORDER BY bc.BookNumber, bc.ChapterNumber, bv.VerseNumber
+    `);
+    const booksTemp = new Map();
+    let rowCount = 0;
+    while (stmt.step()) {
+      const row = stmt.get();
+      const bId = Number(row[0]);
+      const chNum = Number(row[1]);
+      const vNum = Number(row[2]);
+      const rawContent = row[3];
+      if (bId < 1 || bId > 66 || chNum < 1 || vNum < 1 || !rawContent) continue;
+      const htmlStr = typeof rawContent === "string" ? rawContent : tryDecompressJwBlob(rawContent);
+      const cleanTxt = cleanJwVerseHtml(htmlStr);
+      if (!cleanTxt) continue;
+      extractedAnyVerse = true;
+      if (!booksTemp.has(bId)) booksTemp.set(bId, new Map());
+      const chMap = booksTemp.get(bId);
+      if (!chMap.has(chNum)) chMap.set(chNum, []);
+      chMap.get(chNum).push({ verse: vNum, text: cleanTxt });
+      rowCount++;
+      if (rowCount % 2500 === 0) {
+        statusEl.innerHTML = `⚙️ Decodifica versetti <b>${escapeHtml(labelName)}</b> (${rowCount} estratti)...`;
+        await new Promise(r => setTimeout(r, 0));
+      }
+    }
+    stmt.free();
+    booksTemp.forEach((chMap, bId) => {
+      const bMeta = getBook(bId);
+      const chaptersArr = [];
+      chMap.forEach((versesArr, chNum) => {
+        versesArr.sort((a, b) => a.verse - b.verse);
+        chaptersArr.push({ chapter: chNum, verses: versesArr });
+      });
+      chaptersArr.sort((a, b) => a.chapter - b.chapter);
+      mergedBooksMap.set(bId, { nr: bId, name: bMeta.name, chapters: chaptersArr });
+    });
+  } catch (e) {}
+
+  // Fallback su tabella BibleChapter (se i capitoli sono salvati come documento unico compresso)
+  if (!extractedAnyVerse) {
+    try {
+      const stmtCh = db.prepare(`SELECT BookNumber, ChapterNumber, Content FROM BibleChapter WHERE Content IS NOT NULL ORDER BY BookNumber, ChapterNumber`);
+      while (stmtCh.step()) {
+        const [bIdRaw, chNumRaw, rawContent] = stmtCh.get();
+        const bId = Number(bIdRaw);
+        const chNum = Number(chNumRaw);
+        if (bId < 1 || bId > 66 || !rawContent) continue;
+        const htmlStr = typeof rawContent === "string" ? rawContent : tryDecompressJwBlob(rawContent);
+        const versesArr = parseJwEpubChapterXhtml(htmlStr);
+        if (versesArr.length > 0) {
+          const bMeta = getBook(bId);
+          if (!mergedBooksMap.has(bId)) mergedBooksMap.set(bId, { nr: bId, name: bMeta.name, chapters: [] });
+          mergedBooksMap.get(bId).chapters.push({ chapter: chNum, verses: versesArr });
+        }
+      }
+      stmtCh.free();
+    } catch (e) {}
+  }
+  db.close();
+           }
 
 async function extractJwFormatEpub(zip, allFiles, mergedBooksMap, statusEl, labelName) {
   const JW_BOOK_CODES = ["", "GE", "EX", "LE", "NU", "DE", "JOS", "JG", "RU", "1SA", "2SA", "1KI", "2KI", "1CH", "2CH", "EZR", "NE", "ES", "JOB", "PS", "PR", "EC", "CA", "ISA", "JER", "LA", "EZE", "DA", "HOS", "JOE", "AM", "OB", "JON", "MIC", "NAH", "HAB", "ZEP", "HAG", "ZEC", "MAL", "MT", "MR", "LU", "JOH", "AC", "RO", "1CO", "2CO", "GA", "EPH", "PHP", "COL", "1TH", "2TH", "1TI", "2TI", "TIT", "PHM", "HEB", "JAS", "1PE", "2PE", "1JO", "2JO", "3JO", "JUD", "RE"];
