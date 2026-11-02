@@ -13,8 +13,6 @@
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3004/3004458.png">
   <link rel="manifest" href='data:application/manifest+json,{"name":"Bibbia Multilingue PRO","short_name":"BM PRO","start_url":".","display":"standalone","background_color":"%23072a60","theme_color":"%230d47a1","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3004/3004458.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}'>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
   <style>
     :root {
       --bg-main: #f0f6fc;
@@ -535,61 +533,15 @@
       border-color: #4caf50 !important;
       background: rgba(76, 175, 80, 0.14) !important;
     }
-        .rp-check {
+    .rp-check {
       width: 22px;
       height: 22px;
       accent-color: #2e7d32;
       cursor: pointer;
       flex-shrink: 0;
     }
-    .map-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
-      gap: 10px;
-      margin-top: 8px;
-    }
-    .map-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      overflow: hidden;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
-    }
-    .map-thumb {
-      width: 100%;
-      height: 125px;
-      object-fit: cover;
-      background: #072a60;
-      border-bottom: 1px solid var(--border-color);
-    }
-    .map-card-body {
-      padding: 8px 10px;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-    .map-viewer-box {
-      width: 100%;
-      overflow: auto;
-      -webkit-overflow-scrolling: touch;
-      background: #050d1a;
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      max-height: 64vh;
-      text-align: center;
-      position: relative;
-    }
-    .map-hd-img {
-      display: block;
-      margin: 0 auto;
-      transition: width 0.2s ease;
-      height: auto;
-    }
   </style>
+
 </head>
 <body>
   <!-- Schermata Iniziale Splash Blu PRO con Blocco BM Bianco -->
@@ -622,13 +574,12 @@
     <select id="trans2" class="trans-select" style="display:none;" onchange="onTranslationChange()"></select>
     <select id="trans3" class="trans-select" style="display:none;" onchange="onTranslationChange()"></select>
   </div>
-        <!-- Barra Menu Rapida Sempre Visibile (PRO — Biblioteca) -->
+      <!-- Barra Menu Rapida Sempre Visibile (PRO — Biblioteca) -->
   <div class="quick-menu-bar">
     <button id="booksTabBtn" class="quick-pill" onclick="showBooksView()">🟦 Libri Biblici</button>
     <button id="readTabBtn" class="quick-pill" onclick="loadChapterView()">📖 Lettura</button>
     <button id="insightTabBtn" class="quick-pill" onclick="showInsightView()">📚 Perspicacia (it)</button>
     <button id="siTabBtn" class="quick-pill" onclick="showSiView()">📘 Tutta la Scrittura</button>
-    <button id="mapsTabBtn" class="quick-pill" onclick="showMapsView()">🗺️ Cartine Bibliche</button>
     <button id="dailyTabBtn" class="quick-pill highlight" onclick="showDailyTextView()">☀️ Scrittura del Giorno</button>
     <button id="catalogTabBtn" class="quick-pill" onclick="showCatalogView()">⬇️ +1397 Bibbie / Lingue</button>
     <button id="diffBtn" class="quick-pill" style="display:none;" onclick="toggleDiffMode()">🔍 Diff: OFF</button>
@@ -770,11 +721,6 @@ const BIBLE_BOOKS = [
   { id: "gb:bi12", name: "🇮🇹 Italiano: Traduzione del Nuovo Mondo (TNM 1987 - bi12)", lang: "Italian" },
   { id: "gb:nwt_e", name: "🇬🇧 English: New World Translation (NWT 2013)", lang: "English" },
   { id: "gb:bi12_e", name: "🇬🇧 English: New World Translation (NWT 1984 - bi12)", lang: "English" },
-  { id: "jw:by_e", name: "🇬🇧 English: The Bible in Living English (Byington - by_E)", lang: "English" },
-  { id: "jw:bi10_e", name: "🇬🇧 English: American Standard Version (1901 - bi10_E)", lang: "English" },
-  { id: "jw:bi22_e", name: "🇬🇧 English: King James Version (Authorized - bi22_E)", lang: "English" },
-  { id: "jw:int_e", name: "🇬🇧📜 English/Greek: The Kingdom Interlinear Translation (int_E)", lang: "English" },
-  { id: "jw:bi8_e", name: "🇬🇧 English: NWT Reference / Study Edition (bi8 / nwtsty_E)", lang: "English" },
   { id: "gb:nwt_s", name: "🇪🇸 Español: Traducción del Nuevo Mundo (TNM 2019)", lang: "Spanish" },
   { id: "gb:bi12_s", name: "🇪🇸 Español: Traducción del Nuevo Mundo (TNM 1987 - bi12)", lang: "Spanish" },
   { id: "gb:nwt_tpo", name: "🇵🇹🇧🇷 Português: Tradução do Novo Mundo (TNM)", lang: "Portuguese" },
@@ -841,7 +787,6 @@ const BIBLE_BOOKS = [
 const LOCAL_EPUB_IDS = [
   "gb:nwt", "gb:bi12",
   "gb:nwt_e", "gb:bi12_e",
-  "jw:by_e", "jw:bi10_e", "jw:bi22_e", "jw:int_e", "jw:bi8_e",
   "gb:nwt_s", "gb:bi12_s",
   "gb:nwt_tpo",
   "epub:nr", "epub:cei", "epub:tilc"
@@ -2230,12 +2175,6 @@ function saveCurrentPositionToHistory(targetBookId, targetCh) {
       ci: currentViewContext.ci,
       label: currentViewContext.label || "📘 Tutta la Scrittura"
     });
-  } else if (currentViewContext.type === "maps") {
-    navHistory.push({
-      type: "maps",
-      mapIdx: currentViewContext.mapIdx,
-      label: currentViewContext.label || "🗺️ Cartine Bibliche"
-    });
   } else if (currentViewContext.type === "notes") {
     navHistory.push({ type: "notes", label: "📝 Appunti" });
   } else if (state.bookId !== Number(targetBookId) || state.chapter !== Number(targetCh)) {
@@ -2307,10 +2246,6 @@ function goBackHistory() {
     if (prev.mode === "reader") showSiReader(prev.kind, prev.i, prev.ci);
     else if (prev.mode === "book") showSiBook(prev.i);
     else showSiView();
-    return;
-  }
-  if (prev.type === "maps") {
-    showMapsView(prev.mapIdx !== undefined ? prev.mapIdx : null);
     return;
   }
   if (prev.type === "notes") {
@@ -2419,7 +2354,7 @@ function getActiveTTSLangCode(fullLocale = false) {
   if (t === "gb:nwt" || t === "gb:bi12" || t.includes("riveduta") || t.includes("giovanni") || t.startsWith("epub:") || langName.includes("ital")) return fullLocale ? "it-IT" : "it";
   if (t.endsWith("_s") || t.includes("valera") || t.includes("sagradas") || t.includes("rvg") || langName.includes("span")) return fullLocale ? "es-ES" : "es";
   if (t.endsWith("_tpo") || t.includes("almeida") || langName.includes("port")) return fullLocale ? "pt-BR" : "pt";
-  if (t.endsWith("_e") || t.startsWith("jw:") || langName.includes("engl")) return fullLocale ? "en-US" : "en";
+  if (t.endsWith("_e") || langName.includes("engl")) return fullLocale ? "en-US" : "en";
   if (t.includes("luther") || t.includes("schlachter") || t.includes("elberfelder") || langName.includes("germ")) return fullLocale ? "de-DE" : "de";
   if (t.includes("ls1910") || t.includes("martin") || t.includes("ostervald") || langName.includes("fren")) return fullLocale ? "fr-FR" : "fr";
   if (t.includes("synodal") || t.includes("makarij") || langName.includes("russ")) return fullLocale ? "ru-RU" : "ru";
@@ -2685,104 +2620,78 @@ function downloadCanvasCard() {
 // IMPORTATORE UNIVERSALE MULTI-EPUB (TNM 2017, TNM 1987 bi12, NR, CEI 2008, TILC)
 // ============================================================================
 function openBackupModal() {
-  document.getElementById("proModalTitle").textContent = "💾 Backup & Importazione EPUB / JWPUB Offline";
+  document.getElementById("proModalTitle").textContent = "💾 Backup & Importazione EPUB Offline";
   document.getElementById("proModalBody").innerHTML = `
-    <div class="section-title"><span>📗 Importa Bibbie Offline (.jwpub / .epub)</span></div>
+    <div class="section-title"><span>📗 Importa Bibbie Offline da file EPUB</span></div>
     <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px; line-height:1.45;">
-      Seleziona il file <b>.jwpub</b> o <b>.epub</b> corrispondente dal tuo dispositivo. L'app estrarrà e salverà offline tutti i libri:
+      Seleziona il file <b>.epub</b> corrispondente dal tuo dispositivo. L'app estrarrà e salverà offline tutti i 66 libri:
     </p>
-    <div id="epubImportStatus" style="font-size:13px; font-weight:800; color:var(--primary-light); text-align:center; padding:8px; margin-bottom:10px; background:var(--verse-hover); border-radius:6px;">Pronto per l'importazione</div>
     <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;">
       <label class="search-btn" style="text-align:center; padding:10px; cursor:pointer; background:linear-gradient(135deg, #e65100, #f57c00);">
-        ☀️ Carica Scrittura del Giorno (.epub / .jwpub)
-        <input type="file" style="display:none;" onchange="importDailyTextEpub(event)">
+      ☀️ Carica Scrittura del Giorno (.epub Universale)
+      <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importDailyTextEpub(event)">
       </label>
       <label class="search-btn" style="text-align:center; padding:10px; cursor:pointer; background:linear-gradient(135deg, #2e7d32, #43a047);">
-        📚 Carica Perspicacia — it_I (.zip / .rtf / .epub)
-        <input type="file" multiple style="display:none;" onchange="importInsightFiles(event)">
+      📚 Carica Perspicacia — it_I (.zip / .rtf / .epub)
+      <input type="file" accept=".zip,.epub,.rtf,application/zip,application/epub+zip" multiple style="display:none;" onchange="importInsightFiles(event)">
       </label>
       <label class="search-btn" style="text-align:center; padding:10px; cursor:pointer; background:linear-gradient(135deg, #2e7d32, #43a047);">
-        📘 Carica Tutta la Scrittura (.json)
-        <input type="file" style="display:none;" onchange="importSiFile(event)">
-      </label>
-      <label class="search-btn" style="text-align:center; padding:10px; cursor:pointer; background:linear-gradient(135deg, #00695c, #00897b);">
-        🗺️ Carica Cartine Bibliche — gl_I (.jwpub / .epub / .zip / .json)
-        <input type="file" style="display:none;" onchange="importMapsArchive(event)">
-      </label>
-      <div id="mapsImportStatusTop" style="font-size:13px; font-weight:800; color:var(--primary-light); text-align:center; display:none; padding:6px; background:var(--verse-hover); border-radius:6px;"></div>
-      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0d47a1;">
-        🇮🇹 Carica TNM 2017 (nwt_I .epub / .jwpub)
-        <input type="file" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:nwt', 'TNM 2017 (IT)')">
-      </label>
-      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0a367e;">
-        🇮🇹 Carica TNM 1987 (bi12_I .epub / .jwpub)
-        <input type="file" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:bi12', 'TNM 1987 (IT)')">
-      </label>
-      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#1565c0;">
-        🇬🇧 Carica NWT 2013 English (nwt_E .epub / .jwpub)
-        <input type="file" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:nwt_e', 'NWT 2013 (EN)')">
-      </label>
-      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0a367e;">
-        🇬🇧 Carica NWT 1984 English (bi12_E .epub / .jwpub)
-        <input type="file" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:bi12_e', 'NWT 1984 (EN)')">
-      </label>
-      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#1b5e20;">
-        🇬🇧 Carica Byington — Living English (by_E .jwpub / .epub)
-        <input type="file" style="display:none;" onchange="importUniversalEpubFiles(event, 'jw:by_e', 'Byington (by_E)')">
-      </label>
-      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#1b5e20;">
-        🇬🇧 Carica American Standard — ASV (bi10_E .jwpub / .epub)
-        <input type="file" style="display:none;" onchange="importUniversalEpubFiles(event, 'jw:bi10_e', 'ASV (bi10_E)')">
-      </label>
-      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#1b5e20;">
-        🇬🇧 Carica King James Version — KJV (bi22_E .jwpub / .epub)
-        <input type="file" style="display:none;" onchange="importUniversalEpubFiles(event, 'jw:bi22_e', 'KJV (bi22_E)')">
-      </label>
-      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#4a148c;">
-        🇬🇧📜 Carica Kingdom Interlinear — KIT (int_E .jwpub / .epub)
-        <input type="file" style="display:none;" onchange="importUniversalEpubFiles(event, 'jw:int_e', 'Kingdom Interlinear (int_E)')">
+      📘 Carica Tutta la Scrittura (.json)
+      <input type="file" accept=".json,application/json" style="display:none;" onchange="importSiFile(event)">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0d47a1;">
-        🇬🇧 Carica NWT Reference / Study (bi8_E / nwtsty_E .jwpub / .epub)
-        <input type="file" style="display:none;" onchange="importUniversalEpubFiles(event, 'jw:bi8_e', 'NWT Study / Ref (EN)')">
-      </label>
-      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#1565c0;">
-        🇪🇸 Carica TNM 2019 Español (nwt_S .epub / .jwpub)
-        <input type="file" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:nwt_s', 'TNM 2019 (ES)')">
+        🇮🇹 Carica EPUB TNM 2017 (nwt_I.epub)
+        <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:nwt', 'TNM 2017 (IT)')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0a367e;">
-        🇪🇸 Carica TNM 1987 Español (bi12_S .epub / .jwpub)
-        <input type="file" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:bi12_s', 'TNM 1987 (ES)')">
+        🇮🇹 Carica EPUB TNM 1987 (bi12_I.epub)
+        <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:bi12', 'TNM 1987 (IT)')">
+      </label>
+      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#1565c0;">
+        🇬🇧 Carica EPUB NWT 2013 English (nwt_E.epub)
+        <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:nwt_e', 'NWT 2013 (EN)')">
+      </label>
+      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0a367e;">
+        🇬🇧 Carica EPUB NWT 1984 English (bi12_E.epub)
+        <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:bi12_e', 'NWT 1984 (EN)')">
+      </label>
+      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#1565c0;">
+        🇪🇸 Carica EPUB TNM 2019 Español (nwt_S.epub)
+        <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:nwt_s', 'TNM 2019 (ES)')">
+      </label>
+      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0a367e;">
+        🇪🇸 Carica EPUB TNM 1987 Español (bi12_S.epub)
+        <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:bi12_s', 'TNM 1987 (ES)')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#00695c;">
-        🇵🇹🇧🇷 Carica TNM Português (nwt_TPO .epub / .jwpub)
-        <input type="file" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:nwt_tpo', 'TNM (PT)')">
+        🇵🇹🇧🇷 Carica EPUB TNM Português (nwt_TPO.epub)
+        <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:nwt_tpo', 'TNM (PT)')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0277bd;">
         📗 Carica Nuova Riveduta (Seleziona VT e/o NT .epub)
-        <input type="file" multiple style="display:none;" onchange="importUniversalEpubFiles(event, 'epub:nr', 'Nuova Riveduta')">
+        <input type="file" accept=".epub,application/epub+zip" multiple style="display:none;" onchange="importUniversalEpubFiles(event, 'epub:nr', 'Nuova Riveduta')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0277bd;">
         📙 Carica Bibbia CEI 2008 (Seleziona VT e/o NT .epub)
-        <input type="file" multiple style="display:none;" onchange="importUniversalEpubFiles(event, 'epub:cei', 'CEI 2008')">
+        <input type="file" accept=".epub,application/epub+zip" multiple style="display:none;" onchange="importUniversalEpubFiles(event, 'epub:cei', 'CEI 2008')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#00838f;">
         📕 Carica Parola del Signore TILC (Seleziona VT e/o NT .epub)
-        <input type="file" multiple style="display:none;" onchange="importUniversalEpubFiles(event, 'epub:tilc', 'Parola del Signore (TILC)')">
+        <input type="file" accept=".epub,application/epub+zip" multiple style="display:none;" onchange="importUniversalEpubFiles(event, 'epub:tilc', 'Parola del Signore (TILC)')">
       </label>
+      <div id="epubImportStatus" style="font-size:13px; font-weight:700; color:var(--primary-light); text-align:center; padding:4px;"></div>
     </div>
     <div class="section-title"><span>💾 Backup & Ripristino Dati Studio</span></div>
     <div style="display:flex; flex-direction:column; gap:10px;">
       <button class="search-btn" onclick="exportBackupJson()">📤 Esporta / Condividi File di Backup (.json)</button>
       <label class="nav-btn" style="text-align:center; padding:10px; cursor:pointer;">
         📥 Importa File di Backup (.json)
-        <input type="file" style="display:none;" onchange="importBackupJson(event)">
+        <input type="file" accept=".json,application/json" style="display:none;" onchange="importBackupJson(event)">
       </label>
     </div>
   `;
   document.getElementById("proModal").style.display = "flex";
 }
-    
   function matchItalianBookNameToId(rawTitle, isStrictFromBody = false) {
   if (!rawTitle) return null;
   const lower = rawTitle.toLowerCase()
@@ -2894,8 +2803,7 @@ function openBackupModal() {
   return exactBookMap[clean] || null;
     }
 async function importUniversalEpubFiles(event, targetId, labelName) {
-  const inputEl = event.target;
-  const files = Array.from((inputEl && inputEl.files) || []);
+  const files = Array.from(event.target.files || []);
   if (!files.length) return;
   const statusEl = document.getElementById("epubImportStatus");
   if (typeof JSZip === "undefined") {
@@ -2912,52 +2820,18 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
         }
       });
     }
-
     for (const file of files) {
       statusEl.innerHTML = `⏳ Analisi di <b>${escapeHtml(file.name)}</b> in corso...`;
-      const rawBuffer = await file.arrayBuffer();
-      let zip = await JSZip.loadAsync(rawBuffer);
-
-      // 1. Se è un file .jwpub, apre il contenitore interno 'contents' (che è a sua volta uno ZIP)
-      const contentsEntry =
-        zip.files["contents"] ||
-        Object.values(zip.files).find(
-          f => !f.dir && f.name.split("/").pop().toLowerCase() === "contents"
-        );
-      if (contentsEntry) {
-        statusEl.innerHTML = `⚙️ Scompattamento contenitore JWPUB (<b>${escapeHtml(file.name)}</b>)...`;
-        const innerBuf = await contentsEntry.async("uint8array");
-        try {
-          zip = await JSZip.loadAsync(innerBuf);
-        } catch (e) {
-          console.warn("Contenitore 'contents' non è uno ZIP standard:", e);
-        }
-      }
-
+      const zip = await JSZip.loadAsync(file);
       const allFiles = Object.keys(zip.files);
-      const dbFile = allFiles.find(
-        f => f.toLowerCase().endsWith(".db") && !zip.files[f].dir
-      );
-
-      // 2. Instradamento al motore corretto (SQLite .db per JWPUB, oppure XHTML per EPUB)
-      if (dbFile) {
-        await extractJwpubSqliteBible(zip, dbFile, mergedBooksMap, statusEl, labelName);
+      const isJwEpub = targetId.startsWith("gb:nwt") || targetId.startsWith("gb:bi12") ||
+      allFiles.some(f => /_BI12_\.|\.GE-split|biblechapternav/i.test(f));
+      if (!isJwEpub) {
+        await extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, labelName);
       } else {
-        const isJwEpub =
-          targetId.startsWith("gb:nwt") ||
-          targetId.startsWith("gb:bi12") ||
-          targetId.startsWith("jw:") ||
-          allFiles.some(f =>
-            /_BI12_|_BI10_|_BI22_|_BY_|_RH_|_INT_|\.GE-split|biblechapternav/i.test(f)
-          );
-        if (!isJwEpub) {
-          await extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, labelName);
-        } else {
-          await extractJwFormatEpub(zip, allFiles, mergedBooksMap, statusEl, labelName);
-        }
+        await extractJwFormatEpub(zip, allFiles, mergedBooksMap, statusEl, labelName);
       }
     }
-
     const finalBooksData = [];
     let importedCount = 0;
     for (let bId = 1; bId <= 66; bId++) {
@@ -2970,15 +2844,9 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
         finalBooksData.push({ nr: bId, name: bMeta.name, chapters: [] });
       }
     }
-
-    if (importedCount === 0) {
-      throw new Error("Nessun capitolo biblico trovato nel file selezionato.");
-    }
-
     statusEl.innerHTML = `💾 Salvataggio permanente nel database Offline...`;
     const fullBibleObj = { id: targetId, name: labelName, books: finalBooksData };
     await saveOfflineBible(targetId, fullBibleObj);
-
     if (!state.downloadedBibles.includes(targetId)) {
       state.downloadedBibles.unshift(targetId);
       safeSaveStorage("bm_v10_pro_bibles", JSON.stringify(state.downloadedBibles));
@@ -2987,200 +2855,17 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
     state.trans1 = targetId;
     document.getElementById("trans1").value = targetId;
     safeSaveStorage("bm_trans1", targetId);
-
-    if (importedCount <= 27 && state.bookId < 40 && mergedBooksMap.has(40)) {
-      state.bookId = 40;
-      state.chapter = 1;
-    }
-
-    statusEl.innerHTML = `✔ <b>${escapeHtml(labelName)}</b> salvata Offline (${importedCount} libri pronti)!`;
+    statusEl.innerHTML = `✔ <b>${escapeHtml(labelName)}</b> salvata Offline (${importedCount}/66 libri pronti)!`;
     setTimeout(() => {
       closeProModal();
       loadChapterView();
-    }, 900);
+    }, 1000);
   } catch (err) {
     console.error(err);
     statusEl.innerHTML = `❌ Errore durante l'importazione: ${escapeHtml(err.message)}`;
   }
-  if (inputEl) inputEl.value = "";
 }
-  
-async function extractJwpubSqliteBible(zip, dbFilePath, mergedBooksMap, statusEl, labelName) {
-  if (typeof initSqlJs === "undefined") {
-    throw new Error("Libreria SQL.js non caricata. Verifica la connessione internet.");
-  }
-  statusEl.innerHTML = `⚙️ Analisi profonda database per <b>${escapeHtml(labelName)}</b>...`;
-  const SQL = await initSqlJs({
-    locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`
-  });
-  const dbBytes = await zip.files[dbFilePath].async("uint8array");
-  const db = new SQL.Database(dbBytes);
 
-  let tables = [];
-  try {
-    const tRes = db.exec("SELECT name FROM sqlite_master WHERE type='table';");
-    if (tRes.length > 0 && tRes[0].values) {
-      tables = tRes[0].values.map(v => v[0]);
-    }
-  } catch (e) {}
-
-  const hasTable = (name) => tables.some(t => t.toLowerCase() === name.toLowerCase());
-  const booksTemp = new Map();
-  let extractedAnyVerse = false;
-
-  const addVerseToTemp = (bId, chNum, vNum, text) => {
-    if (!text || bId < 1 || bId > 66 || chNum < 1 || vNum < 1) return;
-    // Scarta rigorosamente stringhe che contengono ancora residui binari illeggibili
-    if (/[\x00-\x08\x0E-\x1F\uFFFD]/.test(text) && text.length < 5) return;
-    
-    extractedAnyVerse = true;
-    if (!booksTemp.has(bId)) booksTemp.set(bId, new Map());
-    const chMap = booksTemp.get(bId);
-    if (!chMap.has(chNum)) chMap.set(chNum, new Map());
-    const vMap = chMap.get(chNum);
-    vMap.set(vNum, vMap.has(vNum) ? `${vMap.get(vNum)} ${text}` : text);
-  };
-
-  const cleanTextContent = (raw) => {
-    if (!raw) return "";
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(raw, "text/html");
-    doc.querySelectorAll(".footnote, .footnotes, sup.xrefLink, rt").forEach(el => el.remove());
-    const body = doc.body || doc.documentElement;
-    return (body ? body.textContent : raw)
-      .replace(/^[\s\d\u00A0.,;:]+/, "")
-      .replace(/[\+\*]/g, "")
-      .replace(/\s+/g, " ")
-      .trim();
-  };
-
-  // Funzione di pulizia e conversione universale del BLOB senza errori di cifratura
-  const parseBlobToText = async (rawVal) => {
-    if (!rawVal) return "";
-    if (typeof rawVal === "string") return rawVal;
-    
-    const u8 = rawVal instanceof Uint8Array ? rawVal : new Uint8Array(Object.values(rawVal));
-    if (u8.length === 0) return "";
-
-    // 1. Tenta la decompressione zlib diretta (molti .db JWPUB comprimono i testi senza cifratura AES)
-    if (typeof pako !== "undefined") {
-      try {
-        const inflated = pako.inflate(u8);
-        const decoded = new TextDecoder("utf-8", { fatal: false }).decode(inflated);
-        if (decoded && !decoded.includes("\uFFFD")) return decoded;
-      } catch (e) {}
-      try {
-        const inflatedRaw = pako.inflateRaw(u8);
-        const decodedRaw = new TextDecoder("utf-8", { fatal: false }).decode(inflatedRaw);
-        if (decodedRaw && !decodedRaw.includes("\uFFFD")) return decodedRaw;
-      } catch (e) {}
-    }
-
-    // 2. Fallback su decodifica stringa standard UTF-8
-    const directStr = new TextDecoder("utf-8", { fatal: false }).decode(u8);
-    // Se la stringa contiene tag HTML o testo pulito, usala direttamente
-    if (/<[a-z][\s\S]*>/i.test(directStr) || !directStr.includes("\uFFFD")) {
-      return directStr;
-    }
-
-    return "";
-  };
-
-  // --- ESTRAZIONE MIRATA SU TUTTE LE TABELLE POSSIBILI ---
-  
-  // 1. Tentativo su BibleVerse
-  if (hasTable("BibleVerse") && hasTable("BibleChapter")) {
-    try {
-      const stmt = db.prepare(`
-        SELECT bc.BookNumber, bc.ChapterNumber, bv.VerseNumber, bv.Content
-        FROM BibleVerse bv
-        JOIN BibleChapter bc ON bv.BibleChapterId = bc.BibleChapterId
-        WHERE bv.Content IS NOT NULL
-      `);
-      while (stmt.step()) {
-        const row = stmt.get();
-        const text = await parseBlobToText(row[3]);
-        if (text) {
-          addVerseToTemp(Number(row[0]), Number(row[1]), Number(row[2]), cleanTextContent(text));
-        }
-      }
-      stmt.free();
-    } catch (e) {
-      console.warn("Errore scansione BibleVerse:", e);
-    }
-  }
-
-  // 2. Tentativo su BibleChapter (se BibleVerse è vuota o mancante)
-  if (!extractedAnyVerse && hasTable("BibleChapter")) {
-    try {
-      const stmt = db.prepare(`SELECT BookNumber, ChapterNumber, Content FROM BibleChapter WHERE Content IS NOT NULL;`);
-      while (stmt.step()) {
-        const row = stmt.get();
-        const text = await parseBlobToText(row[2]);
-        if (text) {
-          const verses = parseJwEpubChapterXhtml(text);
-          verses.forEach(v => addVerseToTemp(Number(row[0]), Number(row[1]), Number(v.verse), v.text));
-        }
-      }
-      stmt.free();
-    } catch (e) {
-      console.warn("Errore scansione BibleChapter:", e);
-    }
-  }
-
-  // 3. Tentativo di ricerca globale su qualsiasi tabella contenga colonne di testo/blob
-  if (!extractedAnyVerse) {
-    for (const tbl of tables) {
-      try {
-        const colsRes = db.exec(`PRAGMA table_info("${tbl}");`);
-        if (colsRes.length === 0 || !colsRes[0].values) continue;
-        const colNames = colsRes[0].values.map(c => c[1]);
-        const textCol = colNames.find(c => /content|text|data|html/i.test(c));
-        
-        if (textCol) {
-          const rows = db.exec(`SELECT "${textCol}" FROM "${tbl}" LIMIT 500;`);
-          if (rows.length > 0 && rows[0].values) {
-            let fakeBook = 1;
-            let fakeChap = 1;
-            let fakeVerse = 1;
-            for (const r of rows[0].values) {
-              const val = await parseBlobToText(r[0]);
-              if (val && val.length > 10) {
-                const cleaned = cleanTextContent(val);
-                if (cleaned.length > 3) {
-                  addVerseToTemp(fakeBook, fakeChap, fakeVerse, cleaned);
-                  fakeVerse++;
-                  if (fakeVerse > 30) { fakeVerse = 1; fakeChap++; }
-                  if (fakeChap > 150) { fakeChap = 1; fakeBook++; }
-                }
-              }
-            }
-          }
-        }
-      } catch (e) {}
-    }
-  }
-
-  db.close();
-
-  booksTemp.forEach((chMap, bId) => {
-    const bMeta = getBook(bId);
-    const chaptersArr = [];
-    chMap.forEach((vMap, chNum) => {
-      const versesArr = [];
-      vMap.forEach((txt, vNum) => versesArr.push({ verse: vNum, text: txt }));
-      versesArr.sort((a, b) => a.verse - b.verse);
-      chaptersArr.push({ chapter: chNum, verses: versesArr });
-    });
-    chaptersArr.sort((a, b) => a.chapter - b.chapter);
-    mergedBooksMap.set(bId, { nr: bId, name: bMeta.name, chapters: chaptersArr });
-  });
-
-  if (!extractedAnyVerse && mergedBooksMap.size === 0) {
-    throw new Error("Impossibile estrarre testo leggibile da questo file JWPUB. Formato non supportato.");
-  }
-      }
-    
 async function extractJwFormatEpub(zip, allFiles, mergedBooksMap, statusEl, labelName) {
   const JW_BOOK_CODES = ["", "GE", "EX", "LE", "NU", "DE", "JOS", "JG", "RU", "1SA", "2SA", "1KI", "2KI", "1CH", "2CH", "EZR", "NE", "ES", "JOB", "PS", "PR", "EC", "CA", "ISA", "JER", "LA", "EZE", "DA", "HOS", "JOE", "AM", "OB", "JON", "MIC", "NAH", "HAB", "ZEP", "HAG", "ZEC", "MAL", "MT", "MR", "LU", "JOH", "AC", "RO", "1CO", "2CO", "GA", "EPH", "PHP", "COL", "1TH", "2TH", "1TI", "2TI", "TIT", "PHM", "HEB", "JAS", "1PE", "2PE", "1JO", "2JO", "3JO", "JUD", "RE"];
 
@@ -4396,372 +4081,6 @@ ${nextBtn}
 </div>
 `;
   main.scrollTop = 0;
-}
-// ============================================================================
-// MODULO CARTINE BIBLICHE HD ("Vediamo il 'buon paese'" — gl_I .jwpub / .epub / .json)
-// ============================================================================
-const GL_ATLAS_CATALOG = [
-  { docId: "1102003100", code: "Copertina", section: "Introduzione", title: "Vediamo il 'buon paese' — Atlante Biblico", desc: "Atlante geografico ad alta risoluzione delle terre bibliche (Deuteronomio 8:7). Tocca qualsiasi riferimento biblico per aprire direttamente i versetti.", refs: "Deuteronomio 8:7-9; Genesi 12:1-7; 15:18-21" },
-  { docId: "1102003102", code: "Pagg. 2-3", section: "Introduzione", title: "Il 'buon paese' e il mondo biblico (Panoramica)", desc: "Visione d'insieme del Medio Oriente antico: Mesopotamia, Egitto, Anatolia, Grecia, Roma e la posizione strategica della Terra Promessa.", refs: "Genesi 2:10-14; 11:31; Atti 1:8" },
-  { docId: "1102003103", code: "Pagg. 4-5", section: "Patriarchi ed Esodo", title: "Il mondo dei Patriarchi (Abraamo, Isacco, Giacobbe)", desc: "Le rotte dei viaggi di Abraamo da Ur dei Caldei fino a Carran, Sichem, Betel, Ebron, Beersheba e l'Egitto.", refs: "Genesi 11:31-32; 12:1-10; 13:1-18; 28:10-22; 32:22-30; Atti 7:2-8" },
-  { docId: "1102003104", code: "Pagg. 6-7", section: "Patriarchi ed Esodo", title: "I paesi biblici e le grandi potenze antiche", desc: "Estensione geografica dei paesi menzionati nelle Scritture Ebraiche: Assiria, Babilonia, Media-Persia, Egitto, Edom, Moab, Ammon e Fenicia.", refs: "Genesi 10:1-32; Isaia 11:11; Ezechiele 27:1-25" },
-  { docId: "1102003110", code: "Pagg. 8-9", section: "Patriarchi ed Esodo", title: "L'Esodo dall'Egitto e il viaggio verso il Sinai", desc: "L'uscita di Israele da Rameses e Succot, l'attraversamento del Mar Rosso, Mara, Elim, Refidim, il Monte Sinai e i 40 anni nel deserto fino a Cades-Barnea e alle pianure di Moab.", refs: "Esodo 12:37; 14:21-31; 15:22-27; 17:1-8; 19:1-2; Numeri 13:21-26; 20:1-29; 33:1-49; Deuteronomio 34:1-4" },
-  { docId: "1102003105", code: "Pagg. 10-11", section: "Geografia della Terra Promessa", title: "Sezioni naturali e rilievi della Terra Promessa", desc: "Le regioni geografiche naturali: pianure costiere (Saron, Filistia), Sefela, regione montuosa di Giuda, Efraim e Galilea, depressione del Giordano (Araba) e altopiano della Transgiordania.", refs: "Deuteronomio 1:7; 11:10-12; Giosuè 9:1-2; 11:16-17; Giudici 1:9" },
-  { docId: "1102003106", code: "Pagg. 12-13", section: "Geografia della Terra Promessa", title: "Profilo altimetrico, clima e vegetazione", desc: "Quote altimetriche dal Monte Ermon (+2.814 m) fino al Mar Morto (-400 m), stagioni delle piogge, venti e varietà agricole del paese.", refs: "Deuteronomio 8:7-9; 11:14; Salmi 133:3; Cantico dei Cantici 2:1; Amos 1:2" },
-  { docId: "1102003115", code: "Pagg. 14-15", section: "Conquista e Tribù", title: "La conquista della Terra Promessa e la ripartizione fra le 12 Tribù", desc: "Le campagne militari di Giosuè (Gerico, Ai, Gabaon, campagna meridionale e settentrionale), la suddivisione territoriale tra le 12 tribù di Israele e le 6 città di rifugio.", refs: "Numeri 34:1-15; Giosuè 6:1-27; 8:1-29; 10:1-43; 11:1-23; 13:1-21:45" },
-  { docId: "1102003107", code: "Pagg. 16-17", section: "Conquista e Tribù", title: "L'epoca dei Giudici di Israele", desc: "Le imprese di Otniel, Ehud, Barac e Debora (presso il torrente Chison e il Monte Tabor), Gedeone (fonte di Arod), Iefte e Sansone.", refs: "Giudici 3:7-30; 4:1-24; 6:33-8:21; 11:1-33; 13:1-16:31" },
-  { docId: "1102003117", code: "Pagg. 18-19", section: "Regno e Profeti", title: "Il Regno Unito di Saul, Davide e Salomone", desc: "Le battaglie di Saul, la fuga di Davide, l'espansione dei confini sotto il re Davide dall'Eufrate al torrente d'Egitto e le rotte commerciali di Salomone.", refs: "1 Samuele 13:1-23; 17:1-54; 23:14-29; 31:1-13; 2 Samuele 5:1-25; 8:1-15; 1 Re 4:21-25; 9:26-28" },
-  { docId: "1102003108", code: "Pagg. 20-21", section: "Regno e Profeti", title: "Gerusalemme nell'antichità e il Tempio", desc: "Pianta storica di Gerusalemme: la Città di Davide, il Monte Moria, la valle del Chidron, la valle di Innom, il Gihon e l'espansione sotto Salomone ed Ezechia.", refs: "2 Samuele 5:6-9; 1 Re 6:1-38; 2 Re 20:20; 2 Cronache 3:1; 32:30; Neemia 3:1-32" },
-  { docId: "1102003109", code: "Pagg. 22-23", section: "Regno e Profeti", title: "I regni divisi di Israele (Nord) e Giuda (Sud)", desc: "La divisione del regno nel 997 a.E.V., le capitali Sichem, Tirza e Samaria a nord, Gerusalemme a sud, e il ministero dei profeti Elia ed Eliseo.", refs: "1 Re 12:1-33; 16:23-29; 17:1-19:21; 2 Re 2:1-25; 5:1-14" },
-  { docId: "1102003122", code: "Pagg. 24-25", section: "Regno e Profeti", title: "Esili, deportazioni e ritorno in patria (Assiria, Babilonia, Persia)", desc: "Le campagne assire (Tiglat-Pileser III, Salmaneser V, Sargon II, Sennacherib), la conquista babilonese di Nabucodonosor e il ritorno degli esiliati sotto Ciro con Zorobabele, Esdra e Neemia.", refs: "2 Re 15:29; 17:1-6; 18:13-19:37; 24:1-25:21; Esdra 1:1-4; 2:1-70; 7:1-10; Neemia 2:1-20" },
-  { docId: "1102003124", code: "Pagg. 26-27", section: "Gesù e gli Apostoli", title: "Gli imperi di Grecia e Roma nel mondo biblico", desc: "Le conquiste di Alessandro Magno, i regni ellenistici (Tolomei e Seleucidi) e l'espansione dell'Impero Romano nel bacino del Mediterraneo.", refs: "Daniele 2:39-40; 7:6-7; 8:5-8, 20-22; 11:2-30; Luca 2:1" },
-  { docId: "1102003111", code: "Pagg. 28-29", section: "Gesù e gli Apostoli", title: "La terra di Israele ai giorni di Gesù (Galilea, Samaria, Giudea)", desc: "I luoghi del ministero terreno di Gesù: Betlemme, Nazaret, Cana, Capernaum, il Mar di Galilea, la Decapoli, Sichar, Betania e Gerico.", refs: "Matteo 2:1-23; 4:12-25; Marco 1:14-39; Luca 2:4-7; 4:14-44; Giovanni 2:1-12; 4:1-42" },
-  { docId: "1102003112", code: "Pagg. 30-31", section: "Gesù e gli Apostoli", title: "Gerusalemme durante il ministero di Gesù", desc: "Il Tempio ricostruito da Erode, la piscina di Betzata, la piscina di Siloe, il Getsemani, il palazzo del governatore e il Golgota.", refs: "Matteo 21:12-17; 26:36; 27:33; Giovanni 5:2; 9:7; 18:28; 19:17" },
-  { docId: "1102003113", code: "Pagg. 32-33", section: "Gesù e gli Apostoli", title: "La diffusione del Cristianesimo e i viaggi missionari di Paolo", desc: "L'espansione delle congregazioni cristiane dalla Pentecoste del 33 E.V., i tre viaggi missionari dell'apostolo Paolo in Cipro, Asia Minore, Macedonia e Grecia, e il viaggio verso Roma.", refs: "Atti 2:5-11; 8:1-40; 13:1-14:28; 15:36-18:22; 18:23-21:17; 27:1-28:16; Rivelazione 1:11" },
-  { docId: "1102003126", code: "Indice", section: "Indice dei Luoghi", title: "Indice geografico e coordinate delle località", desc: "Indice di riferimento delle località, dei monti, dei fiumi e delle regioni rappresentate nelle cartine dell'atlante.", refs: "Giosuè 18:8-9; Atti 17:26" }
-];
-
-let mapsMemCache = null;
-let mapsActiveSection = "TUTTE";
-let mapsSearchQuery = "";
-let currentMapZoom = 100;
-
-async function getMapsData() {
-  if (mapsMemCache && Array.isArray(mapsMemCache.maps) && mapsMemCache.maps.length > 0) {
-    return mapsMemCache;
-  }
-  try {
-    const db = await openDB();
-    return new Promise(res => {
-      const tx = db.transaction("bibles", "readonly");
-      const req = tx.objectStore("bibles").get("bm:maps_it");
-      req.onsuccess = () => {
-        if (req.result) mapsMemCache = req.result;
-        res(req.result || null);
-      };
-      req.onerror = () => res(null);
-    });
-  } catch (e) { return null; }
-}
-
-async function importMapsArchive(event) {
-  const inputEl = event.target;
-  const file = inputEl && inputEl.files && inputEl.files[0];
-  if (!file) return;
-  const statusEl = document.getElementById("epubImportStatus");
-  const topStatusEl = document.getElementById("mapsImportStatusTop");
-  const setStatus = html => {
-    if (statusEl) statusEl.innerHTML = html;
-    if (topStatusEl) {
-      topStatusEl.style.display = "block";
-      topStatusEl.innerHTML = html;
-    }
-  };
-  try {
-    const fName = (file.name || "").toLowerCase();
-    setStatus(`⏳ Lettura di <b>${escapeHtml(file.name)}</b> in corso...`);
-    if (fName.endsWith(".json")) {
-      const parsed = JSON.parse(await file.text());
-      const list = Array.isArray(parsed) ? parsed : (parsed.maps || parsed.entries || []);
-      if (!list.length) throw new Error("Nessuna cartina trovata nel file JSON.");
-      const payload = { updated: Date.now(), title: "Vediamo il 'buon paese'", maps: list };
-      mapsMemCache = payload;
-      await saveOfflineBible("bm:maps_it", payload);
-      setStatus(`✔ ${list.length} Cartine Bibliche salvate offline!`);
-      inputEl.value = "";
-      setTimeout(() => { closeProModal(); showMapsView(); }, 600);
-      return;
-    }
-    if (typeof JSZip === "undefined") {
-      throw new Error("Libreria JSZip non caricata. Verifica la connessione internet.");
-    }
-    const rawBuffer = await file.arrayBuffer();
-    let zip = await JSZip.loadAsync(rawBuffer);
-    const contentsEntry = zip.files["contents"] || Object.values(zip.files).find(f => !f.dir && f.name.split("/").pop().toLowerCase() === "contents");
-    if (contentsEntry) {
-      setStatus(`⚙️ Apertura archivio interno JWPUB (contents)...`);
-      const innerBuf = await contentsEntry.async("uint8array");
-      zip = await JSZip.loadAsync(innerBuf);
-    }
-    
-    const allFiles = Object.keys(zip.files).sort();
-    const imgFiles = allFiles.filter(p => /\.(?:jpg|jpeg|png|webp)$/i.test(p) && !zip.files[p].dir);
-
-    if (imgFiles.length === 0) {
-      throw new Error("Nessuna immagine di cartina trovata nell'archivio selezionato.");
-    }
-
-    // Estrae eventuali testi o titoli dai file XHTML/HTML se presenti nell'archivio
-    const htmlTextsByDocId = {};
-    const htmlFiles = allFiles.filter(p => /\.(?:xhtml|html|htm)$/i.test(p) && !zip.files[p].dir);
-    const parser = new DOMParser();
-    for (const hf of htmlFiles) {
-      try {
-        const rawHtml = await zip.files[hf].async("string");
-        const doc = parser.parseFromString(rawHtml, "text/html");
-        doc.querySelectorAll("script, style, rt").forEach(el => el.remove());
-        const body = doc.body || doc.documentElement;
-        if (!body) continue;
-        const hEl = body.querySelector("h1, h2, h3, title");
-        const titleTxt = hEl ? hEl.textContent.replace(/\s+/g, " ").trim() : "";
-        const paras = [];
-        body.querySelectorAll("p, li, figcaption, .caption").forEach(p => {
-          const t = p.textContent.replace(/\s+/g, " ").trim();
-          if (t && t !== titleTxt) paras.push(t);
-        });
-        const mDoc = hf.match(/(110\d{7})/);
-        if (mDoc) {
-          htmlTextsByDocId[mDoc[1]] = {
-            title: titleTxt,
-            body: paras.join("\n\n")
-          };
-        }
-      } catch (e) {}
-    }
-
-    const extractedMaps = [];
-    for (let i = 0; i < imgFiles.length; i++) {
-      const imgPath = imgFiles[i];
-      const baseName = imgPath.split("/").pop();
-      setStatus(`🗺️ Estrazione Cartina HD ${i + 1} / ${imgFiles.length} (${escapeHtml(baseName)})...`);
-
-      const b64 = await zip.files[imgPath].async("base64");
-      const mime = baseName.toLowerCase().endsWith(".png") ? "image/png" : "image/jpeg";
-      const dataUrl = `data:${mime};base64,${b64}`;
-
-      const docMatch = baseName.match(/(110\d{7})/);
-      const docId = docMatch ? docMatch[1] : baseName.replace(/\.[^.]+$/, "");
-      const cntMatch = baseName.match(/_cnt_0*(\d+)/i);
-      const partNum = cntMatch ? parseInt(cntMatch[1], 10) : 1;
-
-      const catEntry = GL_ATLAS_CATALOG.find(c => c.docId === docId);
-      const htmlMeta = htmlTextsByDocId[docId];
-
-      let mapTitle = catEntry
-        ? (partNum > 1 ? `${catEntry.title} (Tavola ${partNum})` : catEntry.title)
-        : (htmlMeta && htmlMeta.title ? htmlMeta.title : `Cartina Biblica ${i + 1} (${docId})`);
-
-      let mapSection = catEntry ? catEntry.section : "Atlante Biblico";
-      let mapCode = catEntry ? (partNum > 1 ? `${catEntry.code} • Tav. ${partNum}` : catEntry.code) : `Tavola ${i + 1}`;
-      let mapDesc = (htmlMeta && htmlMeta.body)
-        ? htmlMeta.body
-        : (catEntry ? catEntry.desc : "Cartina geografica ad alta risoluzione.");
-      let mapRefs = catEntry ? catEntry.refs : "";
-
-      extractedMaps.push({
-        id: `${docId}_${partNum}`,
-        docId,
-        partNum,
-        code: mapCode,
-        section: mapSection,
-        title: mapTitle,
-        desc: mapDesc,
-        refs: mapRefs,
-        dataUrl
-      });
-    }
-
-    // Ordina le cartine secondo l'ordine storico-editoriale dell'atlante
-    const catalogOrder = GL_ATLAS_CATALOG.map(c => c.docId);
-    extractedMaps.sort((a, b) => {
-      const idxA = catalogOrder.indexOf(a.docId);
-      const idxB = catalogOrder.indexOf(b.docId);
-      const ordA = idxA === -1 ? 999 : idxA;
-      const ordB = idxB === -1 ? 999 : idxB;
-      if (ordA !== ordB) return ordA - ordB;
-      return (a.partNum || 1) - (b.partNum || 1);
-    });
-
-    const payload = {
-      updated: Date.now(),
-      title: "Vediamo il 'buon paese' — Atlante Biblico HD",
-      maps: extractedMaps
-    };
-    mapsMemCache = payload;
-    setStatus(`💾 Salvataggio di ${extractedMaps.length} cartine HD nel database offline...`);
-    await saveOfflineBible("bm:maps_it", payload);
-    setStatus(`✔ Atlante Biblico salvato offline (${extractedMaps.length} tavole HD pronte)!`);
-    setTimeout(() => {
-      closeProModal();
-      showMapsView();
-    }, 800);
-  } catch (err) {
-    setStatus(`❌ Errore: ${escapeHtml(err.message)}`);
-  }
-}
-
-function setMapZoom(newZoom) {
-  currentMapZoom = Math.min(400, Math.max(100, newZoom));
-  const img = document.getElementById("activeHdMapImg");
-  const lbl = document.getElementById("mapZoomLabel");
-  if (img) img.style.width = currentMapZoom + "%";
-  if (lbl) lbl.textContent = `${currentMapZoom / 100}x`;
-}
-
-function toggleDoubleTapMapZoom() {
-  const next = currentMapZoom >= 300 ? 100 : currentMapZoom + 100;
-  setMapZoom(next);
-}
-
-function filterMapsBySection(sec) {
-  mapsActiveSection = sec;
-  showMapsView(null);
-}
-
-function onMapsSearchInput(val) {
-  mapsSearchQuery = val || "";
-  renderMapsGridList();
-}
-
-function exportMapsAsJsonFile() {
-  if (!mapsMemCache || !Array.isArray(mapsMemCache.maps) || !mapsMemCache.maps.length) return;
-  const jsonStr = JSON.stringify(mapsMemCache, null, 2);
-  const blob = new Blob([jsonStr], { type: "application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "cartine_bibliche_gl_I.json";
-  a.click();
-}
-
-async function showMapsView(selectedIdx = null) {
-  closeActionBar();
-  stopAllAudio();
-  window.currentInsightSpeechText = "";
-  setActiveTab("", "mapsTabBtn");
-  document.getElementById("currentRefLabel").textContent = "🗺️ Cartine Bibliche";
-  const main = document.getElementById("mainContainer");
-  const data = await getMapsData();
-
-  if (!data || !Array.isArray(data.maps) || data.maps.length === 0) {
-    currentViewContext = { type: "maps", mapIdx: null, label: "🗺️ Cartine Bibliche" };
-    main.innerHTML = `
-      <div class="section-title"><span>🗺️ Cartine Bibliche HD — "Vediamo il 'buon paese'"</span></div>
-      <div class="result-card" style="cursor:default; text-align:center; padding:22px 14px;">
-        <div style="font-size:16px; font-weight:800; color:var(--primary-light); margin-bottom:10px;">
-          Atlante Geografico Biblico ad Alta Risoluzione
-        </div>
-        <p style="font-size:14px; color:var(--text-muted); line-height:1.55; margin-bottom:16px;">
-          Seleziona direttamente il file originale <b>gl_I.jwpub</b> (oppure un file <b>.epub / .zip / .json</b>): l'app estrarrà all'istante tutte le cartine geografiche in alta definizione con zoom interattivo e versetti cliccabili!
-        </p>
-        <div style="display:flex; flex-direction:column; gap:10px; max-width:340px; margin:0 auto;">
-            <label class="search-btn" style="text-align:center; padding:12px; cursor:pointer; background:linear-gradient(135deg, #00695c, #00897b);">
-            🗺️ Carica ora gl_I.jwpub (o .zip / .json)
-            <input type="file" style="display:none;" onchange="importMapsArchive(event)">
-          </label>
-          <button class="nav-btn" style="padding:10px;" onclick="loadChapterView()">
-            📖 Torna alla Bibbia
-          </button>
-        </div>
-        <div id="epubImportStatus" style="margin-top:12px; font-size:13px; font-weight:700; color:var(--primary-light);"></div>
-      </div>
-    `;
-    return;
-  }
-
-  if (selectedIdx !== null && data.maps[selectedIdx]) {
-    const m = data.maps[selectedIdx];
-    currentMapZoom = 100;
-    currentViewContext = { type: "maps", mapIdx: selectedIdx, label: `🗺️ ${m.code || "Cartina"}` };
-    window.currentInsightSpeechText = `${m.title}. ${m.desc}. ${m.refs ? "Scritture di riferimento: " + m.refs : ""}`;
-
-    main.innerHTML = `
-      <div class="chapter-header" style="flex-wrap:wrap; gap:8px;">
-        <div class="chapter-title">🗺️ ${escapeHtml(m.title)}</div>
-        <div class="chapter-nav-btns">
-          <button class="nav-btn" onclick="showMapsView(null)">← Tutte le Cartine</button>
-          <button class="nav-btn" onclick="toggleChapterTTS()">🔊 Ascolta</button>
-        </div>
-      </div>
-      <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
-        <span class="tag-badge" style="background:var(--primary-main); color:#fff;">📍 ${escapeHtml(m.section)} • ${escapeHtml(m.code)}</span>
-        <div style="display:flex; align-items:center; gap:5px;">
-          <button class="nav-btn" style="padding:4px 9px;" onclick="setMapZoom(100)">1x</button>
-          <button class="nav-btn" style="padding:4px 9px;" onclick="setMapZoom(200)">2x</button>
-          <button class="nav-btn" style="padding:4px 9px;" onclick="setMapZoom(300)">3x</button>
-          <button class="nav-btn" style="padding:4px 9px;" onclick="setMapZoom(400)">4x</button>
-          <span id="mapZoomLabel" style="font-size:12px; font-weight:800; color:var(--primary-light); min-width:28px; text-align:center;">1x</span>
-        </div>
-      </div>
-      <div class="map-viewer-box" ondblclick="toggleDoubleTapMapZoom()">
-        <img id="activeHdMapImg" src="${m.dataUrl}" alt="${escapeHtml(m.title)}" class="map-hd-img" style="width:100%;">
-      </div>
-      <div style="font-size:11.5px; color:var(--text-muted); text-align:center; margin:6px 0 10px 0;">
-        💡 Usa i pulsanti <b>1x / 2x / 3x / 4x</b> (o fai doppio tocco sulla mappa) per ingrandire i dettagli ad alta risoluzione e scorri con il dito.
-      </div>
-      ${m.refs ? `
-        <div class="result-card" style="cursor:default; border-left:4px solid var(--primary-light); padding:12px; margin-bottom:10px;">
-          <div style="font-size:12.5px; font-weight:800; color:var(--primary-light); margin-bottom:4px;">📖 SCRITTURE CORRELATE A QUESTA CARTINA:</div>
-          <div style="line-height:1.6;">${formatNoteLinks(m.refs)}</div>
-        </div>
-      ` : ""}
-      <div class="result-card" style="cursor:default; padding:14px; font-size:var(--font-size-verse); line-height:1.6; white-space:pre-wrap;">${formatNoteLinks(m.desc)}</div>
-      <div style="display:flex; justify-content:space-between; margin-top:14px; gap:8px;">
-        <button class="nav-btn" ${selectedIdx <= 0 ? 'disabled style="opacity:0.4"' : ''} onclick="showMapsView(${selectedIdx - 1})">◀ Cartina Prec.</button>
-        <button class="search-btn" onclick="showMapsView(null)">🗺️ Indice Cartine</button>
-        <button class="nav-btn" ${selectedIdx >= data.maps.length - 1 ? 'disabled style="opacity:0.4"' : ''} onclick="showMapsView(${selectedIdx + 1})">Cartina Succ. ▶</button>
-      </div>
-    `;
-    main.scrollTop = 0;
-    return;
-  }
-
-  currentViewContext = { type: "maps", mapIdx: null, label: "🗺️ Cartine Bibliche" };
-  const sections = ["TUTTE", ...new Set(data.maps.map(m => m.section || "Atlante Biblico"))];
-  const secPills = sections.map(s => {
-    const act = mapsActiveSection === s ? "background:var(--primary-main);color:#fff;" : "";
-    return `<span class="tag-badge" style="padding:5px 10px; font-size:12px; ${act}" onclick="filterMapsBySection('${escapeJsStr(s)}')">${escapeHtml(s)}</span>`;
-  }).join("");
-
-  main.innerHTML = `
-    <div class="section-title">
-      <span>🗺️ Vediamo il "buon paese" — Atlante HD</span>
-      <span>${data.maps.length} Tavole</span>
-    </div>
-    <div class="search-box">
-      <input type="text" id="mapsSearchInput" class="search-input" value="${escapeHtml(mapsSearchQuery)}" placeholder="🔍 Cerca cartina, epoca, re, città o scrittura (es. Esodo, Paolo, Gerusalemme)..." oninput="onMapsSearchInput(this.value)">
-      <button class="nav-btn" onclick="exportMapsAsJsonFile()" title="Esporta l'Atlante convertito in file .json">💾 JSON</button>
-    </div>
-    <div style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:10px;">${secPills}</div>
-    <div id="mapsGridContainer"></div>
-  `;
-  renderMapsGridList();
-  main.scrollTop = 0;
-}
-
-async function renderMapsGridList() {
-  const container = document.getElementById("mapsGridContainer");
-  if (!container) return;
-  const data = await getMapsData();
-  if (!data || !Array.isArray(data.maps)) return;
-  const q = normalizeForSearch(mapsSearchQuery.trim());
-
-  const filtered = data.maps
-    .map((m, idx) => ({ m, idx }))
-    .filter(({ m }) => {
-      const matchSec = mapsActiveSection === "TUTTE" || m.section === mapsActiveSection;
-      if (!matchSec) return false;
-      if (!q) return true;
-      const hay = normalizeForSearch(`${m.title} ${m.section} ${m.code} ${m.desc} ${m.refs}`);
-      return hay.includes(q);
-    });
-
-  if (filtered.length === 0) {
-    container.innerHTML = `<div class="loader">Nessuna cartina trovata per "<b>${escapeHtml(mapsSearchQuery)}</b>".</div>`;
-    return;
-  }
-
-  container.innerHTML = `<div class="map-grid">` + filtered.map(({ m, idx }) => `
-    <div class="map-card" onclick="showMapsView(${idx})">
-      <img src="${m.dataUrl}" alt="${escapeHtml(m.title)}" class="map-thumb" loading="lazy">
-      <div class="map-card-body">
-        <div>
-          <div style="font-size:11px; font-weight:800; color:var(--primary-light); margin-bottom:2px;">${escapeHtml(m.code)} • ${escapeHtml(m.section)}</div>
-          <div style="font-size:13.5px; font-weight:800; color:var(--text-main); line-height:1.3; margin-bottom:5px;">${escapeHtml(m.title)}</div>
-        </div>
-        <div style="font-size:11.5px; color:var(--text-muted); line-height:1.35;">${escapeHtml((m.desc || "").slice(0, 75))}…</div>
-      </div>
-    </div>
-  `).join("") + `</div>`;
 }
 // ============================================================================
 // MODULO LETTURA QUOTIDIANA (4 Piani Annuali 365 Giorni, Finestra 3 Righe, Flag Verde)
