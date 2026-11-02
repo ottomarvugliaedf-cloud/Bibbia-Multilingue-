@@ -2692,14 +2692,15 @@ function openBackupModal() {
       📚 Carica Perspicacia — it_I (.zip / .rtf / .epub)
       <input type="file" accept=".zip,.epub,.rtf,application/zip,application/epub+zip" multiple style="display:none;" onchange="importInsightFiles(event)">
       </label>
-      <label class="search-btn" style="text-align:center; padding:10px; cursor:pointer; background:linear-gradient(135deg, #2e7d32, #43a047);">
+            <label class="search-btn" style="text-align:center; padding:10px; cursor:pointer; background:linear-gradient(135deg, #2e7d32, #43a047);">
       📘 Carica Tutta la Scrittura (.json)
       <input type="file" accept=".json,application/json" style="display:none;" onchange="importSiFile(event)">
       </label>
-            <label class="search-btn" style="text-align:center; padding:10px; cursor:pointer; background:linear-gradient(135deg, #00695c, #00897b);">
+      <label class="search-btn" style="text-align:center; padding:10px; cursor:pointer; background:linear-gradient(135deg, #00695c, #00897b);">
       🗺️ Carica Cartine Bibliche — gl_I (.jwpub / .epub / .zip / .json)
-      <input type="file" accept=".jwpub,.epub,.zip,.json,application/zip,application/epub+zip,application/json" style="display:none;" onchange="importMapsArchive(event)">
+      <input type="file" style="display:none;" onchange="importMapsArchive(event)">
       </label>
+      <div id="mapsImportStatusTop" style="font-size:13px; font-weight:800; color:var(--primary-light); text-align:center; display:none; padding:6px; background:var(--verse-hover); border-radius:6px;"></div>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0d47a1;">
         🇮🇹 Carica EPUB TNM 2017 (nwt_I.epub)
         <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:nwt', 'TNM 2017 (IT)')">
@@ -4191,15 +4192,21 @@ async function getMapsData() {
 }
 
 async function importMapsArchive(event) {
-  const file = event.target.files && event.target.files[0];
+  const inputEl = event.target;
+  const file = inputEl && inputEl.files && inputEl.files[0];
   if (!file) return;
   const statusEl = document.getElementById("epubImportStatus");
-  const setStatus = html => { if (statusEl) statusEl.innerHTML = html; };
-
+  const topStatusEl = document.getElementById("mapsImportStatusTop");
+  const setStatus = html => {
+    if (statusEl) statusEl.innerHTML = html;
+    if (topStatusEl) {
+      topStatusEl.style.display = "block";
+      topStatusEl.innerHTML = html;
+    }
+  };
   try {
-    const fName = file.name.toLowerCase();
-    setStatus(`⏳ Estrazione Cartine HD da <b>${escapeHtml(file.name)}</b>...`);
-
+    const fName = (file.name || "").toLowerCase();
+    setStatus(`⏳ Lettura di <b>${escapeHtml(file.name)}</b> in corso...`);
     if (fName.endsWith(".json")) {
       const parsed = JSON.parse(await file.text());
       const list = Array.isArray(parsed) ? parsed : (parsed.maps || parsed.entries || []);
@@ -4208,22 +4215,22 @@ async function importMapsArchive(event) {
       mapsMemCache = payload;
       await saveOfflineBible("bm:maps_it", payload);
       setStatus(`✔ ${list.length} Cartine Bibliche salvate offline!`);
-      setTimeout(() => { closeProModal(); showMapsView(); }, 800);
+      inputEl.value = "";
+      setTimeout(() => { closeProModal(); showMapsView(); }, 600);
       return;
     }
-
     if (typeof JSZip === "undefined") {
-      throw new Error("Libreria JSZip non caricata.");
+      throw new Error("Libreria JSZip non caricata. Verifica la connessione internet.");
     }
-
-    let zip = await JSZip.loadAsync(file);
-    // I file .jwpub contengono un archivio interno chiamato "contents" (senza estensione)
-    if (zip.files["contents"] && !zip.files["contents"].dir) {
-      setStatus(`⚙️ Decompressione archivio interno JWPUB (contents)...`);
-      const innerBuf = await zip.files["contents"].async("uint8array");
+    const rawBuffer = await file.arrayBuffer();
+    let zip = await JSZip.loadAsync(rawBuffer);
+    const contentsEntry = zip.files["contents"] || Object.values(zip.files).find(f => !f.dir && f.name.split("/").pop().toLowerCase() === "contents");
+    if (contentsEntry) {
+      setStatus(`⚙️ Apertura archivio interno JWPUB (contents)...`);
+      const innerBuf = await contentsEntry.async("uint8array");
       zip = await JSZip.loadAsync(innerBuf);
     }
-
+    
     const allFiles = Object.keys(zip.files).sort();
     const imgFiles = allFiles.filter(p => /\.(?:jpg|jpeg|png|webp)$/i.test(p) && !zip.files[p].dir);
 
@@ -4384,9 +4391,9 @@ async function showMapsView(selectedIdx = null) {
           Seleziona direttamente il file originale <b>gl_I.jwpub</b> (oppure un file <b>.epub / .zip / .json</b>): l'app estrarrà all'istante tutte le cartine geografiche in alta definizione con zoom interattivo e versetti cliccabili!
         </p>
         <div style="display:flex; flex-direction:column; gap:10px; max-width:340px; margin:0 auto;">
-          <label class="search-btn" style="text-align:center; padding:12px; cursor:pointer; background:linear-gradient(135deg, #00695c, #00897b);">
+            <label class="search-btn" style="text-align:center; padding:12px; cursor:pointer; background:linear-gradient(135deg, #00695c, #00897b);">
             🗺️ Carica ora gl_I.jwpub (o .zip / .json)
-            <input type="file" accept=".jwpub,.epub,.zip,.json,application/zip,application/epub+zip,application/json" style="display:none;" onchange="importMapsArchive(event)">
+            <input type="file" style="display:none;" onchange="importMapsArchive(event)">
           </label>
           <button class="nav-btn" style="padding:10px;" onclick="loadChapterView()">
             📖 Torna alla Bibbia
