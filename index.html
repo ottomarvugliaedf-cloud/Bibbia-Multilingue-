@@ -2912,47 +2912,44 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
         }
       });
     }
+
     for (const file of files) {
       statusEl.innerHTML = `⏳ Analisi di <b>${escapeHtml(file.name)}</b> in corso...`;
       const rawBuffer = await file.arrayBuffer();
       let zip = await JSZip.loadAsync(rawBuffer);
-      
-      // 1. Se è un file .jwpub, estrae e scompatta l'archivio interno 'contents' o i file XHTML/HTML contenuti
-      const contentsEntry = zip.files["contents"] || Object.values(zip.files).find(f => !f.dir && f.name.split("/").pop().toLowerCase() === "contents");
+
+      // 1. Se è un file .jwpub, apre il contenitore interno 'contents' (che è a sua volta uno ZIP)
+      const contentsEntry =
+        zip.files["contents"] ||
+        Object.values(zip.files).find(
+          f => !f.dir && f.name.split("/").pop().toLowerCase() === "contents"
+        );
       if (contentsEntry) {
         statusEl.innerHTML = `⚙️ Scompattamento contenitore JWPUB (<b>${escapeHtml(file.name)}</b>)...`;
         const innerBuf = await contentsEntry.async("uint8array");
         try {
           zip = await JSZip.loadAsync(innerBuf);
         } catch (e) {
-          // Se il contents è un blob SQLite grezzo, usa il motore di estrazione pagine HTML sottostante
+          console.warn("Contenitore 'contents' non è uno ZIP standard:", e);
         }
       }
-      
+
       const allFiles = Object.keys(zip.files);
-      const htmlFiles = allFiles.filter(f => /\.(?:xhtml|html|htm)$/i.test(f) && !f.includes("toc") && !f.includes("cover") && !zip.files[f].dir);
-      
-      if (htmlFiles.length > 0 && !allFiles.some(f => f.toLowerCase().endsWith(".db"))) {
-        // Estrazione nativa diretta dai file XHTML interni del JWPUB / EPUB
-        statusEl.innerHTML = `⚙️ Lettura pagine HTML interne (${htmlFiles.length} file)...`;
-        const parser = new DOMParser();
-        for (let fIdx = 0; fIdx < htmlFiles.length; fIdx++) {
-          const fPath = htmlFiles[fIdx];
-          const rawXhtml = await zip.files[fPath].async("string");
-          const versesArr = parseJwEpubChapterXhtml(rawXhtml);
-          if (versesArr.length > 0) {
-            // Tenta di associare i capitoli al libro corretto in base al nome del file o al contenuto
-            // (assegnazione intelligente basata sui codici JW o sulla sequenza)
-          }
-        }
-      }
-      
-      const dbFile = allFiles.find(f => f.toLowerCase().endsWith(".db") && !zip.files[f].dir);
-      if (dbFile && mergedBooksMap.size === 0) {
+      const dbFile = allFiles.find(
+        f => f.toLowerCase().endsWith(".db") && !zip.files[f].dir
+      );
+
+      // 2. Instradamento al motore corretto (SQLite .db per JWPUB, oppure XHTML per EPUB)
+      if (dbFile) {
         await extractJwpubSqliteBible(zip, dbFile, mergedBooksMap, statusEl, labelName);
-      } else if (mergedBooksMap.size === 0) {
-        const isJwEpub = targetId.startsWith("gb:nwt") || targetId.startsWith("gb:bi12") || targetId.startsWith("jw:") ||
-          allFiles.some(f => /_BI12_|_BI10_|_BI22_|_BY_|_INT_|\.GE-split|biblechapternav/i.test(f));
+      } else {
+        const isJwEpub =
+          targetId.startsWith("gb:nwt") ||
+          targetId.startsWith("gb:bi12") ||
+          targetId.startsWith("jw:") ||
+          allFiles.some(f =>
+            /_BI12_|_BI10_|_BI22_|_BY_|_RH_|_INT_|\.GE-split|biblechapternav/i.test(f)
+          );
         if (!isJwEpub) {
           await extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, labelName);
         } else {
@@ -2960,6 +2957,7 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
         }
       }
     }
+
     const finalBooksData = [];
     let importedCount = 0;
     for (let bId = 1; bId <= 66; bId++) {
@@ -2972,12 +2970,15 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
         finalBooksData.push({ nr: bId, name: bMeta.name, chapters: [] });
       }
     }
+
     if (importedCount === 0) {
       throw new Error("Nessun capitolo biblico trovato nel file selezionato.");
     }
+
     statusEl.innerHTML = `💾 Salvataggio permanente nel database Offline...`;
     const fullBibleObj = { id: targetId, name: labelName, books: finalBooksData };
     await saveOfflineBible(targetId, fullBibleObj);
+
     if (!state.downloadedBibles.includes(targetId)) {
       state.downloadedBibles.unshift(targetId);
       safeSaveStorage("bm_v10_pro_bibles", JSON.stringify(state.downloadedBibles));
@@ -2986,10 +2987,12 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
     state.trans1 = targetId;
     document.getElementById("trans1").value = targetId;
     safeSaveStorage("bm_trans1", targetId);
+
     if (importedCount <= 27 && state.bookId < 40 && mergedBooksMap.has(40)) {
       state.bookId = 40;
       state.chapter = 1;
     }
+
     statusEl.innerHTML = `✔ <b>${escapeHtml(labelName)}</b> salvata Offline (${importedCount} libri pronti)!`;
     setTimeout(() => {
       closeProModal();
@@ -3001,7 +3004,7 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
   }
   if (inputEl) inputEl.value = "";
 }
-    
+  
 async function extractJwpubSqliteBible(zip, dbFilePath, mergedBooksMap, statusEl, labelName) {
   if (typeof initSqlJs === "undefined") {
     throw new Error("Libreria SQL.js non caricata. Verifica la connessione internet.");
@@ -3013,26 +3016,111 @@ async function extractJwpubSqliteBible(zip, dbFilePath, mergedBooksMap, statusEl
   const dbBytes = await zip.files[dbFilePath].async("uint8array");
   const db = new SQL.Database(dbBytes);
 
-  const tryDecodeText = (rawVal) => {
+  // --- MOTORE DI DECRITTAZIONE NATIVO JWPUB (AES-128-CBC + ZLIB) ---
+  let cryptoKey = null;
+  let cryptoIv = null;
+
+  try {
+    const pubRes = db.exec(
+      "SELECT MepsLanguageIndex, Symbol, Year, IssueTagNumber FROM Publication LIMIT 1;"
+    );
+    if (pubRes.length > 0 && pubRes[0].values && pubRes[0].values.length > 0) {
+      const [lang, sym, year, issue] = pubRes[0].values[0];
+      // Costruisce la card string: se IssueTagNumber è 0, viene omesso nei JWPUB standard
+      const cardStr =
+        issue && Number(issue) !== 0
+          ? `${lang}_${sym}_${year}_${issue}`
+          : `${lang}_${sym}_${year}`;
+
+      const msgBuf = new TextEncoder().encode(cardStr);
+      const hashBuf = await crypto.subtle.digest("SHA-256", msgBuf);
+      const hashBytes = new Uint8Array(hashBuf);
+
+      // Maschera fissa JWPUB: "1105f774" ripetuta su 32 byte
+      const maskHex = "1105f7741105f7741105f7741105f7741105f7741105f7741105f7741105f774";
+      const xored = new Uint8Array(32);
+      for (let i = 0; i < 32; i++) {
+        xored[i] = hashBytes[i] ^ parseInt(maskHex.substr(i * 2, 2), 16);
+      }
+
+      const keyBytes = xored.slice(0, 16);
+      cryptoIv = xored.slice(16, 32);
+      cryptoKey = await crypto.subtle.importKey(
+        "raw",
+        keyBytes,
+        { name: "AES-CBC" },
+        false,
+        ["decrypt"]
+      );
+    }
+  } catch (e) {
+    console.warn("Impossibile derivare la chiave Publication JWPUB:", e);
+  }
+
+  // Decodifica universale del BLOB (Decrittazione AES -> Pako Inflate -> UTF-8)
+  const decodeJwBlob = async (rawVal) => {
     if (!rawVal) return "";
     if (typeof rawVal === "string") return rawVal;
-    try {
-      const u8 = rawVal instanceof Uint8Array ? rawVal : new Uint8Array(Object.values(rawVal));
+    const u8 = rawVal instanceof Uint8Array ? rawVal : new Uint8Array(Object.values(rawVal));
+    if (u8.length === 0) return "";
+
+    const tryInflateOrText = (bytes) => {
       if (typeof pako !== "undefined") {
-        try { return new TextDecoder("utf-8").decode(pako.inflate(u8)); } catch (e) {}
-        try { return new TextDecoder("utf-8").decode(pako.inflateRaw(u8)); } catch (e) {}
+        try { return new TextDecoder("utf-8").decode(pako.inflate(bytes)); } catch (e) {}
+        try { return new TextDecoder("utf-8").decode(pako.inflateRaw(bytes)); } catch (e) {}
       }
-      return new TextDecoder("utf-8", { fatal: false }).decode(u8);
-    } catch (e) {
-      return String(rawVal);
+      return null;
+    };
+
+    // 1. Prova prima se i byte sono già compressi in chiaro (non cifrati)
+    let res = tryInflateOrText(u8);
+    if (res && /<[a-zA-Z]|&nbsp;|[\p{L}]{3,}/u.test(res)) return res;
+
+    // 2. Se abbiamo la chiave AES della tabella Publication, decifra e decomprimi
+    if (cryptoKey && cryptoIv && u8.length % 16 === 0) {
+      try {
+        const decryptedBuf = await crypto.subtle.decrypt(
+          { name: "AES-CBC", iv: cryptoIv },
+          cryptoKey,
+          u8
+        );
+        const decBytes = new Uint8Array(decryptedBuf);
+        const inflated = tryInflateOrText(decBytes);
+        if (inflated) return inflated;
+        return new TextDecoder("utf-8", { fatal: false }).decode(decBytes);
+      } catch (e) {
+        // Fallback: nei casi rari in cui i primi 16 byte del BLOB siano l'IV stesso
+        if (u8.length > 16) {
+          try {
+            const decBuf2 = await crypto.subtle.decrypt(
+              { name: "AES-CBC", iv: u8.slice(0, 16) },
+              cryptoKey,
+              u8.slice(16)
+            );
+            const decBytes2 = new Uint8Array(decBuf2);
+            const inflated2 = tryInflateOrText(decBytes2);
+            if (inflated2) return inflated2;
+          } catch (e2) {}
+        }
+      }
     }
+
+    // 3. Ultimo tentativo come testo UTF-8 diretto (solo se non contiene spazzatura binaria)
+    const plain = new TextDecoder("utf-8", { fatal: false }).decode(u8);
+    if (!plain.includes("\uFFFD")) return plain;
+    return "";
   };
 
+  // Pulizia del singolo versetto HTML
   const cleanJwVerseHtml = (rawHtml) => {
     if (!rawHtml) return "";
     const parser = new DOMParser();
     const doc = parser.parseFromString(rawHtml, "text/html");
-    doc.querySelectorAll(".footnote, .footnotes, .groupFootnote, .marginal, a.b, a.fn, sup.xrefLink, .w_ch, strong.w_ch").forEach(el => el.remove());
+    doc
+      .querySelectorAll(
+        ".footnote, .footnotes, .groupFootnote, .marginal, a.b, a.fn, sup.xrefLink, .w_ch, strong.w_ch"
+      )
+      .forEach(el => el.remove());
     doc.querySelectorAll("rt").forEach(rt => {
       rt.textContent = ` [${rt.textContent.trim()}] `;
     });
@@ -3044,7 +3132,6 @@ async function extractJwpubSqliteBible(zip, dbFilePath, mergedBooksMap, statusEl
       .trim();
   };
 
-  let extractedAnyVerse = false;
   let tables = [];
   try {
     const tRes = db.exec("SELECT name FROM sqlite_master WHERE type='table';");
@@ -3054,79 +3141,144 @@ async function extractJwpubSqliteBible(zip, dbFilePath, mergedBooksMap, statusEl
   } catch (e) {}
 
   const hasTable = (name) => tables.some(t => t.toLowerCase() === name.toLowerCase());
+  const booksTemp = new Map();
+  let extractedAnyVerse = false;
 
-  // 1. Tentativo con schema standard BibleVerse / BibleChapter
+  const addVerseToTemp = (bId, chNum, vNum, text) => {
+    if (!text || bId < 1 || bId > 66 || chNum < 1 || vNum < 1) return;
+    extractedAnyVerse = true;
+    if (!booksTemp.has(bId)) booksTemp.set(bId, new Map());
+    const chMap = booksTemp.get(bId);
+    if (!chMap.has(chNum)) chMap.set(chNum, new Map());
+    const vMap = chMap.get(chNum);
+    // Se il versetto è spezzato in più frammenti, li concatena
+    vMap.set(vNum, vMap.has(vNum) ? `${vMap.get(vNum)} ${text}` : text);
+  };
+
+  // --- METODO 1: Tabella BibleVerse + BibleChapter ---
   if (hasTable("BibleVerse") && hasTable("BibleChapter")) {
+    statusEl.innerHTML = `⚙️ Decodifica versetti SQLite per <b>${escapeHtml(labelName)}</b>...`;
     try {
       const stmt = db.prepare(`
         SELECT bc.BookNumber, bc.ChapterNumber, bv.VerseNumber, bv.Content
         FROM BibleVerse bv
         JOIN BibleChapter bc ON bv.BibleChapterId = bc.BibleChapterId
+        WHERE bv.Content IS NOT NULL
         ORDER BY bc.BookNumber, bc.ChapterNumber, bv.VerseNumber
       `);
-      const booksTemp = new Map();
+      const rawRows = [];
       while (stmt.step()) {
-        const row = stmt.get();
+        rawRows.push(stmt.get());
+      }
+      stmt.free();
+
+      for (const row of rawRows) {
         const bId = Number(row[0]);
         const chNum = Number(row[1]);
         const vNum = Number(row[2]);
-        const htmlStr = tryDecodeText(row[3]);
+        const htmlStr = await decodeJwBlob(row[3]);
         const cleanTxt = cleanJwVerseHtml(htmlStr);
-        if (!cleanTxt || bId < 1 || bId > 66) continue;
-        extractedAnyVerse = true;
-        if (!booksTemp.has(bId)) booksTemp.set(bId, new Map());
-        const chMap = booksTemp.get(bId);
-        if (!chMap.has(chNum)) chMap.set(chNum, []);
-        chMap.get(chNum).push({ verse: vNum, text: cleanTxt });
+        addVerseToTemp(bId, chNum, vNum, cleanTxt);
       }
-      stmt.free();
-      booksTemp.forEach((chMap, bId) => {
-        const bMeta = getBook(bId);
-        const chaptersArr = [];
-        chMap.forEach((versesArr, chNum) => {
-          versesArr.sort((a, b) => a.verse - b.verse);
-          chaptersArr.push({ chapter: chNum, verses: versesArr });
-        });
-        chaptersArr.sort((a, b) => a.chapter - b.chapter);
-        mergedBooksMap.set(bId, { nr: bId, name: bMeta.name, chapters: chaptersArr });
-      });
-    } catch (e) {}
+    } catch (e) {
+      console.warn("Metodo 1 (BibleVerse) non riuscito:", e);
+    }
   }
 
-  // 2. Fallback avanzato: se è un jwpub di studio basato su Document / Text
-  if (!extractedAnyVerse && (hasTable("Document") || hasTable("TextDocument"))) {
+  // --- METODO 2: Capitoli interi dentro BibleChapter.Content ---
+  if (!extractedAnyVerse && hasTable("BibleChapter")) {
     try {
-      const docStmt = db.prepare("SELECT Text FROM Document WHERE Text IS NOT NULL;");
-      const booksTemp = new Map();
-      let currentDetectedBook = 1;
-      let currentDetectedChap = 1;
-      while (docStmt.step()) {
-        const row = docStmt.get();
-        const htmlStr = tryDecodeText(row[0]);
+      const stmt = db.prepare(`
+        SELECT BookNumber, ChapterNumber, Content
+        FROM BibleChapter
+        WHERE Content IS NOT NULL
+        ORDER BY BookNumber, ChapterNumber
+      `);
+      const rawChaps = [];
+      while (stmt.step()) {
+        rawChaps.push(stmt.get());
+      }
+      stmt.free();
+
+      for (const row of rawChaps) {
+        const bId = Number(row[0]);
+        const chNum = Number(row[1]);
+        const htmlStr = await decodeJwBlob(row[2]);
         if (!htmlStr) continue;
         const versesArr = parseJwEpubChapterXhtml(htmlStr);
-        if (versesArr.length > 0) {
-          extractedAnyVerse = true;
-          if (!booksTemp.has(currentDetectedBook)) {
-            booksTemp.set(currentDetectedBook, { nr: currentDetectedBook, name: getBook(currentDetectedBook).name, chapters: [] });
+        versesArr.forEach(v => addVerseToTemp(bId, chNum, Number(v.verse), v.text));
+      }
+    } catch (e) {
+      console.warn("Metodo 2 (BibleChapter.Content) non riuscito:", e);
+    }
+  }
+
+  // --- METODO 3: Tabella Document (per edizioni con capitoli in Document.Content) ---
+  if (!extractedAnyVerse && hasTable("Document")) {
+    try {
+      const docColsRes = db.exec("PRAGMA table_info(Document);");
+      const docCols =
+        docColsRes.length > 0 ? docColsRes[0].values.map(v => v[1]) : [];
+      const contentCol = docCols.find(c => /^content$/i.test(c)) ||
+                         docCols.find(c => /^text$/i.test(c));
+
+      if (contentCol) {
+        const docStmt = db.prepare(
+          `SELECT ${contentCol} FROM Document WHERE ${contentCol} IS NOT NULL;`
+        );
+        const rawDocs = [];
+        while (docStmt.step()) {
+          rawDocs.push(docStmt.get()[0]);
+        }
+        docStmt.free();
+
+        for (const blob of rawDocs) {
+          const htmlStr = await decodeJwBlob(blob);
+          if (!htmlStr) continue;
+
+          // Riconosce libro e capitolo direttamente dagli ID dei versetti (es. id="v40001001" o data-pid)
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(htmlStr, "text/html");
+          let detectedBook = 0;
+          let detectedChap = 0;
+
+          const vIdEl = doc.querySelector('[id^="v"], [id^="chapter"]');
+          if (vIdEl) {
+            const m = vIdEl.id.match(/^v(\d{1,2})(\d{3})(\d{3})/);
+            if (m) {
+              detectedBook = Number(m[1]);
+              detectedChap = Number(m[2]);
+            }
           }
-          const bObj = booksTemp.get(currentDetectedBook);
-          bObj.chapters.push({ chapter: currentDetectedChap, verses: versesArr });
-          currentDetectedChap++;
-          if (currentDetectedChap > getBook(currentDetectedBook).ch) {
-            currentDetectedChap = 1;
-            currentDetectedBook++;
+
+          const versesArr = parseJwEpubChapterXhtml(htmlStr);
+          if (versesArr.length > 0 && detectedBook >= 1 && detectedBook <= 66 && detectedChap >= 1) {
+            versesArr.forEach(v =>
+              addVerseToTemp(detectedBook, detectedChap, Number(v.verse), v.text)
+            );
           }
         }
       }
-      docStmt.free();
-      booksTemp.forEach((bObj, bId) => {
-        mergedBooksMap.set(bId, bObj);
-      });
-    } catch (e) {}
+    } catch (e) {
+      console.warn("Metodo 3 (Document) non riuscito:", e);
+    }
   }
 
   db.close();
+
+  // Salvataggio strutturato dentro mergedBooksMap
+  booksTemp.forEach((chMap, bId) => {
+    const bMeta = getBook(bId);
+    const chaptersArr = [];
+    chMap.forEach((vMap, chNum) => {
+      const versesArr = [];
+      vMap.forEach((txt, vNum) => versesArr.push({ verse: vNum, text: txt }));
+      versesArr.sort((a, b) => a.verse - b.verse);
+      chaptersArr.push({ chapter: chNum, verses: versesArr });
+    });
+    chaptersArr.sort((a, b) => a.chapter - b.chapter);
+    mergedBooksMap.set(bId, { nr: bId, name: bMeta.name, chapters: chaptersArr });
+  });
 
   if (!extractedAnyVerse && mergedBooksMap.size === 0) {
     throw new Error("Il file JWPUB non contiene formati di versetti decodificabili.");
