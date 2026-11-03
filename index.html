@@ -991,8 +991,8 @@ const memoryBibleCache = new Map();
 let dbInstancePromise = null;
 
 let state = {
-  bookId: 1,
-  chapter: 1,
+  bookId: Math.min(66, Math.max(1, Number(localStorage.getItem("bm_last_book")) || 1)),
+  chapter: Math.max(1, Number(localStorage.getItem("bm_last_ch")) || 1),
   trans1: localStorage.getItem("bm_trans1") || "gb:riveduta",
   trans2: localStorage.getItem("bm_trans2") || "gb:kjv",
   trans3: localStorage.getItem("bm_trans3") || "gb:valera",
@@ -1323,6 +1323,10 @@ async function loadChapterView() {
   state.selectedVerseText = "";
   window.currentInsightSpeechText = "";
   const book = getBook(state.bookId);
+  state.bookId = book.id;
+  state.chapter = Math.min(book.ch, Math.max(1, Number(state.chapter) || 1));
+  safeSaveStorage("bm_last_book", String(state.bookId));
+  safeSaveStorage("bm_last_ch", String(state.chapter));
   document.getElementById("currentRefLabel").textContent = `${book.name} ${state.chapter}`;
   const main = document.getElementById("mainContainer");
   main.innerHTML = `<div class="loader">Caricamento di <b>${escapeHtml(book.name)} ${state.chapter}</b>...</div>`;
@@ -2436,6 +2440,25 @@ let bmAudioPlayer = null;
 let bmAudioPlaying = false;
 let bmUserStopped = false;
 let bmSessionId = 0;
+let bmWakeLock = null;
+async function requestAudioWakeLock() {
+  if ("wakeLock" in navigator && navigator.wakeLock) {
+    try {
+      if (!bmWakeLock) bmWakeLock = await navigator.wakeLock.request("screen");
+    } catch (e) {}
+  }
+}
+function releaseAudioWakeLock() {
+  if (bmWakeLock) {
+    try { bmWakeLock.release(); } catch (e) {}
+    bmWakeLock = null;
+  }
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && bmAudioPlaying) {
+    requestAudioWakeLock();
+  }
+});
 function getActiveTTSLangCode(fullLocale = false) {
   if ((typeof currentInsightSpeechText === "string" && currentInsightSpeechText.trim()) ||
       (typeof currentDailySpeechText === "string" && currentDailySpeechText.trim())) {
@@ -2492,6 +2515,7 @@ function splitTextForAudio(text, maxLen = 165) {
   return chunks;
 }
 function stopAllAudio() {
+  releaseAudioWakeLock();
   bmSessionId++;
   bmUserStopped = true;
   bmAudioPlaying = false;
@@ -2563,6 +2587,7 @@ function startUniversalSpeech(rawText, updateMainBtn = true) {
   const mySession = ++bmSessionId;
   bmUserStopped = false;
   bmAudioPlaying = true;
+  requestAudioWakeLock();
   const btn = document.getElementById("ttsChapterBtn");
   if (updateMainBtn && btn) {
     btn.classList.add("active");
