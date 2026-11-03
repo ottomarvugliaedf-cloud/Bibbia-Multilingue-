@@ -69,6 +69,8 @@
       overflow: hidden;
     }
     /* SCHERMATA INIZIALE BLU PRO CON ANIMAZIONE FLUIDA E OROLOGIO INTERNO */
+.splash-box, .splash-sub { opacity: 0; transition: opacity 0.25s ease; }
+#splashScreen.ready .splash-box, #splashScreen.ready .splash-sub { opacity: 1; }
 #splashScreen {
   position: fixed;
   top: 0; left: 0; width: 100%; height: 100%;
@@ -615,6 +617,25 @@
     </div>
     <div class="splash-sub">Bibbia Multilingue PRO</div>
   </div>
+
+  <script>
+(function () {
+  var splash = document.getElementById("splashScreen");
+  var timer, done = false;
+  function reveal() {
+    if (done) return;
+    done = true;
+    window.removeEventListener("resize", restart);
+    splash.classList.add("ready");
+    window.__splashShownAt = Date.now();
+  }
+  function restart() { clearTimeout(timer); timer = setTimeout(reveal, 200); }
+  window.addEventListener("resize", restart);
+  restart();
+  setTimeout(reveal, 600);
+})();
+  </script>
+  
     <!-- Header Superiore con Lettura Quotidiana Annuale e Salto Rapido ⚡ -->
   <header>
     <div>
@@ -4805,12 +4826,18 @@ async function importBackupJson(e) {
     alert("Errore nel file di backup.");
   }
 }  
+let splashDismissed = false;
 function dismissSplashScreen() {
+  if (splashDismissed) return;
   const splash = document.getElementById("splashScreen");
-  if (splash) {
+  if (!splash) return;
+  if (!window.__splashShownAt) { setTimeout(dismissSplashScreen, 100); return; }
+  splashDismissed = true;
+  const wait = Math.max(0, 700 - (Date.now() - window.__splashShownAt));
+  setTimeout(() => {
     splash.style.opacity = "0";
     setTimeout(() => splash.remove(), 400);
-  }
+  }, wait);
 }
 
 setTimeout(dismissSplashScreen, 1800);
