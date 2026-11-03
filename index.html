@@ -68,7 +68,7 @@
       height: 100dvh;
       overflow: hidden;
     }
-    /* SCHERMATA INIZIALE BLU PRO CON ANIMAZIONE FLUIDA E OROLOGIO INTERNO */
+/* SCHERMATA INIZIALE BLU PRO CON ANIMAZIONE FLUIDA E OROLOGIO INTERNO */
 .splash-box, .splash-sub { opacity: 0; transition: opacity 0.25s ease; }
 #splashScreen.ready .splash-box, #splashScreen.ready .splash-sub { opacity: 1; }
 #splashScreen {
@@ -629,10 +629,10 @@
     splash.classList.add("ready");
     window.__splashShownAt = Date.now();
   }
-  function restart() { clearTimeout(timer); timer = setTimeout(reveal, 200); }
+  function restart() { clearTimeout(timer); timer = setTimeout(reveal, 400); }
   window.addEventListener("resize", restart);
   restart();
-  setTimeout(reveal, 600);
+  setTimeout(reveal, 1500);
 })();
   </script>
   
