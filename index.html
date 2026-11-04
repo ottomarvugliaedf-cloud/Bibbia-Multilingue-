@@ -5032,7 +5032,7 @@ async function openMapByDocId(docId, placeName, gridCoord = "") {
     terms: foundPlace ? [foundPlace.name, ...foundPlace.aliases] : (placeName ? [placeName] : [])
   };
   const data = await getMapsData();
-  try {
+    try {
     if (data && Array.isArray(data.maps) && data.maps.length > 0) {
       let idx = data.maps.findIndex(m => m.docId === docId);
       if (idx === -1 && placeName) {
@@ -5047,9 +5047,9 @@ async function openMapByDocId(docId, placeName, gridCoord = "") {
     }
   } finally {
     window.__highlightedPlaceInfo = null;
-  }setTimeout(() => { window.__highlightedPlaceInfo = null; }, 800);
+  }
 }
-
+    
 async function openWhereIsItModal() {
   const activeText = extractActiveViewTextForAnalysis();
   const normText = " " + normalizeForSearch(activeText).replace(/[^a-z0-9]+/g, " ") + " ";
