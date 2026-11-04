@@ -910,7 +910,7 @@ const PRO_STRONG_DICT = {
   "vita": { code: "G2222 / H2416", orig: "ζωή (zōē) / חַי (chay)", def: "Vita in senso assoluto, pienezza di vitalità fisica, spirituale ed eterna." },
   "fede": { code: "G4102 / H530", orig: "πίστις (pistis) / אֱמוּנָה ('emunah)", def: "Certezza, solida fiducia, fedeltà costante e convinzione radicata nelle promesse divine." },
   "amore": { code: "G26 / H160", orig: "ἀγάπη (agapē) / אַהֲבָה ('ahavah)", def: "Amore incondizionato, sacrificale e altruistico guidato dalla natura stessa di Dio." },
-  "grazia": { code: "G5485 / H2580", orig: "χάρις (charis) / חֵן (chen)", def: "Favore immeritato,immeritata benignità, benevolenza sovrana e dono gratuito di Dio." },
+  "grazia": { code: "G5485 / H2580", orig: "χάρις (charis) / חֵן (chen)", def: "Favore immeritato, immeritata benignità, benevolenza sovrana e dono gratuito di Dio." },
   "pace": { code: "H7965 / G1515", orig: "שָׁלוֹם (shalom) / εἰρήνη (eirēnē)", def: "Benessere completo, integrità, armonia, riconciliazione con Dio e assenza di conflitto." },
   "pastore": { code: "H7462 / G4166", orig: "רָעָה (ra'ah) / ποιμήν (poimēn)", def: "Colui che pasce, guida, protegge e dà la vita per il proprio gregge." },
   "anima": { code: "H5315 / G5590", orig: "נֶפֶשׁ (nephesh) / ψυχή (psychē)", def: "Essere vivente, persona intera, respiro vitale, la vita stessa." },
@@ -1005,7 +1005,7 @@ let navHistory = [];
 let currentChapterReqId = 0;
 const _origFetch = window.fetch.bind(window);
 window.fetch = (url, opts = {}) => {
-  if (opts.signal) return _origFetch(url, opts);
+  if (opts.signal || (url && url.signal)) return _origFetch(url, opts);
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), 30000);
   return _origFetch(url, { ...opts, signal: ctrl.signal }).finally(() => clearTimeout(t));
@@ -1949,7 +1949,7 @@ function showSearchView() {
   main.innerHTML = `
     <div class="section-title"><span>Concordanza & Ricerca nei 66 Libri</span></div>
     <div class="search-box">
-      <input type="text" id="searchInput" class="search-input" placeholder="Scrivi una parola, piu parole o una frase che ricordi..." onkeydown="if(event.key==='Enter') executeSearch(1)">
+      <input type="text" id="searchInput" class="search-input" placeholder="Scrivi una parola, più parole o una frase che ricordi..." onkeydown="if(event.key==='Enter') executeSearch(1)">
       <button class="search-btn" onclick="executeSearch(1)">Cerca</button>
     </div>
     <div class="search-box" style="margin-top:-4px;">
@@ -1969,12 +1969,10 @@ function showSearchView() {
     <div id="searchResults"><div class="loader">Inserisci una parola o una frase (preimpostata su <b>TNM 1987</b>) per trovare subito il versetto.</div></div>
   `;
 }
-
 let currentSearchPage = 1;
 const RESULTS_PER_PAGE = 250;
 let cachedSearchMatches = [];
 let cachedSearchMeta = { query: "", total: 0, transId: "", scope: "", mode: "", queryWords: [] };
-
 async function executeSearch(page = 1) {
   const inpEl = document.getElementById("searchInput");
   const rawQuery = inpEl ? inpEl.value.trim() : "";
@@ -1985,17 +1983,14 @@ async function executeSearch(page = 1) {
   const bibleEl = document.getElementById("searchBibleSelect");
   const targetTrans = bibleEl ? bibleEl.value : "gb:bi12";
   if (!rawQuery) return;
-
   const searchTransId = targetTrans.startsWith("helloao:") ? "gb:riveduta" : targetTrans;
   const isNewSearch = (page === 1) ||
     cachedSearchMeta.query !== rawQuery ||
     cachedSearchMeta.transId !== searchTransId ||
     cachedSearchMeta.scope !== scope ||
     cachedSearchMeta.mode !== mode;
-
   currentSearchPage = page;
   const resDiv = document.getElementById("searchResults");
-
   if (isNewSearch) {
     resDiv.innerHTML = `<div class="loader">Ricerca nella Concordanza di "<b>${escapeHtml(rawQuery)}</b>" in corso...</div>`;
     const normalizeForPhrase = (str) => String(str || "").toLowerCase()
@@ -2004,7 +1999,6 @@ async function executeSearch(page = 1) {
       .trim();
     const queryNorm = normalizeForPhrase(rawQuery);
     const queryWords = queryNorm.split(" ").filter(Boolean);
-
     const buildMatcher = (qRaw) => {
       if (/\s+not\s+/i.test(qRaw)) {
         const parts = qRaw.split(/\s+not\s+/i);
@@ -2046,8 +2040,8 @@ async function executeSearch(page = 1) {
           const bMeta = getBook(bNum);
           for (const c of (b.chapters || [])) {
             for (const v of (c.verses || [])) {
-              const plainV = stripTagsToPlainText(v.text);
-              if (plainV && matchLogic(plainV, rawQuery)) {
+          const plainV = stripTagsToPlainText(v.text);
+            if (plainV && matchLogic(plainV)) {
                 allMatches.push({ bookId: bNum, bookName: bMeta.name, ch: c.chapter, v: v.verse, text: plainV });
               }
             }
@@ -2067,8 +2061,8 @@ async function executeSearch(page = 1) {
     }
   }
   renderSearchResultsPage();
-}
-
+  }
+    
 function renderSearchResultsPage() {
   const resDiv = document.getElementById("searchResults");
   if (!resDiv) return;
@@ -4438,12 +4432,13 @@ function filterMapsBySection(sec) {
   showMapsView(null);
 }
 
+let mapsSearchTimeout = null;
 function onMapsSearchInput(val) {
   mapsSearchQuery = val || "";
-  clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(renderMapsGridList, 140);
+  clearTimeout(mapsSearchTimeout);
+  mapsSearchTimeout = setTimeout(renderMapsGridList, 140);
 }
-
+    
 function exportMapsAsJsonFile() {
   if (!mapsMemCache || !Array.isArray(mapsMemCache.maps) || !mapsMemCache.maps.length) return;
   const jsonStr = JSON.stringify(mapsMemCache, null, 2);
