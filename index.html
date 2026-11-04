@@ -68,27 +68,42 @@
       height: 100dvh;
       overflow: hidden;
     }
-/* SCHERMATA INIZIALE BLU PRO CON ANIMAZIONE FLUIDA E OROLOGIO INTERNO */
-.splash-box, .splash-sub { opacity: 0; will-change: transform, opacity; }
+/* SCHERMATA INIZIALE BLU PRO ANTI-SALTINO APPSGEYSER (COORDINATE HARDWARE CONGELATE) */
+.splash-box, .splash-sub { opacity: 0; will-change: transform, opacity; backface-visibility: hidden; }
 #splashScreen.ready .splash-box {
   opacity: 1;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.35s ease;
   animation: splashPulse 2.5s infinite ease-in-out;
 }
 #splashScreen.ready .splash-sub {
-  animation: fadeInSub 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards 0.15s;
+  animation: fadeInSub 0.75s cubic-bezier(0.22, 1, 0.36, 1) forwards 0.12s;
 }
 #splashScreen {
   position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: radial-gradient(circle at center, #1e88e5 0%, #0a367e 55%, #020b1c 100%);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100lvh;
+  min-height: 100vh;
+  background: radial-gradient(circle at 50% 50%, #1e88e5 0%, #0a367e 55%, #020b1c 100%);
   z-index: 9999;
+  overflow: hidden;
+  contain: layout paint style;
   transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s ease;
   will-change: opacity, transform;
+  backface-visibility: hidden;
+}
+.splash-center-lock {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  top: var(--splash-locked-top, 50%);
+  transform: translate3d(0, -50%, 0);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
 }
 .splash-box {
   width: 126px; height: 126px;
@@ -99,10 +114,11 @@
   justify-content: center;
   align-items: center;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 35px rgba(33, 150, 243, 0.5);
+  transform: translateZ(0);
 }
 @keyframes splashPulse {
-  0%, 100% { transform: scale(1); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(33, 150, 243, 0.4); }
-  50% { transform: scale(1.04); box-shadow: 0 26px 50px rgba(0, 0, 0, 0.7), 0 0 45px rgba(33, 150, 243, 0.75); }
+  0%, 100% { transform: scale3d(1, 1, 1); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(33, 150, 243, 0.4); }
+  50% { transform: scale3d(1.04, 1.04, 1); box-shadow: 0 26px 50px rgba(0, 0, 0, 0.7), 0 0 45px rgba(33, 150, 243, 0.75); }
 }
 .splash-text {
   color: #ffffff;
@@ -122,8 +138,8 @@
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 @keyframes fadeInSub {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
 }
     /* HEADER CON CAMPO AZZURRO FINO AL BORDO SUPERIORE E PROTEZIONE BARRA ANDROID */
     header {
@@ -620,32 +636,40 @@
   </style>
 </head>
 <body>
-  <!-- Schermata Iniziale Splash Blu PRO con Blocco BM Bianco -->
+  <!-- Schermata Iniziale Splash Blu PRO con Blocco BM Bianco e Centro Congelato in Pixel -->
   <div id="splashScreen">
-    <div class="splash-box">
-      <span class="splash-text">BM</span>
+    <div class="splash-center-lock">
+      <div class="splash-box">
+        <span class="splash-text">BM</span>
+      </div>
+      <div class="splash-sub">Bibbia Multilingue PRO</div>
     </div>
-    <div class="splash-sub">Bibbia Multilingue PRO</div>
   </div>
-
   <script>
 (function () {
   var splash = document.getElementById("splashScreen");
   var timer, done = false;
-  function reveal() {
+  function lockCenterAndReveal() {
     if (done) return;
     done = true;
-    window.removeEventListener("resize", restart);
-    splash.classList.add("ready");
-    window.__splashShownAt = Date.now();
+    window.removeEventListener("resize", onResizeStabilize);
+    var h = window.innerHeight || document.documentElement.clientHeight || window.screen.height || 800;
+    splash.style.height = Math.max(h, window.screen ? window.screen.height : h) + "px";
+    splash.style.setProperty("--splash-locked-top", Math.round(h / 2) + "px");
+    requestAnimationFrame(function () {
+      splash.classList.add("ready");
+      window.__splashShownAt = Date.now();
+    });
   }
-  function restart() { clearTimeout(timer); timer = setTimeout(reveal, 400); }
-  window.addEventListener("resize", restart);
-  restart();
-  setTimeout(reveal, 1500);
+  function onResizeStabilize() {
+    clearTimeout(timer);
+    timer = setTimeout(lockCenterAndReveal, 520);
+  }
+  window.addEventListener("resize", onResizeStabilize);
+  onResizeStabilize();
+  setTimeout(lockCenterAndReveal, 1100);
 })();
   </script>
-  
     <!-- Header Superiore con Lettura Quotidiana Annuale e Salto Rapido ⚡ -->
   <header>
     <div>
