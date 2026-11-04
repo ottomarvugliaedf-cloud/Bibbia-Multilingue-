@@ -2025,8 +2025,6 @@ async function executeSearch(page = 1) {
     };
     await new Promise(r => setTimeout(r, 30));
     const matchLogic = buildMatcher(rawQuery);
-    };
-
     try {
       let fullBible = await getOfflineBible(searchTransId);
       if (!fullBible && !LOCAL_EPUB_IDS.includes(searchTransId)) {
