@@ -394,12 +394,12 @@
       cursor: pointer;
       flex-shrink: 0;
     }
-    /* BARRA INFERIORE A 6 SCHEDE CON MARGINE SICURO ANTI-GESTURE ANDROID */
+    /* BARRA INFERIORE A 7 SCHEDE CON MARGINE SICURO ANTI-GESTURE ANDROID */
     nav.bottom-nav {
       background: var(--bg-card);
       border-top: 1px solid var(--border-color);
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
+      grid-template-columns: repeat(7, 1fr);
       padding: 6px 2px;
       padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
       flex-shrink: 0;
@@ -409,14 +409,14 @@
       background: none;
       border: none;
       color: var(--text-muted);
-      font-size: 10.5px;
+      font-size: 10px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: 2px;
       cursor: pointer;
-      padding: 4px 2px;
+      padding: 4px 1px;
       font-weight: 700;
     }
     .tab-btn.active { color: var(--primary-light); font-weight: 800; }
@@ -709,13 +709,16 @@
       <div id="proModalBody"></div>
     </div>
   </div>
-    <!-- Barra Navigazione Inferiore a 6 Strumenti -->
+      <!-- Barra Navigazione Inferiore a 7 Strumenti -->
   <nav class="bottom-nav">
     <button class="tab-btn" id="tabSearch" onclick="showSearchView()">
       <span class="tab-icon">🔍</span><span>Cerca</span>
     </button>
     <button class="tab-btn" id="parallelBtn" onclick="toggleParallel()">
       <span class="tab-icon">⚖️</span><span id="parallelLabel">Parallelo: 1x</span>
+    </button>
+    <button class="tab-btn" id="whereBtn" onclick="openWhereIsItModal()">
+      <span class="tab-icon">📍</span><span>Dove?</span>
     </button>
     <button class="tab-btn" id="ttsChapterBtn" onclick="toggleChapterTTS()">
       <span class="tab-icon" id="ttsIcon">🔊</span><span id="ttsLabel">Ascolta</span>
@@ -1171,8 +1174,8 @@ function setActiveTab(tabId, quickPillId = null) {
   };
   const resolvedQuickPill = quickPillId || topMap[tabId] || null;
 
-  document.querySelectorAll(".tab-btn").forEach(b => {
-    if (b.id !== "parallelBtn" && b.id !== "ttsChapterBtn") {
+      document.querySelectorAll(".tab-btn").forEach(b => {
+    if (b.id !== "parallelBtn" && b.id !== "ttsChapterBtn" && b.id !== "whereBtn") {
       b.classList.remove("active");
     }
   });
@@ -3544,14 +3547,14 @@ async function showDailyTextView(dayOffset = 0) {
       <button class="search-btn" style="flex:1; padding:12px;" onclick="loadChapterView()">
         📖 Apri la Bibbia (${escapeHtml(getBook(state.bookId).name)} ${state.chapter})
       </button>
-      <button class="nav-btn" style="padding:12px;" onclick="toggleChapterTTS()">
-        🔊 Ascolta Giorno
+      <button class="nav-btn" style="padding:12px; border-color:var(--primary-light); color:var(--primary-light); font-weight:800;" onclick="openDeepenDailyModal()">
+        💎 Approfondisci
       </button>
     </div>
   `;
   main.scrollTop = 0;
 }
-
+    
 // ============================================================================
 // MODULO PERSPICACIA NELLO STUDIO DELLE SCRITTURE (it_I ZIP/RTF & EPUB)
 // ============================================================================
@@ -4849,6 +4852,236 @@ async function importBackupJson(e) {
     alert("Errore nel file di backup.");
   }
 }  
+// ============================================================================
+// MODULO "📍 DOVE SI TROVA?" (Universale) & "💎 APPROFONDISCI" (Scrittura del Giorno)
+// ============================================================================
+constBM_BIBLE_PLACES = [
+  { name: "Gerusalemme", aliases: ["gerusalemme", "sion", "citta di davide", "moria", "getsemani", "golgota", "siloe", "betzata", "inno", "chidron"], docId: "1102003108", grid: "G10 • Pagg. 20-21 / 30-31", region: "Giudea / Tempio" },
+  { name: "Betlemme", aliases: ["betlemme", "efrata"], docId: "1102003111", grid: "G10 • Pagg. 28-29", region: "Giudea" },
+  { name: "Betania", aliases: ["betania", "betfage"], docId: "1102003111", grid: "G10 • Pagg. 28-31", region: "Monte degli Ulivi" },
+  { name: "Nazaret", aliases: ["nazaret"], docId: "1102003111", grid: "G6 • Pagg. 28-29", region: "Galilea" },
+  { name: "Capernaum", aliases: ["capernaum", "cafarnao", "corazin", "betsaida"], docId: "1102003111", grid: "H5 • Pagg. 28-29", region: "Mar di Galilea" },
+  { name: "Cana", aliases: ["cana"], docId: "1102003111", grid: "G6 • Pagg. 28-29", region: "Galilea" },
+  { name: "Mar di Galilea", aliases: ["mar di galilea", "galilea", "tiberiade", "genesaret", "decapoli"], docId: "1102003111", grid: "H5 • Pagg. 28-29", region: "Israele Settentrionale" },
+  { name: "Samaria / Sichem", aliases: ["samaria", "sichem", "sichar", "garizim", "ebal", "tirza"], docId: "1102003109", grid: "G8 • Pagg. 22-23 / 28-29", region: "Regione Montuosa di Efraim" },
+  { name: "Gerico", aliases: ["gerico", "ghilgal"], docId: "1102003115", grid: "H10 • Pagg. 14-15 / 28-29", region: "Valle del Giordano" },
+  { name: "Fiume Giordano", aliases: ["giordano", "araba"], docId: "1102003105", grid: "H7-H10 • Pagg. 10-11", region: "Rift Valley" },
+  { name: "Mar Morto", aliases: ["mar morto", "mar salato", "sodoma", "gomorra", "en-ghedi", "masada"], docId: "1102003106", grid: "H11 • Pagg. 12-13", region: "Depressione del Giordano" },
+  { name: "Monte Ermon", aliases: ["ermon", "cesarea di filippo", "dan"], docId: "1102003106", grid: "H3 • Pagg. 12-13", region: "Confine Settentrionale" },
+  { name: "Monte Carmelo / Megiddo", aliases: ["carmelo", "megiddo", "izreel", "tabor", "chison", "armaghedon"], docId: "1102003107", grid: "F6 • Pagg. 16-17", region: "Pianura di Izreel" },
+  { name: "Ebron", aliases: ["ebron", "macpela", "mamre"], docId: "1102003103", grid: "G11 • Pagg. 4-5 / 18-19", region: "Monti di Giuda" },
+  { name: "Beersheba", aliases: ["beersheba", "beer-seba", "negheb"], docId: "1102003103", grid: "F12 • Pagg. 4-5 / 14-15", region: "Negheb" },
+  { name: "Betel / Ai", aliases: ["betel", "ai", "silo", "rama", "gabaon"], docId: "1102003115", grid: "G9 • Pagg. 14-15", region: "Beniamino / Efraim" },
+  { name: "Ur / Carran (Haran)", aliases: ["ur", "carran", "haran", "caldei", "mesopotamia", "eufrate", "tigri"], docId: "1102003103", grid: "E3-K6 • Pagg. 4-5", region: "Mezzaluna Fertile" },
+  { name: "Egitto / Rameses", aliases: ["egitto", "nilo", "rameses", "succot", "menfi", " gosen", "mar rosso"], docId: "1102003110", grid: "B6-D8 • Pagg. 8-9", region: "Egitto e Sinai" },
+  { name: "Monte Sinai / Cades", aliases: ["sinai", "oreb", "refidim", "mara", "elim", "cades", "cades-barnea", "paran", "nebo"], docId: "1102003110", grid: "E11-G9 • Pagg. 8-9", region: "Penisola del Sinai" },
+  { name: "Filistia (Gaza, Asdod, Gath)", aliases: ["filistia", "filistei", "gaza", "ascalon", "asdod", "ecron", "gath", "sefela", "saron"], docId: "1102003105", grid: "E10-E11 • Pagg. 10-11 / 18-19", region: "Pianura Costiera" },
+  { name: "Tiro e Sidone (Fenicia)", aliases: ["tiro", "sidone", "fenicia", "zarefat", "libano"], docId: "1102003104", grid: "G3-G4 • Pagg. 6-7 / 28-29", region: "Costa Fenicia" },
+  { name: "Moab, Ammon ed Edom", aliases: ["moab", "ammon", "edom", "rabba", "seir", "galaad", "basan"], docId: "1102003117", grid: "I9-I12 • Pagg. 18-19", region: "Transgiordania" },
+  { name: "Assiria e Ninive", aliases: ["assiria", "ninive", "calah", "assur"], docId: "1102003122", grid: "I3-J3 • Pagg. 24-25", region: "Alto Tigri" },
+  { name: "Babilonia e Persia", aliases: ["babilonia", "babele", "susa", "ecbatana", "media", "persia", "elam"], docId: "1102003122", grid: "J6-L6 • Pagg. 24-25", region: "Bassa Mesopotamia / Persia" },
+  { name: "Grecia (Atene, Corinto, Macedonia)", aliases: ["grecia", "atene", "corinto", "filippi", "tessalonica", "berea", "macedonia", "acaia"], docId: "1102003113", grid: "B2-C3 • Pagg. 26-27 / 32-33", region: "Egeo / Europa" },
+  { name: "Asia Minore e Antiochia", aliases: ["antiochia", "efeso", "smirne", "pergamo", "tiatira", "sardi", "filadelfia", "laodicea", "tarso", "galazia", "cipro", "creta", "patmos"], docId: "1102003113", grid: "D3-G4 • Pagg. 32-33", region: "Viaggi di Paolo" },
+  { name: "Roma e Italia", aliases: ["roma", "italia", "malta", "pozzioli", " Cesarea"], docId: "1102003113", grid: "A2 • Pagg. 26-27 / 32-33", region: "Impero Romano" }
+];
+
+function extractActiveViewTextForAnalysis() {
+  const main = document.getElementById("mainContainer");
+  if (!main) return "";
+  if (currentViewContext.type === "bible") {
+    const rows = [...main.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3")];
+    if (rows.length > 0) return rows.map(r => r.getAttribute("data-text") || r.textContent || "").join(" ");
+  }
+  return (main.innerText || main.textContent || "").replace(/\s+/g, " ").trim();
+}
+
+async function openMapByDocId(docId, placeName) {
+  closeProModal();
+  const data = await getMapsData();
+  if (data && Array.isArray(data.maps) && data.maps.length > 0) {
+    let idx = data.maps.findIndex(m => m.docId === docId);
+    if (idx === -1 && placeName) {
+      const q = normalizeForSearch(placeName);
+      idx = data.maps.findIndex(m => normalizeForSearch(`${m.title} ${m.desc} ${m.section}`).includes(q));
+    }
+    saveCurrentPositionToHistory(state.bookId, state.chapter);
+    showMapsView(idx > -1 ? idx : 0);
+  } else {
+    saveCurrentPositionToHistory(state.bookId, state.chapter);
+    showMapsView(null);
+  }
+}
+
+async function openWhereIsItModal() {
+  const activeText = extractActiveViewTextForAnalysis();
+  const normText = " " + normalizeForSearch(activeText).replace(/[^a-z0-9]+/g, " ") + " ";
+  const detected = [];
+  const seenNames = new Set();
+
+  constBM_BIBLE_PLACES.forEach(p => {
+    const isHit = p.aliases.some(al => {
+      const normAl = normalizeForSearch(al).trim();
+      return normText.includes(" " + normAl + " ");
+    });
+    if (isHit && !seenNames.has(p.name)) {
+      seenNames.add(p.name);
+      detected.push(p);
+    }
+  });
+
+  const data = await getMapsData();
+  if (data && Array.isArray(data.maps)) {
+    data.maps.forEach((m, idx) => {
+      if (detected.length < 10 && !detected.some(d => d.docId === m.docId)) {
+        const words = normalizeForSearch(m.title).split(/\s+/).filter(w => w.length >= 5 && !["cartina", "paese", "mondo", "terra", "promessa", "israele", "giorni", "durante", "regno"].includes(w));
+        if (words.some(w => normText.includes(" " + w + " "))) {
+          detected.push({
+            name: m.title,
+            docId: m.docId,
+            grid: m.code || `Tavola ${idx + 1}`,
+            region: m.section || "Atlante Biblico"
+          });
+        }
+      }
+    });
+  }
+
+  const contextLabels = {
+    daily: "☀️ Scrittura del Giorno",
+    bible: `📖 ${getBook(state.bookId).name} ${state.chapter}`,
+    insight: "📚 Perspicacia",
+    si: "📘 Tutta la Scrittura",
+    maps: "🗺️ Cartine Bibliche",
+    notes: "📝 Appunti Studio"
+  };
+  const ctxLabel = contextLabels[currentViewContext.type] || "Testo Aperto";
+
+  const detectedHtml = detected.length > 0
+    ? detected.map(p => {
+        const cat = GL_ATLAS_CATALOG.find(c => c.docId === p.docId);
+        const mapTitle = cat ? cat.title : p.name;
+        return `
+          <div class="result-card" onclick="openMapByDocId('${escapeJsStr(p.docId)}', '${escapeJsStr(p.name)}')">
+            <div class="result-ref" style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">
+              <span>📍 ${escapeHtml(p.name)}</span>
+              <span class="tag-badge" style="background:var(--primary-main); color:#fff;">🧭 ${escapeHtml(p.grid)}</span>
+            </div>
+            <div style="font-size:13px; font-weight:700; color:var(--text-main); margin-top:3px;">🗺️ ${escapeHtml(mapTitle)}</div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">Regione: ${escapeHtml(p.region)} • Tocca per aprire la cartina HD</div>
+          </div>`;
+      }).join("")
+    : `<div class="result-card" style="cursor:default; text-align:center; color:var(--text-muted); padding:14px;">
+         Nessun toponimo diretto rilevato nel testo visibile.<br>Scegli una delle tavole principali qui sotto o apri l'Indice completo:
+       </div>`;
+
+  const quickChipsHtml = constBM_BIBLE_PLACES.slice(0, 12).map(p =>
+    `<span class="tag-badge" style="padding:6px 10px; font-size:12.5px;" onclick="openMapByDocId('${escapeJsStr(p.docId)}', '${escapeJsStr(p.name)}')">📍 ${escapeHtml(p.name)}</span>`
+  ).join(" ");
+
+  document.getElementById("proModalTitle").textContent = "📍 Dove si trova? — Atlante & Coordinate";
+  document.getElementById("proModalBody").innerHTML = `
+    <div style="font-size:12.5px; color:var(--text-muted); margin-bottom:10px;">
+      Analisi geografica automatica da: <b>${escapeHtml(ctxLabel)}</b>
+    </div>
+    <div class="section-title"><span>Luoghi Rilevati nel Testo</span><span>${detected.length}</span></div>
+    ${detectedHtml}
+    <div class="section-title"><span>Accesso Rapido Luoghi Biblici</span></div>
+    <div style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:14px;">${quickChipsHtml}</div>
+    <button class="search-btn" style="width:100%;" onclick="closeProModal(); showMapsView(null);">🗺️ Apri Tutte le 18 Tavole dell'Atlante HD</button>
+  `;
+  document.getElementById("proModal").style.display = "flex";
+}
+
+function searchWordInInsight(word) {
+  closeProModal();
+  closeActionBar();
+  saveCurrentPositionToHistory(state.bookId, state.chapter);
+  insightActiveLetter = "TUTTE";
+  insightSearchQuery = word || "";
+  showInsightView(null);
+}
+
+async function openDeepenDailyModal() {
+  const savedDaily = await getOfflineBible("bm:daily_text");
+  const targetDate = new Date();
+  targetDate.setDate(targetDate.getDate() + currentDailyOffset);
+  const mm = String(targetDate.getMonth() + 1).padStart(2, "0");
+  const dd = String(targetDate.getDate()).padStart(2, "0");
+  const dayKey = `${mm}-${dd}`;
+  const entry = (savedDaily && savedDaily.days && savedDaily.days[dayKey]) ? savedDaily.days[dayKey] : null;
+
+  const rawTheme = entry ? entry.theme : extractActiveViewTextForAnalysis().slice(0, 220);
+  const rawComment = entry ? entry.comment : extractActiveViewTextForAnalysis();
+
+  const stopWords = new Set([
+    "della", "delle", "dello", "degli", "nella", "nelle", "nello", "negli", "sulla", "sulle", "sullo", "sugli",
+    "dalla", "dalle", "dallo", "dagli", "alla", "alle", "allo", "agli", "colla", "colle", "questo", "questa",
+    "questi", "queste", "quello", "quella", "quelli", "quelle", "essere", "avere", "fatto", "detto", "tutto",
+    "tutti", "tutte", "altro", "altri", "altre", "anche", "ancora", "perche", "quando", "quindi", "contro",
+    "sempre", "prima", "dopo", "sopra", "sotto", "dentro", "fuori", "presso", "verso", "secondo", "nostro",
+    "nostra", "nostri", "nostre", "vostro", "vostra", "vostri", "vostre", "stesso", "stessa", "stessi", "stesse",
+    "proprio", "propria", "propri", "proprie", "quale", "quali", "quanto", "quanta", "quanti", "quante", "molto",
+    "molti", "molte", "poco", "pochi", "poche", "ogni", "alcuni", "alcune", "nessuno", "nessuna", "ciascuno",
+    "mentre", "invece", "eppure", "allora", "forse", "quasi", "nulla", "niente", "insieme", "spesso", "subito",
+    "attraverso", "durante", "mediante", "nonostante", "affinché", "affinche", "poiché", "poiche", "benché",
+    "benche", "sebbene", "qualora", "purché", "purche", "prima", "coloro", "colui", "colei", "hanno", "aveva",
+    "avevano", "sarà", "sara", "saranno", "sarebbe", "fossero", "fosse", "siano", "sono", "erano", "stato", "stata"
+  ]);
+
+  const cleanTheme = String(rawTheme || "")
+    .replace(/\([^)]*\)/g, " ")
+    .replace(/[0-9]+/g, " ")
+    .replace(/[^a-zA-ZÀ-ÿ\s]/g, " ");
+
+  const candidateWords = [];
+  const seenW = new Set();
+
+  cleanTheme.split(/\s+/).forEach(w => {
+    const low = w.toLowerCase();
+    const norm = normalizeForSearch(low);
+    if (low.length >= 4 && !stopWords.has(low) && !stopWords.has(norm) && !seenW.has(norm)) {
+      seenW.add(norm);
+      candidateWords.push(w);
+    }
+  });
+
+  if (candidateWords.length < 4 && rawComment) {
+    String(rawComment).replace(/[^a-zA-ZÀ-ÿ\s]/g, " ").split(/\s+/).forEach(w => {
+      if (candidateWords.length >= 5) return;
+      const low = w.toLowerCase();
+      const norm = normalizeForSearch(low);
+      if (low.length >= 5 && !stopWords.has(low) && !stopWords.has(norm) && !seenW.has(norm)) {
+        seenW.add(norm);
+        candidateWords.push(w);
+      }
+    });
+  }
+
+  const finalKeywords = candidateWords.slice(0, 4);
+
+  const cardsHtml = finalKeywords.map(kw => {
+    const displayKw = kw.charAt(0).toUpperCase() + kw.slice(1).toLowerCase();
+    const safeJs = escapeJsStr(kw.toLowerCase());
+    return `
+      <div class="result-card" style="cursor:default;">
+        <div class="result-ref" style="font-size:15px; margin-bottom:8px;">💎 ${escapeHtml(displayKw)}</div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <span class="tag-badge" style="padding:6px 11px; font-size:12.5px; background:var(--primary-main); color:#fff;" onclick="searchWordInInsight('${safeJs}')">📚 Vedi in Perspicacia</span>
+          <span class="tag-badge" style="padding:6px 11px; font-size:12.5px;" onclick="searchWordInConcordance('${safeJs}')">📖 Cerca in Concordanza</span>
+        </div>
+      </div>`;
+  }).join("");
+
+  document.getElementById("proModalTitle").textContent = "💎 Approfondisci il Tema del Giorno";
+  document.getElementById("proModalBody").innerHTML = `
+    <div style="font-size:13px; color:var(--text-muted); font-style:italic; margin-bottom:12px; border-left:3px solid var(--primary-light); padding-left:8px;">
+      ${escapeHtml(rawTheme || "Scrittura del Giorno")}
+    </div>
+    <div class="section-title"><span>Parole Chiave Estratte dal Tema</span><span>${finalKeywords.length}</span></div>
+    ${cardsHtml || `<div class="loader">Nessuna parola chiave estratta.</div>`}
+  `;
+  document.getElementById("proModal").style.display = "flex";
+   }                              
 let splashDismissed = false;
 function dismissSplashScreen() {
   if (splashDismissed) return;
