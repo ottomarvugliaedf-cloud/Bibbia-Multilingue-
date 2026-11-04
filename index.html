@@ -4900,18 +4900,18 @@ const BM_BIBLE_PLACES = [
   { name: "Betania", aliases: ["betania", "betfage"], docId: "1102003111", grid: "G10 • Pagg. 28-31", region: "Monte degli Ulivi" },
   { name: "Nazaret", aliases: ["nazaret"], docId: "1102003111", grid: "G6 • Pagg. 28-29", region: "Galilea" },
   { name: "Capernaum", aliases: ["capernaum", "cafarnao", "corazin", "betsaida"], docId: "1102003111", grid: "H5 • Pagg. 28-29", region: "Mar di Galilea" },
-  { name: "Cana", aliases: ["cana"], docId: "1102003111", grid: "G6 • Pagg. 28-29", region: "Galilea" },
+  { name: "Cana", aliases: ["cana di galilea", "cana"], docId: "1102003111", grid: "G6 • Pagg. 28-29", region: "Galilea" },
   { name: "Mar di Galilea", aliases: ["mar di galilea", "galilea", "tiberiade", "genesaret", "decapoli"], docId: "1102003111", grid: "H5 • Pagg. 28-29", region: "Israele Settentrionale" },
   { name: "Samaria / Sichem", aliases: ["samaria", "sichem", "sichar", "garizim", "ebal", "tirza"], docId: "1102003109", grid: "G8 • Pagg. 22-23 / 28-29", region: "Regione Montuosa di Efraim" },
   { name: "Gerico", aliases: ["gerico", "ghilgal"], docId: "1102003115", grid: "H10 • Pagg. 14-15 / 28-29", region: "Valle del Giordano" },
   { name: "Fiume Giordano", aliases: ["giordano", "araba"], docId: "1102003105", grid: "H7-H10 • Pagg. 10-11", region: "Rift Valley" },
   { name: "Mar Morto", aliases: ["mar morto", "mar salato", "sodoma", "gomorra", "en-ghedi", "masada"], docId: "1102003106", grid: "H11 • Pagg. 12-13", region: "Depressione del Giordano" },
-  { name: "Monte Ermon", aliases: ["ermon", "cesarea di filippo", "dan"], docId: "1102003106", grid: "H3 • Pagg. 12-13", region: "Confine Settentrionale" },
+  { name: "Monte Ermon", aliases: ["ermon", "cesarea di filippo", "teldan", "citta di dan"], docId: "1102003106", grid: "H3 • Pagg. 12-13", region: "Confine Settentrionale" },
   { name: "Monte Carmelo / Megiddo", aliases: ["carmelo", "megiddo", "izreel", "tabor", "chison", "armaghedon"], docId: "1102003107", grid: "F6 • Pagg. 16-17", region: "Pianura di Izreel" },
   { name: "Ebron", aliases: ["ebron", "macpela", "mamre"], docId: "1102003103", grid: "G11 • Pagg. 4-5 / 18-19", region: "Monti di Giuda" },
   { name: "Beersheba", aliases: ["beersheba", "beer-seba", "negheb"], docId: "1102003103", grid: "F12 • Pagg. 4-5 / 14-15", region: "Negheb" },
-  { name: "Betel / Ai", aliases: ["betel", "ai", "silo", "rama", "gabaon"], docId: "1102003115", grid: "G9 • Pagg. 14-15", region: "Beniamino / Efraim" },
-  { name: "Ur / Carran (Haran)", aliases: ["ur", "carran", "haran", "caldei", "mesopotamia", "eufrate", "tigri"], docId: "1102003103", grid: "E3-K6 • Pagg. 4-5", region: "Mezzaluna Fertile" },
+  { name: "Betel / Silo", aliases: ["betel", "citta di ai", "silo", "rama", "gabaon"], docId: "1102003115", grid: "G9 • Pagg. 14-15", region: "Beniamino / Efraim" },
+  { name: "Ur / Carran (Haran)", aliases: ["ur dei caldei", "carran", "haran", "caldei", "mesopotamia", "eufrate", "tigri"], docId: "1102003103", grid: "E3-K6 • Pagg. 4-5", region: "Mezzaluna Fertile" },
   { name: "Egitto / Rameses", aliases: ["egitto", "nilo", "rameses", "succot", "menfi", "gosen", "mar rosso"], docId: "1102003110", grid: "B6-D8 • Pagg. 8-9", region: "Egitto e Sinai" },
   { name: "Monte Sinai / Cades", aliases: ["sinai", "oreb", "refidim", "mara", "elim", "cades", "cades-barnea", "paran", "nebo"], docId: "1102003110", grid: "E11-G9 • Pagg. 8-9", region: "Penisola del Sinai" },
   { name: "Filistia (Gaza, Asdod, Gath)", aliases: ["filistia", "filistei", "gaza", "ascalon", "asdod", "ecron", "gath", "sefela", "saron"], docId: "1102003105", grid: "E10-E11 • Pagg. 10-11 / 18-19", region: "Pianura Costiera" },
@@ -4923,10 +4923,9 @@ const BM_BIBLE_PLACES = [
   { name: "Asia Minore e Antiochia", aliases: ["antiochia", "efeso", "smirne", "pergamo", "tiatira", "sardi", "filadelfia", "laodicea", "tarso", "galazia", "cipro", "creta", "patmos"], docId: "1102003113", grid: "D3-G4 • Pagg. 32-33", region: "Viaggi di Paolo" },
   { name: "Roma e Italia", aliases: ["roma", "italia", "malta", "pozzuoli", "cesarea"], docId: "1102003113", grid: "A2 • Pagg. 26-27 / 32-33", region: "Impero Romano" }
 ];
-
 function highlightPlaceInHtmlSafe(htmlStr, terms) {
   if (!terms || !terms.length) return htmlStr;
-  const cleanTerms = terms.map(t => t.trim()).filter(t => t.length >= 2);
+  const cleanTerms = terms.map(t => t.trim()).filter(t => t.length >= 3);
   if (!cleanTerms.length) return htmlStr;
   const map = { a: "[aàáâãäå]", e: "[eèéêë]", i: "[iìíîï]", o: "[oòóôõö]", u: "[uùúûü]" };
   const patterns = cleanTerms
@@ -4938,7 +4937,6 @@ function highlightPlaceInHtmlSafe(htmlStr, terms) {
     return textNode.replace(rgx, '$1<span class="bm-place-hl" style="cursor:default;">$2</span>');
   });
 }
-
 function highlightDetectedPlacesInActiveDOM(detectedPlaces) {
   if (!detectedPlaces || !detectedPlaces.length || currentViewContext.type === "maps") return;
   const main = document.getElementById("mainContainer");
@@ -4952,7 +4950,7 @@ function highlightDetectedPlacesInActiveDOM(detectedPlaces) {
   detectedPlaces.forEach(p => {
     (p.aliases || [p.name]).forEach(al => {
       const cleanAl = al.trim().toLowerCase();
-      if (cleanAl.length >= 2) {
+      if (cleanAl.length >= 3) {
         aliasToPlace.set(normalizeForSearch(cleanAl), p);
         allAliases.push(cleanAl);
       }
@@ -4979,6 +4977,7 @@ function highlightDetectedPlacesInActiveDOM(detectedPlaces) {
   const nodesToProcess = [];
   let cur;
   while ((cur = walker.nextNode())) nodesToProcess.push(cur);
+  let firstHighlightedSpan = null;
   nodesToProcess.forEach(textNode => {
     const val = textNode.nodeValue;
     rgx.lastIndex = 0;
@@ -5003,6 +5002,7 @@ function highlightDetectedPlacesInActiveDOM(detectedPlaces) {
           openMapByDocId(placeObj.docId, placeObj.name, placeObj.grid);
         };
       }
+      if (!firstHighlightedSpan) firstHighlightedSpan = span;
       frag.appendChild(span);
       lastIdx = matchStart + matchedWord.length;
     }
@@ -5011,8 +5011,10 @@ function highlightDetectedPlacesInActiveDOM(detectedPlaces) {
     }
     textNode.replaceWith(frag);
   });
+  if (firstHighlightedSpan) {
+    firstHighlightedSpan.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
 }
-                                          
 function extractActiveViewTextForAnalysis() {
   const main = document.getElementById("mainContainer");
   if (!main) return "";
@@ -5022,7 +5024,6 @@ function extractActiveViewTextForAnalysis() {
   }
   return (main.innerText || main.textContent || "").replace(/\s+/g, " ").trim();
 }
-
 async function openMapByDocId(docId, placeName, gridCoord = "") {
   closeProModal();
   const foundPlace = BM_BIBLE_PLACES.find(p => p.name === placeName) || BM_BIBLE_PLACES.find(p => p.docId === docId);
@@ -5032,7 +5033,7 @@ async function openMapByDocId(docId, placeName, gridCoord = "") {
     terms: foundPlace ? [foundPlace.name, ...foundPlace.aliases] : (placeName ? [placeName] : [])
   };
   const data = await getMapsData();
-    try {
+  try {
     if (data && Array.isArray(data.maps) && data.maps.length > 0) {
       let idx = data.maps.findIndex(m => m.docId === docId);
       if (idx === -1 && placeName) {
@@ -5049,7 +5050,6 @@ async function openMapByDocId(docId, placeName, gridCoord = "") {
     window.__highlightedPlaceInfo = null;
   }
 }
-    
 async function openWhereIsItModal() {
   const activeText = extractActiveViewTextForAnalysis();
   const normText = " " + normalizeForSearch(activeText).replace(/[^a-z0-9]+/g, " ") + " ";
@@ -5058,7 +5058,7 @@ async function openWhereIsItModal() {
   BM_BIBLE_PLACES.forEach(p => {
     const matchedAliases = p.aliases.filter(al => {
       const normAl = normalizeForSearch(al).trim();
-      return normText.includes(" " + normAl + " ");
+      return normAl.length >= 3 && normText.includes(" " + normAl + " ");
     });
     if (matchedAliases.length > 0 && !seenNames.has(p.name)) {
       seenNames.add(p.name);
@@ -5084,10 +5084,7 @@ async function openWhereIsItModal() {
       }
     });
   }
-
-  // Evidenzia immediatamente in modo sicuro i luoghi trovati nel testo sottostante!
   highlightDetectedPlacesInActiveDOM(detected);
-
   const contextLabels = {
     daily: "☀️ Scrittura del Giorno",
     bible: `📖 ${getBook(state.bookId).name} ${state.chapter}`,
@@ -5148,10 +5145,13 @@ async function openDeepenDailyModal() {
   const entry = (savedDaily && savedDaily.days && savedDaily.days[dayKey]) ? savedDaily.days[dayKey] : null;
   const rawTheme = entry ? entry.theme : extractActiveViewTextForAnalysis().slice(0, 220);
   const rawComment = entry ? entry.comment : extractActiveViewTextForAnalysis();
+  const bookStopNames = BIBLE_BOOKS.flatMap(b => [normalizeForSearch(b.name), normalizeForSearch(b.abbr)]);
   const stopWords = new Set([
+    ...bookStopNames, "salmo", "capitolo", "versetto", "disse", "dice", "detto", "fece", "fatto", "fare",
+    "uomo", "uomini", "giorno", "giorni", "tempo", "tempi", "cose", "cosa", "modo", "parte", "parti",
     "della", "delle", "dello", "degli", "nella", "nelle", "nello", "negli", "sulla", "sulle", "sullo", "sugli",
     "dalla", "dalle", "dallo", "dagli", "alla", "alle", "allo", "agli", "colla", "colle", "questo", "questa",
-    "questi", "queste", "quello", "quella", "quelli", "quelle", "essere", "avere", "fatto", "detto", "tutto",
+    "questi", "queste", "quello", "quella", "quelli", "quelle", "essere", "avere", "tutto",
     "tutti", "tutte", "altro", "altri", "altre", "anche", "ancora", "perche", "quando", "quindi", "contro",
     "sempre", "prima", "dopo", "sopra", "sotto", "dentro", "fuori", "presso", "verso", "secondo", "nostro",
     "nostra", "nostri", "nostre", "vostro", "vostra", "vostri", "vostre", "stesso", "stessa", "stessi", "stesse",
@@ -5159,10 +5159,11 @@ async function openDeepenDailyModal() {
     "molti", "molte", "poco", "pochi", "poche", "ogni", "alcuni", "alcune", "nessuno", "nessuna", "ciascuno",
     "mentre", "invece", "eppure", "allora", "forse", "quasi", "nulla", "niente", "insieme", "spesso", "subito",
     "attraverso", "durante", "mediante", "nonostante", "affinché", "affinche", "poiché", "poiche", "benché",
-    "benche", "sebbene", "qualora", "purché", "purche", "prima", "coloro", "colui", "colei", "hanno", "aveva",
+    "benche", "sebbene", "qualora", "purché", "purche", "coloro", "colui", "colei", "hanno", "aveva",
     "avevano", "sarà", "sara", "saranno", "sarebbe", "fossero", "fosse", "siano", "sono", "erano", "stato", "stata"
   ]);
   const cleanTheme = String(rawTheme || "")
+    .replace(/\s*[—–-]\s*[1-3]?\s*[A-Za-zÀ-ÿ]+\.?\s*\d+.*$/, " ")
     .replace(/\([^)]*\)/g, " ")
     .replace(/[0-9]+/g, " ")
     .replace(/[^a-zA-ZÀ-ÿ\s]/g, " ");
