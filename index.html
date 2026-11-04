@@ -4819,6 +4819,10 @@ function exportBackupJson() {
   const data = {
     app: "BibbiaMultilingue_PRO",
     date: new Date().toISOString(),
+    bookId: state.bookId,
+    chapter: state.chapter,
+    fontSize: state.fontSize,
+    themeMode: state.themeMode,
     highlights: state.highlights,
     bookmarks: state.bookmarks,
     notes: state.notes,
@@ -4847,6 +4851,22 @@ async function importBackupJson(e) {
   if (!confirm("Vuoi importare questo file di backup? I dati attuali verranno aggiornati.")) return;
   try {
     const parsed = JSON.parse(await file.text());
+    if (parsed.bookId) {
+      state.bookId = Math.min(66, Math.max(1, Number(parsed.bookId) || 1));
+      safeSaveStorage("bm_last_book", String(state.bookId));
+    }
+    if (parsed.chapter) {
+      state.chapter = Math.max(1, Number(parsed.chapter) || 1);
+      safeSaveStorage("bm_last_ch", String(state.chapter));
+    }
+    if (parsed.fontSize) {
+      changeFontSize(Number(parsed.fontSize) - state.fontSize);
+    }
+    if (parsed.themeMode && ["light", "dark", "oled"].includes(parsed.themeMode)) {
+      state.themeMode = parsed.themeMode;
+      safeSaveStorage("bm_theme", state.themeMode);
+      applySavedTheme();
+    }
     if (parsed.highlights && typeof parsed.highlights === "object") {
       state.highlights = parsed.highlights;
       safeSaveStorage("bm_hl", JSON.stringify(state.highlights));
@@ -4870,7 +4890,7 @@ async function importBackupJson(e) {
   } catch (err) {
     alert("Errore nel file di backup.");
   }
-}  
+}
 // ============================================================================
 // MODULO "📍 DOVE SI TROVA?" (Universale) & "💎 APPROFONDISCI" (Scrittura del Giorno)
 // ============================================================================
@@ -4909,13 +4929,13 @@ function highlightPlaceInHtmlSafe(htmlStr, terms) {
   const cleanTerms = terms.map(t => t.trim()).filter(t => t.length >= 2);
   if (!cleanTerms.length) return htmlStr;
   const map = { a: "[aàáâãäå]", e: "[eèéêë]", i: "[iìíîï]", o: "[oòóôõö]", u: "[uùúûü]" };
-  const patterns = cleanTerms.map(t =>
-    normalizeForSearch(t).replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/[aeiou]/g, ch => map[ch] || ch)
-  );
-  const rgx = new RegExp(`\\b(${patterns.join("|")})\\b`, "gi");
+  const patterns = cleanTerms
+    .sort((a, b) => b.length - a.length)
+    .map(t => normalizeForSearch(t).replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/[aeiou]/g, ch => map[ch] || ch));
+  const rgx = new RegExp(`(^|[^a-zA-ZÀ-ÿ0-9])(${patterns.join("|")})(?=[^a-zA-ZÀ-ÿ0-9]|$)`, "gi");
   return htmlStr.replace(/(<[^>]+>)|([^<]+)/g, (match, tag, textNode) => {
     if (tag) return tag;
-    return textNode.replace(rgx, '<span class="bm-place-hl" style="cursor:default;">$1</span>');
+    return textNode.replace(rgx, '$1<span class="bm-place-hl" style="cursor:default;">$2</span>');
   });
 }
 
@@ -4923,12 +4943,10 @@ function highlightDetectedPlacesInActiveDOM(detectedPlaces) {
   if (!detectedPlaces || !detectedPlaces.length || currentViewContext.type === "maps") return;
   const main = document.getElementById("mainContainer");
   if (!main) return;
-  // Rimuove eventuali evidenziazioni precedenti senza toccare il resto del DOM
   main.querySelectorAll("span.bm-place-hl").forEach(el => {
     el.replaceWith(document.createTextNode(el.textContent || ""));
   });
   main.normalize();
-
   const aliasToPlace = new Map();
   const allAliases = [];
   detectedPlaces.forEach(p => {
@@ -4942,13 +4960,11 @@ function highlightDetectedPlacesInActiveDOM(detectedPlaces) {
   });
   allAliases.sort((a, b) => b.length - a.length);
   if (!allAliases.length) return;
-
   const map = { a: "[aàáâãäå]", e: "[eèéêë]", i: "[iìíîï]", o: "[oòóôõö]", u: "[uùúûü]" };
   const pat = allAliases.map(al =>
     normalizeForSearch(al).replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/[aeiou]/g, ch => map[ch] || ch)
   ).join("|");
-  const rgx = new RegExp(`\\b(${pat})\\b`, "gi");
-
+  const rgx = new RegExp(`(^|[^a-zA-ZÀ-ÿ0-9])(${pat})(?=[^a-zA-ZÀ-ÿ0-9]|$)`, "gi");
   const walker = document.createTreeWalker(main, NodeFilter.SHOW_TEXT, {
     acceptNode(node) {
       const p = node.parentElement;
@@ -4956,14 +4972,13 @@ function highlightDetectedPlacesInActiveDOM(detectedPlaces) {
       if (p.closest("button, select, script, style, .tag-badge, .chapter-header, .section-title, .verse-num, .bm-place-hl")) {
         return NodeFilter.FILTER_REJECT;
       }
+      rgx.lastIndex = 0;
       return rgx.test(node.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
     }
   });
-
   const nodesToProcess = [];
   let cur;
   while ((cur = walker.nextNode())) nodesToProcess.push(cur);
-
   nodesToProcess.forEach(textNode => {
     const val = textNode.nodeValue;
     rgx.lastIndex = 0;
@@ -4971,10 +4986,12 @@ function highlightDetectedPlacesInActiveDOM(detectedPlaces) {
     let m;
     const frag = document.createDocumentFragment();
     while ((m = rgx.exec(val)) !== null) {
-      if (m.index > lastIdx) {
-        frag.appendChild(document.createTextNode(val.slice(lastIdx, m.index)));
+      const prefix = m[1] || "";
+      const matchedWord = m[2];
+      const matchStart = m.index + prefix.length;
+      if (matchStart > lastIdx) {
+        frag.appendChild(document.createTextNode(val.slice(lastIdx, matchStart)));
       }
-      const matchedWord = m[0];
       const placeObj = aliasToPlace.get(normalizeForSearch(matchedWord.toLowerCase()));
       const span = document.createElement("span");
       span.className = "bm-place-hl";
@@ -4983,11 +5000,11 @@ function highlightDetectedPlacesInActiveDOM(detectedPlaces) {
         span.title = `📍 ${placeObj.name} (${placeObj.grid}) — Tocca per aprire la cartina`;
         span.onclick = (ev) => {
           ev.stopPropagation();
-          openMapByDocId(placeObj.docId, placeObj.name, placeObj.grid, placeObj.aliases);
+          openMapByDocId(placeObj.docId, placeObj.name, placeObj.grid);
         };
       }
       frag.appendChild(span);
-      lastIdx = rgx.lastIndex;
+      lastIdx = matchStart + matchedWord.length;
     }
     if (lastIdx < val.length) {
       frag.appendChild(document.createTextNode(val.slice(lastIdx)));
@@ -4995,7 +5012,7 @@ function highlightDetectedPlacesInActiveDOM(detectedPlaces) {
     textNode.replaceWith(frag);
   });
 }
-
+                                          
 function extractActiveViewTextForAnalysis() {
   const main = document.getElementById("mainContainer");
   if (!main) return "";
@@ -5006,28 +5023,31 @@ function extractActiveViewTextForAnalysis() {
   return (main.innerText || main.textContent || "").replace(/\s+/g, " ").trim();
 }
 
-async function openMapByDocId(docId, placeName, gridCoord = "", aliases = null) {
+async function openMapByDocId(docId, placeName, gridCoord = "") {
   closeProModal();
-  const foundPlace = BM_BIBLE_PLACES.find(p => p.name === placeName || p.docId === docId);
+  const foundPlace = BM_BIBLE_PLACES.find(p => p.name === placeName) || BM_BIBLE_PLACES.find(p => p.docId === docId);
   window.__highlightedPlaceInfo = {
     name: placeName || (foundPlace ? foundPlace.name : "Luogo Biblico"),
     grid: gridCoord || (foundPlace ? foundPlace.grid : "Atlante HD"),
-    terms: aliases || (foundPlace ? [foundPlace.name, ...foundPlace.aliases] : [placeName])
+    terms: foundPlace ? [foundPlace.name, ...foundPlace.aliases] : (placeName ? [placeName] : [])
   };
   const data = await getMapsData();
-  if (data && Array.isArray(data.maps) && data.maps.length > 0) {
-    let idx = data.maps.findIndex(m => m.docId === docId);
-    if (idx === -1 && placeName) {
-      const q = normalizeForSearch(placeName);
-      idx = data.maps.findIndex(m => normalizeForSearch(`${m.title} ${m.desc} ${m.section}`).includes(q));
+  try {
+    if (data && Array.isArray(data.maps) && data.maps.length > 0) {
+      let idx = data.maps.findIndex(m => m.docId === docId);
+      if (idx === -1 && placeName) {
+        const q = normalizeForSearch(placeName);
+        idx = data.maps.findIndex(m => normalizeForSearch(`${m.title} ${m.desc} ${m.section}`).includes(q));
+      }
+      saveCurrentPositionToHistory(state.bookId, state.chapter);
+      await showMapsView(idx > -1 ? idx : 0);
+    } else {
+      saveCurrentPositionToHistory(state.bookId, state.chapter);
+      await showMapsView(null);
     }
-    saveCurrentPositionToHistory(state.bookId, state.chapter);
-    await showMapsView(idx > -1 ? idx : 0);
-  } else {
-    saveCurrentPositionToHistory(state.bookId, state.chapter);
-    await showMapsView(null);
-  }
-  setTimeout(() => { window.__highlightedPlaceInfo = null; }, 800);
+  } finally {
+    window.__highlightedPlaceInfo = null;
+  }setTimeout(() => { window.__highlightedPlaceInfo = null; }, 800);
 }
 
 async function openWhereIsItModal() {
