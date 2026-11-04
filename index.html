@@ -604,6 +604,19 @@
       transition: width 0.2s ease;
       height: auto;
     }
+        .bm-place-hl {
+      background: rgba(2, 136, 209, 0.18);
+      color: var(--primary-light);
+      border: 1px solid var(--primary-light);
+      border-radius: 5px;
+      padding: 0 5px;
+      font-weight: 800;
+      text-decoration: underline;
+      text-decoration-thickness: 2px;
+      text-underline-offset: 2px;
+      cursor: pointer;
+      display: inline-block;
+    }
   </style>
 </head>
 <body>
@@ -4505,7 +4518,13 @@ async function showMapsView(selectedIdx = null) {
           <div style="line-height:1.6;">${formatNoteLinks(m.refs)}</div>
         </div>
       ` : ""}
-      <div class="result-card" style="cursor:default; padding:14px; font-size:var(--font-size-verse); line-height:1.6; white-space:pre-wrap;">${formatNoteLinks(m.desc)}</div>
+       ${window.__highlightedPlaceInfo ? `
+        <div class="result-card" style="cursor:default; background:var(--verse-hover); border:2px solid var(--primary-light); padding:10px 12px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+          <span style="font-weight:800; color:var(--primary-light);">📍 Luogo cercato: <span class="bm-place-hl" style="cursor:default;">${escapeHtml(window.__highlightedPlaceInfo.name)}</span></span>
+          <span class="tag-badge" style="background:var(--primary-main); color:#fff;">🧭 Coord: ${escapeHtml(window.__highlightedPlaceInfo.grid)}</span>
+        </div>
+      ` : ""}
+      <div class="result-card" style="cursor:default; padding:14px; font-size:var(--font-size-verse); line-height:1.6; white-space:pre-wrap;">${highlightPlaceInHtmlSafe(formatNoteLinks(m.desc), window.__highlightedPlaceInfo ? window.__highlightedPlaceInfo.terms : null)}</div>
       <div style="display:flex; justify-content:space-between; margin-top:14px; gap:8px;">
         <button class="nav-btn" ${selectedIdx <= 0 ? 'disabled style="opacity:0.4"' : ''} onclick="showMapsView(${selectedIdx - 1})">◀ Cartina Prec.</button>
         <button class="search-btn" onclick="showMapsView(null)">🗺️ Indice Cartine</button>
@@ -4855,8 +4874,8 @@ async function importBackupJson(e) {
 // ============================================================================
 // MODULO "📍 DOVE SI TROVA?" (Universale) & "💎 APPROFONDISCI" (Scrittura del Giorno)
 // ============================================================================
-constBM_BIBLE_PLACES = [
-  { name: "Gerusalemme", aliases: ["gerusalemme", "sion", "citta di davide", "moria", "getsemani", "golgota", "siloe", "betzata", "inno", "chidron"], docId: "1102003108", grid: "G10 • Pagg. 20-21 / 30-31", region: "Giudea / Tempio" },
+const BM_BIBLE_PLACES = [
+  { name: "Gerusalemme", aliases: ["gerusalemme", "sion", "citta di davide", "moria", "getsemani", "golgota", "siloe", "betzata", "innom", "chidron"], docId: "1102003108", grid: "G10 • Pagg. 20-21 / 30-31", region: "Giudea / Tempio" },
   { name: "Betlemme", aliases: ["betlemme", "efrata"], docId: "1102003111", grid: "G10 • Pagg. 28-29", region: "Giudea" },
   { name: "Betania", aliases: ["betania", "betfage"], docId: "1102003111", grid: "G10 • Pagg. 28-31", region: "Monte degli Ulivi" },
   { name: "Nazaret", aliases: ["nazaret"], docId: "1102003111", grid: "G6 • Pagg. 28-29", region: "Galilea" },
@@ -4873,7 +4892,7 @@ constBM_BIBLE_PLACES = [
   { name: "Beersheba", aliases: ["beersheba", "beer-seba", "negheb"], docId: "1102003103", grid: "F12 • Pagg. 4-5 / 14-15", region: "Negheb" },
   { name: "Betel / Ai", aliases: ["betel", "ai", "silo", "rama", "gabaon"], docId: "1102003115", grid: "G9 • Pagg. 14-15", region: "Beniamino / Efraim" },
   { name: "Ur / Carran (Haran)", aliases: ["ur", "carran", "haran", "caldei", "mesopotamia", "eufrate", "tigri"], docId: "1102003103", grid: "E3-K6 • Pagg. 4-5", region: "Mezzaluna Fertile" },
-  { name: "Egitto / Rameses", aliases: ["egitto", "nilo", "rameses", "succot", "menfi", " gosen", "mar rosso"], docId: "1102003110", grid: "B6-D8 • Pagg. 8-9", region: "Egitto e Sinai" },
+  { name: "Egitto / Rameses", aliases: ["egitto", "nilo", "rameses", "succot", "menfi", "gosen", "mar rosso"], docId: "1102003110", grid: "B6-D8 • Pagg. 8-9", region: "Egitto e Sinai" },
   { name: "Monte Sinai / Cades", aliases: ["sinai", "oreb", "refidim", "mara", "elim", "cades", "cades-barnea", "paran", "nebo"], docId: "1102003110", grid: "E11-G9 • Pagg. 8-9", region: "Penisola del Sinai" },
   { name: "Filistia (Gaza, Asdod, Gath)", aliases: ["filistia", "filistei", "gaza", "ascalon", "asdod", "ecron", "gath", "sefela", "saron"], docId: "1102003105", grid: "E10-E11 • Pagg. 10-11 / 18-19", region: "Pianura Costiera" },
   { name: "Tiro e Sidone (Fenicia)", aliases: ["tiro", "sidone", "fenicia", "zarefat", "libano"], docId: "1102003104", grid: "G3-G4 • Pagg. 6-7 / 28-29", region: "Costa Fenicia" },
@@ -4882,8 +4901,100 @@ constBM_BIBLE_PLACES = [
   { name: "Babilonia e Persia", aliases: ["babilonia", "babele", "susa", "ecbatana", "media", "persia", "elam"], docId: "1102003122", grid: "J6-L6 • Pagg. 24-25", region: "Bassa Mesopotamia / Persia" },
   { name: "Grecia (Atene, Corinto, Macedonia)", aliases: ["grecia", "atene", "corinto", "filippi", "tessalonica", "berea", "macedonia", "acaia"], docId: "1102003113", grid: "B2-C3 • Pagg. 26-27 / 32-33", region: "Egeo / Europa" },
   { name: "Asia Minore e Antiochia", aliases: ["antiochia", "efeso", "smirne", "pergamo", "tiatira", "sardi", "filadelfia", "laodicea", "tarso", "galazia", "cipro", "creta", "patmos"], docId: "1102003113", grid: "D3-G4 • Pagg. 32-33", region: "Viaggi di Paolo" },
-  { name: "Roma e Italia", aliases: ["roma", "italia", "malta", "pozzioli", " Cesarea"], docId: "1102003113", grid: "A2 • Pagg. 26-27 / 32-33", region: "Impero Romano" }
+  { name: "Roma e Italia", aliases: ["roma", "italia", "malta", "pozzuoli", "cesarea"], docId: "1102003113", grid: "A2 • Pagg. 26-27 / 32-33", region: "Impero Romano" }
 ];
+
+function highlightPlaceInHtmlSafe(htmlStr, terms) {
+  if (!terms || !terms.length) return htmlStr;
+  const cleanTerms = terms.map(t => t.trim()).filter(t => t.length >= 2);
+  if (!cleanTerms.length) return htmlStr;
+  const map = { a: "[aàáâãäå]", e: "[eèéêë]", i: "[iìíîï]", o: "[oòóôõö]", u: "[uùúûü]" };
+  const patterns = cleanTerms.map(t =>
+    normalizeForSearch(t).replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/[aeiou]/g, ch => map[ch] || ch)
+  );
+  const rgx = new RegExp(`\\b(${patterns.join("|")})\\b`, "gi");
+  return htmlStr.replace(/(<[^>]+>)|([^<]+)/g, (match, tag, textNode) => {
+    if (tag) return tag;
+    return textNode.replace(rgx, '<span class="bm-place-hl" style="cursor:default;">$1</span>');
+  });
+}
+
+function highlightDetectedPlacesInActiveDOM(detectedPlaces) {
+  if (!detectedPlaces || !detectedPlaces.length || currentViewContext.type === "maps") return;
+  const main = document.getElementById("mainContainer");
+  if (!main) return;
+  // Rimuove eventuali evidenziazioni precedenti senza toccare il resto del DOM
+  main.querySelectorAll("span.bm-place-hl").forEach(el => {
+    el.replaceWith(document.createTextNode(el.textContent || ""));
+  });
+  main.normalize();
+
+  const aliasToPlace = new Map();
+  const allAliases = [];
+  detectedPlaces.forEach(p => {
+    (p.aliases || [p.name]).forEach(al => {
+      const cleanAl = al.trim().toLowerCase();
+      if (cleanAl.length >= 2) {
+        aliasToPlace.set(normalizeForSearch(cleanAl), p);
+        allAliases.push(cleanAl);
+      }
+    });
+  });
+  allAliases.sort((a, b) => b.length - a.length);
+  if (!allAliases.length) return;
+
+  const map = { a: "[aàáâãäå]", e: "[eèéêë]", i: "[iìíîï]", o: "[oòóôõö]", u: "[uùúûü]" };
+  const pat = allAliases.map(al =>
+    normalizeForSearch(al).replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/[aeiou]/g, ch => map[ch] || ch)
+  ).join("|");
+  const rgx = new RegExp(`\\b(${pat})\\b`, "gi");
+
+  const walker = document.createTreeWalker(main, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      const p = node.parentElement;
+      if (!p) return NodeFilter.FILTER_REJECT;
+      if (p.closest("button, select, script, style, .tag-badge, .chapter-header, .section-title, .verse-num, .bm-place-hl")) {
+        return NodeFilter.FILTER_REJECT;
+      }
+      return rgx.test(node.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+    }
+  });
+
+  const nodesToProcess = [];
+  let cur;
+  while ((cur = walker.nextNode())) nodesToProcess.push(cur);
+
+  nodesToProcess.forEach(textNode => {
+    const val = textNode.nodeValue;
+    rgx.lastIndex = 0;
+    let lastIdx = 0;
+    let m;
+    const frag = document.createDocumentFragment();
+    while ((m = rgx.exec(val)) !== null) {
+      if (m.index > lastIdx) {
+        frag.appendChild(document.createTextNode(val.slice(lastIdx, m.index)));
+      }
+      const matchedWord = m[0];
+      const placeObj = aliasToPlace.get(normalizeForSearch(matchedWord.toLowerCase()));
+      const span = document.createElement("span");
+      span.className = "bm-place-hl";
+      span.textContent = matchedWord;
+      if (placeObj) {
+        span.title = `📍 ${placeObj.name} (${placeObj.grid}) — Tocca per aprire la cartina`;
+        span.onclick = (ev) => {
+          ev.stopPropagation();
+          openMapByDocId(placeObj.docId, placeObj.name, placeObj.grid, placeObj.aliases);
+        };
+      }
+      frag.appendChild(span);
+      lastIdx = rgx.lastIndex;
+    }
+    if (lastIdx < val.length) {
+      frag.appendChild(document.createTextNode(val.slice(lastIdx)));
+    }
+    textNode.replaceWith(frag);
+  });
+}
 
 function extractActiveViewTextForAnalysis() {
   const main = document.getElementById("mainContainer");
@@ -4895,8 +5006,14 @@ function extractActiveViewTextForAnalysis() {
   return (main.innerText || main.textContent || "").replace(/\s+/g, " ").trim();
 }
 
-async function openMapByDocId(docId, placeName) {
+async function openMapByDocId(docId, placeName, gridCoord = "", aliases = null) {
   closeProModal();
+  const foundPlace = BM_BIBLE_PLACES.find(p => p.name === placeName || p.docId === docId);
+  window.__highlightedPlaceInfo = {
+    name: placeName || (foundPlace ? foundPlace.name : "Luogo Biblico"),
+    grid: gridCoord || (foundPlace ? foundPlace.grid : "Atlante HD"),
+    terms: aliases || (foundPlace ? [foundPlace.name, ...foundPlace.aliases] : [placeName])
+  };
   const data = await getMapsData();
   if (data && Array.isArray(data.maps) && data.maps.length > 0) {
     let idx = data.maps.findIndex(m => m.docId === docId);
@@ -4905,11 +5022,12 @@ async function openMapByDocId(docId, placeName) {
       idx = data.maps.findIndex(m => normalizeForSearch(`${m.title} ${m.desc} ${m.section}`).includes(q));
     }
     saveCurrentPositionToHistory(state.bookId, state.chapter);
-    showMapsView(idx > -1 ? idx : 0);
+    await showMapsView(idx > -1 ? idx : 0);
   } else {
     saveCurrentPositionToHistory(state.bookId, state.chapter);
-    showMapsView(null);
+    await showMapsView(null);
   }
+  setTimeout(() => { window.__highlightedPlaceInfo = null; }, 800);
 }
 
 async function openWhereIsItModal() {
@@ -4917,26 +5035,27 @@ async function openWhereIsItModal() {
   const normText = " " + normalizeForSearch(activeText).replace(/[^a-z0-9]+/g, " ") + " ";
   const detected = [];
   const seenNames = new Set();
-
-  constBM_BIBLE_PLACES.forEach(p => {
-    const isHit = p.aliases.some(al => {
+  BM_BIBLE_PLACES.forEach(p => {
+    const matchedAliases = p.aliases.filter(al => {
       const normAl = normalizeForSearch(al).trim();
       return normText.includes(" " + normAl + " ");
     });
-    if (isHit && !seenNames.has(p.name)) {
+    if (matchedAliases.length > 0 && !seenNames.has(p.name)) {
       seenNames.add(p.name);
-      detected.push(p);
+      detected.push({ ...p, matchedWord: matchedAliases[0] });
     }
   });
-
   const data = await getMapsData();
   if (data && Array.isArray(data.maps)) {
     data.maps.forEach((m, idx) => {
       if (detected.length < 10 && !detected.some(d => d.docId === m.docId)) {
         const words = normalizeForSearch(m.title).split(/\s+/).filter(w => w.length >= 5 && !["cartina", "paese", "mondo", "terra", "promessa", "israele", "giorni", "durante", "regno"].includes(w));
-        if (words.some(w => normText.includes(" " + w + " "))) {
+        const hitW = words.find(w => normText.includes(" " + w + " "));
+        if (hitW) {
           detected.push({
             name: m.title,
+            aliases: [hitW],
+            matchedWord: hitW,
             docId: m.docId,
             grid: m.code || `Tavola ${idx + 1}`,
             region: m.section || "Atlante Biblico"
@@ -4945,6 +5064,9 @@ async function openWhereIsItModal() {
       }
     });
   }
+
+  // Evidenzia immediatamente in modo sicuro i luoghi trovati nel testo sottostante!
+  highlightDetectedPlacesInActiveDOM(detected);
 
   const contextLabels = {
     daily: "☀️ Scrittura del Giorno",
@@ -4955,33 +5077,30 @@ async function openWhereIsItModal() {
     notes: "📝 Appunti Studio"
   };
   const ctxLabel = contextLabels[currentViewContext.type] || "Testo Aperto";
-
   const detectedHtml = detected.length > 0
     ? detected.map(p => {
         const cat = GL_ATLAS_CATALOG.find(c => c.docId === p.docId);
         const mapTitle = cat ? cat.title : p.name;
         return `
-          <div class="result-card" onclick="openMapByDocId('${escapeJsStr(p.docId)}', '${escapeJsStr(p.name)}')">
+          <div class="result-card" onclick="openMapByDocId('${escapeJsStr(p.docId)}', '${escapeJsStr(p.name)}', '${escapeJsStr(p.grid)}')">
             <div class="result-ref" style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">
-              <span>📍 ${escapeHtml(p.name)}</span>
+              <span>📍 <span class="bm-place-hl">${escapeHtml(p.name)}</span></span>
               <span class="tag-badge" style="background:var(--primary-main); color:#fff;">🧭 ${escapeHtml(p.grid)}</span>
             </div>
-            <div style="font-size:13px; font-weight:700; color:var(--text-main); margin-top:3px;">🗺️ ${escapeHtml(mapTitle)}</div>
-            <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">Regione: ${escapeHtml(p.region)} • Tocca per aprire la cartina HD</div>
+            <div style="font-size:13px; font-weight:700; color:var(--text-main); margin-top:4px;">🗺️ ${escapeHtml(mapTitle)}</div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">Regione: ${escapeHtml(p.region)} • Evidenziato nel testo e nella cartina HD</div>
           </div>`;
       }).join("")
     : `<div class="result-card" style="cursor:default; text-align:center; color:var(--text-muted); padding:14px;">
          Nessun toponimo diretto rilevato nel testo visibile.<br>Scegli una delle tavole principali qui sotto o apri l'Indice completo:
        </div>`;
-
-  const quickChipsHtml = constBM_BIBLE_PLACES.slice(0, 12).map(p =>
-    `<span class="tag-badge" style="padding:6px 10px; font-size:12.5px;" onclick="openMapByDocId('${escapeJsStr(p.docId)}', '${escapeJsStr(p.name)}')">📍 ${escapeHtml(p.name)}</span>`
+  const quickChipsHtml = BM_BIBLE_PLACES.slice(0, 12).map(p =>
+    `<span class="tag-badge" style="padding:6px 10px; font-size:12.5px;" onclick="openMapByDocId('${escapeJsStr(p.docId)}', '${escapeJsStr(p.name)}', '${escapeJsStr(p.grid)}')">📍 ${escapeHtml(p.name)}</span>`
   ).join(" ");
-
   document.getElementById("proModalTitle").textContent = "📍 Dove si trova? — Atlante & Coordinate";
   document.getElementById("proModalBody").innerHTML = `
     <div style="font-size:12.5px; color:var(--text-muted); margin-bottom:10px;">
-      Analisi geografica automatica da: <b>${escapeHtml(ctxLabel)}</b>
+      Analisi geografica da <b>${escapeHtml(ctxLabel)}</b> (i luoghi rilevati sono stati <span class="bm-place-hl" style="font-size:11.5px;">evidenziati e sottolineati</span> anche nel testo):
     </div>
     <div class="section-title"><span>Luoghi Rilevati nel Testo</span><span>${detected.length}</span></div>
     ${detectedHtml}
@@ -4991,7 +5110,6 @@ async function openWhereIsItModal() {
   `;
   document.getElementById("proModal").style.display = "flex";
 }
-
 function searchWordInInsight(word) {
   closeProModal();
   closeActionBar();
@@ -5000,7 +5118,6 @@ function searchWordInInsight(word) {
   insightSearchQuery = word || "";
   showInsightView(null);
 }
-
 async function openDeepenDailyModal() {
   const savedDaily = await getOfflineBible("bm:daily_text");
   const targetDate = new Date();
@@ -5009,10 +5126,8 @@ async function openDeepenDailyModal() {
   const dd = String(targetDate.getDate()).padStart(2, "0");
   const dayKey = `${mm}-${dd}`;
   const entry = (savedDaily && savedDaily.days && savedDaily.days[dayKey]) ? savedDaily.days[dayKey] : null;
-
   const rawTheme = entry ? entry.theme : extractActiveViewTextForAnalysis().slice(0, 220);
   const rawComment = entry ? entry.comment : extractActiveViewTextForAnalysis();
-
   const stopWords = new Set([
     "della", "delle", "dello", "degli", "nella", "nelle", "nello", "negli", "sulla", "sulle", "sullo", "sugli",
     "dalla", "dalle", "dallo", "dagli", "alla", "alle", "allo", "agli", "colla", "colle", "questo", "questa",
@@ -5027,15 +5142,12 @@ async function openDeepenDailyModal() {
     "benche", "sebbene", "qualora", "purché", "purche", "prima", "coloro", "colui", "colei", "hanno", "aveva",
     "avevano", "sarà", "sara", "saranno", "sarebbe", "fossero", "fosse", "siano", "sono", "erano", "stato", "stata"
   ]);
-
   const cleanTheme = String(rawTheme || "")
     .replace(/\([^)]*\)/g, " ")
     .replace(/[0-9]+/g, " ")
     .replace(/[^a-zA-ZÀ-ÿ\s]/g, " ");
-
   const candidateWords = [];
   const seenW = new Set();
-
   cleanTheme.split(/\s+/).forEach(w => {
     const low = w.toLowerCase();
     const norm = normalizeForSearch(low);
@@ -5044,7 +5156,6 @@ async function openDeepenDailyModal() {
       candidateWords.push(w);
     }
   });
-
   if (candidateWords.length < 4 && rawComment) {
     String(rawComment).replace(/[^a-zA-ZÀ-ÿ\s]/g, " ").split(/\s+/).forEach(w => {
       if (candidateWords.length >= 5) return;
@@ -5056,9 +5167,7 @@ async function openDeepenDailyModal() {
       }
     });
   }
-
   const finalKeywords = candidateWords.slice(0, 4);
-
   const cardsHtml = finalKeywords.map(kw => {
     const displayKw = kw.charAt(0).toUpperCase() + kw.slice(1).toLowerCase();
     const safeJs = escapeJsStr(kw.toLowerCase());
@@ -5071,7 +5180,6 @@ async function openDeepenDailyModal() {
         </div>
       </div>`;
   }).join("");
-
   document.getElementById("proModalTitle").textContent = "💎 Approfondisci il Tema del Giorno";
   document.getElementById("proModalBody").innerHTML = `
     <div style="font-size:13px; color:var(--text-muted); font-style:italic; margin-bottom:12px; border-left:3px solid var(--primary-light); padding-left:8px;">
@@ -5081,7 +5189,7 @@ async function openDeepenDailyModal() {
     ${cardsHtml || `<div class="loader">Nessuna parola chiave estratta.</div>`}
   `;
   document.getElementById("proModal").style.display = "flex";
-   }                              
+    }
 let splashDismissed = false;
 function dismissSplashScreen() {
   if (splashDismissed) return;
