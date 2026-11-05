@@ -5599,6 +5599,16 @@ function updateMyReadingLabel() {
   lbl.textContent = `${bMeta.abbr} ${pers.chapter}`;
 }
 
+function setAsMyReading() {
+  const main = document.getElementById("mainContainer");
+  safeSaveStorage("bm_pers_book", String(state.bookId));
+  safeSaveStorage("bm_pers_ch", String(state.chapter));
+  safeSaveStorage("bm_pers_scroll", String(currentViewContext.type === "bible" && main ? Math.round(main.scrollTop) : 0));
+  updateMyReadingLabel();
+  closeProModal();
+  alert(`✔ "Mia lettura" fissata su ${getBook(state.bookId).name} ${state.chapter}.`);
+}
+    
 function openMyReading() {
   closeActionBar();
   if (typeof closeMapViewer === "function") closeMapViewer();
