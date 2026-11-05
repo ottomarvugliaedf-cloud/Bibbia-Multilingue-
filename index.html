@@ -210,7 +210,7 @@
       scrollbar-width: none;
     }
     .quick-menu-bar::-webkit-scrollbar { display: none; }
-        .quick-menu-bar {
+    .quick-menu-bar {
       background: var(--bg-card);
       border-bottom: 1px solid var(--border-color);
       padding: 6px 10px;
@@ -221,7 +221,7 @@
       scrollbar-width: none;
     }
     .quick-menu-bar::-webkit-scrollbar { display: none; }
-        .quick-pill {
+    .quick-pill {
       background: var(--bg-main);
       color: var(--text-main);
       border: 1px solid var(--border-color);
@@ -816,7 +816,6 @@
     <button class="icon-btn" style="color:var(--text-main);" title="Rimuovi colore" onclick="applyHighlight('')">🚫</button>
     <button class="icon-btn" style="color:var(--text-main);" title="Copia versetto" onclick="copySelectedVerse()">📋</button>
     <button class="icon-btn" style="color:var(--primary-light);" title="Ascolta versetto" onclick="speakSelectedVerse()">🔊</button>
-    <button class="icon-btn" style="color:var(--primary-light);" title="Sottolinea una porzione da leggere (inizio e fine)" onclick="markReadRange()">📏</button>
     <button class="icon-btn" style="color:var(--primary-light);" title="Lessico Strong" onclick="openStrongModalForVerse()">🏛️</button>
     <button class="icon-btn" style="color:var(--primary-light);" title="Passi Paralleli" onclick="openCrossRefsModalForVerse()">🔗</button>
     <button class="icon-btn" style="color:var(--primary-light);" title="Card Immagine" onclick="generateVerseCardModal()">🖼️</button>
@@ -1152,6 +1151,7 @@ let dynamicCatalog = [...CORE_BIBLES];
 let catalogLoaded = false;
 const DEFAULT_ACTIVE_IDS = CORE_BIBLES.map(b => b.id);
 let navHistory = [];
+let isPersonalReadingMode = true;
 let currentChapterReqId = 0;
 const memoryBibleCache = new Map();
 let dbInstancePromise = null;
@@ -4477,7 +4477,6 @@ async function bpGetMeta() {
   if (m && Array.isArray(m.places) && Array.isArray(m.maps)) { bpMeta = m; bpBuildPlaceMap(); }
   return bpMeta;
 }
-async function getMapsData() { return bpGetMeta(); }
 
 function bpMakeThumb(dataUri, w = 260) {
   return new Promise(res => {
@@ -5531,57 +5530,15 @@ function dismissSplashScreen() {
 }
 // Fallback di sicurezza nel caso la rete o il DB tardino
 setTimeout(dismissSplashScreen, 4000);
-
-function updateMyPersonalReadBtn() {
-  const lbl = document.getElementById("myReadLabel");
-  const btn = document.getElementById("tabMyRead");
-  if (!lbl || !btn) return;
-  const pBook = getBook(state.personalBookId || state.bookId);
-  const pCh = state.personalChapter || state.chapter;
-  lbl.textContent = `${pBook.abbr} ${pCh}`;
-  const isAtPersonal = currentViewContext.type === "bible" && isPersonalReadingMode && state.bookId === pBook.id && state.chapter === pCh;
-  btn.classList.toggle("active", isAtPersonal);
-}
-
-function openMyPersonalRead() {
-  closeActionBar();
-  if (typeof closeMapViewer === "function") closeMapViewer();
-  const pBookId = state.personalBookId || state.bookId;
-  const pCh = state.personalChapter || state.chapter;
-  if (currentViewContext.type === "bible" && !isPersonalReadingMode && (state.bookId !== pBookId || state.chapter !== pCh)) {
-    const curBook = getBook(state.bookId);
-    const wantReturn = confirm(`📖 Il tuo segnalibro di lettura personale è su ${getBook(pBookId).name} ${pCh}.\n\n• Premi OK per TORNARE alla tua lettura personale (${getBook(pBookId).name} ${pCh}).\n• Premi Annulla se invece vuoi IMPOSTARE ${curBook.name} ${state.chapter} come tua nuova lettura personale.`);
-    if (!wantReturn) {
-      isPersonalReadingMode = true;
-      state.personalBookId = state.bookId;
-      state.personalChapter = state.chapter;
-      safeSaveStorage("bm_personal_book", String(state.personalBookId));
-      safeSaveStorage("bm_personal_ch", String(state.personalChapter));
-      safeSaveStorage("bm_last_book", String(state.personalBookId));
-      safeSaveStorage("bm_last_ch", String(state.personalChapter));
-      updateMyPersonalReadBtn();
-      return;
-    }
-  }
-  if (currentViewContext.type !== "bible" || state.bookId !== pBookId || state.chapter !== pCh) {
-    saveCurrentPositionToHistory(pBookId, pCh);
-  }
-  isPersonalReadingMode = true;
-  state.bookId = pBookId;
-  state.chapter = pCh;
-  loadChapterView().then(() => {
-    const main = document.getElementById("mainContainer");
-    const savedScroll = Number(localStorage.getItem("bm_personal_scroll")) || 0;
-    if (main && savedScroll > 0) {
-      setTimeout(() => { main.scrollTop = savedScroll; }, 80);
-    }
-  });
-}
-
+let lastScrollSaveTimer = null;
 document.getElementById("mainContainer")?.addEventListener("scroll", function() {
-  if (currentViewContext.type === "bible" && isPersonalReadingMode) {
-    safeSaveStorage("bm_personal_scroll", String(Math.round(this.scrollTop)));
-  }
+  const el = this;
+  clearTimeout(lastScrollSaveTimer);
+  lastScrollSaveTimer = setTimeout(() => {
+    if (currentViewContext.type === "bible") {
+      safeSaveStorage("bm_last_scroll", String(Math.round(el.scrollTop)));
+    }
+  }, 300);
 }, { passive: true });
 
 function handlePortionTextSelection() {
@@ -5607,18 +5564,15 @@ document.addEventListener("touchend", () => setTimeout(handlePortionTextSelectio
 document.documentElement.style.setProperty("--font-size-verse", state.fontSize + "px");
 applySavedTheme();
 updateReadingPlanHeaderBtn();
-updateMyPersonalReadBtn();
+updateMyReadingLabel();
 populateSelects()
   .catch(() => {})
-  .finally(() => {
-    const hasPersonalSaved = localStorage.getItem("bm_personal_book") || localStorage.getItem("bm_last_book");
-    if (hasPersonalSaved) {
+    .finally(() => {
+    if (localStorage.getItem("bm_last_book")) {
       isPersonalReadingMode = true;
-      state.bookId = state.personalBookId;
-      state.chapter = state.personalChapter;
       loadChapterView().finally(() => {
         const main = document.getElementById("mainContainer");
-        const savedScroll = Number(localStorage.getItem("bm_personal_scroll")) || 0;
+        const savedScroll = Number(localStorage.getItem("bm_last_scroll")) || 0;
         if (main && savedScroll > 0) setTimeout(() => { main.scrollTop = savedScroll; }, 100);
         dismissSplashScreen();
       });
@@ -5628,22 +5582,7 @@ populateSelects()
       });
     }
   });
-    // Segnalibro fisso e indipendente per la "Mia lettura"
-function getPersonalReadingState() {
-  return {
-    bookId: Number(localStorage.getItem("bm_pers_book")) || 1,
-    chapter: Number(localStorage.getItem("bm_pers_ch")) || 1
-  };
-}
-
-function updateMyReadingLabel() {
-  const lbl = document.getElementById("myReadLabel");
-  if (!lbl) return;
-  const pers = getPersonalReadingState();
-  const bMeta = getBook(pers.bookId);
-  lbl.textContent = `${bMeta.abbr} ${pers.chapter}`;
-}
-
+    
 // Segnalibro fisso e indipendente con richiesta di conferma
 function getPersonalReadingState() {
   return {
