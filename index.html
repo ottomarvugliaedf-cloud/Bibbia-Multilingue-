@@ -1371,14 +1371,15 @@ function showBooksView() {
   `;
   main.scrollTop = 0;
 }
+let pendingGridBookId = 1;
 function showChaptersView(bookId) {
-  state.bookId = bookId;
-  const book = getBook(bookId);
-  if (book.ch === 1) { state.chapter = 1; loadChapterView(); return; }
+  pendingGridBookId = Number(bookId);
+  const book = getBook(pendingGridBookId);
+  if (book.ch === 1) { selectChapter(1); return; }
   const main = document.getElementById("mainContainer");
   let btns = "";
   for (let i = 1; i <= book.ch; i++) {
-    const isCurr = (i === state.chapter) ? "current" : "";
+    const isCurr = (pendingGridBookId === state.bookId && i === state.chapter) ? "current" : "";
     btns += `<button class="chapter-tile ${isCurr}" onclick="selectChapter(${i})">${i}</button>`;
   }
   main.innerHTML = `
@@ -1391,7 +1392,11 @@ function showChaptersView(bookId) {
   main.scrollTop = 0;
 }
 function selectChapter(ch) {
-  state.chapter = ch;
+  const targetB = pendingGridBookId || state.bookId;
+  const targetC = Number(ch);
+  saveCurrentPositionToHistory(targetB, targetC);
+  state.bookId = targetB;
+  state.chapter = targetC;
   loadChapterView();
     }
     const HELLOAO_BOOK_MAP = ["", "GEN", "EXO", "LEV", "NUM", "DEU", "JOS", "JDG", "RUT", "1SA", "2SA", "1KI", "2KI", "1CH", "2CH", "EZR", "NEH", "EST", "JOB", "PSA", "PRO", "ECC", "SNG", "ISA", "JER", "LAM", "EZK", "DAN", "HOS", "JOL", "AMO", "OBA", "JON", "MIC", "NAM", "HAB", "ZEP", "HAG", "ZEC", "MAL", "MAT", "MRK", "LUK", "JHN", "ACT", "ROM", "1CO", "2CO", "GAL", "EPH", "PHP", "COL", "1TH", "2TH", "1TI", "2TI", "TIT", "PHM", "HEB", "JAS", "1PE", "2PE", "1JN", "2JN", "3JN", "JUD", "REV"];
@@ -2476,8 +2481,12 @@ function saveCurrentPositionToHistory(targetBookId = null, targetCh = null) {
       scrollTop: scrollPos,
       label: currentViewContext.label || "🗺️ Cartine"
     };
-  } else if (currentViewContext.type === "notes") {
+    } else if (currentViewContext.type === "notes") {
     snap = { type: "notes", scrollTop: scrollPos, label: "📝 Appunti" };
+  } else if (currentViewContext.type === "search") {
+    snap = { type: "search", scrollTop: scrollPos, label: "🔍 Cerca" };
+  } else if (currentViewContext.type === "saved") {
+    snap = { type: "saved", scrollTop: scrollPos, label: "🔖 Preferiti" };
   } else if (currentViewContext.type === "bible") {
     if (targetBookId === null || state.bookId !== Number(targetBookId) || state.chapter !== Number(targetCh)) {
       const curBook = getBook(state.bookId);
@@ -4402,7 +4411,7 @@ const extraCards = extras.map((x, i) => `
 </div>
 `).join("");
 main.innerHTML = `
-<div class="section-title"><span>📘 Tutta la Scrittura è ispirata da Dio e utile</span></div>
+<div class="section-title"><span>📘 Tutta la Scrittura è ispirata da Dio e utile</span><span>${getBackBtnHtml()}</span></div>
 <div class="section-title"><span>Scritture Ebraico-Aramaiche</span><span>39 Libri</span></div>
 <div class="books-grid">${tiles(ot)}</div>
 <div class="section-title"><span>Scritture Greche Cristiane</span><span>27 Libri</span></div>
