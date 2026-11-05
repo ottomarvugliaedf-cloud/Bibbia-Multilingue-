@@ -454,7 +454,7 @@
       cursor: pointer;
       flex-shrink: 0;
     }
-        /* BARRA INFERIORE A 8 SCHEDE CON MARGINE SICURO ANTI-GESTURE ANDROID */
+    /* BARRA INFERIORE A 8 SCHEDE CON MARGINE SICURO ANTI-GESTURE ANDROID */
     nav.bottom-nav {
       background: var(--bg-card);
       border-top: 1px solid var(--border-color);
@@ -614,7 +614,7 @@
       outline: 2px solid var(--primary-light);
       background: var(--verse-hover);
     }
-        .rp-row.rp-done {
+    .rp-row.rp-done {
       color: #4caf50 !important;
       border-color: rgba(76, 175, 80, 0.45);
     }
@@ -837,14 +837,15 @@
       </div>
     </div>
   </div>
-  <!-- Finestra Modale Universale Pro (Salto Rapido, Strong, Passi Paralleli, Card Immagine, Backup) -->
-  <div id="proModal" class="modal-overlay" onclick="if(event.target.id==='proModal') closeProModal()">
-    <div class="modal-card">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-        <div id="proModalTitle" class="modal-title" style="margin:0;">Strumento Pro</div>
-        <button class="nav-btn" onclick="closeProModal()">✕</button>
+  <!-- Finestra Modale Personalizzata per Mia Lettura (Blu Scuro PRO) -->
+  <div id="myReadModal" class="modal-overlay" style="display:none;">
+    <div class="modal-card" style="background:#0a367e; color:#ffffff; border:1px solid var(--primary-light);">
+      <div class="modal-title" style="color:#ffffff; font-size:17px; margin-bottom:12px;">Bibbia Multilingue PRO</div>
+      <div id="myReadModalBody" style="font-size:14.5px; line-height:1.55; margin-bottom:18px; color:#e3f2fd;"></div>
+      <div class="modal-actions" style="display:flex; justify-content:flex-end; gap:10px;">
+        <button id="myReadNoBtn" class="nav-btn" style="background:transparent; color:#ffffff; border:1px solid rgba(255,255,255,0.4); font-weight:700;">NO</button>
+        <button id="myReadYesBtn" class="search-btn" style="background:#ccff00; color:#0a367e; font-weight:800; border:none;">YES</button>
       </div>
-      <div id="proModalBody"></div>
     </div>
   </div>
   <!-- Visualizzatore cartine (Dove? / Cartine Bibliche — Stile Uniformato PRO) -->
@@ -5667,19 +5668,28 @@ function openMyReading() {
   const pers = getPersonalReadingState();
   const persBook = getBook(pers.bookId);
   
-  // Messaggio di conferma richiesto
-  const confirmMsg = `🕯️ La tua "Mia lettura" attuale è fissata su:\n👉 ${persBook.name} ${pers.chapter}\n\nStai leggendo al momento:\n📖 ${curBook.name} ${state.chapter}\n\n• Premi OK per AGGIORNARE/PORRE qui il segnalibro di lettura.\n• Premi Annulla per ANDARE DIRETTAMENTE al tuo segnalibro salvato (${persBook.name} ${pers.chapter}).`;
+  const modal = document.getElementById("myReadModal");
+  const body = document.getElementById("myReadModalBody");
+  const yesBtn = document.getElementById("myReadYesBtn");
+  const noBtn = document.getElementById("myReadNoBtn");
+  if (!modal || !body) return;
+
+  body.innerHTML = `🕯️ La tua "Mia lettura" attuale è fissata su:<br><b>👉 ${persBook.name} ${pers.chapter}</b><br><br>Stai leggendo al momento:<br><b>📖 ${curBook.name} ${state.chapter}</b><br><br>• Premi <b>YES</b> per AGGIORNARE/PORRE qui il segnalibro.<br>• Premi <b>NO</b> per ANDARE DIRETTAMENTE al tuo segnalibro salvato (${persBook.name} ${pers.chapter}).`;
   
-  if (confirm(confirmMsg)) {
-    // Conferma: pone/aggiorna il segnalibro qui
+  modal.style.display = "flex";
+
+  yesBtn.onclick = function() {
+    modal.style.display = "none";
     safeSaveStorage("bm_pers_book", String(state.bookId));
     safeSaveStorage("bm_pers_ch", String(state.chapter));
     const main = document.getElementById("mainContainer");
     safeSaveStorage("bm_pers_scroll", String(main ? main.scrollTop : 0));
     updateMyReadingLabel();
     alert(`✔ Segnalibro aggiornato con successo su ${curBook.name} ${state.chapter}!`);
-  } else {
-    // Annulla: va al segnalibro salvato in precedenza
+  };
+
+  noBtn.onclick = function() {
+    modal.style.display = "none";
     saveCurrentPositionToHistory();
     isPersonalReadingMode = false;
     state.bookId = pers.bookId;
@@ -5691,7 +5701,7 @@ function openMyReading() {
         setTimeout(() => { main.scrollTop = savedScroll; }, 80);
       }
     });
-  }
+  };
 }
 </script>
 </body>
