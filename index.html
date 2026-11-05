@@ -5567,20 +5567,10 @@ updateReadingPlanHeaderBtn();
 updateMyReadingLabel();
 populateSelects()
   .catch(() => {})
-    .finally(() => {
-    if (localStorage.getItem("bm_last_book")) {
-      isPersonalReadingMode = true;
-      loadChapterView().finally(() => {
-        const main = document.getElementById("mainContainer");
-        const savedScroll = Number(localStorage.getItem("bm_last_scroll")) || 0;
-        if (main && savedScroll > 0) setTimeout(() => { main.scrollTop = savedScroll; }, 100);
-        dismissSplashScreen();
-      });
-    } else {
-      showDailyTextView(0).finally(() => {
-        dismissSplashScreen();
-      });
-    }
+      .finally(() => {
+    showDailyTextView(0).finally(() => {
+      dismissSplashScreen();
+    });
   });
     
 // Segnalibro fisso e indipendente con richiesta di conferma
