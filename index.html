@@ -221,14 +221,8 @@
       scrollbar-width: none;
     }
     .quick-menu-bar::-webkit-scrollbar { display: none; }
-    
-    /* I 4 tasti rapidi (Libri Biblici, Lettura, Cerca, Paralleli) con le tonalità richieste */
-    #booksTabBtn { background-color: var(--cat-1); color: #fff; border-color: var(--cat-1); }
-    #readTabBtn  { background-color: var(--cat-2); color: #fff; border-color: var(--cat-2); }
-    #searchTabBtn, #tabSearch { background-color: var(--cat-3); color: #fff; border-color: var(--cat-3); }
-    #parallelBtn { background-color: var(--cat-3); color: #fff; border-color: var(--cat-3); }
-
-    .quick-pill, .tab-btn {
+        .quick-pill {
+      background: var(--bg-main);
       color: var(--text-main);
       border: 1px solid var(--border-color);
       padding: 5px 10px;
@@ -240,14 +234,50 @@
       display: flex;
       align-items: center;
       gap: 4px;
+      transition: all 0.18s ease;
     }
-    
-    /* Effetto illuminazione attiva fosforescente giallo/verdino */
-    .quick-pill.active-glow, .quick-pill.highlight, .tab-btn.active-glow {
+
+    /* I 2 tasti superiori (Libri Biblici e Lettura) col secondo azzurro dell'elenco (--cat-2) */
+    #booksTabBtn, #readTabBtn {
+      background-color: var(--cat-2);
+      color: #ffffff;
+      border-color: var(--cat-2);
+    }
+
+    /* Illuminazione fosforescente giallo/verdina per i tasti superiori quando attivi o premuti */
+    .quick-pill.highlight, #booksTabBtn:active, #readTabBtn:active {
       background-color: #ccff00 !important;
       color: #0a1b33 !important;
       border-color: #99cc00 !important;
-      box-shadow: 0 0 12px rgba(204, 255, 0, 0.8);
+      box-shadow: 0 0 12px rgba(204, 255, 0, 0.85);
+      font-weight: 800;
+    }
+
+    /* Cerchiolino elegante dietro l'icona di Cerca e Parallelo nella barra inferiore (terzo azzurro --cat-3) */
+    #tabSearch .tab-icon, #parallelBtn .tab-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background-color: var(--cat-3);
+      color: #ffffff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      box-shadow: 0 2px 5px rgba(2, 136, 209, 0.35);
+      transition: all 0.18s ease;
+    }
+
+    /* Illuminazione fosforescente giallo/verdina del cerchiolino quando Cerca o Parallelo sono attivi o premuti */
+    #tabSearch.active .tab-icon, #tabSearch:active .tab-icon,
+    #parallelBtn.active .tab-icon, #parallelBtn:active .tab-icon {
+      background-color: #ccff00 !important;
+      color: #0a1b33 !important;
+      box-shadow: 0 0 12px rgba(204, 255, 0, 0.9), 0 0 4px #99cc00 !important;
+      transform: scale(1.06);
+    }
+    #tabSearch.active, #parallelBtn.active {
+      color: var(--primary-light) !important;
       font-weight: 800;
     }
     main {
