@@ -199,18 +199,7 @@
       font-size: 13px;
       font-weight: 600;
     }
-    .quick-menu-bar {
-      background: var(--bg-card);
-      border-bottom: 1px solid var(--border-color);
-      padding: 6px 10px;
-      display: flex;
-      gap: 6px;
-      overflow-x: auto;
-      flex-shrink: 0;
-      scrollbar-width: none;
-    }
-    .quick-menu-bar::-webkit-scrollbar { display: none; }
-    .quick-menu-bar {
+        .quick-menu-bar {
       background: var(--bg-card);
       border-bottom: 1px solid var(--border-color);
       padding: 6px 10px;
@@ -708,30 +697,7 @@
     .bp-it { display: flex; gap: 10px; padding: 6px 4px; border-bottom: 1px solid var(--border-color); font-size: 13.5px; }
     .bp-it.click { cursor: pointer; }
         .bp-it.click:active { background: var(--verse-hover); }
-    .bp-g { min-width: 46px; font-weight: 800; color: var(--primary-light); }
-    /* BM-NAV: porzione sottolineata, avviso consultazione */
-    .bm-range-sel {
-      text-decoration: underline;
-      text-decoration-color: var(--primary-light);
-      text-decoration-thickness: 2px;
-      text-underline-offset: 3px;
-      box-shadow: inset 3px 0 0 var(--primary-light);
-    }
-    .bm-chip {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      padding: 8px 10px;
-      margin: 0 0 8px 0;
-      background: var(--bg-card);
-      border: 1px solid var(--primary-light);
-      border-radius: 10px;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text-main);
-    }
-    .bm-sticky { position: sticky; top: 0; z-index: 6; }
+        .bp-g { min-width: 46px; font-weight: 800; color: var(--primary-light); }
   </style>
 </head>
 <body>
@@ -780,7 +746,6 @@
       <span id="currentRefLabel" style="display:none;"></span>
     </div>
   <div class="header-controls">
-      <button class="icon-btn" id="bmBackBtn" onclick="goBackHistory()" title="Torna a dove eri" style="display:none;">↩</button>
       <button class="icon-btn" onclick="openQuickJumpModal()" title="Salto Rapido (es. Gv 3 16)">⚡</button>
       <button class="icon-btn" onclick="changeFontSize(-2)" title="Riduci testo">A-</button>
       <button class="icon-btn" onclick="changeFontSize(2)" title="Ingrandisci testo">A+</button>
@@ -836,14 +801,24 @@
       </div>
     </div>
   </div>
+    <!-- Finestra Modale Universale Pro (Salto Rapido, Strong, Passi Paralleli, Card Immagine, Backup) -->
+  <div id="proModal" class="modal-overlay" onclick="if(event.target.id==='proModal') closeProModal()">
+    <div class="modal-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <div id="proModalTitle" class="modal-title" style="margin:0;">Strumento Pro</div>
+        <button class="nav-btn" onclick="closeProModal()">✕</button>
+      </div>
+      <div id="proModalBody"></div>
+    </div>
+  </div>
   <!-- Finestra Modale Personalizzata per Mia Lettura (Blu Scuro PRO) -->
-  <div id="myReadModal" class="modal-overlay" style="display:none;">
+  <div id="myReadModal" class="modal-overlay" onclick="if(event.target.id==='myReadModal') this.style.display='none'" style="display:none;">
     <div class="modal-card" style="background:#0a367e; color:#ffffff; border:1px solid var(--primary-light);">
       <div class="modal-title" style="color:#ffffff; font-size:17px; margin-bottom:12px;">Bibbia Multilingue PRO</div>
-      <div id="myReadModalBody" style="font-size:14.5px; line-height:1.55; margin-bottom:18px; color:#e3f2fd;"></div>
+      <div id="myReadModalBody" style="font-size:14.5px; line-height:1.55; margin-bottom:18px; color:#ffffff;"></div>
       <div class="modal-actions" style="display:flex; justify-content:flex-end; gap:10px;">
-        <button id="myReadNoBtn" class="nav-btn" style="background:transparent; color:#ffffff; border:1px solid rgba(255,255,255,0.4); font-weight:700;">NO</button>
-        <button id="myReadYesBtn" class="search-btn" style="background:#ccff00; color:#0a367e; font-weight:800; border:none;">YES</button>
+        <button id="myReadNoBtn" class="search-btn" style="background:#ccff00; color:#0a367e; font-weight:800; border:none; box-shadow:0 0 10px rgba(204,255,0,0.6);">NO</button>
+        <button id="myReadYesBtn" class="search-btn" style="background:#ccff00; color:#0a367e; font-weight:800; border:none; box-shadow:0 0 10px rgba(204,255,0,0.6);">YES</button>
       </div>
     </div>
   </div>
@@ -1350,14 +1325,12 @@ function setActiveTab(tabId, quickPillId = null) {
   document.querySelectorAll(".quick-menu-bar .quick-pill").forEach(b => {
     if (b.id !== "diffBtn") b.classList.remove("highlight");
   });
-  if (resolvedQuickPill) {
+    if (resolvedQuickPill) {
     const qp = document.getElementById(resolvedQuickPill);
     if (qp) qp.classList.add("highlight");
   }
-  if (tabId && tabId !== "tabNotes") {
-    currentViewContext = { type: "bible" };
-  }
-    }
+}
+    
 function getBook(id) {
   return BIBLE_BOOKS.find(b => b.id === Number(id)) || BIBLE_BOOKS[0];
 }
@@ -1931,7 +1904,8 @@ function filterNotesByTag(tagVal) {
   state.activeTagFilter = tagVal || null;
   showNotesView();
 }
-function showNotesView() {
+function showNotesView(fromBack = false) {
+  if (!fromBack && currentViewContext.type !== "notes") saveCurrentPositionToHistory();
   closeActionBar();
   setActiveTab("tabNotes");
   currentViewContext = { type: "notes" };
@@ -1939,6 +1913,7 @@ function showNotesView() {
   const curBook = getBook(state.bookId);
   const headerActions = `
     <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
+      ${getBackBtnHtml()}
       <button class="search-btn" style="flex:1;" onclick="openNewFreeNoteModal()">➕ Scrivi Nuova Nota Libera</button>
       <button class="nav-btn" onclick="openNoteModalForVerse()">📝 Nota su ${escapeHtml(curBook.name)} ${state.chapter}:${state.selectedVerse || 1}</button>
     </div>
@@ -2091,16 +2066,18 @@ async function toggleDownload(id) {
   }
 }
 
-function showSearchView() {
+function showSearchView(fromBack = false) {
+  if (!fromBack && currentViewContext.type !== "search") saveCurrentPositionToHistory();
   closeActionBar();
   setActiveTab("tabSearch");
+  currentViewContext = { type: "search" };
   const main = document.getElementById("mainContainer");
   const defaultSearchBible = state.downloadedBibles.includes("gb:bi12") ? "gb:bi12" : state.trans1;
   const bibleOptionsHtml = CORE_BIBLES.map(b =>
     `<option value="${escapeHtml(b.id)}" ${b.id === defaultSearchBible ? "selected" : ""}>Cerca in: ${escapeHtml(b.name)}</option>`
   ).join("");
   main.innerHTML = `
-    <div class="section-title"><span>Concordanza & Ricerca nei 66 Libri</span></div>
+    <div class="section-title"><span>Concordanza & Ricerca nei 66 Libri</span><span>${getBackBtnHtml()}</span></div>
     <div class="search-box">
       <input type="text" id="searchInput" class="search-input" placeholder="Scrivi una parola, più parole o una frase che ricordi..." onkeydown="if(event.key==='Enter') executeSearch(1)">
       <button class="search-btn" onclick="executeSearch(1)">Cerca</button>
@@ -2388,15 +2365,17 @@ window.openCrossRefsModalForVerse = function() {
   closeActionBar();
   document.getElementById("proModal").style.display = "flex";
 };
-function showSavedView() {
+function showSavedView(fromBack = false) {
+  if (!fromBack && currentViewContext.type !== "saved") saveCurrentPositionToHistory();
   closeActionBar();
   setActiveTab("tabSaved");
+  currentViewContext = { type: "saved" };
   const main = document.getElementById("mainContainer");
   if (!state.bookmarks.length) {
-    main.innerHTML = `<div class="loader">Nessun preferito salvato.<br><br>Tocca un versetto e premi 🔖 per salvarlo.</div>`;
+    main.innerHTML = `<div class="section-title"><span>Preferiti Salvati</span><span>${getBackBtnHtml()}</span></div><div class="loader">Nessun preferito salvato.<br><br>Tocca un versetto e premi 🔖 per salvarlo.</div>`;
     return;
   }
-  main.innerHTML = `<div class="section-title"><span>Preferiti Salvati</span><span>${state.bookmarks.length}</span></div>` +
+  main.innerHTML = `<div class="section-title"><span>Preferiti Salvati (${state.bookmarks.length})</span><span>${getBackBtnHtml()}</span></div>` +
     state.bookmarks.map((b, idx) => `
       <div class="result-card" onclick="openRef(${Number(b.bookId) || 1}, ${Number(b.chapter) || 1}, ${Number(b.verse) || 0})">
         <div class="result-ref" style="display:flex;justify-content:space-between;">
@@ -2547,8 +2526,8 @@ function goBackHistory() {
     showMapsView(prev.mapIdx !== undefined ? prev.mapIdx : null, true).then(() => { if (main && prev.scrollTop) main.scrollTop = prev.scrollTop; });
     return;
   }
-  if (prev.type === "notes") {
-    showNotesView();
+    if (prev.type === "notes") {
+    showNotesView(true);
     if (main && prev.scrollTop) setTimeout(() => { main.scrollTop = prev.scrollTop; }, 60);
     return;
   }
@@ -3696,7 +3675,8 @@ async function importDailyTextEpub(event) {
   }
 }
 
-async function showDailyTextView(dayOffset = 0) {
+async function showDailyTextView(dayOffset = 0, fromBack = false) {
+  if (!fromBack && currentViewContext.type !== "daily") saveCurrentPositionToHistory();
   closeActionBar();
   stopAllAudio();
   window.currentInsightSpeechText = "";
@@ -3744,10 +3724,11 @@ async function showDailyTextView(dayOffset = 0) {
     <div class="chapter-header">
       <div class="chapter-title">☀️ ${escapeHtml(entry.dateTitle || dateFormatted)}</div>
       <div class="chapter-nav-btns">
-        <button class="nav-btn" onclick="showDailyTextView(${currentDailyOffset - 1})">◀ Ieri</button>
-        <button class="nav-btn" onclick="showDailyTextView(0)">Oggi</button>
-        <button class="nav-btn" onclick="showDailyTextView(${currentDailyOffset + 1})">Domani ▶</button>
-      </div>
+      ${getBackBtnHtml()}
+      <button class="nav-btn" onclick="showDailyTextView(${currentDailyOffset - 1}, true)">◀ Ieri</button>
+      <button class="nav-btn" onclick="showDailyTextView(0, true)">Oggi</button>
+      <button class="nav-btn" onclick="showDailyTextView(${currentDailyOffset + 1}, true)">Domani ▶</button>
+    </div>
     </div>
     <div class="result-card" style="cursor:default; border-left:4px solid var(--primary-light); padding:14px; margin-bottom:12px; font-size:var(--font-size-verse); line-height:1.55;">
       <div style="font-style:italic; font-weight:700; color:var(--primary-light);">
@@ -4007,7 +3988,7 @@ function onInsightSearchInput(val) {
 }
 
 async function showInsightView(selectedIndex = null, fromBack = false) {
-  if (!fromBack && selectedIndex !== null && currentViewContext.type === "insight" && currentViewContext.idx !== selectedIndex) {
+  if (!fromBack && (currentViewContext.type !== "insight" || (selectedIndex !== null && currentViewContext.idx !== selectedIndex))) {
     saveCurrentPositionToHistory();
   }
   closeActionBar();
@@ -4091,8 +4072,8 @@ async function showInsightView(selectedIndex = null, fromBack = false) {
   }).join("");
   main.innerHTML = `
     <div class="section-title">
-      <span>📚 Perspicacia nello studio delle Scritture</span>
-      <span>${data.entries.length} Voci</span>
+      <span>📚 Perspicacia (${data.entries.length} Voci)</span>
+      <span>${getBackBtnHtml()}</span>
     </div>
     <div class="search-box">
       <input type="text" id="insightSearchInput" class="search-input" value="${escapeHtml(insightSearchQuery)}" placeholder="🔍 Cerca voce o parola nel testo (es. Incorruzione)..." oninput="onInsightSearchInput(this.value)">
@@ -4278,7 +4259,8 @@ req.onerror = () => res(null);
 });
 } catch (e) { return null; }
     }
-async function showSiView() {
+async function showSiView(fromBack = false) {
+if (!fromBack && currentViewContext.type !== "si") saveCurrentPositionToHistory();
 closeActionBar();
 stopAllAudio();
 window.currentInsightSpeechText = "";
@@ -4289,7 +4271,7 @@ const main = document.getElementById("mainContainer");
 const data = await getSiData();
 if (!data || !Array.isArray(data.books) || data.books.length === 0) {
 main.innerHTML = `
-<div class="section-title"><span>📘 Tutta la Scrittura</span></div>
+<div class="section-title"><span>📘 Tutta la Scrittura è ispirata da Dio e utile</span><span>${getBackBtnHtml()}</span></div>
 <div class="result-card" style="cursor:default; text-align:center; padding:22px 14px;">
 <div style="font-size:16px; font-weight:800; color:var(--primary-light); margin-bottom:10px;">
 “Tutta la Scrittura è ispirata da Dio e utile”
@@ -4337,7 +4319,8 @@ ${extras.length ? `<div class="section-title"><span>Introduzione e Studi</span><
 `;
 main.scrollTop = 0;
     }
-async function showSiBook(bi) {
+async function showSiBook(bi, fromBack = false) {
+if (!fromBack) saveCurrentPositionToHistory();
 closeActionBar();
 stopAllAudio();
 window.currentInsightSpeechText = "";
@@ -4347,7 +4330,7 @@ document.getElementById("currentRefLabel").textContent = "📘 Tutta la Scrittur
 const main = document.getElementById("mainContainer");
 const data = await getSiData();
 const book = data && data.books ? data.books[bi] : null;
-if (!book) { showSiView(); return; }
+if (!book) { showSiView(true); return; }
 const cards = book.chapters.map((c, ci) => `
 <div class="result-card" onclick="showSiReader('b', ${bi}, ${ci})">
 <div class="result-ref">📘 ${escapeHtml(c.title)} ${siPageBadge(c.printPage)}</div>
@@ -4357,7 +4340,7 @@ const cards = book.chapters.map((c, ci) => `
 main.innerHTML = `
 <div class="chapter-header">
 <div class="chapter-title">📘 ${escapeHtml(siBookLabel(book))}</div>
-<button class="nav-btn" onclick="showSiView()">← Tutti i Libri</button>
+<div class="chapter-nav-btns">${getBackBtnHtml()}<button class="nav-btn" onclick="showSiView(true)">← Tutti i Libri</button></div>
 </div>
 ${cards}
 `;
@@ -4546,7 +4529,8 @@ function onMapsSearchInput(val) {
   clearTimeout(mapsSearchTimeout);
   mapsSearchTimeout = setTimeout(renderMapsGridList, 140);
 }
-async function showMapsView(selectedIdx = null) {
+async function showMapsView(selectedIdx = null, fromBack = false) {
+  if (!fromBack && currentViewContext.type !== "maps") saveCurrentPositionToHistory();
   closeActionBar();
   stopAllAudio();
   setActiveTab("", "mapsTabBtn");
@@ -4574,10 +4558,10 @@ async function showMapsView(selectedIdx = null) {
     return;
   }
   window.currentInsightSpeechText = `Cartine bibliche. ${meta.maps.map(m => m.title).join(". ")}.`;
-  main.innerHTML = `
+    main.innerHTML = `
     <div class="section-title">
-      <span>🗺️ “Vedete il buon paese”</span>
-      <span>${meta.maps.length} cartine • ${meta.places.length} luoghi</span>
+      <span>🗺️ “Vedete il buon paese” (${meta.maps.length})</span>
+      <span>${getBackBtnHtml()}</span>
     </div>
     <div class="search-box">
       <input type="text" id="mapsSearchInput" class="search-input" value="${escapeHtml(mapsSearchQuery)}" placeholder="🔍 Cerca una cartina o un luogo (es. Esodo, Betania, Paolo)..." oninput="onMapsSearchInput(this.value)">
@@ -5567,13 +5551,13 @@ updateReadingPlanHeaderBtn();
 updateMyReadingLabel();
 populateSelects()
   .catch(() => {})
-      .finally(() => {
-    showDailyTextView(0).finally(() => {
+  .finally(() => {
+    showDailyTextView(0, true).finally(() => {
       dismissSplashScreen();
     });
   });
-    
-// Segnalibro fisso e indipendente con richiesta di conferma
+
+// Segnalibro fisso e indipendente con finestra Blu Scuro PRO
 function getPersonalReadingState() {
   return {
     bookId: Number(localStorage.getItem("bm_pers_book")) || 1,
@@ -5589,6 +5573,23 @@ function updateMyReadingLabel() {
   lbl.textContent = `${bMeta.abbr} ${pers.chapter}`;
 }
 
+function showBlueToastModal(msgHtml) {
+  const modal = document.getElementById("myReadModal");
+  const body = document.getElementById("myReadModalBody");
+  const yesBtn = document.getElementById("myReadYesBtn");
+  const noBtn = document.getElementById("myReadNoBtn");
+  if (!modal || !body) return;
+  body.innerHTML = msgHtml;
+  noBtn.style.display = "none";
+  yesBtn.textContent = "OK";
+  modal.style.display = "flex";
+  yesBtn.onclick = function() {
+    modal.style.display = "none";
+    noBtn.style.display = "inline-block";
+    yesBtn.textContent = "YES";
+  };
+}
+
 function setAsMyReading() {
   const main = document.getElementById("mainContainer");
   safeSaveStorage("bm_pers_book", String(state.bookId));
@@ -5596,9 +5597,9 @@ function setAsMyReading() {
   safeSaveStorage("bm_pers_scroll", String(currentViewContext.type === "bible" && main ? Math.round(main.scrollTop) : 0));
   updateMyReadingLabel();
   closeProModal();
-  alert(`✔ "Mia lettura" fissata su ${getBook(state.bookId).name} ${state.chapter}.`);
+  showBlueToastModal(`🕯️ <b>Segnalibro aggiornato!</b><br><br>La tua "Mia lettura" è ora fissata su:<br><b>📖 ${escapeHtml(getBook(state.bookId).name)} ${state.chapter}</b>`);
 }
-    
+
 function openMyReading() {
   closeActionBar();
   if (typeof closeMapViewer === "function") closeMapViewer();
@@ -5613,23 +5614,24 @@ function openMyReading() {
   const noBtn = document.getElementById("myReadNoBtn");
   if (!modal || !body) return;
 
-  body.innerHTML = `🕯️ La tua "Mia lettura" attuale è fissata su:<br><b>👉 ${persBook.name} ${pers.chapter}</b><br><br>Stai leggendo al momento:<br><b>📖 ${curBook.name} ${state.chapter}</b><br><br>• Premi <b>YES</b> per AGGIORNARE/PORRE qui il segnalibro.<br>• Premi <b>NO</b> per ANDARE DIRETTAMENTE al tuo segnalibro salvato (${persBook.name} ${pers.chapter}).`;
+  noBtn.style.display = "inline-block";
+  yesBtn.textContent = "YES";
+  body.innerHTML = `🕯️ La tua "Mia lettura" attuale è fissata su:<br><b>👉 ${escapeHtml(persBook.name)} ${pers.chapter}</b><br><br>Stai leggendo al momento:<br><b>📖 ${escapeHtml(curBook.name)} ${state.chapter}</b><br><br>• Premi <b>YES</b> per AGGIORNARE/PORRE qui il segnalibro.<br>• Premi <b>NO</b> per ANDARE DIRETTAMENTE al tuo segnalibro salvato (${escapeHtml(persBook.name)} ${pers.chapter}).`;
   
   modal.style.display = "flex";
 
   yesBtn.onclick = function() {
-    modal.style.display = "none";
     safeSaveStorage("bm_pers_book", String(state.bookId));
     safeSaveStorage("bm_pers_ch", String(state.chapter));
     const main = document.getElementById("mainContainer");
-    safeSaveStorage("bm_pers_scroll", String(main ? main.scrollTop : 0));
+    safeSaveStorage("bm_pers_scroll", String(currentViewContext.type === "bible" && main ? Math.round(main.scrollTop) : 0));
     updateMyReadingLabel();
-    alert(`✔ Segnalibro aggiornato con successo su ${curBook.name} ${state.chapter}!`);
+    showBlueToastModal(`✔ <b>Segnalibro aggiornato con successo</b> su:<br><b>📖 ${escapeHtml(curBook.name)} ${state.chapter}</b>`);
   };
 
   noBtn.onclick = function() {
     modal.style.display = "none";
-    saveCurrentPositionToHistory();
+    saveCurrentPositionToHistory(pers.bookId, pers.chapter);
     isPersonalReadingMode = false;
     state.bookId = pers.bookId;
     state.chapter = pers.chapter;
