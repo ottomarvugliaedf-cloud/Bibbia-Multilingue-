@@ -210,8 +210,25 @@
       scrollbar-width: none;
     }
     .quick-menu-bar::-webkit-scrollbar { display: none; }
-    .quick-pill {
-      background: var(--bg-main);
+        .quick-menu-bar {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-color);
+      padding: 6px 10px;
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      flex-shrink: 0;
+      scrollbar-width: none;
+    }
+    .quick-menu-bar::-webkit-scrollbar { display: none; }
+    
+    /* I 4 tasti rapidi (Libri Biblici, Lettura, Cerca, Paralleli) con le tonalità richieste */
+    #booksTabBtn { background-color: var(--cat-1); color: #fff; border-color: var(--cat-1); }
+    #readTabBtn  { background-color: var(--cat-2); color: #fff; border-color: var(--cat-2); }
+    #searchTabBtn, #tabSearch { background-color: var(--cat-3); color: #fff; border-color: var(--cat-3); }
+    #parallelBtn { background-color: var(--cat-3); color: #fff; border-color: var(--cat-3); }
+
+    .quick-pill, .tab-btn {
       color: var(--text-main);
       border: 1px solid var(--border-color);
       padding: 5px 10px;
@@ -224,10 +241,14 @@
       align-items: center;
       gap: 4px;
     }
-    .quick-pill.highlight {
-      background: var(--primary-main);
-      color: #fff;
-      border-color: var(--primary-main);
+    
+    /* Effetto illuminazione attiva fosforescente giallo/verdino */
+    .quick-pill.active-glow, .quick-pill.highlight, .tab-btn.active-glow {
+      background-color: #ccff00 !important;
+      color: #0a1b33 !important;
+      border-color: #99cc00 !important;
+      box-shadow: 0 0 12px rgba(204, 255, 0, 0.8);
+      font-weight: 800;
     }
     main {
       flex: 1;
@@ -5586,36 +5607,55 @@ function updateMyReadingLabel() {
   lbl.textContent = `${bMeta.abbr} ${pers.chapter}`;
 }
 
+// Segnalibro fisso e indipendente con richiesta di conferma
+function getPersonalReadingState() {
+  return {
+    bookId: Number(localStorage.getItem("bm_pers_book")) || 1,
+    chapter: Number(localStorage.getItem("bm_pers_ch")) || 1
+  };
+}
+
+function updateMyReadingLabel() {
+  const lbl = document.getElementById("myReadLabel");
+  if (!lbl) return;
+  const pers = getPersonalReadingState();
+  const bMeta = getBook(pers.bookId);
+  lbl.textContent = `${bMeta.abbr} ${pers.chapter}`;
+}
+
 function openMyReading() {
   closeActionBar();
   if (typeof closeMapViewer === "function") closeMapViewer();
-  const pers = getPersonalReadingState();
   
-  // Salva la posizione corrente nello storico prima di saltare al segnalibro fisso
-  saveCurrentPositionToHistory();
-  
-  isPersonalReadingMode = false; 
-  state.bookId = pers.bookId;
-  state.chapter = pers.chapter;
-  
-  loadChapterView().then(() => {
-    const main = document.getElementById("mainContainer");
-    const savedScroll = Number(localStorage.getItem("bm_pers_scroll")) || 0;
-    if (main && savedScroll > 0) {
-      setTimeout(() => { main.scrollTop = savedScroll; }, 80);
-    }
-  });
-}
-
-// Funzione richiamabile per memorizzare il capitolo attuale come "Mia lettura"
-function setAsMyReading() {
   const curBook = getBook(state.bookId);
-  safeSaveStorage("bm_pers_book", String(state.bookId));
-  safeSaveStorage("bm_pers_ch", String(state.chapter));
-  const main = document.getElementById("mainContainer");
-  safeSaveStorage("bm_pers_scroll", String(main ? main.scrollTop : 0));
-  updateMyReadingLabel();
-  alert(`🕯️ "Mia lettura" aggiornata e fissata su: ${curBook.name} ${state.chapter}`);
+  const pers = getPersonalReadingState();
+  const persBook = getBook(pers.bookId);
+  
+  // Messaggio di conferma richiesto
+  const confirmMsg = `🕯️ La tua "Mia lettura" attuale è fissata su:\n👉 ${persBook.name} ${pers.chapter}\n\nStai leggendo al momento:\n📖 ${curBook.name} ${state.chapter}\n\n• Premi OK per AGGIORNARE/PORRE qui il segnalibro di lettura.\n• Premi Annulla per ANDARE DIRETTAMENTE al tuo segnalibro salvato (${persBook.name} ${pers.chapter}).`;
+  
+  if (confirm(confirmMsg)) {
+    // Conferma: pone/aggiorna il segnalibro qui
+    safeSaveStorage("bm_pers_book", String(state.bookId));
+    safeSaveStorage("bm_pers_ch", String(state.chapter));
+    const main = document.getElementById("mainContainer");
+    safeSaveStorage("bm_pers_scroll", String(main ? main.scrollTop : 0));
+    updateMyReadingLabel();
+    alert(`✔ Segnalibro aggiornato con successo su ${curBook.name} ${state.chapter}!`);
+  } else {
+    // Annulla: va al segnalibro salvato in precedenza
+    saveCurrentPositionToHistory();
+    isPersonalReadingMode = false;
+    state.bookId = pers.bookId;
+    state.chapter = pers.chapter;
+    loadChapterView().then(() => {
+      const main = document.getElementById("mainContainer");
+      const savedScroll = Number(localStorage.getItem("bm_pers_scroll")) || 0;
+      if (main && savedScroll > 0) {
+        setTimeout(() => { main.scrollTop = savedScroll; }, 80);
+      }
+    });
+  }
 }
 </script>
 </body>
