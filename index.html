@@ -603,24 +603,7 @@
       flex-direction: column;
       justify-content: space-between;
     }
-    .map-viewer-box {
-      width: 100%;
-      overflow: auto;
-      -webkit-overflow-scrolling: touch;
-      background: #050d1a;
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      max-height: 64vh;
-      text-align: center;
-      position: relative;
-    }
-    .map-hd-img {
-      display: block;
-      margin: 0 auto;
-      transition: width 0.2s ease;
-      height: auto;
-    }
-        .bm-place-hl {
+    .bm-place-hl {
       background: rgba(2, 136, 209, 0.18);
       color: var(--primary-light);
       border: 1px solid var(--primary-light);
@@ -5141,7 +5124,10 @@ function bpSearchPlaces(q) {
 }
 function bpOpen(pi, gi) {
   const g = bpGroupRefs(bpMeta.places[pi])[gi];
-  if (g) openMapViewer(g.mapId, g.cells, bpMeta.places[pi].n);
+  if (g) {
+    closeProModal();
+    openMapViewer(g.mapId, g.cells, bpMeta.places[pi].n);
+  }
 }
 // tocco su un nome evidenziato nel testo
 function bpOpenSurface(key, surface) {
