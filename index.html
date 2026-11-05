@@ -825,8 +825,8 @@
     <button class="tab-btn" id="ttsChapterBtn" onclick="toggleChapterTTS()">
       <span class="tab-icon" id="ttsIcon">🔊</span><span id="ttsLabel">Ascolta</span>
     </button>
-    <button class="tab-btn" id="tabMyReading" onclick="openMyReading()">
-      <span class="tab-icon">🕯️</span><span>Mia lettura</span>
+        <button class="tab-btn" id="tabMyReading" onclick="openMyReading()" title="Il tuo segnalibro fisso di lettura personale">
+      <span class="tab-icon">🕯️</span><span id="myReadLabel">Mia lettura</span>
     </button>
     <button class="tab-btn" id="tabSaved" onclick="showSavedView()">
       <span class="tab-icon">🔖</span><span>Preferiti</span>
@@ -1304,6 +1304,7 @@ function getBook(id) {
   return BIBLE_BOOKS.find(b => b.id === Number(id)) || BIBLE_BOOKS[0];
 }
 function showBooksView() {
+  saveCurrentPositionToHistory();
   closeActionBar();
   setActiveTab("tabBooks");
   const main = document.getElementById("mainContainer");
@@ -1630,14 +1631,23 @@ function openDirectStrongCode(code, verseNum) {
 function applyHighlight(colorClass) {
   if (!state.selectedVerse) return;
   const key = `${state.bookId}_${state.chapter}_${state.selectedVerse}`;
-  if (colorClass) state.highlights[key] = colorClass;
-  else delete state.highlights[key];
-  safeSaveStorage("bm_hl", JSON.stringify(state.highlights));
-  const row = document.getElementById(`v_${state.selectedVerse}`);
-  if (row) {
-    row.classList.remove("hl-yellow", "hl-blue", "hl-green", "hl-pink", "hl-purple");
-    if (colorClass) row.classList.add(colorClass);
+  
+  if (colorClass) {
+    state.highlights[key] = colorClass;
+  } else {
+    delete state.highlights[key];
   }
+  
+  safeSaveStorage("bm_hl", JSON.stringify(state.highlights));
+  
+  // Aggiorna istantaneamente la riga nel DOM (inclusi eventuali riquadri paralleli)
+  document.querySelectorAll(`#v_${state.selectedVerse}`).forEach(row => {
+    row.classList.remove("hl-yellow", "hl-blue", "hl-green", "hl-pink", "hl-purple");
+    if (colorClass) {
+      row.classList.add(colorClass);
+    }
+  });
+
   closeActionBar();
 }
 function copySelectedVerse() {
@@ -2951,8 +2961,9 @@ function openBackupModal() {
       </label>
       <div id="epubImportStatus" style="font-size:13px; font-weight:700; color:var(--primary-light); text-align:center; padding:4px;"></div>
     </div>
-    <div class="section-title"><span>💾 Backup & Ripristino Dati Studio</span></div>
+     <div class="section-title"><span>💾 Backup & Ripristino Dati Studio</span></div>
     <div style="display:flex; flex-direction:column; gap:10px;">
+      <button class="search-btn" style="background:linear-gradient(135deg, #0a367e, #1565c0);" onclick="setAsMyReading()">🕯️ Fissa il capitolo attuale come "Mia lettura"</button>
       <button class="search-btn" onclick="exportBackupJson()">📤 Esporta / Condividi File di Backup (.json)</button>
       <label class="nav-btn" style="text-align:center; padding:10px; cursor:pointer;">
         📥 Importa File di Backup (.json)
@@ -5559,6 +5570,53 @@ populateSelects()
       });
     }
   });
+    // Segnalibro fisso e indipendente per la "Mia lettura"
+function getPersonalReadingState() {
+  return {
+    bookId: Number(localStorage.getItem("bm_pers_book")) || 1,
+    chapter: Number(localStorage.getItem("bm_pers_ch")) || 1
+  };
+}
+
+function updateMyReadingLabel() {
+  const lbl = document.getElementById("myReadLabel");
+  if (!lbl) return;
+  const pers = getPersonalReadingState();
+  const bMeta = getBook(pers.bookId);
+  lbl.textContent = `${bMeta.abbr} ${pers.chapter}`;
+}
+
+function openMyReading() {
+  closeActionBar();
+  if (typeof closeMapViewer === "function") closeMapViewer();
+  const pers = getPersonalReadingState();
+  
+  // Salva la posizione corrente nello storico prima di saltare al segnalibro fisso
+  saveCurrentPositionToHistory();
+  
+  isPersonalReadingMode = false; 
+  state.bookId = pers.bookId;
+  state.chapter = pers.chapter;
+  
+  loadChapterView().then(() => {
+    const main = document.getElementById("mainContainer");
+    const savedScroll = Number(localStorage.getItem("bm_pers_scroll")) || 0;
+    if (main && savedScroll > 0) {
+      setTimeout(() => { main.scrollTop = savedScroll; }, 80);
+    }
+  });
+}
+
+// Funzione richiamabile per memorizzare il capitolo attuale come "Mia lettura"
+function setAsMyReading() {
+  const curBook = getBook(state.bookId);
+  safeSaveStorage("bm_pers_book", String(state.bookId));
+  safeSaveStorage("bm_pers_ch", String(state.chapter));
+  const main = document.getElementById("mainContainer");
+  safeSaveStorage("bm_pers_scroll", String(main ? main.scrollTop : 0));
+  updateMyReadingLabel();
+  alert(`🕯️ "Mia lettura" aggiornata e fissata su: ${curBook.name} ${state.chapter}`);
+}
 </script>
 </body>
 </html>
