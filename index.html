@@ -410,12 +410,12 @@
       cursor: pointer;
       flex-shrink: 0;
     }
-    /* BARRA INFERIORE A 7 SCHEDE CON MARGINE SICURO ANTI-GESTURE ANDROID */
+    /* BARRA INFERIORE A 8 SCHEDE CON MARGINE SICURO ANTI-GESTURE ANDROID */
     nav.bottom-nav {
       background: var(--bg-card);
       border-top: 1px solid var(--border-color);
       display: grid;
-      grid-template-columns: repeat(7, 1fr);
+      grid-template-columns: repeat(8, 1fr);
       padding: 6px 2px;
       padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
       flex-shrink: 0;
@@ -650,8 +650,31 @@
     .bp-gt { font-size: 12px; font-weight: 800; color: var(--primary-light); text-transform: uppercase; margin: 12px 0 4px; }
     .bp-it { display: flex; gap: 10px; padding: 6px 4px; border-bottom: 1px solid var(--border-color); font-size: 13.5px; }
     .bp-it.click { cursor: pointer; }
-    .bp-it.click:active { background: var(--verse-hover); }
+        .bp-it.click:active { background: var(--verse-hover); }
     .bp-g { min-width: 46px; font-weight: 800; color: var(--primary-light); }
+    /* BM-NAV: porzione sottolineata, avviso consultazione */
+    .bm-range-sel {
+      text-decoration: underline;
+      text-decoration-color: var(--primary-light);
+      text-decoration-thickness: 2px;
+      text-underline-offset: 3px;
+      box-shadow: inset 3px 0 0 var(--primary-light);
+    }
+    .bm-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 8px 10px;
+      margin: 0 0 8px 0;
+      background: var(--bg-card);
+      border: 1px solid var(--primary-light);
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .bm-sticky { position: sticky; top: 0; z-index: 6; }
   </style>
 </head>
 <body>
@@ -699,12 +722,13 @@
       </button>
       <span id="currentRefLabel" style="display:none;"></span>
     </div>
-    <div class="header-controls">
+  <div class="header-controls">
+      <button class="icon-btn" id="bmBackBtn" onclick="goBackHistory()" title="Torna a dove eri" style="display:none;">↩</button>
       <button class="icon-btn" onclick="openQuickJumpModal()" title="Salto Rapido (es. Gv 3 16)">⚡</button>
       <button class="icon-btn" onclick="changeFontSize(-2)" title="Riduci testo">A-</button>
       <button class="icon-btn" onclick="changeFontSize(2)" title="Ingrandisci testo">A+</button>
       <button class="icon-btn" id="themeBtn" onclick="toggleDarkMode()" title="Tema Chiaro / Scuro / OLED">🌙</button>
-    </div>
+        </div>
   </header>
   <!-- Selettori Traduzioni Attive (Supporta 1x, 2x e 3x) -->
   <div class="trans-bar">
@@ -735,6 +759,7 @@
     <button class="icon-btn" style="color:var(--text-main);" title="Rimuovi colore" onclick="applyHighlight('')">🚫</button>
     <button class="icon-btn" style="color:var(--text-main);" title="Copia versetto" onclick="copySelectedVerse()">📋</button>
     <button class="icon-btn" style="color:var(--primary-light);" title="Ascolta versetto" onclick="speakSelectedVerse()">🔊</button>
+    <button class="icon-btn" style="color:var(--primary-light);" title="Sottolinea una porzione da leggere (inizio e fine)" onclick="markReadRange()">📏</button>
     <button class="icon-btn" style="color:var(--primary-light);" title="Lessico Strong" onclick="openStrongModalForVerse()">🏛️</button>
     <button class="icon-btn" style="color:var(--primary-light);" title="Passi Paralleli" onclick="openCrossRefsModalForVerse()">🔗</button>
     <button class="icon-btn" style="color:var(--primary-light);" title="Card Immagine" onclick="generateVerseCardModal()">🖼️</button>
@@ -786,7 +811,7 @@
     </div>
     <div id="bpSheet" class="bp-sheet"></div>
   </div>
-  <!-- Barra Navigazione Inferiore a 7 Strumenti -->
+  <!-- Barra Navigazione Inferiore a 8 Strumenti -->
   <nav class="bottom-nav">
     <button class="tab-btn" id="tabSearch" onclick="showSearchView()">
       <span class="tab-icon">🔍</span><span>Cerca</span>
@@ -799,6 +824,9 @@
     </button>
     <button class="tab-btn" id="ttsChapterBtn" onclick="toggleChapterTTS()">
       <span class="tab-icon" id="ttsIcon">🔊</span><span id="ttsLabel">Ascolta</span>
+    </button>
+    <button class="tab-btn" id="tabMyReading" onclick="openMyReading()">
+      <span class="tab-icon">📖</span><span>Mia lettura</span>
     </button>
     <button class="tab-btn" id="tabSaved" onclick="showSavedView()">
       <span class="tab-icon">🔖</span><span>Preferiti</span>
@@ -2316,48 +2344,79 @@ function deleteBookmark(idx) {
   showSavedView();
 }
 let currentViewContext = { type: "daily", offset: 0 };
-
-function saveCurrentPositionToHistory(targetBookId, targetCh) {
-  if (currentViewContext.type === "daily") {
-    navHistory.push({ type: "daily", offset: currentDailyOffset, label: "☀️ Scrittura del Giorno" });
-  } else if (currentViewContext.type === "insight") {
+function getBackBtnHtml() {
+  if (!navHistory.length) return "";
+  const lastNav = navHistory[navHistory.length - 1];
+  return `<button class="nav-btn" style="background:var(--primary-main);color:#fff;border-color:var(--primary-main);" onclick="goBackHistory()">⬅️ ${escapeHtml(lastNav.label)}</button>`;
+}
+function saveCurrentPositionToHistory(targetBookId = null, targetCh = null) {
+  const main = document.getElementById("mainContainer");
+  const scrollPos = main ? main.scrollTop : 0;
+  const mapV = document.getElementById("mapsViewer");
+  if (mapV && mapV.style.display === "flex" && typeof bpV !== "undefined" && bpV.map) {
     navHistory.push({
+      type: "map_viewer",
+      mapId: bpV.map.id,
+      cells: (bpV.cells || []).slice(),
+      mapLabel: bpV.label || "",
+      label: `🗺️ ${bpV.map.title.slice(0, 14)}`
+    });
+    if (navHistory.length > 30) navHistory.shift();
+    return;
+  }
+  let snap = null;
+  if (currentViewContext.type === "daily") {
+    snap = { type: "daily", offset: currentDailyOffset, scrollTop: scrollPos, label: "☀️ Giorno" };
+  } else if (currentViewContext.type === "insight") {
+    snap = {
       type: "insight",
       idx: currentViewContext.idx,
-      label: currentViewContext.title ? `📚 ${currentViewContext.title.slice(0, 16)}` : "📚 Perspicacia"
-    });
+      scrollTop: scrollPos,
+      label: currentViewContext.title ? `📚 ${currentViewContext.title.slice(0, 14)}` : "📚 Perspicacia"
+    };
   } else if (currentViewContext.type === "si") {
-    navHistory.push({
+    snap = {
       type: "si",
       mode: currentViewContext.mode,
       kind: currentViewContext.kind,
       i: currentViewContext.i,
       ci: currentViewContext.ci,
-      label: currentViewContext.label || "📘 Tutta la Scrittura"
-    });
+      scrollTop: scrollPos,
+      label: currentViewContext.label || "📘 Scrittura"
+    };
   } else if (currentViewContext.type === "maps") {
-    navHistory.push({
+    snap = {
       type: "maps",
       mapIdx: currentViewContext.mapIdx,
-      label: currentViewContext.label || "🗺️ Cartine Bibliche"
-    });
+      scrollTop: scrollPos,
+      label: currentViewContext.label || "🗺️ Cartine"
+    };
   } else if (currentViewContext.type === "notes") {
-    navHistory.push({ type: "notes", label: "📝 Appunti" });
-  } else if (state.bookId !== Number(targetBookId) || state.chapter !== Number(targetCh)) {
-    const curBook = getBook(state.bookId);
-    const vNum = state.selectedVerse || 1;
-    const label = `${curBook.abbr} ${state.chapter}${state.selectedVerse ? ':' + state.selectedVerse : ''}`;
-    navHistory.push({
-      type: "bible",
-      bookId: state.bookId,
-      chapter: state.chapter,
-      verse: vNum,
-      label: label
-    });
+    snap = { type: "notes", scrollTop: scrollPos, label: "📝 Appunti" };
+  } else if (currentViewContext.type === "bible") {
+    if (targetBookId === null || state.bookId !== Number(targetBookId) || state.chapter !== Number(targetCh)) {
+      const curBook = getBook(state.bookId);
+      const vNum = state.selectedVerse || null;
+      const label = `${curBook.abbr} ${state.chapter}${vNum ? ':' + vNum : ''}`;
+      snap = {
+        type: "bible",
+        bookId: state.bookId,
+        chapter: state.chapter,
+        verse: vNum,
+        isPersonal: isPersonalReadingMode,
+        scrollTop: scrollPos,
+        label: label
+      };
+    }
   }
-  if (navHistory.length > 25) navHistory.shift();
+  if (snap) {
+    const prev = navHistory[navHistory.length - 1];
+    if (!prev || prev.type !== snap.type || prev.label !== snap.label || prev.idx !== snap.idx || prev.i !== snap.i || prev.ci !== snap.ci) {
+      navHistory.push(snap);
+      if (navHistory.length > 30) navHistory.shift();
+    }
+  }
 }
-
 function parseVerseSpecToArray(vSpec) {
   if (!vSpec) return [];
   if (typeof vSpec === "number") return vSpec > 0 ? [vSpec] : [];
@@ -2374,7 +2433,6 @@ function parseVerseSpecToArray(vSpec) {
   });
   return res;
 }
-
 function scrollToVerseAndHighlight(vSpec) {
   const verses = parseVerseSpecToArray(vSpec);
   if (!verses.length) return;
@@ -2396,49 +2454,54 @@ function scrollToVerseAndHighlight(vSpec) {
     });
   }, 300);
 }
-
 function goBackHistory() {
   if (!navHistory.length) return;
   const prev = navHistory.pop();
+  const main = document.getElementById("mainContainer");
+  if (prev.type === "map_viewer") {
+    openMapViewer(prev.mapId, prev.cells || [], prev.mapLabel || "", true);
+    return;
+  }
   if (prev.type === "daily") {
-    showDailyTextView(prev.offset || 0);
+    showDailyTextView(prev.offset || 0).then(() => { if (main && prev.scrollTop) main.scrollTop = prev.scrollTop; });
     return;
   }
   if (prev.type === "insight") {
-    showInsightView(prev.idx !== undefined ? prev.idx : null);
+    showInsightView(prev.idx !== undefined ? prev.idx : null, true).then(() => { if (main && prev.scrollTop) main.scrollTop = prev.scrollTop; });
     return;
   }
   if (prev.type === "si") {
-    if (prev.mode === "reader") showSiReader(prev.kind, prev.i, prev.ci);
-    else if (prev.mode === "book") showSiBook(prev.i);
-    else showSiView();
+    const p = prev.mode === "reader" ? showSiReader(prev.kind, prev.i, prev.ci, true) : (prev.mode === "book" ? showSiBook(prev.i, true) : showSiView(true));
+    Promise.resolve(p).then(() => { if (main && prev.scrollTop) main.scrollTop = prev.scrollTop; });
     return;
   }
   if (prev.type === "maps") {
-    showMapsView(prev.mapIdx !== undefined ? prev.mapIdx : null);
+    showMapsView(prev.mapIdx !== undefined ? prev.mapIdx : null, true).then(() => { if (main && prev.scrollTop) main.scrollTop = prev.scrollTop; });
     return;
   }
   if (prev.type === "notes") {
     showNotesView();
+    if (main && prev.scrollTop) setTimeout(() => { main.scrollTop = prev.scrollTop; }, 60);
     return;
   }
+  isPersonalReadingMode = Boolean(prev.isPersonal);
   state.bookId = prev.bookId;
   state.chapter = prev.chapter;
   const targetVerse = prev.verse || null;
   loadChapterView().then(() => {
     if (targetVerse) scrollToVerseAndHighlight(targetVerse);
+    else if (main && prev.scrollTop) main.scrollTop = prev.scrollTop;
   });
-    }
-
-function openRef(bookId, chapter, verseSpec = 0) {
+}
+function openRef(bookId, chapter, verseSpec = 0, asPersonal = false) {
   saveCurrentPositionToHistory(bookId, chapter);
+  isPersonalReadingMode = asPersonal;
   state.bookId = Number(bookId);
   state.chapter = Number(chapter);
   loadChapterView().then(() => {
     if (verseSpec) scrollToVerseAndHighlight(verseSpec);
   });
-                         }
-    
+  }
 function changeFontSize(delta) {
   state.fontSize = Math.min(30, Math.max(14, state.fontSize + delta));
   document.documentElement.style.setProperty("--font-size-verse", state.fontSize + "px");
@@ -2495,9 +2558,10 @@ function jumpToRefString(str) {
       b.name.toLowerCase().replace(/\s+/g, "").startsWith(qBook)
     );
   }
-  if (found) {
+    if (found) {
     const targetCh = Math.min(found.ch, Math.max(1, ch));
     saveCurrentPositionToHistory(found.id, targetCh);
+    isPersonalReadingMode = false;
     state.bookId = found.id;
     state.chapter = targetCh;
     closeProModal();
@@ -2711,6 +2775,15 @@ function startUniversalSpeech(rawText, updateMainBtn = true) {
 function toggleChapterTTS() {
   if (bmAudioPlaying) {
     stopAllAudio();
+    return;
+  }
+  const sel = window.getSelection ? window.getSelection().toString().trim() : "";
+  if (sel.length >= 3) {
+    startUniversalSpeech(sel, true);
+    return;
+  }
+  if (state.selectedVerseText && document.getElementById("verseActionBar")?.style.display === "flex") {
+    startUniversalSpeech(state.selectedVerseText, true);
     return;
   }
   const rows = [...document.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3")];
@@ -3864,7 +3937,10 @@ function onInsightSearchInput(val) {
   }, 140);
 }
 
-async function showInsightView(selectedIndex = null) {
+async function showInsightView(selectedIndex = null, fromBack = false) {
+  if (!fromBack && selectedIndex !== null && currentViewContext.type === "insight" && currentViewContext.idx !== selectedIndex) {
+    saveCurrentPositionToHistory();
+  }
   closeActionBar();
   stopAllAudio();
   window.currentInsightSpeechText = "";
@@ -3918,7 +3994,8 @@ async function showInsightView(selectedIndex = null) {
     main.innerHTML = `
       <div class="chapter-header" style="flex-wrap:wrap; gap:8px;">
         <div class="chapter-title">📚 ${escapeHtml(item.title)}</div>
-        <div class="chapter-nav-btns">
+                <div class="chapter-nav-btns">
+          ${getBackBtnHtml()}
           <button class="nav-btn" onclick="showInsightView(null)">← Risultati</button>
           <button class="nav-btn" onclick="toggleChapterTTS()">🔊 Ascolta</button>
         </div>
@@ -4217,7 +4294,10 @@ ${cards}
 `;
 main.scrollTop = 0;
 }
-async function showSiReader(kind, i, ci) {
+async function showSiReader(kind, i, ci, fromBack = false) {
+  if (!fromBack && currentViewContext.type === "si" && (currentViewContext.mode !== "reader" || currentViewContext.i !== i || currentViewContext.ci !== ci)) {
+    saveCurrentPositionToHistory();
+  }
 closeActionBar();
 stopAllAudio();
 setActiveTab("", "siTabBtn");
@@ -4264,6 +4344,7 @@ main.innerHTML = `
 <div class="chapter-header" style="flex-wrap:wrap; gap:8px;">
 <div class="chapter-title">📘 ${escapeHtml(title)}</div>
 <div class="chapter-nav-btns">
+${getBackBtnHtml()}
 ${backBtn}
 <button class="nav-btn" onclick="toggleChapterTTS()">🔊 Ascolta</button>
 </div>
@@ -4479,11 +4560,14 @@ function bpParseCell(c, grid) {
   const side = bpV.w / grid.cols;   // le celle sono quadrate: lato = larghezza / colonne (l'ultima riga può essere tagliata dal bordo)
   return { col, row, cw: side, ch: side };
 }
-async function openMapViewer(mapId, cells, label) {
+async function openMapViewer(mapId, cells, label, fromBack = false) {
   const meta = await bpGetMeta();
   if (!meta) return;
   const map = bpMapById(mapId);
   if (!map) return;
+  if (!fromBack && document.getElementById("mapsViewer").style.display !== "flex") {
+    saveCurrentPositionToHistory();
+  }
   bpV.map = map;
   bpV.cells = (cells || []).slice();
   bpV.label = label || "";
@@ -5379,15 +5463,101 @@ function dismissSplashScreen() {
 // Fallback di sicurezza nel caso la rete o il DB tardino
 setTimeout(dismissSplashScreen, 4000);
 
+function updateMyPersonalReadBtn() {
+  const lbl = document.getElementById("myReadLabel");
+  const btn = document.getElementById("tabMyRead");
+  if (!lbl || !btn) return;
+  const pBook = getBook(state.personalBookId || state.bookId);
+  const pCh = state.personalChapter || state.chapter;
+  lbl.textContent = `${pBook.abbr} ${pCh}`;
+  const isAtPersonal = currentViewContext.type === "bible" && isPersonalReadingMode && state.bookId === pBook.id && state.chapter === pCh;
+  btn.classList.toggle("active", isAtPersonal);
+}
+
+function openMyPersonalRead() {
+  closeActionBar();
+  if (typeof closeMapViewer === "function") closeMapViewer();
+  const pBookId = state.personalBookId || state.bookId;
+  const pCh = state.personalChapter || state.chapter;
+  if (currentViewContext.type === "bible" && !isPersonalReadingMode && (state.bookId !== pBookId || state.chapter !== pCh)) {
+    const curBook = getBook(state.bookId);
+    const wantReturn = confirm(`📖 Il tuo segnalibro di lettura personale è su ${getBook(pBookId).name} ${pCh}.\n\n• Premi OK per TORNARE alla tua lettura personale (${getBook(pBookId).name} ${pCh}).\n• Premi Annulla se invece vuoi IMPOSTARE ${curBook.name} ${state.chapter} come tua nuova lettura personale.`);
+    if (!wantReturn) {
+      isPersonalReadingMode = true;
+      state.personalBookId = state.bookId;
+      state.personalChapter = state.chapter;
+      safeSaveStorage("bm_personal_book", String(state.personalBookId));
+      safeSaveStorage("bm_personal_ch", String(state.personalChapter));
+      safeSaveStorage("bm_last_book", String(state.personalBookId));
+      safeSaveStorage("bm_last_ch", String(state.personalChapter));
+      updateMyPersonalReadBtn();
+      return;
+    }
+  }
+  if (currentViewContext.type !== "bible" || state.bookId !== pBookId || state.chapter !== pCh) {
+    saveCurrentPositionToHistory(pBookId, pCh);
+  }
+  isPersonalReadingMode = true;
+  state.bookId = pBookId;
+  state.chapter = pCh;
+  loadChapterView().then(() => {
+    const main = document.getElementById("mainContainer");
+    const savedScroll = Number(localStorage.getItem("bm_personal_scroll")) || 0;
+    if (main && savedScroll > 0) {
+      setTimeout(() => { main.scrollTop = savedScroll; }, 80);
+    }
+  });
+}
+
+document.getElementById("mainContainer")?.addEventListener("scroll", function() {
+  if (currentViewContext.type === "bible" && isPersonalReadingMode) {
+    safeSaveStorage("bm_personal_scroll", String(Math.round(this.scrollTop)));
+  }
+}, { passive: true });
+
+function handlePortionTextSelection() {
+  const sel = window.getSelection ? window.getSelection() : null;
+  const txt = sel ? sel.toString().trim() : "";
+  if (txt.length >= 4) {
+    const anchor = sel.anchorNode ? (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement) : null;
+    if (anchor && (anchor.closest("#proModal") || anchor.closest("#noteModal") || anchor.closest("#mapsViewer"))) return;
+    const vRow = anchor ? anchor.closest(".verse-row, .parallel-row, .parallel-row-3") : null;
+    if (vRow && vRow.id && vRow.id.startsWith("v_")) {
+      state.selectedVerse = parseInt(vRow.id.slice(2), 10) || 1;
+    } else {
+      state.selectedVerse = state.selectedVerse || 1;
+    }
+    state.selectedVerseText = txt;
+    const bar = document.getElementById("verseActionBar");
+    if (bar) bar.style.display = "flex";
+  }
+}
+document.addEventListener("mouseup", handlePortionTextSelection);
+document.addEventListener("touchend", () => setTimeout(handlePortionTextSelection, 180));
+
 document.documentElement.style.setProperty("--font-size-verse", state.fontSize + "px");
 applySavedTheme();
 updateReadingPlanHeaderBtn();
+updateMyPersonalReadBtn();
 populateSelects()
   .catch(() => {})
   .finally(() => {
-    showDailyTextView(0).finally(() => {
-      dismissSplashScreen();
-    });
+    const hasPersonalSaved = localStorage.getItem("bm_personal_book") || localStorage.getItem("bm_last_book");
+    if (hasPersonalSaved) {
+      isPersonalReadingMode = true;
+      state.bookId = state.personalBookId;
+      state.chapter = state.personalChapter;
+      loadChapterView().finally(() => {
+        const main = document.getElementById("mainContainer");
+        const savedScroll = Number(localStorage.getItem("bm_personal_scroll")) || 0;
+        if (main && savedScroll > 0) setTimeout(() => { main.scrollTop = savedScroll; }, 100);
+        dismissSplashScreen();
+      });
+    } else {
+      showDailyTextView(0).finally(() => {
+        dismissSplashScreen();
+      });
+    }
   });
 </script>
 </body>
