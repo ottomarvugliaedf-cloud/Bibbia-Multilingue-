@@ -258,9 +258,32 @@
       box-shadow: 0 0 12px rgba(204, 255, 0, 0.9), 0 0 4px #99cc00 !important;
       transform: scale(1.06);
     }
-    #tabSearch.active, #parallelBtn.active {
+        #tabSearch.active, #parallelBtn.active {
       color: var(--primary-light) !important;
       font-weight: 800;
+    }
+    .myread-action-btn {
+      width: 100%;
+      background: #1565c0;
+      color: #ffffff;
+      border: 1px solid #29b6f6;
+      padding: 11px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.1s ease, background-color 0.1s ease, box-shadow 0.1s ease;
+    }
+    .myread-action-btn:active {
+      background-color: #ccff00 !important;
+      color: #0a1b33 !important;
+      border-color: #99cc00 !important;
+      box-shadow: 0 0 14px rgba(204, 255, 0, 0.95) !important;
+      transform: scale(0.98);
+    }
+    .verse-num, .tag-badge {
+      -webkit-user-select: none;
+      user-select: none;
     }
     main {
       flex: 1;
@@ -761,7 +784,7 @@
     <!-- Barra Menu Rapida Sempre Visibile (PRO — Biblioteca) -->
   <div class="quick-menu-bar">
     <button id="booksTabBtn" class="quick-pill" onclick="showBooksView()">🟦 Libri Biblici</button>
-    <button id="readTabBtn" class="quick-pill" onclick="loadChapterView()">📖 Lettura</button>
+    <button id="readTabBtn" class="quick-pill" onclick="openBibleTabFromMenu()">📖 Lettura</button>
     <button id="insightTabBtn" class="quick-pill" onclick="showInsightView()">📚 Perspicacia (it)</button>
     <button id="siTabBtn" class="quick-pill" onclick="showSiView()">📘 Tutta la Scrittura</button>
     <button id="mapsTabBtn" class="quick-pill" onclick="showMapsView()">🗺️ Cartine Bibliche</button>
@@ -811,15 +834,14 @@
       <div id="proModalBody"></div>
     </div>
   </div>
-  <!-- Finestra Modale Personalizzata per Mia Lettura (Blu Scuro PRO) -->
+   <!-- Finestra Modale Personalizzata per Mia Lettura (Blu Scuro PRO) -->
   <div id="myReadModal" class="modal-overlay" onclick="if(event.target.id==='myReadModal') this.style.display='none'" style="display:none;">
-    <div class="modal-card" style="background:#0a367e; color:#ffffff; border:1px solid var(--primary-light);">
-      <div class="modal-title" style="color:#ffffff; font-size:17px; margin-bottom:12px;">Bibbia Multilingue PRO</div>
-      <div id="myReadModalBody" style="font-size:14.5px; line-height:1.55; margin-bottom:18px; color:#ffffff;"></div>
-      <div class="modal-actions" style="display:flex; justify-content:flex-end; gap:10px;">
-        <button id="myReadNoBtn" class="search-btn" style="background:#ccff00; color:#0a367e; font-weight:800; border:none; box-shadow:0 0 10px rgba(204,255,0,0.6);">NO</button>
-        <button id="myReadYesBtn" class="search-btn" style="background:#ccff00; color:#0a367e; font-weight:800; border:none; box-shadow:0 0 10px rgba(204,255,0,0.6);">YES</button>
+    <div class="modal-card" style="background:#0a367e; color:#ffffff; border:1px solid #29b6f6;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div class="modal-title" style="color:#ffffff; font-size:17px; margin:0;">Bibbia Multilingue PRO</div>
+        <button class="nav-btn" style="background:rgba(255,255,255,0.15); color:#fff; border:1px solid rgba(255,255,255,0.3); padding:3px 9px;" onclick="document.getElementById('myReadModal').style.display='none'">✕</button>
       </div>
+      <div id="myReadModalBody" style="font-size:14.5px; line-height:1.55; color:#ffffff;"></div>
     </div>
   </div>
   <!-- Visualizzatore cartine (Dove? / Cartine Bibliche — Stile Uniformato PRO) -->
@@ -1572,17 +1594,31 @@ async function loadChapterView() {
       </div>`;
   }
 }
+function openBibleTabFromMenu() {
+  if (currentViewContext.type !== "bible") {
+    saveCurrentPositionToHistory(state.bookId, state.chapter);
+  }
+  loadChapterView();
+}
 function prevChapter() {
-  if (state.chapter > 1) state.chapter--;
-  else if (state.bookId > 1) { state.bookId--; state.chapter = getBook(state.bookId).ch; }
+  let targetB = state.bookId, targetC = state.chapter;
+  if (targetC > 1) targetC--;
+  else if (targetB > 1) { targetB--; targetC = getBook(targetB).ch; }
+  saveCurrentPositionToHistory(targetB, targetC);
+  state.bookId = targetB;
+  state.chapter = targetC;
   loadChapterView();
 }
 function nextChapter() {
   const book = getBook(state.bookId);
-  if (state.chapter < book.ch) state.chapter++;
-  else if (state.bookId < 66) { state.bookId++; state.chapter = 1; }
+  let targetB = state.bookId, targetC = state.chapter;
+  if (targetC < book.ch) targetC++;
+  else if (targetB < 66) { targetB++; targetC = 1; }
+  saveCurrentPositionToHistory(targetB, targetC);
+  state.bookId = targetB;
+  state.chapter = targetC;
   loadChapterView();
-}
+    }
 function onTranslationChange() {
   state.trans1 = document.getElementById("trans1").value;
   state.trans2 = document.getElementById("trans2").value;
@@ -1636,7 +1672,9 @@ function onVerseClick(verseNum, text) {
 function closeActionBar() {
   const bar = document.getElementById("verseActionBar");
   if (bar) bar.style.display = "none";
-}
+  state.selectedVerse = null;
+  state.selectedVerseText = "";
+    }
 function selectVerseDataFromDOM(verseNum) {
   const row = document.getElementById(`v_${verseNum}`);
   const txt = row ? (row.getAttribute("data-text") || "") : "";
@@ -2526,6 +2564,8 @@ function goBackHistory() {
     showMapsView(prev.mapIdx !== undefined ? prev.mapIdx : null, true).then(() => { if (main && prev.scrollTop) main.scrollTop = prev.scrollTop; });
     return;
   }
+    if (prev.type === "search") { showSearchView(true); return; }
+    if (prev.type === "saved") { showSavedView(true); return; }
     if (prev.type === "notes") {
     showNotesView(true);
     if (main && prev.scrollTop) setTimeout(() => { main.scrollTop = prev.scrollTop; }, 60);
@@ -2698,11 +2738,26 @@ function splitTextForAudio(text, maxLen = 165) {
   if (cur.trim()) chunks.push(cur.trim());
   return chunks;
 }
+let bmAutoNextChapter = false;
+
+function extractCleanSelectedText() {
+  const sel = window.getSelection ? window.getSelection() : null;
+  if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return "";
+  const frag = sel.getRangeAt(0).cloneContents();
+  frag.querySelectorAll(".verse-num, .tag-badge, sup, script, style").forEach(el => el.remove());
+  return (frag.textContent || "")
+    .replace(/📝\s*Nota/gi, " ")
+    .replace(/🔗\s*Paralleli/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function stopAllAudio() {
   releaseAudioWakeLock();
   bmSessionId++;
   bmUserStopped = true;
   bmAudioPlaying = false;
+  bmAutoNextChapter = false;
   if (bmAudioPlayer) {
     try {
       bmAudioPlayer.onended = null;
@@ -2721,9 +2776,39 @@ function stopAllAudio() {
     btn.innerHTML = '<span class="tab-icon">🔊</span><span>Ascolta</span>';
   }
 }
+
+function onSpeechFinishedSession(sessionId) {
+  if (sessionId !== bmSessionId) return;
+  if (bmAutoNextChapter && !bmUserStopped && currentViewContext.type === "bible") {
+    const book = getBook(state.bookId);
+    if (state.chapter < book.ch) {
+      state.chapter++;
+    } else if (state.bookId < 66) {
+      state.bookId++;
+      state.chapter = 1;
+    } else {
+      stopAllAudio();
+      return;
+    }
+    loadChapterView().then(() => {
+      setTimeout(() => {
+        if (!bmUserStopped) {
+          const rows = [...document.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3")];
+          const nextBook = getBook(state.bookId);
+          const fullText = `${nextBook.name}, capitolo ${state.chapter}. ` + rows.map(r => r.getAttribute("data-text") || "").join(" ");
+          if (fullText.trim()) startUniversalSpeech(fullText, true, true);
+        }
+      }, 350);
+    });
+    return;
+  }
+  stopAllAudio();
+}
+
 function playWebViewStream(chunks, idx, sessionId) {
-  if (bmUserStopped || !bmAudioPlaying || sessionId !== bmSessionId || idx >= chunks.length) {
-    if (sessionId === bmSessionId) stopAllAudio();
+  if (bmUserStopped || !bmAudioPlaying || sessionId !== bmSessionId) return;
+  if (idx >= chunks.length) {
+    onSpeechFinishedSession(sessionId);
     return;
   }
   const tl = getActiveTTSLangCode(false);
@@ -2764,20 +2849,21 @@ function playWebViewStream(chunks, idx, sessionId) {
   };
   tryNextUrl();
 }
-function startUniversalSpeech(rawText, updateMainBtn = true) {
+
+function startUniversalSpeech(rawText, updateMainBtn = true, autoNext = false) {
   stopAllAudio();
   const chunks = splitTextForAudio(rawText, 165);
   if (!chunks.length) return;
   const mySession = ++bmSessionId;
   bmUserStopped = false;
   bmAudioPlaying = true;
+  bmAutoNextChapter = autoNext;
   requestAudioWakeLock();
   const btn = document.getElementById("ttsChapterBtn");
   if (updateMainBtn && btn) {
     btn.classList.add("active");
     btn.innerHTML = '<span class="tab-icon">⏹️</span><span>Ferma</span>';
   }
-  
   if (!bmAudioPlayer) {
     bmAudioPlayer = new Audio();
   }
@@ -2785,8 +2871,9 @@ function startUniversalSpeech(rawText, updateMainBtn = true) {
     let idx = 0;
     let nativeOk = false;
     const speakNextNative = () => {
-      if (bmUserStopped || !bmAudioPlaying || mySession !== bmSessionId || idx >= chunks.length) {
-        if (mySession === bmSessionId) stopAllAudio();
+      if (bmUserStopped || !bmAudioPlaying || mySession !== bmSessionId) return;
+      if (idx >= chunks.length) {
+        onSpeechFinishedSession(mySession);
         return;
       }
       try {
@@ -2819,42 +2906,47 @@ function startUniversalSpeech(rawText, updateMainBtn = true) {
     playWebViewStream(chunks, 0, mySession);
   }
 }
+
 function toggleChapterTTS() {
   if (bmAudioPlaying) {
     stopAllAudio();
     return;
   }
-  const sel = window.getSelection ? window.getSelection().toString().trim() : "";
-  if (sel.length >= 3) {
-    startUniversalSpeech(sel, true);
+  const cleanSel = extractCleanSelectedText();
+  if (cleanSel.length >= 3) {
+    startUniversalSpeech(cleanSel, true, false);
     return;
   }
   if (state.selectedVerseText && document.getElementById("verseActionBar")?.style.display === "flex") {
-    startUniversalSpeech(state.selectedVerseText, true);
+    startUniversalSpeech(state.selectedVerseText, true, false);
     return;
   }
   const rows = [...document.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3")];
   if (rows.length > 0) {
-    const fullText = rows.map(r => r.getAttribute("data-text") || "").join(" ");
-    if (fullText.trim()) startUniversalSpeech(fullText, true);
+    const curBook = getBook(state.bookId);
+    const fullText = `${curBook.name}, capitolo ${state.chapter}. ` + rows.map(r => r.getAttribute("data-text") || "").join(" ");
+    if (fullText.trim()) startUniversalSpeech(fullText, true, true);
     return;
   }
   if (typeof currentInsightSpeechText === "string" && currentInsightSpeechText.trim()) {
-    startUniversalSpeech(currentInsightSpeechText, true);
+    startUniversalSpeech(currentInsightSpeechText, true, false);
     return;
   }
   if (typeof currentDailySpeechText === "string" && currentDailySpeechText.trim()) {
-    startUniversalSpeech(currentDailySpeechText, true);
+    startUniversalSpeech(currentDailySpeechText, true, false);
   }
 }
+
 function speakSelectedVerse() {
-  if (!state.selectedVerseText) return;
+  const cleanSel = extractCleanSelectedText();
+  const txtToSpeak = cleanSel.length >= 3 ? cleanSel : state.selectedVerseText;
+  if (!txtToSpeak) return;
   if (bmAudioPlaying) {
     stopAllAudio();
     return;
   }
-  startUniversalSpeech(state.selectedVerseText, false);
-}
+  startUniversalSpeech(txtToSpeak, false, false);
+    }
 function generateVerseCardModal() {
   const book = getBook(state.bookId);
   const vNum = state.selectedVerse || 1;
@@ -5527,10 +5619,11 @@ document.getElementById("mainContainer")?.addEventListener("scroll", function() 
 
 function handlePortionTextSelection() {
   const sel = window.getSelection ? window.getSelection() : null;
-  const txt = sel ? sel.toString().trim() : "";
+  if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+  const anchor = sel.anchorNode ? (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement) : null;
+  if (anchor && (anchor.closest("#proModal") || anchor.closest("#noteModal") || anchor.closest("#myReadModal") || anchor.closest("#mapsViewer"))) return;
+  const txt = extractCleanSelectedText();
   if (txt.length >= 4) {
-    const anchor = sel.anchorNode ? (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement) : null;
-    if (anchor && (anchor.closest("#proModal") || anchor.closest("#noteModal") || anchor.closest("#mapsViewer"))) return;
     const vRow = anchor ? anchor.closest(".verse-row, .parallel-row, .parallel-row-3") : null;
     if (vRow && vRow.id && vRow.id.startsWith("v_")) {
       state.selectedVerse = parseInt(vRow.id.slice(2), 10) || 1;
@@ -5557,7 +5650,9 @@ populateSelects()
     });
   });
 
-// Segnalibro fisso e indipendente con finestra Blu Scuro PRO
+// ============================================================================
+// MODULO "🕯️ MIA LETTURA" INDIPENDENTE (Scelta Capitolo, Tasto Conferma e Tasto Vai)
+// ============================================================================
 function getPersonalReadingState() {
   return {
     bookId: Number(localStorage.getItem("bm_pers_book")) || 1,
@@ -5573,76 +5668,120 @@ function updateMyReadingLabel() {
   lbl.textContent = `${bMeta.abbr} ${pers.chapter}`;
 }
 
-function showBlueToastModal(msgHtml) {
+function onMyReadBookSelectChange() {
+  const bSel = document.getElementById("myReadBookSel");
+  const cSel = document.getElementById("myReadChSel");
+  if (!bSel || !cSel) return;
+  const bObj = getBook(Number(bSel.value));
+  let chOpts = "";
+  for (let i = 1; i <= bObj.ch; i++) {
+    chOpts += `<option value="${i}">Cap. ${i}</option>`;
+  }
+  cSel.innerHTML = chOpts;
+}
+
+function showBlueConfirmToast(savedBookName, savedCh) {
   const modal = document.getElementById("myReadModal");
   const body = document.getElementById("myReadModalBody");
-  const yesBtn = document.getElementById("myReadYesBtn");
-  const noBtn = document.getElementById("myReadNoBtn");
   if (!modal || !body) return;
-  body.innerHTML = msgHtml;
-  noBtn.style.display = "none";
-  yesBtn.textContent = "OK";
+  body.innerHTML = `
+    <div style="text-align:center; padding:6px 0 14px 0;">
+      <div style="font-size:32px; margin-bottom:8px;">🕯️</div>
+      <div style="font-size:16px; font-weight:800; color:#ffffff; margin-bottom:6px;">Segnalibro Memorizzato!</div>
+      <div style="font-size:14.5px; color:#e3f2fd;">
+        La tua lettura personale è ora fissata su:<br>
+        <b style="font-size:16.5px; color:#ffffff;">📖 ${escapeHtml(savedBookName)} ${savedCh}</b>
+      </div>
+    </div>
+    <button class="myread-action-btn" onclick="document.getElementById('myReadModal').style.display='none'">OK</button>
+  `;
   modal.style.display = "flex";
-  yesBtn.onclick = function() {
-    modal.style.display = "none";
-    noBtn.style.display = "inline-block";
-    yesBtn.textContent = "YES";
-  };
+}
+
+function confirmMyReadingSelection() {
+  const bSel = document.getElementById("myReadBookSel");
+  const cSel = document.getElementById("myReadChSel");
+  const chosenBookId = bSel ? Number(bSel.value) : state.bookId;
+  const chosenCh = cSel ? Number(cSel.value) : state.chapter;
+  const chosenBook = getBook(chosenBookId);
+  const main = document.getElementById("mainContainer");
+  const isSameCurrentChapter = (currentViewContext.type === "bible" && chosenBookId === state.bookId && chosenCh === state.chapter);
+
+  safeSaveStorage("bm_pers_book", String(chosenBookId));
+  safeSaveStorage("bm_pers_ch", String(chosenCh));
+  safeSaveStorage("bm_pers_scroll", String(isSameCurrentChapter && main ? Math.round(main.scrollTop) : 0));
+  updateMyReadingLabel();
+  showBlueConfirmToast(chosenBook.name, chosenCh);
+}
+
+function goToMyPersonalReadingNow() {
+  const modal = document.getElementById("myReadModal");
+  if (modal) modal.style.display = "none";
+  const pers = getPersonalReadingState();
+  saveCurrentPositionToHistory(pers.bookId, pers.chapter);
+  isPersonalReadingMode = true;
+  state.bookId = pers.bookId;
+  state.chapter = pers.chapter;
+  loadChapterView().then(() => {
+    const main = document.getElementById("mainContainer");
+    const savedScroll = Number(localStorage.getItem("bm_pers_scroll")) || 0;
+    if (main && savedScroll > 0) {
+      setTimeout(() => { main.scrollTop = savedScroll; }, 80);
+    }
+  });
 }
 
 function setAsMyReading() {
+  closeProModal();
   const main = document.getElementById("mainContainer");
   safeSaveStorage("bm_pers_book", String(state.bookId));
   safeSaveStorage("bm_pers_ch", String(state.chapter));
   safeSaveStorage("bm_pers_scroll", String(currentViewContext.type === "bible" && main ? Math.round(main.scrollTop) : 0));
   updateMyReadingLabel();
-  closeProModal();
-  showBlueToastModal(`🕯️ <b>Segnalibro aggiornato!</b><br><br>La tua "Mia lettura" è ora fissata su:<br><b>📖 ${escapeHtml(getBook(state.bookId).name)} ${state.chapter}</b>`);
+  showBlueConfirmToast(getBook(state.bookId).name, state.chapter);
 }
 
 function openMyReading() {
   closeActionBar();
   if (typeof closeMapViewer === "function") closeMapViewer();
-  
+
   const curBook = getBook(state.bookId);
   const pers = getPersonalReadingState();
   const persBook = getBook(pers.bookId);
-  
+
   const modal = document.getElementById("myReadModal");
   const body = document.getElementById("myReadModalBody");
-  const yesBtn = document.getElementById("myReadYesBtn");
-  const noBtn = document.getElementById("myReadNoBtn");
   if (!modal || !body) return;
 
-  noBtn.style.display = "inline-block";
-  yesBtn.textContent = "YES";
-  body.innerHTML = `🕯️ La tua "Mia lettura" attuale è fissata su:<br><b>👉 ${escapeHtml(persBook.name)} ${pers.chapter}</b><br><br>Stai leggendo al momento:<br><b>📖 ${escapeHtml(curBook.name)} ${state.chapter}</b><br><br>• Premi <b>YES</b> per AGGIORNARE/PORRE qui il segnalibro.<br>• Premi <b>NO</b> per ANDARE DIRETTAMENTE al tuo segnalibro salvato (${escapeHtml(persBook.name)} ${pers.chapter}).`;
-  
+  const bookOptions = BIBLE_BOOKS.map(b =>
+    `<option value="${b.id}" ${b.id === curBook.id ? "selected" : ""}>${escapeHtml(b.name)}</option>`
+  ).join("");
+  let chOptions = "";
+  for (let i = 1; i <= curBook.ch; i++) {
+    chOptions += `<option value="${i}" ${i === state.chapter ? "selected" : ""}>Cap. ${i}</option>`;
+  }
+
+  body.innerHTML = `
+    <div style="margin-bottom:10px; font-size:13.5px; color:#e3f2fd;">
+       Imposta o aggiorna il capitolo del tuo segnalibro personale:
+    </div>
+    <div style="display:flex; gap:6px; margin-bottom:12px;">
+      <select id="myReadBookSel" class="trans-select" style="flex:1.4; background:#062356; color:#fff; border-color:#29b6f6;" onchange="onMyReadBookSelectChange()">${bookOptions}</select>
+      <select id="myReadChSel" class="trans-select" style="flex:0.8; background:#062356; color:#fff; border-color:#29b6f6;">${chOptions}</select>
+    </div>
+    <button class="myread-action-btn" onclick="confirmMyReadingSelection()">
+      📌 Conferma
+    </button>
+    <hr style="border:none; border-top:1px solid rgba(255,255,255,0.28); margin:16px 0 14px 0;">
+    <div style="font-size:12.5px; color:#cfe3ff; margin-bottom:8px; text-align:center;">
+      Segnalibro salvato in memoria: <b>${escapeHtml(persBook.name)} ${pers.chapter}</b>
+    </div>
+    <button class="myread-action-btn" style="background:#0d47a1;" onclick="goToMyPersonalReadingNow()">
+      🕯️ Vai alla tua lettura personale (${escapeHtml(persBook.name)} ${pers.chapter})
+    </button>
+  `;
+
   modal.style.display = "flex";
-
-  yesBtn.onclick = function() {
-    safeSaveStorage("bm_pers_book", String(state.bookId));
-    safeSaveStorage("bm_pers_ch", String(state.chapter));
-    const main = document.getElementById("mainContainer");
-    safeSaveStorage("bm_pers_scroll", String(currentViewContext.type === "bible" && main ? Math.round(main.scrollTop) : 0));
-    updateMyReadingLabel();
-    showBlueToastModal(`✔ <b>Segnalibro aggiornato con successo</b> su:<br><b>📖 ${escapeHtml(curBook.name)} ${state.chapter}</b>`);
-  };
-
-  noBtn.onclick = function() {
-    modal.style.display = "none";
-    saveCurrentPositionToHistory(pers.bookId, pers.chapter);
-    isPersonalReadingMode = false;
-    state.bookId = pers.bookId;
-    state.chapter = pers.chapter;
-    loadChapterView().then(() => {
-      const main = document.getElementById("mainContainer");
-      const savedScroll = Number(localStorage.getItem("bm_pers_scroll")) || 0;
-      if (main && savedScroll > 0) {
-        setTimeout(() => { main.scrollTop = savedScroll; }, 80);
-      }
-    });
-  };
 }
 </script>
 </body>
