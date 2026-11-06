@@ -248,14 +248,12 @@
       flex-shrink: 0;
       flex-wrap: wrap;
     }
-    .trans-select {
+     .trans-select {
       flex: 1;
       min-width: 115px;
       padding: 7px 8px;
       border-radius: 6px;
-      border: 1px solid var(--border-color);
-      background: var(--bg-main);
-      color: var(--text-main);
+      border: 1px solid #29b6f6;
       font-size: 13px;
       font-weight: 600;
     }
@@ -318,10 +316,10 @@
       box-shadow: 0 0 12px rgba(204, 255, 0, 0.9), 0 0 4px #99cc00 !important;
       transform: scale(1.06);
     }
-        #tabSearch.active, #parallelBtn.active {
+    #tabSearch.active, #parallelBtn.active {
       color: var(--primary-light) !important;
       font-weight: 800;
-    }
+        }
     .myread-action-btn {
       width: 100%;
       background: #1565c0;
@@ -619,7 +617,7 @@
       z-index: 1000;
       padding: 16px;
     }
-        .modal-card {
+    .modal-card {
       background-color: #0a367e !important;
       color: #ffffff !important;
       border: 1px solid #29b6f6 !important;
@@ -780,8 +778,8 @@
     .bp-gt { font-size: 12px; font-weight: 800; color: var(--primary-light); text-transform: uppercase; margin: 12px 0 4px; }
     .bp-it { display: flex; gap: 10px; padding: 6px 4px; border-bottom: 1px solid var(--border-color); font-size: 13.5px; }
     .bp-it.click { cursor: pointer; }
-        .bp-it.click:active { background: var(--verse-hover); }
-        .bp-g { min-width: 46px; font-weight: 800; color: var(--primary-light); }
+    .bp-it.click:active { background: var(--verse-hover); }
+    .bp-g { min-width: 46px; font-weight: 800; color: var(--primary-light); }
   </style>
 </head>
 <body>
@@ -948,9 +946,9 @@
       <span class="tab-icon">📍</span><span>Dove?</span>
     </button>
     <button class="tab-btn" id="ttsChapterBtn" onclick="toggleChapterTTS()">
-      <span class="tab-icon" id="ttsIcon">🔊</span><span id="ttsLabel">Ascolta</span>
+      <span class="tab-icon">🔊</span><span>Ascolta</span>
     </button>
-        <button class="tab-btn" id="tabMyReading" onclick="openMyReading()" title="Il tuo segnalibro fisso di lettura personale">
+    <button class="tab-btn" id="tabMyReading" onclick="openMyReading()" title="Il tuo segnalibro fisso di lettura personale">
       <span class="tab-icon">🕯️</span><span id="myReadLabel">Mia lettura</span>
     </button>
     <button class="tab-btn" id="tabSaved" onclick="showSavedView()">
@@ -1809,10 +1807,10 @@ function copySelectedVerse() {
     ta.select();
     document.execCommand("copy");
     document.body.removeChild(ta);
-  } catch (e) {}
-    closeActionBar();
+   } catch (e) {}
+  closeActionBar();
   showBlueInfoModal("📋 Versetto Copiato", escapeHtml(fullCopy));
-    }
+ }
 function saveBookmark() {
   if (!state.selectedVerse) return;
   const book = getBook(state.bookId);
@@ -2147,10 +2145,10 @@ function filterCatalogList() {
 async function toggleDownload(id) {
   const safeId = id.replace(/[^a-zA-Z0-9_-]/g, "_");
   const btn = document.getElementById(`btn_${safeId}`);
-    if (state.downloadedBibles.includes(id)) {
-    if (state.downloadedBibles.length <= 1) {
-      showBlueInfoModal("⚠️ Attenzione", "Devi mantenere almeno una traduzione attiva!");
-      return;
+  if (state.downloadedBibles.includes(id)) {
+  if (state.downloadedBibles.length <= 1) {
+   showBlueInfoModal("⚠️ Attenzione", "Devi mantenere almeno una traduzione attiva!");
+   return;
     }
     state.downloadedBibles = state.downloadedBibles.filter(item => item !== id);
     await removeOfflineBible(id);
@@ -5944,9 +5942,9 @@ function openMyReading() {
     </button>
   `;
 
-    modal.style.display = "flex";
+  modal.style.display = "flex";
 }
-
+    
 // ============================================================================
 // INTERCETTORE UNIVERSALE TENDINE BLU PRO (Zero menu bianchi nativi Android)
 // ============================================================================
