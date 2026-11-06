@@ -1056,7 +1056,7 @@
     <button class="tab-btn" id="ttsChapterBtn" onclick="toggleChapterTTS()">
       <span class="tab-icon">🔊</span><span>Ascolta</span>
     </button>
-    <button class="tab-btn" id="tabMyReading" onclick="openMyReading()" title="Il tuo segnalibro fisso di lettura personale">
+    <button class="tab-btn" id="tabMyReading" style="user-select:none;-webkit-user-select:none;" onpointerdown="onMyReadBtnDown(event)" onpointerup="onMyReadBtnUp()" onpointerleave="onMyReadBtnUp()" onpointercancel="onMyReadBtnUp()" oncontextmenu="event.preventDefault()" onclick="onMyReadBtnClick(event)" title="Tocca per aprire Mia lettura • Tieni premuto per azzerare il segnalibro">
       <span class="tab-icon">🕯️</span><span id="myReadLabel">Mia lettura</span>
     </button>
     <button class="tab-btn" id="tabSaved" onclick="showSavedView()">
@@ -5928,8 +5928,15 @@ populateSelects()
   });
 
 // ============================================================================
-// MODULO "🕯️ MIA LETTURA" INDIPENDENTE (Scelta Capitolo, Tasto Conferma e Tasto Vai)
+// MODULO "🕯️ MIA LETTURA" INDIPENDENTE (Scelta Capitolo, Conferma, Vai e Reset Long-Press)
 // ============================================================================
+let bmMyReadLongPressTimer = null;
+let bmMyReadLongPressTriggered = false;
+
+function hasSavedPersonalReading() {
+  return Boolean(localStorage.getItem("bm_pers_book") && localStorage.getItem("bm_pers_ch"));
+}
+
 function getPersonalReadingState() {
   return {
     bookId: Number(localStorage.getItem("bm_pers_book")) || 1,
@@ -5940,9 +5947,74 @@ function getPersonalReadingState() {
 function updateMyReadingLabel() {
   const lbl = document.getElementById("myReadLabel");
   if (!lbl) return;
+  if (!hasSavedPersonalReading()) {
+    lbl.textContent = "Mia lettura";
+    return;
+  }
   const pers = getPersonalReadingState();
   const bMeta = getBook(pers.bookId);
   lbl.textContent = `${bMeta.abbr} ${pers.chapter}`;
+}
+
+function onMyReadBtnDown(ev) {
+  if (ev && ev.button !== undefined && ev.button !== 0) return;
+  bmMyReadLongPressTriggered = false;
+  clearTimeout(bmMyReadLongPressTimer);
+  bmMyReadLongPressTimer = setTimeout(() => {
+    bmMyReadLongPressTriggered = true;
+    openResetMyReadingModal();
+  }, 550);
+}
+
+function onMyReadBtnUp() {
+  clearTimeout(bmMyReadLongPressTimer);
+}
+
+function onMyReadBtnClick(ev) {
+  clearTimeout(bmMyReadLongPressTimer);
+  if (bmMyReadLongPressTriggered) {
+    if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+    bmMyReadLongPressTriggered = false;
+    return;
+  }
+  openMyReading();
+}
+
+function openResetMyReadingModal() {
+  closeActionBar();
+  const modal = document.getElementById("myReadModal");
+  const body = document.getElementById("myReadModalBody");
+  if (!modal || !body) return;
+  const hasSaved = hasSavedPersonalReading();
+  const pers = getPersonalReadingState();
+  const persBook = getBook(pers.bookId);
+  const currentSavedStr = hasSaved ? `${persBook.name} ${pers.chapter}` : "Nessun capitolo fissato";
+  body.innerHTML = `
+    <div style="text-align:center; padding:4px 0 14px 0;">
+      <div style="font-size:30px; margin-bottom:8px;">🕯️</div>
+      <div style="font-size:16px; font-weight:800; color:#ffffff; margin-bottom:8px;">Reset Memoria "Mia lettura"</div>
+      <div style="font-size:14px; color:#e3f2fd; line-height:1.5;">
+        Vuoi azzerare il segnalibro memorizzato (<b>${escapeHtml(currentSavedStr)}</b>) e riportare il tasto a <b>"Mia lettura"</b>?<br>
+        <span style="font-size:12.5px; color:#9ec9ff;">La memorizzazione riprenderà immediatamente appena confermerai un nuovo capitolo.</span>
+      </div>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <button class="myread-action-btn" style="background:#062356; flex:1;" onclick="document.getElementById('myReadModal').style.display='none'">Annulla</button>
+      <button class="myread-action-btn" style="flex:1.3;" onclick="confirmResetMyReading()">🗑️ Azzera memoria</button>
+    </div>
+  `;
+  modal.style.display = "flex";
+}
+
+function confirmResetMyReading() {
+  try {
+    localStorage.removeItem("bm_pers_book");
+    localStorage.removeItem("bm_pers_ch");
+    localStorage.removeItem("bm_pers_scroll");
+  } catch (e) {}
+  updateMyReadingLabel();
+  const modal = document.getElementById("myReadModal");
+  if (modal) modal.style.display = "none";
 }
 
 function onMyReadBookSelectChange() {
@@ -6023,6 +6095,7 @@ function openMyReading() {
   if (typeof closeMapViewer === "function") closeMapViewer();
 
   const curBook = getBook(state.bookId);
+  const hasSaved = hasSavedPersonalReading();
   const pers = getPersonalReadingState();
   const persBook = getBook(pers.bookId);
 
@@ -6040,7 +6113,7 @@ function openMyReading() {
 
   body.innerHTML = `
     <div style="margin-bottom:10px; font-size:13.5px; color:#e3f2fd;">
-       Imposta o aggiorna il capitolo del tuo segnalibro personale:
+      Imposta o aggiorna il capitolo del tuo segnalibro personale:
     </div>
     <div style="display:flex; gap:6px; margin-bottom:12px;">
       <select id="myReadBookSel" class="trans-select" style="flex:1.4; background:#062356; color:#fff; border-color:#29b6f6;" onchange="onMyReadBookSelectChange()">${bookOptions}</select>
@@ -6051,7 +6124,7 @@ function openMyReading() {
     </button>
     <hr style="border:none; border-top:1px solid rgba(255,255,255,0.28); margin:16px 0 14px 0;">
     <div style="font-size:12.5px; color:#cfe3ff; margin-bottom:8px; text-align:center;">
-      Segnalibro salvato in memoria: <b>${escapeHtml(persBook.name)} ${pers.chapter}</b>
+      Segnalibro salvato in memoria: <b>${hasSaved ? `${escapeHtml(persBook.name)} ${pers.chapter}` : "Nessuno (Mia lettura)"}</b>
     </div>
     <button class="myread-action-btn" style="background:#0d47a1;" onclick="goToMyPersonalReadingNow()">
       🕯️ Vai alla tua lettura personale (${escapeHtml(persBook.name)} ${pers.chapter})
@@ -6059,7 +6132,7 @@ function openMyReading() {
   `;
 
   modal.style.display = "flex";
-}
+    }
     
 // ============================================================================
 // INTERCETTORE UNIVERSALE TENDINE BLU PRO (Zero menu bianchi nativi Android)
