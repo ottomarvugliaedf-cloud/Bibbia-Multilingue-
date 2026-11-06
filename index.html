@@ -107,16 +107,11 @@
       gap: 8px;
       transition: all 0.12s ease;
     }
-    .bm-select-opt.selected {
+        .bm-select-opt.selected {
       background: #1565c0;
-      border-color: #ccff00;
-      box-shadow: inset 4px 0 0 #ccff00;
-    }
-    .bm-select-opt:active {
-      background-color: #ccff00 !important;
-      color: #0a1b33 !important;
-      border-color: #99cc00 !important;
-    }
+      border-color: #00e5ff;
+      box-shadow: inset 4px 0 0 #00e5ff;
+        }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -201,7 +196,7 @@
   from { opacity: 0; transform: translate3d(0, 10px, 0); }
   to { opacity: 1; transform: translate3d(0, 0, 0); }
 }
-        /* HEADER CON GRIGLIA A 3 COLONNE E BADGE OVALE CENTRATO */
+    /* HEADER CON GRIGLIA A 3 COLONNE E BADGE OVALE CENTRATO */
     header {
       background: linear-gradient(135deg, var(--primary-dark), var(--primary-main));
       color: #fff;
@@ -279,15 +274,23 @@
       font-size: 14.5px;
       font-weight: 700;
     }
-    /* Animazione Radiale universale dai toni azzurro chiaro centrale a blu scuro ai margini (Stile Splash Screen) */
-    @keyframes bmRadialPulse {
+        /* Transizione Radiale (da azzurro chiaro centrale a blu scuro ai margini) che si attesta su Azzurro Fosforescente */
+    @keyframes bmRadialToCyanGlow {
       0% {
-        background: radial-gradient(circle at 50% 50%, #80d8ff 0%, #29b6f6 30%, #0a367e 72%, #020b1c 100%);
-        box-shadow: 0 0 14px rgba(79, 195, 247, 0.75);
+        background: radial-gradient(circle at 50% 50%, #b3e5fc 0%, #1e88e5 28%, #0a367e 65%, #020b1c 100%);
+        color: #ffffff;
+        box-shadow: 0 0 8px rgba(41, 182, 246, 0.6);
+      }
+      55% {
+        background: radial-gradient(circle at 50% 50%, #00e5ff 0%, #00b0ff 48%, #0a367e 85%, #020b1c 100%);
+        color: #ffffff;
+        box-shadow: 0 0 14px rgba(0, 229, 255, 0.85);
       }
       100% {
-        background: radial-gradient(circle at 50% 50%, #4fc3f7 0%, #1e88e5 40%, #0a367e 76%, #020b1c 100%);
-        box-shadow: 0 0 8px rgba(30, 136, 229, 0.5);
+        background: #00e5ff;
+        color: #041a42;
+        border-color: #84ffff;
+        box-shadow: 0 0 16px rgba(0, 229, 255, 0.95), 0 0 5px #00b8d4;
       }
     }
     .nav-btn:active,
@@ -303,14 +306,17 @@
     .bp-chip:active,
     .bp-ref:active,
     .tag-badge:active,
+    .myread-action-btn:active,
+    .bm-select-opt:active,
     .quick-pill:not(#booksTabBtn):not(#readTabBtn):active,
     .tab-btn:not(#tabSearch):not(#parallelBtn):active .tab-icon {
-      background: radial-gradient(circle at 50% 50%, #4fc3f7 0%, #1e88e5 38%, #0a367e 75%, #020b1c 100%) !important;
-      color: #ffffff !important;
-      border-color: #80d8ff !important;
-      box-shadow: 0 0 12px rgba(79, 195, 247, 0.7) !important;
-      transform: scale(0.96);
-      animation: bmRadialPulse 0.22s ease-out;
+      animation: bmRadialToCyanGlow 0.26s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
+      background-color: #00e5ff !important;
+      color: #041a42 !important;
+      border-color: #00b8d4 !important;
+      box-shadow: 0 0 15px rgba(0, 229, 255, 0.95) !important;
+      font-weight: 800;
+      transform: scale(0.97);
     }
     .trans-bar {
       background: var(--bg-card);
@@ -358,19 +364,33 @@
       transition: all 0.18s ease;
     }
 
-    /* I 2 tasti superiori (Libri Biblici e Lettura) col secondo azzurro dell'elenco (--cat-2) */
+        /* I 2 tasti speciali superiori (Libri Biblici e Lettura) col secondo azzurro dell'elenco (--cat-2) */
     #booksTabBtn, #readTabBtn {
       background-color: var(--cat-2);
       color: #ffffff;
       border-color: var(--cat-2);
     }
 
-    /* Illuminazione fosforescente giallo/verdina per i tasti superiori quando attivi o premuti */
-    .quick-pill.highlight, #booksTabBtn:active, #readTabBtn:active {
+    /* ESCLUSIVA 4 TASTI SPECIALI: Solo Libri Biblici e Lettura (in alto) si illuminano di Giallo/Verde Fosforescente (Zero effetto radiale) */
+    #booksTabBtn.highlight, #readTabBtn.highlight,
+    #booksTabBtn:active, #readTabBtn:active {
+      animation: none !important;
+      background: #ccff00 !important;
       background-color: #ccff00 !important;
       color: #0a1b33 !important;
       border-color: #99cc00 !important;
-      box-shadow: 0 0 12px rgba(204, 255, 0, 0.85);
+      box-shadow: 0 0 12px rgba(204, 255, 0, 0.9) !important;
+      font-weight: 800;
+    }
+
+    /* TUTTI GLI ALTRI TASTI DELLA BARRA SUPERIORE (Perspicacia, Tutta la Scrittura, Cartine, Giorno, Catalogo, Diff):
+       Transizione radiale e attestazione finale su Azzurro Fosforescente (#00e5ff) */
+    .quick-pill:not(#booksTabBtn):not(#readTabBtn).highlight {
+      animation: bmRadialToCyanGlow 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      background-color: #00e5ff !important;
+      color: #041a42 !important;
+      border-color: #00b8d4 !important;
+      box-shadow: 0 0 14px rgba(0, 229, 255, 0.9) !important;
       font-weight: 800;
     }
 
@@ -382,18 +402,35 @@
       box-shadow: 0 2px 5px rgba(2, 136, 209, 0.35);
     }
 
-    /* Illuminazione fosforescente giallo/verdina del cerchiolino quando Cerca o Parallelo sono attivi o premuti */
+    /* ESCLUSIVA 4 TASTI SPECIALI: Solo Cerca e Parallelo (in basso) si illuminano di Giallo/Verde Fosforescente (Zero effetto radiale) */
     #tabSearch.active .tab-icon, #tabSearch:active .tab-icon,
     #parallelBtn.active .tab-icon, #parallelBtn:active .tab-icon {
+      animation: none !important;
+      background: #ccff00 !important;
       background-color: #ccff00 !important;
       color: #0a1b33 !important;
-      box-shadow: 0 0 12px rgba(204, 255, 0, 0.9), 0 0 4px #99cc00 !important;
+      box-shadow: 0 0 12px rgba(204, 255, 0, 0.95), 0 0 4px #99cc00 !important;
       transform: scale(1.06);
     }
     #tabSearch.active, #parallelBtn.active {
-      color: var(--primary-light) !important;
+      color: #ccff00 !important;
       font-weight: 800;
-        }
+    }
+
+    /* TUTTI GLI ALTRI TASTI DELLA BARRA INFERIORE (Dove?, Ascolta, Mia lettura, Preferiti, Appunti, Backup):
+       Transizione radiale e attestazione finale su Azzurro Fosforescente (#00e5ff) */
+    .tab-btn:not(#tabSearch):not(#parallelBtn).active .tab-icon {
+      animation: bmRadialToCyanGlow 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      background-color: #00e5ff !important;
+      color: #041a42 !important;
+      box-shadow: 0 0 14px rgba(0, 229, 255, 0.9), 0 0 4px #00b8d4 !important;
+      transform: scale(1.06);
+    }
+    .tab-btn:not(#tabSearch):not(#parallelBtn).active {
+      color: #00e5ff !important;
+      font-weight: 800;
+    }
+
     .myread-action-btn {
       width: 100%;
       background: #1565c0;
@@ -405,13 +442,6 @@
       font-weight: 800;
       cursor: pointer;
       transition: transform 0.1s ease, background-color 0.1s ease, box-shadow 0.1s ease;
-    }
-    .myread-action-btn:active {
-      background-color: #ccff00 !important;
-      color: #0a1b33 !important;
-      border-color: #99cc00 !important;
-      box-shadow: 0 0 14px rgba(204, 255, 0, 0.95) !important;
-      transform: scale(0.98);
     }
     .verse-num, .tag-badge {
       -webkit-user-select: none;
