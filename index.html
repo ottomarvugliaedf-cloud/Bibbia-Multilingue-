@@ -72,13 +72,59 @@
       color: #9ec9ff !important;
       opacity: 1;
     }
-    .modal-card {
+        .modal-card {
       background-color: #0a367e !important;
       color: #ffffff !important;
       border-color: #29b6f6 !important;
     }
     .modal-title {
       color: #ffffff !important;
+    }
+    /* Sottomenù a tendina Custom Blu PRO (Sostituisce il popup bianco nativo Android) */
+    select, .trans-select {
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: linear-gradient(45deg, transparent 50%, #4fc3f7 50%), linear-gradient(135deg, #4fc3f7 50%, transparent 50%) !important;
+      background-position: calc(100% - 14px) 50%, calc(100% - 9px) 50% !important;
+      background-size: 5px 5px, 5px 5px !important;
+      background-repeat: no-repeat !important;
+      padding-right: 26px !important;
+      cursor: pointer;
+    }
+    .bm-select-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 62vh;
+      overflow-y: auto;
+      padding: 2px;
+    }
+    .bm-select-opt {
+      width: 100%;
+      text-align: left;
+      background: #062356;
+      color: #ffffff;
+      border: 1px solid rgba(41, 182, 246, 0.45);
+      border-radius: 8px;
+      padding: 11px 13px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.12s ease;
+    }
+    .bm-select-opt.selected {
+      background: #1565c0;
+      border-color: #ccff00;
+      box-shadow: inset 4px 0 0 #ccff00;
+    }
+    .bm-select-opt:active {
+      background-color: #ccff00 !important;
+      color: #0a1b33 !important;
+      border-color: #99cc00 !important;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body {
@@ -265,7 +311,7 @@
       font-weight: 800;
     }
 
-        /* Cerchiolino elegante dietro l'icona di Cerca e Parallelo nella barra inferiore (terzo azzurro --cat-3) */
+    /* Cerchiolino elegante dietro l'icona di Cerca e Parallelo nella barra inferiore (terzo azzurro --cat-3) */
     #tabSearch .tab-icon, #parallelBtn .tab-icon {
       background-color: var(--cat-3);
       color: #ffffff;
@@ -857,7 +903,7 @@
       <div id="proModalBody"></div>
     </div>
   </div>
-   <!-- Finestra Modale Personalizzata per Mia Lettura (Blu Scuro PRO) -->
+      <!-- Finestra Modale Personalizzata per Mia Lettura (Blu Scuro PRO) -->
   <div id="myReadModal" class="modal-overlay" onclick="if(event.target.id==='myReadModal') this.style.display='none'" style="display:none;">
     <div class="modal-card" style="background:#0a367e; color:#ffffff; border:1px solid #29b6f6;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -865,6 +911,16 @@
         <button class="nav-btn" style="background:rgba(255,255,255,0.15); color:#fff; border:1px solid rgba(255,255,255,0.3); padding:3px 9px;" onclick="document.getElementById('myReadModal').style.display='none'">✕</button>
       </div>
       <div id="myReadModalBody" style="font-size:14.5px; line-height:1.55; color:#ffffff;"></div>
+    </div>
+  </div>
+  <!-- Sottomenù a Tendina Universale Blu Scuro PRO (Sostituisce tutti i menu bianchi nativi) -->
+  <div id="bmSelectModal" class="modal-overlay" onclick="if(event.target.id==='bmSelectModal') closeBmSelectModal()" style="display:none; z-index:1200;">
+    <div class="modal-card" style="background:#0a367e; color:#ffffff; border:1px solid #29b6f6; max-width:420px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <div id="bmSelectModalTitle" class="modal-title" style="color:#ffffff; font-size:16px; margin:0;">Seleziona un'opzione</div>
+        <button class="nav-btn" style="background:#062356; color:#fff; border:1px solid #29b6f6; padding:3px 9px;" onclick="closeBmSelectModal()">✕</button>
+      </div>
+      <div id="bmSelectModalList" class="bm-select-list"></div>
     </div>
   </div>
   <!-- Visualizzatore cartine (Dove? / Cartine Bibliche — Stile Uniformato PRO) -->
@@ -5865,8 +5921,88 @@ function openMyReading() {
     </button>
   `;
 
-  modal.style.display = "flex";
+    modal.style.display = "flex";
 }
+
+// ============================================================================
+// INTERCETTORE UNIVERSALE TENDINE BLU PRO (Zero menu bianchi nativi Android)
+// ============================================================================
+let activeCustomSelectEl = null;
+
+function closeBmSelectModal() {
+  const m = document.getElementById("bmSelectModal");
+  if (m) m.style.display = "none";
+  activeCustomSelectEl = null;
+}
+
+function openCustomSelectMenu(selectEl) {
+  if (!selectEl || !selectEl.options || selectEl.options.length === 0) return;
+  activeCustomSelectEl = selectEl;
+  const modal = document.getElementById("bmSelectModal");
+  const titleEl = document.getElementById("bmSelectModalTitle");
+  const listEl = document.getElementById("bmSelectModalList");
+  if (!modal || !listEl) return;
+
+  const titleMap = {
+    trans1: "📖 Scegli Traduzione Principale",
+    trans2: "⚖️ Scegli 2ª Traduzione Parallela",
+    trans3: "⚖️ Scegli 3ª Traduzione Parallela",
+    myReadBookSel: "🕯️ Scegli Libro Biblico",
+    myReadChSel: "🕯️ Scegli Capitolo",
+    searchBibleSelect: "🔍 Versione in cui Cercare",
+    searchMode: "🔍 Modalità di Ricerca",
+    searchScope: "🔍 Ambito dei Libri",
+    catLangFilter: "🌍 Filtra per Lingua"
+  };
+  if (titleEl) {
+    titleEl.textContent = titleMap[selectEl.id] || "🔹 Seleziona dal menù";
+  }
+
+  const opts = Array.from(selectEl.options);
+  listEl.innerHTML = opts.map((opt, idx) => {
+    const isSel = idx === selectEl.selectedIndex;
+    return `<button type="button" class="bm-select-opt ${isSel ? 'selected' : ''}" id="bm_opt_${idx}" onclick="pickCustomSelectOption(${idx})">
+      <span>${escapeHtml(opt.text)}</span>
+      ${isSel ? '<span style="color:#ccff00; font-weight:900;">✔</span>' : ''}
+    </button>`;
+  }).join("");
+
+  modal.style.display = "flex";
+  setTimeout(() => {
+    const curBtn = document.getElementById(`bm_opt_${selectEl.selectedIndex}`);
+    if (curBtn) curBtn.scrollIntoView({ block: "center" });
+  }, 40);
+}
+
+function pickCustomSelectOption(idx) {
+  const sel = activeCustomSelectEl;
+  closeBmSelectModal();
+  if (!sel || !sel.options[idx]) return;
+  if (sel.selectedIndex !== idx) {
+    sel.selectedIndex = idx;
+    sel.value = sel.options[idx].value;
+    sel.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+}
+
+["mousedown", "touchstart"].forEach(evtName => {
+  document.addEventListener(evtName, function(e) {
+    const sel = e.target && e.target.closest ? e.target.closest("select") : null;
+    if (!sel) return;
+    e.preventDefault();
+    e.stopPropagation();
+    sel.blur();
+    openCustomSelectMenu(sel);
+  }, { passive: false, capture: true });
+});
+
+document.addEventListener("keydown", function(e) {
+  const sel = e.target && e.target.closest ? e.target.closest("select") : null;
+  if (sel && (e.key === "Enter" || e.key === " ")) {
+    e.preventDefault();
+    openCustomSelectMenu(sel);
+  }
+}, true);
 </script>
 </body>
 </html>
