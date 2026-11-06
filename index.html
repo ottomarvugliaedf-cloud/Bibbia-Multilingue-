@@ -2147,9 +2147,9 @@ function filterCatalogList() {
 async function toggleDownload(id) {
   const safeId = id.replace(/[^a-zA-Z0-9_-]/g, "_");
   const btn = document.getElementById(`btn_${safeId}`);
-  if (state.downloadedBibles.includes(id)) {
+    if (state.downloadedBibles.includes(id)) {
     if (state.downloadedBibles.length <= 1) {
-      alert("Devi mantenere almeno una traduzione attiva!");
+      showBlueInfoModal("⚠️ Attenzione", "Devi mantenere almeno una traduzione attiva!");
       return;
     }
     state.downloadedBibles = state.downloadedBibles.filter(item => item !== id);
@@ -3347,10 +3347,10 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
   const files = Array.from(event.target.files || []);
   if (!files.length) return;
   const statusEl = document.getElementById("epubImportStatus");
-  if (typeof JSZip === "undefined") {
-    alert("Libreria JSZip non caricata. Verifica la connessione internet.");
+    if (typeof JSZip === "undefined") {
+    showBlueInfoModal("⚠️ Libreria Mancante", "Libreria JSZip non caricata. Verifica la connessione internet.");
     return;
-  }
+    }
   try {
     const existingBible = await getOfflineBible(targetId);
     const mergedBooksMap = new Map();
@@ -3814,10 +3814,10 @@ async function importDailyTextEpub(event) {
   const file = event.target.files?.[0];
   if (!file) return;
   const statusEl = document.getElementById("epubImportStatus");
-  if (typeof JSZip === "undefined") {
-    alert("Libreria JSZip non caricata.");
+    if (typeof JSZip === "undefined") {
+    showBlueInfoModal("⚠️ Libreria Mancante", "Libreria JSZip non caricata. Verifica la connessione internet.");
     return;
-  }
+    }
   try {
     statusEl.innerHTML = `⏳ Estrazione dei 365 giorni da <b>${escapeHtml(file.name)}</b>...`;
     const zip = await JSZip.loadAsync(file);
@@ -4061,7 +4061,7 @@ async function importInsightFiles(event) {
   if (!files.length) return;
   const statusEl = document.getElementById("epubImportStatus");
   if (typeof JSZip === "undefined") {
-    alert("Libreria JSZip non caricata.");
+    showBlueInfoModal("⚠️ Libreria Mancante", "Libreria JSZip non caricata. Verifica la connessione internet.");
     return;
   }
   try {
@@ -5280,12 +5280,44 @@ function exportBackupJson() {
   a.download = fileName;
   a.click();
 }
+let pendingBackupRawText = null;
+
 async function importBackupJson(e) {
-  const file = e.target.files[0];
+  const inputEl = e.target;
+  const file = inputEl && inputEl.files ? inputEl.files[0] : null;
   if (!file) return;
-  if (!confirm("Vuoi importare questo file di backup? I dati attuali verranno aggiornati.")) return;
   try {
-    const parsed = JSON.parse(await file.text());
+    pendingBackupRawText = await file.text();
+    const modal = document.getElementById("myReadModal");
+    const body = document.getElementById("myReadModalBody");
+    if (!modal || !body) return;
+    body.innerHTML = `
+      <div style="text-align:center; padding:4px 0 14px 0;">
+        <div style="font-size:30px; margin-bottom:8px;">📥</div>
+        <div style="font-size:16px; font-weight:800; color:#ffffff; margin-bottom:8px;">Conferma Ripristino Backup</div>
+        <div style="font-size:14px; color:#e3f2fd; line-height:1.5;">
+          Vuoi importare il file <b>${escapeHtml(file.name)}</b>?<br>
+          <span style="font-size:12.5px; color:#9ec9ff;">I tuoi appunti, preferiti, colori e piani di lettura verranno aggiornati.</span>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button class="myread-action-btn" style="background:#062356; flex:1;" onclick="pendingBackupRawText=null; document.getElementById('myReadModal').style.display='none'">Annulla</button>
+        <button class="myread-action-btn" style="flex:1.3;" onclick="confirmImportBackupNow()">✔ Importa ora</button>
+      </div>
+    `;
+    modal.style.display = "flex";
+  } catch (err) {
+    showBlueInfoModal("❌ Errore", "Impossibile leggere il file selezionato.");
+  } finally {
+    inputEl.value = "";
+  }
+}
+
+function confirmImportBackupNow() {
+  if (!pendingBackupRawText) return;
+  try {
+    const parsed = JSON.parse(pendingBackupRawText);
+    pendingBackupRawText = null;
     if (parsed.bookId) {
       state.bookId = Math.min(66, Math.max(1, Number(parsed.bookId) || 1));
       safeSaveStorage("bm_last_book", String(state.bookId));
@@ -5321,9 +5353,9 @@ async function importBackupJson(e) {
     }
     closeProModal();
     loadChapterView();
-    alert("✔ Backup ripristinato con successo!");
+    showBlueInfoModal("✔ Backup Ripristinato", "Tutti i tuoi dati di studio sono stati ripristinati con successo!");
   } catch (err) {
-    alert("Errore nel file di backup.");
+    showBlueInfoModal("❌ File Non Valido", "Errore nel formato del file di backup (.json).");
   }
 }
 // ============================================================================
@@ -5752,7 +5784,7 @@ function handlePortionTextSelection() {
   const sel = window.getSelection ? window.getSelection() : null;
   if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
   const anchor = sel.anchorNode ? (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement) : null;
-  if (anchor && (anchor.closest("#proModal") || anchor.closest("#noteModal") || anchor.closest("#myReadModal") || anchor.closest("#mapsViewer"))) return;
+  if (anchor && (anchor.closest("#proModal") || anchor.closest("#noteModal") || anchor.closest("#myReadModal") || anchor.closest("#bmSelectModal") || anchor.closest("#mapsViewer"))) return;
   const txt = extractCleanSelectedText();
   if (txt.length >= 4) {
     const vRow = anchor ? anchor.closest(".verse-row, .parallel-row, .parallel-row-3") : null;
@@ -5991,7 +6023,32 @@ function showBlueInfoModal(titleTxt, bodyHtml) {
 }
 
 let lastCustomSelectOpenAt = 0;
-["pointerdown", "mousedown", "touchstart", "click"].forEach(evtName => {
+let selectTouchStartPos = null;
+
+document.addEventListener("touchstart", function(e) {
+  const sel = e.target && e.target.closest ? e.target.closest("select") : null;
+  if (sel && e.touches && e.touches[0]) {
+    selectTouchStartPos = { x: e.touches[0].clientX, y: e.touches[0].clientY, sel };
+  } else {
+    selectTouchStartPos = null;
+  }
+}, { passive: true, capture: true });
+
+document.addEventListener("touchend", function(e) {
+  if (!selectTouchStartPos) return;
+  const t = e.changedTouches && e.changedTouches[0] ? e.changedTouches[0] : null;
+  const { x, y, sel } = selectTouchStartPos;
+  selectTouchStartPos = null;
+  if (t && Math.hypot(t.clientX - x, t.clientY - y) < 12) {
+    e.preventDefault();
+    e.stopPropagation();
+    sel.blur();
+    lastCustomSelectOpenAt = Date.now();
+    openCustomSelectMenu(sel);
+  }
+}, { passive: false, capture: true });
+
+["mousedown", "click"].forEach(evtName => {
   document.addEventListener(evtName, function(e) {
     const sel = e.target && e.target.closest ? e.target.closest("select") : null;
     if (!sel) return;
@@ -5999,7 +6056,7 @@ let lastCustomSelectOpenAt = 0;
     e.stopPropagation();
     sel.blur();
     const now = Date.now();
-    if (now - lastCustomSelectOpenAt > 250) {
+    if (now - lastCustomSelectOpenAt > 300) {
       lastCustomSelectOpenAt = now;
       openCustomSelectMenu(sel);
     }
