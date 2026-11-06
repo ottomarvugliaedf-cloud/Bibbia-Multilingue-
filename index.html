@@ -14,7 +14,7 @@
   <link rel="manifest" href='data:application/manifest+json,{"name":"Bibbia Multilingue PRO","short_name":"BM PRO","start_url":".","display":"standalone","background_color":"%23072a60","theme_color":"%230d47a1","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3004/3004458.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}'>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <style>
-        /* MODALITÀ CHIARA SOLARE: Scala di Blu "Mia Lettura" (Zero Bianco Accecante) */
+    /* MODALITÀ CHIARA SOLARE: Scala di Blu "Mia Lettura" (Zero Bianco Accecante) */
     :root {
       color-scheme: dark;
       --bg-main: #062356;
@@ -72,15 +72,6 @@
       color: #9ec9ff !important;
       opacity: 1;
     }
-        .modal-card {
-      background-color: #0a367e !important;
-      color: #ffffff !important;
-      border-color: #29b6f6 !important;
-    }
-    .modal-title {
-      color: #ffffff !important;
-    }
-    /* Sottomenù a tendina Custom Blu PRO (Sostituisce il popup bianco nativo Android) */
     select, .trans-select {
       appearance: none;
       -webkit-appearance: none;
@@ -628,18 +619,19 @@
       z-index: 1000;
       padding: 16px;
     }
-    .modal-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
+        .modal-card {
+      background-color: #0a367e !important;
+      color: #ffffff !important;
+      border: 1px solid #29b6f6 !important;
       border-radius: 12px;
       width: 100%;
       max-width: 460px;
       max-height: 86vh;
       overflow-y: auto;
       padding: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
-    .modal-title { font-size: 16px; font-weight: 800; color: var(--primary-light); margin-bottom: 8px; }
+    .modal-title { font-size: 16px; font-weight: 800; color: #ffffff !important; margin-bottom: 8px; }
     .modal-textarea {
       width: 100%;
       height: 110px;
@@ -1818,9 +1810,9 @@ function copySelectedVerse() {
     document.execCommand("copy");
     document.body.removeChild(ta);
   } catch (e) {}
-  closeActionBar();
-  alert(`📋 Versetto copiato negli appunti:\n${fullCopy}`);
-}
+    closeActionBar();
+  showBlueInfoModal("📋 Versetto Copiato", escapeHtml(fullCopy));
+    }
 function saveBookmark() {
   if (!state.selectedVerse) return;
   const book = getBook(state.bookId);
@@ -1882,21 +1874,20 @@ function openNoteModalForVerse(customRef) {
   }, 120);
 }
 function openNewFreeNoteModal() {
-  const title = prompt("Titolo o Tema del tuo nuovo Appunto (es. Studio sulla Fede, Sermone, Promemoria):", "Nota di Studio " + (state.notes.length + 1));
-  if (!title) return;
+  const defaultTitle = "Nota di Studio " + (state.notes.length + 1);
   activeNoteTarget = {
     bookId: state.bookId,
     chapter: state.chapter,
     verse: 1,
-    ref: title.trim(),
+    ref: defaultTitle,
     verseText: ""
   };
-  document.getElementById("noteModalTitle").textContent = `📝 ${activeNoteTarget.ref}`;
-  document.getElementById("noteModalVersePreview").textContent = "Appunto libero personale";
+  document.getElementById("noteModalTitle").textContent = `📝 Nuovo Appunto Libero`;
+  document.getElementById("noteModalVersePreview").innerHTML = `<input type="text" id="freeNoteTitleInput" class="search-input" style="width:100%; margin-top:4px; font-style:normal; font-weight:700;" value="${escapeHtml(defaultTitle)}" placeholder="Titolo o tema dell'appunto..." oninput="if(activeNoteTarget) activeNoteTarget.ref = this.value.trim() || '${escapeJsStr(defaultTitle)}'">`;
   document.getElementById("noteModalInput").value = "";
   document.getElementById("noteTagsInput").value = "studio";
   document.getElementById("noteModal").style.display = "flex";
-}
+    }
 function closeNoteModal() {
   document.getElementById("noteModal").style.display = "none";
 }
@@ -5985,14 +5976,33 @@ function pickCustomSelectOption(idx) {
   }
 }
 
-["mousedown", "touchstart"].forEach(evtName => {
+function showBlueInfoModal(titleTxt, bodyHtml) {
+  const modal = document.getElementById("myReadModal");
+  const body = document.getElementById("myReadModalBody");
+  if (!modal || !body) return;
+  body.innerHTML = `
+    <div style="text-align:center; padding:6px 0 14px 0;">
+      <div style="font-size:16px; font-weight:800; color:#ffffff; margin-bottom:8px;">${escapeHtml(titleTxt)}</div>
+      <div style="font-size:14px; color:#e3f2fd; line-height:1.5;">${bodyHtml}</div>
+    </div>
+    <button class="myread-action-btn" onclick="document.getElementById('myReadModal').style.display='none'">OK</button>
+  `;
+  modal.style.display = "flex";
+}
+
+let lastCustomSelectOpenAt = 0;
+["pointerdown", "mousedown", "touchstart", "click"].forEach(evtName => {
   document.addEventListener(evtName, function(e) {
     const sel = e.target && e.target.closest ? e.target.closest("select") : null;
     if (!sel) return;
     e.preventDefault();
     e.stopPropagation();
     sel.blur();
-    openCustomSelectMenu(sel);
+    const now = Date.now();
+    if (now - lastCustomSelectOpenAt > 250) {
+      lastCustomSelectOpenAt = now;
+      openCustomSelectMenu(sel);
+    }
   }, { passive: false, capture: true });
 });
 
