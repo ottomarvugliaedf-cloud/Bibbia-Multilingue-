@@ -6198,11 +6198,15 @@ document.addEventListener("keydown", function(e) {
 }, true);
 
 // ============================================================================
-// INTERCETTORE TASTO INDIETRO / EXIT ANDROID (Blocca il popup bianco AppsGeyser)
+// INTERCETTORE TASTO INDIETRO / EXIT ANDROID (Forzatura URL Hash per WebView)
 // ============================================================================
+let bmHandlingBack = false;
+
 function armBackGuard() {
   try {
-    history.pushState({ bmGuard: true }, "", location.href);
+    if (location.hash !== "#bm") {
+      location.hash = "#bm";
+    }
   } catch (e) {}
 }
 
@@ -6236,61 +6240,46 @@ function confirmAppExitNow() {
       return;
     }
     if (window.close) window.close();
-    history.go(-2);
+    history.go(-3);
   } catch (e) {}
 }
 
-armBackGuard();
+window.addEventListener("load", () => {
+  setTimeout(armBackGuard, 300);
+});
+
 ["pointerdown", "touchstart"].forEach(evt => {
-  document.addEventListener(evt, function ensureGuardOnce() {
-    if (!history.state || !history.state.bmGuard) armBackGuard();
+  document.addEventListener(evt, function() {
+    if (location.hash !== "#bm") armBackGuard();
   }, { passive: true });
 });
 
-window.addEventListener("popstate", function() {
-  const selectModal = document.getElementById("bmSelectModal");
-  if (selectModal && selectModal.style.display === "flex") {
-    closeBmSelectModal();
+window.addEventListener("hashchange", function() {
+  if (bmHandlingBack) return;
+  if (location.hash === "") {
+    bmHandlingBack = true;
     armBackGuard();
-    return;
+    setTimeout(() => { bmHandlingBack = false; }, 150);
+
+    const selectModal = document.getElementById("bmSelectModal");
+    if (selectModal && selectModal.style.display === "flex") { closeBmSelectModal(); return; }
+    const myReadModal = document.getElementById("myReadModal");
+    if (myReadModal && myReadModal.style.display === "flex") { myReadModal.style.display = "none"; return; }
+    const proModal = document.getElementById("proModal");
+    if (proModal && proModal.style.display === "flex") { closeProModal(); return; }
+    const noteModal = document.getElementById("noteModal");
+    if (noteModal && noteModal.style.display === "flex") { closeNoteModal(); return; }
+    const mapsViewer = document.getElementById("mapsViewer");
+    if (mapsViewer && mapsViewer.style.display === "flex") { closeMapViewer(); return; }
+    const actionBar = document.getElementById("verseActionBar");
+    if (actionBar && actionBar.style.display === "flex") { closeActionBar(); return; }
+
+    if (navHistory.length > 0) {
+      goBackHistory();
+      return;
+    }
+    openBlueExitModal();
   }
-  const myReadModal = document.getElementById("myReadModal");
-  if (myReadModal && myReadModal.style.display === "flex") {
-    myReadModal.style.display = "none";
-    armBackGuard();
-    return;
-  }
-  const proModal = document.getElementById("proModal");
-  if (proModal && proModal.style.display === "flex") {
-    closeProModal();
-    armBackGuard();
-    return;
-  }
-  const noteModal = document.getElementById("noteModal");
-  if (noteModal && noteModal.style.display === "flex") {
-    closeNoteModal();
-    armBackGuard();
-    return;
-  }
-  const mapsViewer = document.getElementById("mapsViewer");
-  if (mapsViewer && mapsViewer.style.display === "flex") {
-    closeMapViewer();
-    armBackGuard();
-    return;
-  }
-  const actionBar = document.getElementById("verseActionBar");
-  if (actionBar && actionBar.style.display === "flex") {
-    closeActionBar();
-    armBackGuard();
-    return;
-  }
-  if (navHistory.length > 0) {
-    goBackHistory();
-    armBackGuard();
-    return;
-  }
-  armBackGuard();
-  openBlueExitModal();
 });
 </script>
 </body>
