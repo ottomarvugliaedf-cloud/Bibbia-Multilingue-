@@ -61,24 +61,12 @@
       --verse-hover: #141414;
       --diff-bg: rgba(245, 158, 11, 0.3);
     }
-    /* Tutti i sottomenù a tendina, campi input, autofill Android e scrollbar su scala di Blu Mia Lettura */
-    html, body, * {
-      scrollbar-color: #29b6f6 #062356;
-    }
+    /* Tutti i sottomenù a tendina (Libri, Capitoli, Ricerca, Traduzioni) e campi su scala di Blu Mia Lettura */
     select, .trans-select, select option, select optgroup,
-    input, textarea, .search-input, .bp-search, .modal-textarea {
+    .search-input, .bp-search, .modal-textarea {
       background-color: #062356 !important;
       color: #ffffff !important;
       border-color: #29b6f6 !important;
-      color-scheme: dark !important;
-    }
-    input:-webkit-autofill,
-    input:-webkit-autofill:hover,
-    input:-webkit-autofill:focus,
-    textarea:-webkit-autofill {
-      -webkit-box-shadow: 0 0 0 1000px #062356 inset !important;
-      -webkit-text-fill-color: #ffffff !important;
-      caret-color: #00e5ff !important;
     }
     .search-input::placeholder, .bp-search::placeholder, .modal-textarea::placeholder {
       color: #9ec9ff !important;
@@ -6196,91 +6184,6 @@ document.addEventListener("keydown", function(e) {
     openCustomSelectMenu(sel);
   }
 }, true);
-
-// ============================================================================
-// INTERCETTORE TASTO INDIETRO / EXIT ANDROID (Forzatura URL Hash per WebView)
-// ============================================================================
-let bmHandlingBack = false;
-
-function armBackGuard() {
-  try {
-    if (location.hash !== "#bm") {
-      location.hash = "#bm";
-    }
-  } catch (e) {}
-}
-
-function openBlueExitModal() {
-  const modal = document.getElementById("myReadModal");
-  const body = document.getElementById("myReadModalBody");
-  if (!modal || !body) return;
-  body.innerHTML = `
-    <div style="text-align:center; padding:6px 0 16px 0;">
-      <div style="font-size:32px; margin-bottom:8px;">🚪</div>
-      <div style="font-size:16.5px; font-weight:800; color:#ffffff; margin-bottom:8px;">Uscire da Bibbia Multilingue PRO?</div>
-      <div style="font-size:14px; color:#cfe3ff; line-height:1.5;">
-        La tua posizione di lettura, i segnalibri e gli appunti sono già salvati al sicuro.
-      </div>
-    </div>
-    <div style="display:flex; gap:10px;">
-      <button class="myread-action-btn" style="background:#062356; flex:1;" onclick="document.getElementById('myReadModal').style.display='none'; armBackGuard();">Resta nell'App</button>
-      <button class="myread-action-btn" style="background:#0d47a1; flex:1;" onclick="confirmAppExitNow()">Esci</button>
-    </div>
-  `;
-  modal.style.display = "flex";
-}
-
-function confirmAppExitNow() {
-  stopAllAudio();
-  const modal = document.getElementById("myReadModal");
-  if (modal) modal.style.display = "none";
-  try {
-    if (navigator.app && typeof navigator.app.exitApp === "function") {
-      navigator.app.exitApp();
-      return;
-    }
-    if (window.close) window.close();
-    history.go(-3);
-  } catch (e) {}
-}
-
-window.addEventListener("load", () => {
-  setTimeout(armBackGuard, 300);
-});
-
-["pointerdown", "touchstart"].forEach(evt => {
-  document.addEventListener(evt, function() {
-    if (location.hash !== "#bm") armBackGuard();
-  }, { passive: true });
-});
-
-window.addEventListener("hashchange", function() {
-  if (bmHandlingBack) return;
-  if (location.hash === "") {
-    bmHandlingBack = true;
-    armBackGuard();
-    setTimeout(() => { bmHandlingBack = false; }, 150);
-
-    const selectModal = document.getElementById("bmSelectModal");
-    if (selectModal && selectModal.style.display === "flex") { closeBmSelectModal(); return; }
-    const myReadModal = document.getElementById("myReadModal");
-    if (myReadModal && myReadModal.style.display === "flex") { myReadModal.style.display = "none"; return; }
-    const proModal = document.getElementById("proModal");
-    if (proModal && proModal.style.display === "flex") { closeProModal(); return; }
-    const noteModal = document.getElementById("noteModal");
-    if (noteModal && noteModal.style.display === "flex") { closeNoteModal(); return; }
-    const mapsViewer = document.getElementById("mapsViewer");
-    if (mapsViewer && mapsViewer.style.display === "flex") { closeMapViewer(); return; }
-    const actionBar = document.getElementById("verseActionBar");
-    if (actionBar && actionBar.style.display === "flex") { closeActionBar(); return; }
-
-    if (navHistory.length > 0) {
-      goBackHistory();
-      return;
-    }
-    openBlueExitModal();
-  }
-});
 </script>
 </body>
 </html>
