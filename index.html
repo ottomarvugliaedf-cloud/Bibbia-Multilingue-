@@ -238,22 +238,27 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    /* Campo Adattivo (da Circolare a Ovale) per Lettura Biblica, Perspicacia e Tutta la Scrittura */
+        .header-center-slot {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
+    }
+    /* Campo Adattivo (da Circolare a Ovale) con Scorrimento Loop per Titoli Lunghi */
     .header-center-pill {
       background: radial-gradient(circle at 50% 50%, #4fc3f7 0%, #1e88e5 42%, #0a367e 82%, #020b1c 100%);
       color: #ffffff;
       border: 1.5px solid rgba(255, 255, 255, 0.65);
       padding: 5px 11px;
-      min-width: 32px;
+      min-width: 34px;
       min-height: 30px;
-      max-width: min(160px, 38vw);
+      max-width: min(156px, 37vw);
       border-radius: 999px;
       font-size: 13px;
       font-weight: 900;
       letter-spacing: 0.3px;
       white-space: nowrap;
       overflow: hidden;
-      text-overflow: ellipsis;
       box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4), 0 0 12px rgba(41, 182, 246, 0.45);
       cursor: pointer;
       display: none;
@@ -262,6 +267,23 @@
       text-align: center;
       user-select: none;
       -webkit-user-select: none;
+    }
+    .header-center-pill.is-marquee {
+      justify-content: flex-start;
+    }
+    .pill-marquee-track {
+      display: inline-flex;
+      align-items: center;
+      white-space: nowrap;
+      will-change: transform;
+      animation: bmPillMarquee var(--marquee-dur, 8s) linear infinite;
+    }
+    .pill-marquee-item {
+      padding-right: 28px;
+    }
+    @keyframes bmPillMarquee {
+      0%, 12% { transform: translate3d(0, 0, 0); }
+      100% { transform: translate3d(-50%, 0, 0); }
     }
     .header-controls {
       display: flex;
@@ -937,8 +959,10 @@
       </button>
       <span id="currentRefLabel" style="display:none;"></span>
     </div>
-    <button type="button" id="currentBookChapterPill" class="header-center-pill" style="display:none;" onclick="onHeaderCenterPillClick()" title="Posizione di lettura attuale">
-    </button>
+    <div class="header-center-slot">
+      <button type="button" id="currentBookChapterPill" class="header-center-pill" style="display:none;" onclick="onHeaderCenterPillClick()" title="Posizione di lettura attuale">
+      </button>
+    </div>
     <div class="header-controls">
       <button class="icon-btn" onclick="openQuickJumpModal()" title="Salto Rapido (es. Gv 3 16)">⚡</button>
       <button class="icon-btn" onclick="changeFontSize(-2)" title="Riduci testo">A-</button>
@@ -1513,15 +1537,30 @@ function setHeaderCenterPill(text = "", mode = "") {
   const clean = String(text || "").trim();
   if (!clean) {
     pillEl.style.display = "none";
-    pillEl.textContent = "";
+    pillEl.classList.remove("is-marquee");
+    pillEl.innerHTML = "";
     pillEl.dataset.mode = "";
     return;
   }
-  pillEl.textContent = clean;
-  pillEl.dataset.mode = mode || "bible";
+  const actualMode = mode || "bible";
+  pillEl.dataset.mode = actualMode;
   pillEl.title = clean;
-  pillEl.style.display = "inline-block";
-}
+  pillEl.classList.remove("is-marquee");
+  pillEl.textContent = clean;
+  pillEl.style.display = "inline-flex";
+
+  if (actualMode !== "bible" && clean.length > 12) {
+    requestAnimationFrame(() => {
+      if (pillEl.scrollWidth > pillEl.clientWidth + 2) {
+        const safe = escapeHtml(clean);
+        const dur = Math.max(6, Math.round(clean.length * 0.28));
+        pillEl.style.setProperty("--marquee-dur", `${dur}s`);
+        pillEl.classList.add("is-marquee");
+        pillEl.innerHTML = `<span class="pill-marquee-track"><span class="pill-marquee-item">${safe}</span><span class="pill-marquee-item">${safe}</span></span>`;
+      }
+    });
+  }
+    }
 
 function onHeaderCenterPillClick() {
   const pillEl = document.getElementById("currentBookChapterPill");
