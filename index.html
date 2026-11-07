@@ -4545,7 +4545,6 @@ async function showInsightView(selectedIndex = null, fromBack = false) {
     const active = insightActiveLetter === l ? "background:var(--primary-main);color:#fff;" : "";
     return `<span class="tag-badge" style="padding:5px 9px; font-size:12.5px; ${active}" onclick="filterInsightByLetter('${l}')">${l}</span>`;
   }).join("");
-}
   main.innerHTML = `
     <div class="section-title">
       <span>📚 Perspicacia (${data.entries.length} Voci)</span>
