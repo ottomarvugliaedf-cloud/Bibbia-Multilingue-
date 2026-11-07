@@ -238,23 +238,28 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    /* Campo Ovale Azzurro Centrale con Libro e Capitolo Corrente */
+    /* Campo Adattivo (da Circolare a Ovale) per Lettura Biblica, Perspicacia e Tutta la Scrittura */
     .header-center-pill {
       background: radial-gradient(circle at 50% 50%, #4fc3f7 0%, #1e88e5 42%, #0a367e 82%, #020b1c 100%);
       color: #ffffff;
       border: 1.5px solid rgba(255, 255, 255, 0.65);
-      padding: 5px 13px;
+      padding: 5px 11px;
+      min-width: 32px;
+      min-height: 30px;
+      max-width: min(160px, 38vw);
       border-radius: 999px;
-      font-size: 13.5px;
+      font-size: 13px;
       font-weight: 900;
-      letter-spacing: 0.4px;
+      letter-spacing: 0.3px;
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
       box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4), 0 0 12px rgba(41, 182, 246, 0.45);
       cursor: pointer;
-      display: inline-flex;
+      display: none;
       align-items: center;
       justify-content: center;
-      gap: 4px;
+      text-align: center;
       user-select: none;
       -webkit-user-select: none;
     }
@@ -932,9 +937,8 @@
       </button>
       <span id="currentRefLabel" style="display:none;"></span>
     </div>
-    <button type="button" id="currentBookChapterPill" class="header-center-pill" onclick="showChaptersView(state.bookId)" title="Libro e capitolo attuale (Tocca per scegliere il capitolo)">
-      Gen 1
-    </button>
+      <button type="button" id="currentBookChapterPill" class="header-center-pill" style="display:none;" onclick="onHeaderCenterPillClick()" title="Posizione di lettura attuale">
+      </button>
     <div class="header-controls">
       <button class="icon-btn" onclick="openQuickJumpModal()" title="Salto Rapido (es. Gv 3 16)">⚡</button>
       <button class="icon-btn" onclick="changeFontSize(-2)" title="Riduci testo">A-</button>
@@ -1503,7 +1507,38 @@ async function populateSelects() {
   if (activeList.some(b => b.id === state.trans3)) s3.value = state.trans3;
   else { state.trans3 = (activeList[2] || activeList[0]).id; s3.value = state.trans3; }
 }
+function setHeaderCenterPill(text = "", mode = "") {
+  const pillEl = document.getElementById("currentBookChapterPill");
+  if (!pillEl) return;
+  const clean = String(text || "").trim();
+  if (!clean) {
+    pillEl.style.display = "none";
+    pillEl.textContent = "";
+    pillEl.dataset.mode = "";
+    return;
+  }
+  pillEl.textContent = clean;
+  pillEl.dataset.mode = mode || "bible";
+  pillEl.title = clean;
+  pillEl.style.display = "inline-block";
+}
+
+function onHeaderCenterPillClick() {
+  const pillEl = document.getElementById("currentBookChapterPill");
+  const mode = pillEl ? pillEl.dataset.mode : "";
+  if (mode === "insight") {
+    showInsightView(null);
+  } else if (mode === "si_book" && typeof currentViewContext.i === "number") {
+    showSiBook(currentViewContext.i);
+  } else if (mode === "si_index") {
+    showSiView();
+  } else {
+    showChaptersView(state.bookId);
+  }
+}
+
 function setActiveTab(tabId, quickPillId = null) {
+  setHeaderCenterPill("");
   const topMap = {
     tabBooks: "booksTabBtn",
     tabRead: "readTabBtn",
@@ -1511,7 +1546,7 @@ function setActiveTab(tabId, quickPillId = null) {
   };
   const resolvedQuickPill = quickPillId || topMap[tabId] || null;
 
-      document.querySelectorAll(".tab-btn").forEach(b => {
+  document.querySelectorAll(".tab-btn").forEach(b => {
     if (b.id !== "parallelBtn" && b.id !== "ttsChapterBtn" && b.id !== "whereBtn") {
       b.classList.remove("active");
     }
@@ -1524,11 +1559,11 @@ function setActiveTab(tabId, quickPillId = null) {
   document.querySelectorAll(".quick-menu-bar .quick-pill").forEach(b => {
     if (b.id !== "diffBtn") b.classList.remove("highlight");
   });
-    if (resolvedQuickPill) {
+  if (resolvedQuickPill) {
     const qp = document.getElementById(resolvedQuickPill);
     if (qp) qp.classList.add("highlight");
   }
-}
+ }
     
 function getBook(id) {
   return BIBLE_BOOKS.find(b => b.id === Number(id)) || BIBLE_BOOKS[0];
@@ -1672,8 +1707,7 @@ async function loadChapterView() {
   safeSaveStorage("bm_last_book", String(state.bookId));
   safeSaveStorage("bm_last_ch", String(state.chapter));
   document.getElementById("currentRefLabel").textContent = `${book.name} ${state.chapter}`;
-  const pillEl = document.getElementById("currentBookChapterPill");
-  if (pillEl) pillEl.textContent = `${book.abbr} ${state.chapter}`;
+  setHeaderCenterPill(`${book.abbr} ${state.chapter}`, "bible");
   const main = document.getElementById("mainContainer");
   main.innerHTML = `<div class="loader">Caricamento di <b>${escapeHtml(book.name)} ${state.chapter}</b>...</div>`;
   try {
@@ -4354,8 +4388,9 @@ async function showInsightView(selectedIndex = null, fromBack = false) {
     `;
     return;
   }
-  if (selectedIndex !== null && data.entries[selectedIndex]) {
+    if (selectedIndex !== null && data.entries[selectedIndex]) {
     const item = data.entries[selectedIndex];
+    setHeaderCenterPill(item.title, "insight");
     window.currentInsightSpeechText = `${item.title}. ${item.body}`;
     
     const baseHtml = formatNoteLinks(item.body);
@@ -4650,6 +4685,28 @@ ${extras.length ? `<div class="section-title"><span>Introduzione e Studi</span><
 `;
 main.scrollTop = 0;
     }
+function extractSiPillLabel(kind, item, ch) {
+  if (kind !== "x") return siBookLabel(item);
+  const raw = String((ch && ch.title) || (item && item.title) || "").trim();
+  const studioMatch = raw.match(/^(Studio\s+n\.\s*\d+|Studio\s+\d+)\s*[—–:-]\s*(.+)$/i);
+  if (studioMatch) {
+    const numPart = studioMatch[1].replace(/n\.\s*/i, "").trim();
+    const topic = studioMatch[2].replace(/^(?:La\s+|Il\s+|Lo\s+|L['’]|I\s+|Gli\s+|Le\s+|Un\s+|Una\s+)/i, "").trim();
+    return `${numPart}: ${topic}`;
+  }
+  return raw;
+}
+function extractSiPillLabel(kind, item, ch) {
+  if (kind !== "x") return siBookLabel(item);
+  const raw = String((ch && ch.title) || (item && item.title) || "").trim();
+  const studioMatch = raw.match(/^(Studio\s+n\.\s*\d+|Studio\s+\d+)\s*[—–:-]\s*(.+)$/i);
+  if (studioMatch) {
+    const numPart = studioMatch[1].replace(/n\.\s*/i, "").trim();
+    const topic = studioMatch[2].replace(/^(?:La\s+|Il\s+|Lo\s+|L['’]|I\s+|Gli\s+|Le\s+|Un\s+|Una\s+)/i, "").trim();
+    return `${numPart}: ${topic}`;
+  }
+  return raw;
+}
 async function showSiBook(bi, fromBack = false) {
 if (!fromBack) saveCurrentPositionToHistory();
 closeActionBar();
@@ -4662,6 +4719,7 @@ const main = document.getElementById("mainContainer");
 const data = await getSiData();
 const book = data && data.books ? data.books[bi] : null;
 if (!book) { showSiView(true); return; }
+setHeaderCenterPill(siBookLabel(book), "si_index");
 const cards = book.chapters.map((c, ci) => `
 <div class="result-card" onclick="showSiReader('b', ${bi}, ${ci})">
 <div class="result-ref">📘 ${escapeHtml(c.title)} ${siPageBadge(c.printPage)}</div>
@@ -4695,6 +4753,7 @@ const ch = item && item.chapters ? item.chapters[ci] : null;
 if (!ch) { showSiView(); return; }
 const itemName = kind === "x" ? item.title : siBookLabel(item);
 const title = item.chapters.length > 1 ? `${itemName} — ${ch.title}` : itemName;
+setHeaderCenterPill(extractSiPillLabel(kind, item, ch), kind === "x" ? "si_index" : "si_book");
 window.currentInsightSpeechText = `${title}. ${String(ch.content || "").replace(/\[[a-z]{1,2}\]/g, "").replace(/[ \t]+/g, " ").trim()}`;
 let prev = null, next = null;
 if (ci > 0) prev = [i, ci - 1];
@@ -5255,11 +5314,6 @@ function updateReadingPlanHeaderBtn() {
     const todayItem = schedule[todayIdx] || schedule[0];
     const isDone = Boolean(rpState.checked[`${rpState.planId}_${todayIdx}`]);
     el.textContent = `${isDone ? "✔ " : ""}${todayItem.label}`;
-  }
-  const pillEl = document.getElementById("currentBookChapterPill");
-  if (pillEl) {
-    const curBook = getBook(state.bookId);
-    pillEl.textContent = `${curBook.abbr} ${state.chapter}`;
   }
 }
 function toggleReadingPlanDay(dayIdx) {
