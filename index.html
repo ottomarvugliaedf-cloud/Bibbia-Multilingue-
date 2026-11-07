@@ -937,8 +937,8 @@
       </button>
       <span id="currentRefLabel" style="display:none;"></span>
     </div>
-      <button type="button" id="currentBookChapterPill" class="header-center-pill" style="display:none;" onclick="onHeaderCenterPillClick()" title="Posizione di lettura attuale">
-      </button>
+    <button type="button" id="currentBookChapterPill" class="header-center-pill" style="display:none;" onclick="onHeaderCenterPillClick()" title="Posizione di lettura attuale">
+    </button>
     <div class="header-controls">
       <button class="icon-btn" onclick="openQuickJumpModal()" title="Salto Rapido (es. Gv 3 16)">⚡</button>
       <button class="icon-btn" onclick="changeFontSize(-2)" title="Riduci testo">A-</button>
@@ -1563,8 +1563,7 @@ function setActiveTab(tabId, quickPillId = null) {
     const qp = document.getElementById(resolvedQuickPill);
     if (qp) qp.classList.add("highlight");
   }
- }
-    
+}
 function getBook(id) {
   return BIBLE_BOOKS.find(b => b.id === Number(id)) || BIBLE_BOOKS[0];
 }
@@ -1770,7 +1769,7 @@ async function loadChapterView() {
           </div>`;
       }).join("");
     }
-        const backBtnHtml = getBackBtnHtml();
+    const backBtnHtml = getBackBtnHtml();
     main.innerHTML = `
       <div class="chapter-header">
         <div class="chapter-title" onclick="showChaptersView(${state.bookId})" style="cursor:pointer;">${escapeHtml(book.name)} ${state.chapter}▾</div>
@@ -4388,7 +4387,7 @@ async function showInsightView(selectedIndex = null, fromBack = false) {
     `;
     return;
   }
-    if (selectedIndex !== null && data.entries[selectedIndex]) {
+  if (selectedIndex !== null && data.entries[selectedIndex]) {
     const item = data.entries[selectedIndex];
     setHeaderCenterPill(item.title, "insight");
     window.currentInsightSpeechText = `${item.title}. ${item.body}`;
@@ -4685,17 +4684,6 @@ ${extras.length ? `<div class="section-title"><span>Introduzione e Studi</span><
 `;
 main.scrollTop = 0;
     }
-function extractSiPillLabel(kind, item, ch) {
-  if (kind !== "x") return siBookLabel(item);
-  const raw = String((ch && ch.title) || (item && item.title) || "").trim();
-  const studioMatch = raw.match(/^(Studio\s+n\.\s*\d+|Studio\s+\d+)\s*[—–:-]\s*(.+)$/i);
-  if (studioMatch) {
-    const numPart = studioMatch[1].replace(/n\.\s*/i, "").trim();
-    const topic = studioMatch[2].replace(/^(?:La\s+|Il\s+|Lo\s+|L['’]|I\s+|Gli\s+|Le\s+|Un\s+|Una\s+)/i, "").trim();
-    return `${numPart}: ${topic}`;
-  }
-  return raw;
-}
 function extractSiPillLabel(kind, item, ch) {
   if (kind !== "x") return siBookLabel(item);
   const raw = String((ch && ch.title) || (item && item.title) || "").trim();
