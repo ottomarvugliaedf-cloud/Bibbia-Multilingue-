@@ -2543,8 +2543,8 @@ function showSearchView(fromBack = false) {
     <div id="searchResults"><div class="loader">Inserisci una parola o frase e premi <b>🔍 Bibbia</b> (Concordanza) oppure <b>🌐 4 Pilastri</b> per cercare in tutta la Biblioteca (Perspicacia, Tutta la Scrittura, Cartine e Bibbia).</div></div>
   `;
 }
-const JW_TOWER_SVG = `<svg viewBox="0 0 1000 1000"><path d="M198.5 200h603v302h-100.5v100.5h-100.5v301.5h-302v-301.5h-100.5v-100.5h-100.5v-302z M334 290.5h67v134h-67z M500 290.5h67v134h-67z M666 290.5h67v134h-67z"/></svg>`;
-
+const JW_TOWER_SVG = `<svg viewBox="0 0 1000 1000"><path d="M200 200H334V267H367V200H434V267H467V200H534V267H566V200H633V267H666V200H800V433H767V467H734V800H266V467H233V433H200Z"/></svg>`;
+    
 function openJwLibrary(lang, searchInputId = "searchInput") {
   const res = document.getElementById("searchResults");
   if (navigator.onLine === false) {
