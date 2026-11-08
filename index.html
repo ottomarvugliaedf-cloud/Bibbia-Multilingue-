@@ -252,6 +252,28 @@
       border-radius: 6px;
       transition: background-color 0.2s ease, box-shadow 0.2s ease;
     }
+    /* Evidenziazione Multi-Versetto Attiva (Tocco cumulativo stile Suite PRO) */
+    .bm-verse-selected {
+      outline: 2px dashed #ccff00 !important;
+      background-color: rgba(204, 255, 0, 0.14) !important;
+      border-radius: 6px;
+    }
+    /* Karaoke Audio in Tempo Reale (Versetto in corso di lettura vocale) */
+    .bm-tts-active-verse {
+      outline: 2.5px solid #ccff00 !important;
+      background: linear-gradient(90deg, rgba(204, 255, 0, 0.22) 0%, rgba(0, 229, 255, 0.14) 100%) !important;
+      box-shadow: 0 0 16px rgba(204, 255, 0, 0.45) !important;
+      border-radius: 6px;
+      transition: all 0.22s ease;
+    }
+    /* Transizione Cinematografica a 120Hz sul cambio vista/capitolo */
+    @keyframes bmViewFadeIn {
+      from { opacity: 0.35; transform: translate3d(0, 5px, 0); }
+      to { opacity: 1; transform: translate3d(0, 0, 0); }
+    }
+    .bm-view-anim {
+      animation: bmViewFadeIn 0.17s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
     /* Campo Adattivo (da Circolare a Ovale) con Scorrimento Loop per Titoli Lunghi */
     .header-center-pill {
       background: radial-gradient(circle at 50% 50%, #4fc3f7 0%, #1e88e5 42%, #0a367e 82%, #020b1c 100%);
@@ -1925,66 +1947,139 @@ function toggleDiffMode() {
   loadChapterView();
     }
     let activeNoteTarget = null;
+    let selectedVersesMap = new Map();
+
+function bmHaptic(ms = 12) {
+  try {
+    if (navigator && typeof navigator.vibrate === "function") {
+      navigator.vibrate(ms);
+    }
+  } catch (e) {}
+}
+
+function formatSelectedVersesRangeLabel(nums) {
+  if (!nums || !nums.length) return "";
+  const sorted = [...nums].sort((a, b) => a - b);
+  const parts = [];
+  let start = sorted[0], prev = sorted[0];
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i] === prev + 1) {
+      prev = sorted[i];
+    } else {
+      parts.push(start === prev ? `${start}` : `${start}-${prev}`);
+      start = prev = sorted[i];
+    }
+  }
+  parts.push(start === prev ? `${start}` : `${start}-${prev}`);
+  return parts.join(", ");
+}
+
+function syncSelectedVersesState() {
+  const nums = Array.from(selectedVersesMap.keys()).sort((a, b) => a - b);
+  if (nums.length === 0) {
+    state.selectedVerse = null;
+    state.selectedVerseText = "";
+    return;
+  }
+  state.selectedVerse = nums[0];
+  state.selectedVerseText = nums.map(n => selectedVersesMap.get(n) || "").filter(Boolean).join(" ");
+}
+
 function onVerseClick(verseNum, text) {
-  state.selectedVerse = verseNum;
-  state.selectedVerseText = text || "";
+  bmHaptic(10);
+  const vNum = Number(verseNum);
+  const row = document.getElementById(`v_${vNum}`);
+  if (selectedVersesMap.has(vNum)) {
+    selectedVersesMap.delete(vNum);
+    if (row) row.classList.remove("bm-verse-selected");
+  } else {
+    selectedVersesMap.set(vNum, text || "");
+    if (row) row.classList.add("bm-verse-selected");
+  }
+  if (selectedVersesMap.size === 0) {
+    closeActionBar();
+    return;
+  }
+  syncSelectedVersesState();
   document.getElementById("verseActionBar").style.display = "flex";
 }
+
 function closeActionBar() {
   const bar = document.getElementById("verseActionBar");
   if (bar) bar.style.display = "none";
+  selectedVersesMap.clear();
+  document.querySelectorAll(".bm-verse-selected").forEach(el => el.classList.remove("bm-verse-selected"));
   state.selectedVerse = null;
   state.selectedVerseText = "";
-    }
+}
+
 function selectVerseDataFromDOM(verseNum) {
-  const row = document.getElementById(`v_${verseNum}`);
+  const vNum = Number(verseNum);
+  const row = document.getElementById(`v_${vNum}`);
   const txt = row ? (row.getAttribute("data-text") || "") : "";
-  state.selectedVerse = verseNum;
+  selectedVersesMap.clear();
+  document.querySelectorAll(".bm-verse-selected").forEach(el => el.classList.remove("bm-verse-selected"));
+  selectedVersesMap.set(vNum, txt);
+  state.selectedVerse = vNum;
   state.selectedVerseText = txt;
 }
+
 function openVerseNoteDirectly(verseNum) {
   selectVerseDataFromDOM(verseNum);
   openNoteModalForVerse();
 }
+
 function openVerseCrossDirectly(verseNum) {
   selectVerseDataFromDOM(verseNum);
   if (typeof openCrossRefsModalForVerse === "function") {
     openCrossRefsModalForVerse();
   }
 }
+
 function openDirectStrongCode(code, verseNum) {
   selectVerseDataFromDOM(verseNum);
   if (typeof openStrongModalForVerse === "function") {
     openStrongModalForVerse(code);
   }
 }
-function applyHighlight(colorClass) {
-  if (!state.selectedVerse) return;
-  const key = `${state.bookId}_${state.chapter}_${state.selectedVerse}`;
-  
-  if (colorClass) {
-    state.highlights[key] = colorClass;
-  } else {
-    delete state.highlights[key];
-  }
-  
-  safeSaveStorage("bm_hl", JSON.stringify(state.highlights));
-  
-  // Aggiorna istantaneamente la riga nel DOM (inclusi eventuali riquadri paralleli)
-  document.querySelectorAll(`#v_${state.selectedVerse}`).forEach(row => {
-    row.classList.remove("hl-yellow", "hl-blue", "hl-green", "hl-pink", "hl-purple");
-    if (colorClass) {
-      row.classList.add(colorClass);
-    }
-  });
 
+function applyHighlight(colorClass) {
+  const nums = selectedVersesMap.size > 0
+    ? Array.from(selectedVersesMap.keys())
+    : (state.selectedVerse ? [state.selectedVerse] : []);
+  if (!nums.length) return;
+  bmHaptic(14);
+  nums.forEach(vNum => {
+    const key = `${state.bookId}_${state.chapter}_${vNum}`;
+    if (colorClass) {
+      state.highlights[key] = colorClass;
+    } else {
+      delete state.highlights[key];
+    }
+    document.querySelectorAll(`#v_${vNum}`).forEach(row => {
+      row.classList.remove("hl-yellow", "hl-blue", "hl-green", "hl-pink", "hl-purple");
+      if (colorClass) {
+        row.classList.add(colorClass);
+      }
+    });
+  });
+  safeSaveStorage("bm_hl", JSON.stringify(state.highlights));
   closeActionBar();
 }
+
 function copySelectedVerse() {
-  if (!state.selectedVerse) return;
+  const nums = selectedVersesMap.size > 0
+    ? Array.from(selectedVersesMap.keys()).sort((a, b) => a - b)
+    : (state.selectedVerse ? [state.selectedVerse] : []);
+  if (!nums.length) return;
+  bmHaptic(14);
   const book = getBook(state.bookId);
-  const ref = `${book.name} ${state.chapter}:${state.selectedVerse}`;
-  const fullCopy = `${ref} — "${state.selectedVerseText}"`;
+  const rangeStr = formatSelectedVersesRangeLabel(nums);
+  const ref = `${book.name} ${state.chapter}:${rangeStr}`;
+  const combinedText = nums.length > 1
+    ? nums.map(n => `[${n}] ${selectedVersesMap.get(n) || ""}`).join(" ")
+    : (state.selectedVerseText || selectedVersesMap.get(nums[0]) || "");
+  const fullCopy = `${ref} — "${combinedText}"`;
   try {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(fullCopy).catch(() => {});
@@ -1997,27 +2092,37 @@ function copySelectedVerse() {
     ta.select();
     document.execCommand("copy");
     document.body.removeChild(ta);
-   } catch (e) {}
+  } catch (e) {}
   closeActionBar();
-  showBlueInfoModal("📋 Versetto Copiato", escapeHtml(fullCopy));
- }
+  showBlueInfoModal(nums.length > 1 ? `📋 ${nums.length} Versetti Copiati` : "📋 Versetto Copiato", escapeHtml(fullCopy));
+}
+
 function saveBookmark() {
-  if (!state.selectedVerse) return;
+  const nums = selectedVersesMap.size > 0
+    ? Array.from(selectedVersesMap.keys()).sort((a, b) => a - b)
+    : (state.selectedVerse ? [state.selectedVerse] : []);
+  if (!nums.length) return;
+  bmHaptic(14);
   const book = getBook(state.bookId);
-  const ref = `${book.name} ${state.chapter}:${state.selectedVerse}`;
+  const rangeStr = formatSelectedVersesRangeLabel(nums);
+  const ref = `${book.name} ${state.chapter}:${rangeStr}`;
+  const combinedText = nums.length > 1
+    ? nums.map(n => `[${n}] ${selectedVersesMap.get(n) || ""}`).join(" ")
+    : (state.selectedVerseText || selectedVersesMap.get(nums[0]) || "");
   if (!state.bookmarks.some(b => b.ref === ref)) {
     state.bookmarks.unshift({
       bookId: state.bookId,
       chapter: state.chapter,
-      verse: state.selectedVerse,
+      verse: nums[0],
       ref: ref,
-      text: state.selectedVerseText
+      text: combinedText
     });
     safeSaveStorage("bm_bm", JSON.stringify(state.bookmarks));
   }
   closeActionBar();
   showSavedView();
 }
+
 function openNoteModalForVerse(customRef) {
   const book = getBook(state.bookId);
   let ref = customRef;
@@ -3132,8 +3237,57 @@ function extractCleanSelectedText() {
     .trim();
 }
 
+function clearTtsKaraokeHighlight() {
+  document.querySelectorAll(".bm-tts-active-verse").forEach(el => {
+    el.classList.remove("bm-tts-active-verse");
+  });
+}
+
+function highlightTtsKaraokeVerse(vNum) {
+  clearTtsKaraokeHighlight();
+  if (!vNum) return;
+  const row = document.getElementById(`v_${vNum}`);
+  if (row) {
+    row.classList.add("bm-tts-active-verse");
+    row.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+}
+
+function updateMediaSessionMetadata(titleStr, subtitleStr, isPlaying) {
+  if (!("mediaSession" in navigator) || !navigator.mediaSession) return;
+  try {
+    if (typeof MediaMetadata !== "undefined") {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: titleStr || "Bibbia Multilingue PRO",
+        artist: subtitleStr || "Lettura Vocale Integrata",
+        album: "Bibbia Multilingue PRO",
+        artwork: [{ src: "https://cdn-icons-png.flaticon.com/512/3004/3004458.png", sizes: "512x512", type: "image/png" }]
+      });
+    }
+    navigator.mediaSession.playbackState = isPlaying ? "playing" : "none";
+    navigator.mediaSession.setActionHandler("play", () => { if (!bmAudioPlaying) toggleChapterTTS(); });
+    navigator.mediaSession.setActionHandler("pause", () => { stopAllAudio(); });
+    navigator.mediaSession.setActionHandler("stop", () => { stopAllAudio(); });
+    navigator.mediaSession.setActionHandler("previoustrack", () => {
+      if (currentViewContext.type === "bible") {
+        stopAllAudio();
+        prevChapter();
+        setTimeout(() => toggleChapterTTS(), 420);
+      }
+    });
+    navigator.mediaSession.setActionHandler("nexttrack", () => {
+      if (currentViewContext.type === "bible") {
+        stopAllAudio();
+        nextChapter();
+        setTimeout(() => toggleChapterTTS(), 420);
+      }
+    });
+  } catch (e) {}
+}
+
 function stopAllAudio() {
   releaseAudioWakeLock();
+  clearTtsKaraokeHighlight();
   bmSessionId++;
   bmUserStopped = true;
   bmAudioPlaying = false;
@@ -3150,6 +3304,7 @@ function stopAllAudio() {
   if ("speechSynthesis" in window) {
     try { window.speechSynthesis.cancel(); } catch (e) {}
   }
+  updateMediaSessionMetadata("", "", false);
   const btn = document.getElementById("ttsChapterBtn");
   if (btn) {
     btn.classList.remove("active");
@@ -3159,6 +3314,7 @@ function stopAllAudio() {
 
 function onSpeechFinishedSession(sessionId) {
   if (sessionId !== bmSessionId) return;
+  clearTtsKaraokeHighlight();
   if (bmAutoNextChapter && bmTtsAutoNextPref && !bmUserStopped && currentViewContext.type === "bible") {
     const book = getBook(state.bookId);
     if (state.chapter < book.ch) {
@@ -3173,10 +3329,7 @@ function onSpeechFinishedSession(sessionId) {
     loadChapterView().then(() => {
       setTimeout(() => {
         if (!bmUserStopped) {
-          const rows = [...document.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3")];
-          const nextBook = getBook(state.bookId);
-          const fullText = `${nextBook.name}, capitolo ${state.chapter}. ` + rows.map(r => r.getAttribute("data-text") || "").join(" ");
-          if (fullText.trim()) startUniversalSpeech(fullText, true, true);
+          startChapterKaraokeSpeech(1);
         }
       }, 350);
     });
@@ -3185,14 +3338,16 @@ function onSpeechFinishedSession(sessionId) {
   stopAllAudio();
 }
 
-function playWebViewStream(chunks, idx, sessionId) {
+function playWebViewStreamQueue(queueItems, idx, sessionId) {
   if (bmUserStopped || !bmAudioPlaying || sessionId !== bmSessionId) return;
-  if (idx >= chunks.length) {
+  if (idx >= queueItems.length) {
     onSpeechFinishedSession(sessionId);
     return;
   }
+  const item = queueItems[idx];
+  if (item.verseNum) highlightTtsKaraokeVerse(item.verseNum);
   const tl = getActiveTTSLangCode(false);
-  const q = encodeURIComponent(chunks[idx]);
+  const q = encodeURIComponent(item.text);
   const urls = [
     `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=${tl}&q=${q}`,
     `https://translate.googleapis.com/translate_tts?client=tw-ob&ie=UTF-8&tl=${tl}&q=${q}`
@@ -3204,14 +3359,14 @@ function playWebViewStream(chunks, idx, sessionId) {
   const tryNextUrl = () => {
     if (bmUserStopped || !bmAudioPlaying || sessionId !== bmSessionId) return;
     if (uIdx >= urls.length) {
-      playWebViewStream(chunks, idx + 1, sessionId);
+      playWebViewStreamQueue(queueItems, idx + 1, sessionId);
       return;
     }
     bmAudioPlayer.src = urls[uIdx++];
     bmAudioPlayer.playbackRate = bmTtsRate;
     bmAudioPlayer.onended = () => {
       if (!bmUserStopped && bmAudioPlaying && sessionId === bmSessionId) {
-        playWebViewStream(chunks, idx + 1, sessionId);
+        playWebViewStreamQueue(queueItems, idx + 1, sessionId);
       }
     };
     bmAudioPlayer.onerror = () => {
@@ -3231,15 +3386,15 @@ function playWebViewStream(chunks, idx, sessionId) {
   tryNextUrl();
 }
 
-function startUniversalSpeech(rawText, updateMainBtn = true, autoNext = false) {
+function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, mediaTitle = "", mediaSub = "") {
   stopAllAudio();
-  const chunks = splitTextForAudio(rawText, 165);
-  if (!chunks.length) return;
+  if (!queueItems || !queueItems.length) return;
   const mySession = ++bmSessionId;
   bmUserStopped = false;
   bmAudioPlaying = true;
   bmAutoNextChapter = autoNext && bmTtsAutoNextPref;
   requestAudioWakeLock();
+  updateMediaSessionMetadata(mediaTitle, mediaSub, true);
   const btn = document.getElementById("ttsChapterBtn");
   if (updateMainBtn && btn) {
     btn.classList.add("active");
@@ -3253,12 +3408,14 @@ function startUniversalSpeech(rawText, updateMainBtn = true, autoNext = false) {
     let nativeOk = false;
     const speakNextNative = () => {
       if (bmUserStopped || !bmAudioPlaying || mySession !== bmSessionId) return;
-      if (idx >= chunks.length) {
+      if (idx >= queueItems.length) {
         onSpeechFinishedSession(mySession);
         return;
       }
+      const item = queueItems[idx];
+      if (item.verseNum) highlightTtsKaraokeVerse(item.verseNum);
       try {
-        const u = new SpeechSynthesisUtterance(chunks[idx]);
+        const u = new SpeechSynthesisUtterance(item.text);
         u.lang = getActiveTTSLangCode(true);
         u.rate = bmTtsRate;
         u.onstart = () => { nativeOk = true; };
@@ -3271,7 +3428,7 @@ function startUniversalSpeech(rawText, updateMainBtn = true, autoNext = false) {
         u.onerror = (ev) => {
           if (bmUserStopped || mySession !== bmSessionId || ev.error === "canceled" || ev.error === "interrupted") return;
           if (!nativeOk) {
-            playWebViewStream(chunks, idx, mySession);
+            playWebViewStreamQueue(queueItems, idx, mySession);
           } else {
             idx++;
             speakNextNative();
@@ -3279,17 +3436,47 @@ function startUniversalSpeech(rawText, updateMainBtn = true, autoNext = false) {
         };
         window.speechSynthesis.speak(u);
       } catch (e) {
-        playWebViewStream(chunks, idx, mySession);
+        playWebViewStreamQueue(queueItems, idx, mySession);
       }
     };
     try { window.speechSynthesis.cancel(); } catch (e) {}
     speakNextNative();
   } else {
-    playWebViewStream(chunks, 0, mySession);
+    playWebViewStreamQueue(queueItems, 0, mySession);
   }
 }
-                                                              
+
+function startUniversalSpeech(rawText, updateMainBtn = true, autoNext = false) {
+  const chunks = splitTextForAudio(rawText, 165).map(c => ({ text: c, verseNum: null }));
+  const curBook = getBook(state.bookId);
+  const titleStr = currentViewContext.type === "insight" ? "Perspicacia (it)" : (currentViewContext.type === "daily" ? "Scrittura del Giorno" : `${curBook.name} ${state.chapter}`);
+  startQueueSpeech(chunks, updateMainBtn, autoNext, titleStr, "Bibbia Multilingue PRO");
+}
+
+function startChapterKaraokeSpeech(startFromVerse = 1) {
+  const rows = [...document.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3")];
+  if (!rows.length) return;
+  const curBook = getBook(state.bookId);
+  const queue = [];
+  if (startFromVerse <= 1) {
+    queue.push({ text: `${curBook.name}, capitolo ${state.chapter}.`, verseNum: 1 });
+  }
+  rows.forEach(r => {
+    const idAttr = r.id || "";
+    const vNum = idAttr.startsWith("v_") ? parseInt(idAttr.slice(2), 10) : 0;
+    if (vNum >= startFromVerse) {
+      const vTxt = r.getAttribute("data-text") || "";
+      const subChunks = splitTextForAudio(vTxt, 165);
+      subChunks.forEach(sc => queue.push({ text: sc, verseNum: vNum }));
+    }
+  });
+  if (queue.length > 0) {
+    startQueueSpeech(queue, true, true, `${curBook.name} ${state.chapter}`, "Lettura Biblica Sincronizzata");
+  }
+}
+
 function toggleChapterTTS() {
+  bmHaptic(12);
   if (bmAudioPlaying) {
     stopAllAudio();
     return;
@@ -3305,9 +3492,7 @@ function toggleChapterTTS() {
   }
   const rows = [...document.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3")];
   if (rows.length > 0) {
-    const curBook = getBook(state.bookId);
-    const fullText = `${curBook.name}, capitolo ${state.chapter}. ` + rows.map(r => r.getAttribute("data-text") || "").join(" ");
-    if (fullText.trim()) startUniversalSpeech(fullText, true, true);
+    startChapterKaraokeSpeech(1);
     return;
   }
   if (typeof currentInsightSpeechText === "string" && currentInsightSpeechText.trim()) {
@@ -3320,6 +3505,7 @@ function toggleChapterTTS() {
 }
 
 function speakSelectedVerse() {
+  bmHaptic(12);
   const cleanSel = extractCleanSelectedText();
   const txtToSpeak = cleanSel.length >= 3 ? cleanSel : state.selectedVerseText;
   if (!txtToSpeak) return;
@@ -3328,7 +3514,8 @@ function speakSelectedVerse() {
     return;
   }
   startUniversalSpeech(txtToSpeak, false, false);
-    }
+}
+    
 function generateVerseCardModal() {
   const book = getBook(state.bookId);
   const vNum = state.selectedVerse || 1;
@@ -6655,7 +6842,63 @@ async function executeOmniSearch() {
 
   resDiv.innerHTML = html;
 }
+
+// ============================================================================
+// 5. PROTEZIONE GESTO "INDIETRO" ANDROID (History API) & TRANSIZIONE GPU 120Hz
+// ============================================================================
+(function initEnterpriseNativeFeel() {
+  try {
+    window.history.replaceState({ bmGuard: true }, "");
+    window.history.pushState({ bmGuard: true }, "");
+  } catch (e) {}
+
+  window.addEventListener("popstate", function () {
+    const closeIfFlex = (id, fn) => {
+      const el = document.getElementById(id);
+      if (el && el.style.display === "flex") {
+        if (fn) fn(); else el.style.display = "none";
+        return true;
+      }
+      return false;
+    };
+
+    const handledModal =
+      closeIfFlex("bmSelectModal", closeBmSelectModal) ||
+      closeIfFlex("myReadModal") ||
+      closeIfFlex("noteModal", closeNoteModal) ||
+      closeIfFlex("proModal", closeProModal) ||
+      closeIfFlex("mapsViewer", closeMapViewer) ||
+      closeIfFlex("verseActionBar", closeActionBar);
+
+    if (handledModal) {
+      bmHaptic(10);
+      try { window.history.pushState({ bmGuard: true }, ""); } catch (e) {}
+      return;
+    }
+
+    if (navHistory.length > 0) {
+      bmHaptic(12);
+      goBackHistory();
+      try { window.history.pushState({ bmGuard: true }, ""); } catch (e) {}
+    }
+  });
+
+  const mainEl = document.getElementById("mainContainer");
+  if (mainEl && typeof MutationObserver !== "undefined") {
+    let lastAnimAt = 0;
+    const obs = new MutationObserver(() => {
+      const now = Date.now();
+      if (now - lastAnimAt < 90) return;
+      lastAnimAt = now;
+      mainEl.classList.remove("bm-view-anim");
+      void mainEl.offsetWidth;
+      mainEl.classList.add("bm-view-anim");
+    });
+    obs.observe(mainEl, { childList: true });
+  }
+})();
 </script>
 </body>
 </html>
+
 
