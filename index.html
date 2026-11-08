@@ -941,6 +941,42 @@
     .bp-it.click { cursor: pointer; }
     .bp-it.click:active { background: var(--verse-hover); }
     .bp-g { min-width: 46px; font-weight: 800; color: var(--primary-light); }
+
+    /* Biblioteca online JW.org: cerchio azzurro con torre vettoriale originale */
+    .jw-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 5px 12px 5px 5px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      text-decoration: none;
+    }
+    .jw-btn .jw-circle {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background-color: var(--cat-3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 5px rgba(2, 136, 209, 0.35);
+      flex-shrink: 0;
+    }
+    .jw-btn .jw-circle svg { width: 20px; height: 20px; fill: #ffffff; }
+    .jw-btn:active { border-color: #99cc00; }
+    .jw-btn:active .jw-circle {
+      background-color: #ccff00;
+      box-shadow: 0 0 12px rgba(204, 255, 0, 0.9), 0 0 4px #99cc00;
+      transform: scale(1.06);
+    }
+    .jw-btn:active .jw-circle svg { fill: #0a1b33; }
   </style>
 </head>
 <body>
@@ -2486,6 +2522,10 @@ function showSearchView(fromBack = false) {
       <button class="search-btn" onclick="executeSearch(1)">🔍 Bibbia</button>
       <button class="search-btn" style="background:linear-gradient(135deg, #00838f, #00acc1);" onclick="executeOmniSearch()" title="Cerca contemporaneamente in Perspicacia, Tutta la Scrittura, Cartine e Bibbia">🌐 4 Pilastri</button>
     </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin:0 0 10px 0;">
+      <button class="jw-btn" onclick="openJwLibrary('it', 'searchInput')" title="Cerca nella Biblioteca online Watchtower (italiano)"><span class="jw-circle">${JW_TOWER_SVG}</span>Biblioteca online · Italiano</button>
+      <button class="jw-btn" onclick="openJwLibrary('en', 'searchInput')" title="Search the Watchtower Online Library (English)"><span class="jw-circle">${JW_TOWER_SVG}</span>Online Library · English</button>
+    </div>
     <div class="search-box" style="margin-top:-4px;">
       <select id="searchBibleSelect" class="trans-select" onchange="if(document.getElementById('searchInput').value.trim()) executeSearch(1)">${bibleOptionsHtml}</select>
       <select id="searchMode" class="trans-select" style="max-width:195px;" onchange="if(document.getElementById('searchInput').value.trim()) executeSearch(1)">
@@ -2503,6 +2543,27 @@ function showSearchView(fromBack = false) {
     <div id="searchResults"><div class="loader">Inserisci una parola o frase e premi <b>🔍 Bibbia</b> (Concordanza) oppure <b>🌐 4 Pilastri</b> per cercare in tutta la Biblioteca (Perspicacia, Tutta la Scrittura, Cartine e Bibbia).</div></div>
   `;
 }
+const JW_TOWER_SVG = `<svg viewBox="0 0 1000 1000"><path d="M198.5 200h603v302h-100.5v100.5h-100.5v301.5h-302v-301.5h-100.5v-100.5h-100.5v-302z M334 290.5h67v134h-67z M500 290.5h67v134h-67z M666 290.5h67v134h-67z"/></svg>`;
+
+function openJwLibrary(lang, searchInputId = "searchInput") {
+  const res = document.getElementById("searchResults");
+  if (navigator.onLine === false) {
+    if (res) res.innerHTML = `<div class="loader">📡 Sei offline: la Biblioteca online richiede la connessione a internet.</div>`;
+    return;
+  }
+  const q = (document.getElementById(searchInputId)?.value || "").trim();
+  const base = lang === "en" ? "https://wol.jw.org/en/wol/" : "https://wol.jw.org/it/wol/";
+  const tail = lang === "en" ? "r1/lp-e" : "r6/lp-i";
+  const url = q ? `${base}s/${tail}?q=${encodeURIComponent(q)}` : `${base}h/${tail}`;
+  const a = document.createElement("a");
+  a.href = url;
+  a.target = "_blank";
+  a.rel = "noopener noreferrer";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+       
 let currentSearchPage = 1;
 const RESULTS_PER_PAGE = 250;
 let cachedSearchMatches = [];
@@ -4732,13 +4793,17 @@ async function showInsightView(selectedIndex = null, fromBack = false) {
     const active = insightActiveLetter === l ? "background:var(--primary-main);color:#fff;" : "";
     return `<span class="tag-badge" style="padding:5px 9px; font-size:12.5px; ${active}" onclick="filterInsightByLetter('${l}')">${l}</span>`;
   }).join("");
-  main.innerHTML = `
+    main.innerHTML = `
     <div class="section-title">
       <span>📚 Perspicacia (${data.entries.length} Voci)</span>
       <span>${getBackBtnHtml()}</span>
     </div>
     <div class="search-box">
       <input type="text" id="insightSearchInput" class="search-input" value="${escapeHtml(insightSearchQuery)}" placeholder="🔍 Cerca voce o parola nel testo (es. Incorruzione)..." oninput="onInsightSearchInput(this.value)">
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin:0 0 10px 0;">
+      <button class="jw-btn" onclick="openJwLibrary('it', 'insightSearchInput')" title="Cerca nella Biblioteca online Watchtower (italiano)"><span class="jw-circle">${JW_TOWER_SVG}</span>Biblioteca online · Italiano</button>
+      <button class="jw-btn" onclick="openJwLibrary('en', 'insightSearchInput')" title="Search the Watchtower Online Library (English)"><span class="jw-circle">${JW_TOWER_SVG}</span>Online Library · English</button>
     </div>
     <div style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:12px;">${letterPills}</div>
     <div id="insightListContainer"></div>
@@ -4973,6 +5038,10 @@ const extraCards = extras.map((x, i) => `
 `).join("");
 main.innerHTML = `
 <div class="section-title"><span>📘 Tutta la Scrittura è ispirata da Dio e utile</span><span>${getBackBtnHtml()}</span></div>
+<div style="display:flex; gap:8px; flex-wrap:wrap; margin:10px 0;">
+  <button class="jw-btn" onclick="openJwLibrary('it')" title="Cerca nella Biblioteca online Watchtower (italiano)"><span class="jw-circle">${JW_TOWER_SVG}</span>Biblioteca online · Italiano</button>
+  <button class="jw-btn" onclick="openJwLibrary('en')" title="Search the Watchtower Online Library (English)"><span class="jw-circle">${JW_TOWER_SVG}</span>Online Library · English</button>
+</div>
 <div class="section-title"><span>Scritture Ebraico-Aramaiche</span><span>39 Libri</span></div>
 <div class="books-grid">${tiles(ot)}</div>
 <div class="section-title"><span>Scritture Greche Cristiane</span><span>27 Libri</span></div>
