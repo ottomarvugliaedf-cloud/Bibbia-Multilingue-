@@ -2366,7 +2366,7 @@ function formatNoteLinks(txt, defaultBookId = null) {
 
  // ─── PASSO 2: riferimenti a PUBBLICAZIONI (badge viola) ───
  // Riconosce formati come: w21.05 p. 12 · g20.3 pp. 4-5 · w24.06 12 parr. 15-16 · lff lez. 12
- const PUB_RE = /\b((?:w|g|it|km|wp|mwb|ws|wb|wh|rp|lvs|kr|iw|wiy|ia|mb|yc|jy|yp|lff|es|th|rj|we|ct|ds|sn|br|ka|jv|od|cl|be|bhs|ba|bt|lr|fy|wsp|ms|cf|jh|sg|yy|gh|gb|si|sjb|su|ta|lp|ca|dx|dw|wly|rc|bm|bp|yb)(?:\s?[-\u2013\/.]?\s?\d{1,2}(?:\s?[\/.]\s?\d{1,2})?))((?:\s+(?:(?:pp?\.|parr?\.|lez\.|cap\.|sez\.|pagine?|pagina)\s*)?[\d\s,\-\u2013]+)*)/gi;
+ const PUB_RE = /\b((?:w|g|it|km|wp|mwb|ws|wb|wh|rp|lvs|kr|iw|wiy|ia|mb|yc|jy|yp|lff|th|rj|we|ct|ds|sn|br|ka|jv|od|cl|be|bhs|ba|bt|lr|fy|wsp|ms|cf|jh|sg|yy|gh|gb|si|sjb|su|ta|lp|ca|dx|dw|wly|rc|bm|bp|yb)(?:\s?[-\u2013\/.]?\s?\d{1,2}(?:\s?[\/.]\s?\d{1,2})?|\s+(?:pp?\.|parr?\.|par\.|pagg?\.|lez\.|cap\.|sez\.|§|pagine?|pagina)\s*\d+)(?:\s+(?:(?:pp?\.|parr?\.|par\.|pagg?\.|lez\.|cap\.|sez\.|§|pagine?|pagina)\s*)?[\d,\-\u2013]+)*)/gi;
 
  const wrapPub = (m) => {
    const clean = m.replace(/\s+/g, " ").trim();
