@@ -2276,6 +2276,13 @@ const SI_ABBR_MAP = {
   "giuda": 65, "gda": 65, "riv": 66
 };
 
+function formatNoteLinks(txt, defaultBookId = null) {
+  if (typeof linkifyPubRefs === "function") {
+    return linkifyPubRefs(formatBibleRefLinks(txt, defaultBookId));
+  }
+  return formatBibleRefLinks(txt, defaultBookId);
+  }
+    
 function formatBibleRefLinks(txt, defaultBookId = null) {
   if (!txt) return "";
   const escaped = escapeHtml(txt);
