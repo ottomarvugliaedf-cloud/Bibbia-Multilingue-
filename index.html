@@ -2277,13 +2277,6 @@ const SI_ABBR_MAP = {
 };
 
 function formatNoteLinks(txt, defaultBookId = null) {
-  if (typeof linkifyPubRefs === "function") {
-    return linkifyPubRefs(formatBibleRefLinks(txt, defaultBookId));
-  }
-  return formatBibleRefLinks(txt, defaultBookId);
-  }
-    
-function formatBibleRefLinks(txt, defaultBookId = null) {
   if (!txt) return "";
   const escaped = escapeHtml(txt);
 
@@ -2533,10 +2526,6 @@ function showSearchView(fromBack = false) {
       <button class="jw-btn" onclick="openJwLibrary('it', 'searchInput')" title="Cerca nella Biblioteca online Watchtower (italiano)"><span class="jw-circle">${JW_TOWER_SVG}</span>Biblioteca online · Italiano</button>
       <button class="jw-btn" onclick="openJwLibrary('en', 'searchInput')" title="Search the Watchtower Online Library (English)"><span class="jw-circle">${JW_TOWER_SVG}</span>Online Library · English</button>
     </div>
-    <div class="jw-bar">
-      <button class="jw-btn" onclick="openJwLibrary('it','searchInput')" title="Cerca nella Biblioteca online Watchtower (italiano)"><span class="jw-circle">${JW_TOWER_SVG}</span>Biblioteca online · Italiano</button>
-      <button class="jw-btn" onclick="openJwLibrary('en','searchInput')" title="Search the Watchtower Online Library (English)"><span class="jw-circle">${JW_TOWER_SVG}</span>Online Library · English</button>
-    </div>
     <div class="search-box" style="margin-top:-4px;">
       <select id="searchBibleSelect" class="trans-select" onchange="if(document.getElementById('searchInput').value.trim()) executeSearch(1)">${bibleOptionsHtml}</select>
       <select id="searchMode" class="trans-select" style="max-width:195px;" onchange="if(document.getElementById('searchInput').value.trim()) executeSearch(1)">
@@ -2574,106 +2563,7 @@ function openJwLibrary(lang, searchInputId = "searchInput") {
   a.click();
   a.remove();
 }
-
-// ============================================================================
-// BIBLIOTECA ONLINE (WOL) — pulsanti e riferimenti alle pubblicazioni
-// ============================================================================
-const JW_TOWER_SVG = `<svg viewBox="180 180 540 540"><path d="M180 180h120v60h30v-60h60v60h30v-60h60v60h30v-60h60v60h30v-60h120v210h-30v30h-30v300h-420v-300h-30v-30h-30z"/></svg>`;
-
-const PUB_PG = String.raw`(?:\s+(?:pp?\.|pagg?\.)\s*\d+(?:\s*[–-]\s*\d+)?(?:\s*,\s*\d+(?:\s*[–-]\s*\d+)?)*)`;
-const PUB_REF_RE = new RegExp(
-  String.raw`\b(?:` +
-  String.raw`(?:w|wp|ws|g|km|mwb|yb)\d{0,2}\s+\d{1,2}\/\d{1,2}(?:\/\d{2,4})?` + PUB_PG + `?` +
-  `|` +
-  String.raw`(?:w|wp|ws|g|mwb)\d{2}\.\d{1,2}` + PUB_PG + `?` +
-  `|` +
-  String.raw`(?:it-[12]|si|bh|rs|kl|jr|re|ia|cl|lv|lff|lfb|ypq|yp[12]|dp|ed|gt|pm|kr|th|ba|ad|be|bt|od|ol|ct|cv|hl|im|jd|jv|lr|my|ph|pr|rr|sg|sp|tp|uw|wi|fy|gm|gr|jy|nh|yc|lp|rp)\s+(?:cap\.|lez\.|storia|pp?\.|pagg?\.)\s*\d+(?:\s*[–-]\s*\d+)?(?:\s*,\s*\d+(?:\s*[–-]\s*\d+)?)*(?:\s+(?:par\.|parr\.)\s*\d+(?:\s*[–-]\s*\d+)?)?` +
-  `|` +
-  String.raw`Perspicacia,\s+vol\.\s*[12],\s+pp?\.\s*\d+(?:\s*[–-]\s*\d+)?(?:\s*,\s*\d+(?:\s*[–-]\s*\d+)?)*` +
-  `)`, "g");
-
-// Versetti biblici (come prima) + riferimenti a pubblicazioni (w, g, it-1, si, ...)
-function formatNoteLinks(txt, defaultBookId = null) {
-  return linkifyPubRefs(formatBibleRefLinks(txt, defaultBookId));
-}
-
-function linkifyPubRefs(html) {
-  if (!html) return html;
-  let inBadge = false;
-  return String(html).split(/(<[^>]*>)/).map(part => {
-    if (part.startsWith("<")) {
-      if (/^<span[^>]*class="tag-badge/.test(part)) inBadge = true;
-      else if (inBadge && part === "</span>") inBadge = false;
-      return part;
-    }
-    if (inBadge || !part) return part;
-    return part.replace(PUB_REF_RE, m =>
-      `<span class="tag-badge" onclick="event.stopPropagation(); openPubRef('${escapeJsStr(m)}')">📚 ${m}</span>`
-    );
-  }).join("");
-}
-
-function bmCopyText(txt) {
-  try {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(txt).catch(() => {});
-      return;
-    }
-  } catch (e) {}
-  try {
-    const ta = document.createElement("textarea");
-    ta.value = txt;
-    ta.style.position = "fixed";
-    ta.style.opacity = "0";
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand("copy");
-    ta.remove();
-  } catch (e) {}
-}
-
-function jwOfflineNotice() {
-  const modal = document.getElementById("myReadModal");
-  const body = document.getElementById("myReadModalBody");
-  if (!modal || !body) return;
-  body.innerHTML = `<div style="padding:8px 2px;">📡 Sei offline: la Biblioteca online richiede la connessione a internet.</div>`;
-  modal.style.display = "flex";
-}
-
-function openJwLibrary(lang, inputId, directQuery) {
-  const fromInput = inputId ? (document.getElementById(inputId)?.value || "") : "";
-  const q = String(directQuery != null ? directQuery : fromInput).trim();
-  if (navigator.onLine === false) { jwOfflineNotice(); return; }
-  const base = lang === "en" ? "https://wol.jw.org/en/wol/" : "https://wol.jw.org/it/wol/";
-  const tail = lang === "en" ? "r1/lp-e" : "r6/lp-i";
-  const url = q ? `${base}s/${tail}?q=${encodeURIComponent(q)}` : `${base}h/${tail}`;
-  const a = document.createElement("a");
-  a.href = url;
-  a.target = "_blank";
-  a.rel = "noopener noreferrer";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-}
-
-function openPubRef(ref) {
-  bmCopyText(ref);
-  const modal = document.getElementById("myReadModal");
-  const body = document.getElementById("myReadModalBody");
-  if (!modal || !body) { openJwLibrary("it", null, ref); return; }
-  const safe = escapeJsStr(ref);
-  const btnStyle = "width:100%; background:rgba(255,255,255,0.12); color:#ffffff; border:1px solid #29b6f6;";
-  body.innerHTML = `
-    <div style="font-size:15.5px; font-weight:900; color:#ccff00; margin-bottom:10px; border-bottom:1px solid rgba(41,182,246,0.4); padding-bottom:6px;">📚 ${escapeHtml(ref)}</div>
-    <div style="margin-bottom:12px;">Riferimento copiato. Aprilo nella Biblioteca online e, se serve, incollalo nella ricerca.</div>
-    <div style="display:flex; flex-direction:column; gap:8px;">
-      <button class="jw-btn" style="${btnStyle}" onclick="openJwLibrary('it', null, '${safe}'); document.getElementById('myReadModal').style.display='none'"><span class="jw-circle">${JW_TOWER_SVG}</span>Biblioteca online · Italiano</button>
-      <button class="jw-btn" style="${btnStyle}" onclick="openJwLibrary('en', null, '${safe}'); document.getElementById('myReadModal').style.display='none'"><span class="jw-circle">${JW_TOWER_SVG}</span>Online Library · English</button>
-    </div>
-  `;
-  modal.style.display = "flex";
-}
-    
+       
 let currentSearchPage = 1;
 const RESULTS_PER_PAGE = 250;
 let cachedSearchMatches = [];
@@ -3830,7 +3720,7 @@ function openBackupModal() {
       </label>
       <div id="epubImportStatus" style="font-size:13px; font-weight:700; color:var(--primary-light); text-align:center; padding:4px;"></div>
     </div>
-    <div class="section-title"><span>💾 Backup & Ripristino Dati Studio</span></div>
+     <div class="section-title"><span>💾 Backup & Ripristino Dati Studio</span></div>
     <div style="display:flex; flex-direction:column; gap:10px;">
       <button class="search-btn" style="background:linear-gradient(135deg, #0a367e, #1565c0);" onclick="setAsMyReading()">🕯️ Fissa il capitolo attuale come "Mia lettura"</button>
       <button class="search-btn" onclick="exportBackupJson()">📤 Esporta / Condividi File di Backup (.json)</button>
@@ -4915,10 +4805,6 @@ async function showInsightView(selectedIndex = null, fromBack = false) {
       <button class="jw-btn" onclick="openJwLibrary('it', 'insightSearchInput')" title="Cerca nella Biblioteca online Watchtower (italiano)"><span class="jw-circle">${JW_TOWER_SVG}</span>Biblioteca online · Italiano</button>
       <button class="jw-btn" onclick="openJwLibrary('en', 'insightSearchInput')" title="Search the Watchtower Online Library (English)"><span class="jw-circle">${JW_TOWER_SVG}</span>Online Library · English</button>
     </div>
-    <div class="jw-bar">
-      <button class="jw-btn" onclick="openJwLibrary('it','insightSearchInput')" title="Cerca nella Biblioteca online Watchtower (italiano)"><span class="jw-circle">${JW_TOWER_SVG}</span>Biblioteca online · Italiano</button>
-      <button class="jw-btn" onclick="openJwLibrary('en','insightSearchInput')" title="Search the Watchtower Online Library (English)"><span class="jw-circle">${JW_TOWER_SVG}</span>Online Library · English</button>
-    </div>
     <div style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:12px;">${letterPills}</div>
     <div id="insightListContainer"></div>
   `;
@@ -5152,10 +5038,9 @@ const extraCards = extras.map((x, i) => `
 `).join("");
 main.innerHTML = `
 <div class="section-title"><span>📘 Tutta la Scrittura è ispirata da Dio e utile</span><span>${getBackBtnHtml()}</span></div>
-<div class="search-box"><input type="text" id="siJwInput" class="search-input" placeholder="🔍 Cerca nella Biblioteca online (es. Giobbe)..." onkeydown="if(event.key==='Enter') openJwLibrary('it','siJwInput')"></div>
-<div class="jw-bar">
-<button class="jw-btn" onclick="openJwLibrary('it','siJwInput')" title="Cerca nella Biblioteca online Watchtower (italiano)"><span class="jw-circle">${JW_TOWER_SVG}</span>Biblioteca online · Italiano</button>
-<button class="jw-btn" onclick="openJwLibrary('en','siJwInput')" title="Search the Watchtower Online Library (English)"><span class="jw-circle">${JW_TOWER_SVG}</span>Online Library · English</button>
+<div style="display:flex; gap:8px; flex-wrap:wrap; margin:10px 0;">
+  <button class="jw-btn" onclick="openJwLibrary('it')" title="Cerca nella Biblioteca online Watchtower (italiano)"><span class="jw-circle">${JW_TOWER_SVG}</span>Biblioteca online · Italiano</button>
+  <button class="jw-btn" onclick="openJwLibrary('en')" title="Search the Watchtower Online Library (English)"><span class="jw-circle">${JW_TOWER_SVG}</span>Online Library · English</button>
 </div>
 <div class="section-title"><span>Scritture Ebraico-Aramaiche</span><span>39 Libri</span></div>
 <div class="books-grid">${tiles(ot)}</div>
