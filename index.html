@@ -905,6 +905,35 @@
       cursor: pointer;
       display: inline-block;
     }
+/* Riferimenti a pubblicazioni (w, g, it, km, wp, mwb, lff, ia, ws, rp, lvs, kr, ...) — VIOLA */
+.pub-ref-badge {
+  display: inline-block;
+  background: rgba(156, 39, 176, 0.18);
+  color: #e1bee7;
+  border: 1px solid #ba68c8;
+  border-radius: 5px;
+  padding: 0 5px;
+  font-weight: 800;
+  font-size: 0.92em;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  transition: background-color .15s ease, box-shadow .15s ease;
+}
+.pub-ref-badge:active {
+  background: #ba68c8 !important;
+  color: #1a0033 !important;
+  box-shadow: 0 0 10px rgba(186, 104, 200, 0.9);
+}
+body.dark-mode .pub-ref-badge,
+body.oled-mode .pub-ref-badge {
+  background: rgba(186, 104, 200, 0.22);
+  color: #f3e5f5;
+}
     /* ===== DOVE? / CARTINE BIBLICHE (Stile Uniformato PRO) ===== */
     .bp-viewer { position: fixed; inset: 0; z-index: 1100; display: none; flex-direction: column; background: var(--bg-main); color: var(--text-main); }
     .bp-vhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; padding-top: max(36px, env(safe-area-inset-top, 36px)); background: linear-gradient(135deg, var(--primary-dark), var(--primary-main)); color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.22); flex-shrink: 0; }
@@ -2278,11 +2307,21 @@ const SI_ABBR_MAP = {
 
 function formatNoteLinks(txt, defaultBookId = null) {
   if (!txt) return "";
-  const escaped = escapeHtml(txt);
+  let out = escapeHtml(txt);
 
+  // ─── 1. RIFERIMENTI A PUBBLICAZIONI (badge viola) ───
+  // Riconosce formati come: w24.06 12 parr. 15-16 · g20.3 pp. 4-5 · w 15/4 p. 7 · lff lez. 12 · it-1 p. 345
+  const PUB_RE = /\b((?:w|g|it|km|wp|mwb|ws|wb|wh|rp|lvs|kr|iw|wiy|ia|mb|yc|jy|yp|lff|es|th|rj|we|ct|ds|sn|br|ka|jv|od|cl|be|bhs|ba|bt|lr|fy|wsp|ms|cf|jh|sg|yy|gh|gb|si|sjb|su|ta|lp|ca|dx|dw|wly|rc|bm|bp|yb)(?:\s?\d{1,2}(?:[\/.]\d{1,2})?|(?:\s+(?:pp?\.|p\.|parr?\.|par\.|lez\.|cap\.|sez\.|§|pagine?|pagina))))((?:\s*(?:pp?\.|p\.|parr?\.|par\.|lez\.|cap\.|sez\.|§|pagine?|pagina)?\s*[\d\s,\-\u2013]+)*)/gi;
+
+  out = out.replace(PUB_RE, (match) => {
+    const clean = match.replace(/\s+/g, ' ').trim();
+    return `<span class="pub-ref-badge" data-ref="${clean}" onpointerdown="onPubRefDown(event)" onpointerup="onPubRefUp()" onpointerleave="onPubRefUp()" onpointercancel="onPubRefUp()" onclick="onPubRefClick(event, this.getAttribute('data-ref'))" oncontextmenu="event.preventDefault(); copyPubRefToClipboard(this.getAttribute('data-ref'))">📚 ${clean}</span>`;
+  });
+
+  // ─── 2. RIFERIMENTI BIBLICI (versetti) ───
   const chainRegex = /\b(?:(?:([1-3]\s*)?([A-ZÀ-Ý][A-Za-zÀ-ÖØ-öø-ÿ]{1,18})\.?\s+(\d{1,3})(?::(\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?(?::\d{1,3}[a-z]?)?)?(?:\s*,\s*(?!\d{1,3}\s*:)\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?)*))?)|(?:(\d{1,3}):(\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?(?::\d{1,3}[a-z]?)?)?(?:\s*,\s*(?!\d{1,3}\s*:)\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?)*)))((?:\s*[;,]\s*(?![1-3]?\s*[A-Za-zÀ-ÖØ-öø-ÿ]{2})\d{1,3}[a-z]?(?::\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?(?::\d{1,3}[a-z]?)?)?(?:\s*,\s*(?!\d{1,3}\s*:)\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?)*)?(?:\s*[–-]\s*\d{1,3}[a-z]?(?::\d{1,3}[a-z]?)?)?)*)/g;
-  
-  return escaped.replace(chainRegex, (fullMatch, numPrefix, wordPart, chWithBook, vListWithBook, chImplicit, vListImplicit, tailPart) => {
+
+  out = out.replace(chainRegex, (fullMatch, numPrefix, wordPart, chWithBook, vListWithBook, chImplicit, vListImplicit, tailPart) => {
     let bId = null;
     let firstCh = "";
     let firstVList = "";
@@ -2307,38 +2346,138 @@ function formatNoteLinks(txt, defaultBookId = null) {
     const firstToken = fullMatch.slice(0, headEndIdx);
     const firstRef = `${bookName} ${curCh}${firstVList ? ":" + firstVList : ""}`;
 
-    let out = `<span class="tag-badge" onclick="event.stopPropagation(); jumpToRefString('${escapeJsStr(firstRef)}')">📖 ${firstToken}</span>`;
-    if (!tailPart) return out;
+    let outSeg = `<span class="tag-badge" onclick="event.stopPropagation(); jumpToRefString('${escapeJsStr(firstRef)}')">📖 ${firstToken}</span>`;
+    if (!tailPart) return outSeg;
     const crossChMatch = firstToken.match(/[–-]\s*(\d{1,3}):\d{1,3}/);
     if (crossChMatch) curCh = crossChMatch[1];
     let hasColons = Boolean(firstVList);
-    
+
     const segRegex = /(\s*([;,])\s*)(\d{1,3}[a-z]?)(?::(\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?(?:\s*,\s*(?!\d{1,3}\s*:)\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?)*))?(?:\s*[–-]\s*(\d{1,3}[a-z]?))?/g;
 
-    out += tailPart.replace(segRegex, (segMatch, sepFull, sepChar, n1, vListAfterColon, rangeEndNoColon) => {
+    outSeg += tailPart.replace(segRegex, (segMatch, sepFull, sepChar, n1, vListAfterColon, rangeEndNoColon) => {
       const cleanN1 = n1.replace(/\D/g, "");
       let targetRef = "";
-
       if (vListAfterColon) {
-        curCh = cleanN1;
-        hasColons = true;
+        curCh = cleanN1; hasColons = true;
         targetRef = `${bookName} ${curCh}:${vListAfterColon}`;
       } else if (sepChar === "," && hasColons) {
         const vRange = rangeEndNoColon ? `${cleanN1}-${rangeEndNoColon.replace(/\D/g, "")}` : cleanN1;
         targetRef = `${bookName} ${curCh}:${vRange}`;
       } else {
-        curCh = cleanN1;
-        hasColons = false;
+        curCh = cleanN1; hasColons = false;
         targetRef = `${bookName} ${curCh}`;
       }
-
       const labelPart = segMatch.slice(sepFull.length);
       return `${sepFull}<span class="tag-badge" onclick="event.stopPropagation(); jumpToRefString('${escapeJsStr(targetRef)}')">📖 ${labelPart}</span>`;
     });
 
-    return out;
+    return outSeg;
   });
+
+  return out;
 }
+
+// ─── Riferimenti a pubblicazioni: copia e apertura ───
+let pubRefLongPressFired = false;
+let pubRefTimer = null;
+
+function onPubRefDown(ev) {
+  if (ev && ev.button !== undefined && ev.button !== 0) return;
+  pubRefLongPressFired = false;
+  clearTimeout(pubRefTimer);
+  const el = ev.currentTarget;
+  const ref = el.getAttribute('data-ref');
+  pubRefTimer = setTimeout(() => {
+    pubRefLongPressFired = true;
+    copyPubRefToClipboard(ref);
+  }, 600);
+}
+
+function onPubRefUp() {
+  clearTimeout(pubRefTimer);
+}
+
+function onPubRefClick(ev, ref) {
+  if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+  clearTimeout(pubRefTimer);
+  if (pubRefLongPressFired) { pubRefLongPressFired = false; return; }
+  bmHaptic(10);
+  showPubRefModal(ref);
+}
+
+function copyPubRefToClipboard(txt) {
+  if (!txt) return;
+  let success = false;
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt);
+      success = true;
+    }
+  } catch(e) {}
+  if (!success) {
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = txt;
+      ta.style.position = "absolute";
+      ta.style.left = "-9999px";
+      ta.style.top = "0";
+      ta.style.opacity = "0.01";
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      ta.setSelectionRange(0, ta.value.length);
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      success = true;
+    } catch(e) {}
+  }
+  if (success) {
+    showBlueInfoModal("📋 Copiato!", `Riferimento <b>${escapeHtml(txt)}</b> copiato negli appunti.`);
+  } else {
+    showBlueInfoModal("⚠️ Copia manuale", `Copia manualmente:<br><textarea style="width:100%; height:50px; margin-top:6px;" readonly onclick="this.select()">${escapeHtml(txt)}</textarea>`);
+  }
+}
+
+function showPubRefModal(fullRef) {
+  const modal = document.getElementById("myReadModal");
+  const body = document.getElementById("myReadModalBody");
+  if (!modal || !body) { copyPubRefToClipboard(fullRef); return; }
+
+  // Pulizia della query per WOL: togliamo i paragrafi e uniformiamo la pagina
+  let wolQuery = fullRef.replace(/\s+parr?\..*$/i, '').replace(/\s+par\..*$/i, '');
+  const m = wolQuery.match(/^([a-zA-Z]+\d[\d\/\.\-]+)\s+(?:pp?\.\s*)?(\d+)/i);
+  if (m) {
+    wolQuery = `${m[1]} p. ${m[2]}`;
+  }
+  wolQuery = wolQuery.replace(/\s+/g, ' ').trim();
+
+  const base = "https://wol.jw.org/it/wol/";
+  const tail = "r6/lp-i";
+  const url = `${base}s/${tail}?q=${encodeURIComponent(wolQuery)}`;
+  const cleanUrl = url.replace(/^https?:\/\//, '');
+  const chromeIntent = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;end`;
+  const defaultIntent = `intent://${cleanUrl}#Intent;scheme=https;end`;
+
+  body.innerHTML = `
+    <div style="text-align:center; padding:4px 0 12px 0;">
+      <div style="font-size:30px; margin-bottom:8px;">📚</div>
+      <div style="font-size:16px; font-weight:800; color:#ffffff; margin-bottom:6px;">Riferimento Rilevato</div>
+      <div style="font-size:13.5px; color:#e3f2fd; line-height:1.5;">
+        <b style="color:#f3e5f5; font-size:15px;">${escapeHtml(fullRef)}</b>
+        <div style="font-size:11px; color:#9ec9ff; margin-top:4px;">Ricerca WOL: <i>${escapeHtml(wolQuery)}</i></div>
+      </div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <button class="myread-action-btn" style="background:#2e7d32;" onclick="copyPubRefToClipboard('${escapeJsStr(fullRef)}')">📋 Copia Riferimento Completo</button>
+      <button class="myread-action-btn" style="background:#0277bd;" onclick="copyPubRefToClipboard('${escapeJsStr(wolQuery)}')">📋 Copia per WOL</button>
+      <button class="myread-action-btn" style="background:#0d47a1;" onclick="window.location.href='${escapeJsStr(chromeIntent)}'; document.getElementById('myReadModal').style.display='none';">🌐 Apri in Chrome</button>
+      <button class="myread-action-btn" style="background:#062356;" onclick="window.location.href='${escapeJsStr(defaultIntent)}'; document.getElementById('myReadModal').style.display='none';">📱 Apri nel Browser</button>
+      <button class="myread-action-btn" style="background:#1a0033; margin-top:6px;" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
+    </div>
+  `;
+  modal.style.display = "flex";
+}
+    
 function filterNotesByTag(tagVal) {
   state.activeTagFilter = tagVal || null;
   showNotesView();
