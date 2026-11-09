@@ -2417,16 +2417,29 @@ function onPubRefClick(ev, pubRef) {
 
 function openPubRefInWOL(pubRef) {
   if (!pubRef) return;
-  const query = String(pubRef).trim();
+  
+  // 1. PULIZIA DELLA QUERY PER WOL
+  let query = String(pubRef).trim();
+  
+  // Rimuove "parr. 15-16" o "par. 15"
+  query = query.replace(/\s+parr?\.\s*\d+.*/i, '');
+  // Rimuove eventuali range di numeri alla fine (es. "15-16")
+  query = query.replace(/\s+\d+(?:[–-]\d+)?\s*$/, '');
+  
+  // Se la query è nel formato "w24.06 12", la trasforma in "w24.06 p. 12" (WOL lo capisce meglio)
+  const m = query.match(/^([a-zA-Z]+\d[\d\/\.\-]+)\s+(?:p+\.?\s*)?(\d+)$/i);
+  if (m) {
+    query = `${m[1]} p. ${m[2]}`;
+  }
+  
+  // 2. GESTIONE OFFLINE E APERTURA
   const lang = (typeof getActiveTTSLangCode === "function" ? getActiveTTSLangCode(false) : "it");
 
-  // Se offline: mostra il modale con "Copia" + "Apri" (così il riferimento resta recuperabile)
   if (navigator.onLine === false) {
     showPubRefModal(query, lang);
     return;
   }
 
-  // Su Android = stesso pattern di openJwLibrary (a.click con target _blank funziona in WebView)
   const base = (lang === "en") ? "https://wol.jw.org/en/wol/" : "https://wol.jw.org/it/wol/";
   const tail = (lang === "en") ? "r1/lp-e" : "r6/lp-i";
   const url = `${base}s/${tail}?q=${encodeURIComponent(query)}`;
@@ -2437,13 +2450,20 @@ function openPubRefInWOL(pubRef) {
     }
   } catch (e) {}
 
-  const a = document.createElement("a");
-  a.href = url;
-  a.target = "_blank";
-  a.rel = "noopener noreferrer";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  // 3. TENTA DI APRIRE NEL BROWSER DI SISTEMA
+  // Usiamo window.open con '_system', che su molte WebView (come quelle di AppsGeyser) 
+  // forza l'apertura in Chrome invece che nella WebView interna.
+  const win = window.open(url, '_system');
+  if (!win) {
+    // Se '_system' non funziona, ripiega sul classico link con target="_blank"
+    const a = document.createElement("a");
+    a.href = url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
 }
 
 function copyPubRefToClipboard(pubRef) {
