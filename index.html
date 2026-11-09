@@ -905,7 +905,7 @@
       cursor: pointer;
       display: inline-block;
     }
-    /* Riferimenti a pubblicazioni (w, g, it, km, wp, mwb, lff, ia, ws, rp, lvs, kr, ...) — VIOLA per distinguerli dai versetti (blu) */
+/* Riferimenti a pubblicazioni (w, g, it, km, wp, mwb, lff, ia, ws, rp, lvs, kr, ...) — VIOLA per distinguerli dai versetti (blu) */
 .pub-ref-badge {
   display: inline-block;
   background: rgba(156, 39, 176, 0.18);
@@ -1071,7 +1071,7 @@ body.oled-mode .pub-ref-badge {
     <select id="trans2" class="trans-select" style="display:none;" onchange="onTranslationChange()"></select>
     <select id="trans3" class="trans-select" style="display:none;" onchange="onTranslationChange()"></select>
   </div>
-    <!-- Barra Menu Rapida Sempre Visibile (PRO — Biblioteca) -->
+  <!-- Barra Menu Rapida Sempre Visibile (PRO — Biblioteca) -->
   <div class="quick-menu-bar">
     <button id="booksTabBtn" class="quick-pill" onclick="showBooksView()">🟦 Libri Biblici</button>
     <button id="readTabBtn" class="quick-pill" onclick="openBibleTabFromMenu()">📖 Lettura</button>
@@ -2364,24 +2364,21 @@ function formatNoteLinks(txt, defaultBookId = null) {
     return outSeg;
   });
 
-  // ─── PASSO 2: riferimenti a PUBBLICAZIONI (badge viola) ───
-  // Formati riconosciuti: w21.05 p. 12 · g20.3 pp. 4-5 · w 15/4 p. 7 · it-1 p. 345 ·
-  //                       km 3/22 p. 2 · mwb 5/21 p. 3 · lff lez. 12 · ia p. 34 parr. 5-7 · ws 15/2 pp. 3-6
-  const PUB_RE_WITH_NUM = /\b((?:w|g|it|km|wp|mwb|ws|wb|wh|rp|lvs|kr|iw|wiy|ia|mb|yc|jy|yp|lff|es|th|rj|we|ct|ds|sn|br|ka|jv|od|cl|be|bhs|ba|bt|lr|fy|wsp|ms|cf|jh|sg|yy|gh|gb|si|sjb|su|ta|lp|ca|dx|dw|wly|rc|bm|bp|yb)\s?[-\u2013\/.]?\s?\d{1,2}(?:\s?[\/.]\s?\d{1,2})?)(?:\s+(?:pp?\.|p\.|parr?\.|lez\.|cap\.|sez\.|pagine?|pagina)\s*[\d\s,\-\u2013]+)*/gi;
-  const PUB_RE_WITH_PAGE = /\b((?:w|g|it|km|wp|mwb|ws|wb|wh|rp|lvs|kr|iw|wiy|ia|mb|yc|jy|yp|lff|es|th|rj|we|ct|ds|sn|br|ka|jv|od|cl|be|bhs|ba|bt|lr|fy|wsp|ms|cf|jh|sg|yy|gh|gb|si|sjb|su|ta|lp|ca|dx|dw|wly|rc|bm|bp|yb)\s+(?:pp?\.|p\.|parr?\.|lez\.|cap\.|sez\.|pagine?|pagina)\s*[\d\s,\-\u2013]+)/gi;
+ // ─── PASSO 2: riferimenti a PUBBLICAZIONI (badge viola) ───
+ // Riconosce formati come: w21.05 p. 12 · g20.3 pp. 4-5 · w24.06 12 parr. 15-16 · lff lez. 12
+ const PUB_RE = /\b((?:w|g|it|km|wp|mwb|ws|wb|wh|rp|lvs|kr|iw|wiy|ia|mb|yc|jy|yp|lff|es|th|rj|we|ct|ds|sn|br|ka|jv|od|cl|be|bhs|ba|bt|lr|fy|wsp|ms|cf|jh|sg|yy|gh|gb|si|sjb|su|ta|lp|ca|dx|dw|wly|rc|bm|bp|yb)(?:\s?[-\u2013\/.]?\s?\d{1,2}(?:\s?[\/.]\s?\d{1,2})?))((?:\s+(?:(?:pp?\.|parr?\.|lez\.|cap\.|sez\.|pagine?|pagina)\s*)?[\d\s,\-\u2013]+)*)/gi;
 
-  const wrapPub = (m) => {
-    const clean = m.replace(/\s+/g, " ").trim();
-    const safeJs = escapeJsStr(clean);
-    return `<span class="pub-ref-badge" onpointerdown="onPubRefDown(event)" onpointerup="onPubRefUp()" onpointerleave="onPubRefUp()" onpointercancel="onPubRefUp()" oncontextmenu="event.preventDefault(); event.stopPropagation(); return false;" onclick="onPubRefClick(event, '${safeJs}')" title="Tocca: apri in Biblioteca Online · Tieni premuto: copia">📚 ${escapeHtml(clean)}</span>`;
-  };
+ const wrapPub = (m) => {
+   const clean = m.replace(/\s+/g, " ").trim();
+   const safeJs = escapeJsStr(clean);
+   return `<span class="pub-ref-badge" onpointerdown="onPubRefDown(event)" onpointerup="onPubRefUp()" onpointerleave="onPubRefUp()" onpointercancel="onPubRefUp()" oncontextmenu="event.preventDefault(); event.stopPropagation(); return false;" onclick="onPubRefClick(event, '${safeJs}')" title="Tocca: apri in Biblioteca Online · Tieni premuto: copia">📚 ${escapeHtml(clean)}</span>`;
+ };
 
-  out = out.replace(PUB_RE_WITH_NUM, wrapPub);
-  out = out.replace(PUB_RE_WITH_PAGE, wrapPub);
+ out = out.replace(PUB_RE, wrapPub);
 
-  return out;
+ return out;
 }
-
+    
 /* ============================================================================
    RIFERIMENTI A PUBBLICAZIONI — Android (Pixel + AppsGeyser WebView)
    Tap = apri Biblioteca Online · Tieni premuto = copia negli appunti
@@ -2392,7 +2389,6 @@ function onPubRefDown(ev) {
   if (ev && ev.button !== undefined && ev.button !== 0) return;
   pubRefPress.triggered = false;
   clearTimeout(pubRefPress.timer);
-  const ref = (ev && ev.currentTarget) ? (ev.currentTarget.getAttribute("data-ref") || "") : "";
   // Il riferimento vero viene passato via onclick: usiamo un riferimento temporaneo dal testo del badge
   const el = ev && ev.currentTarget;
   const rawLabel = el ? (el.textContent || "").replace(/^\s*📚\s*/, "").trim() : "";
