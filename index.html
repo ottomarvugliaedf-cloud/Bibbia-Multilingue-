@@ -2397,6 +2397,28 @@ function onPubRefUp() {
   clearTimeout(pubRefTimer);
 }
 
+// Funzione intelligente per creare la query corretta per WOL
+function buildWolQuery(fullRef) {
+  let clean = fullRef.replace(/\s+/g, ' ').trim();
+  const codeMatch = clean.match(/^([a-zA-Z]+\d[\d\/\.\-]+)/);
+  if (!codeMatch) return clean;
+  const code = codeMatch[1];
+
+  // 1. Cerca paragrafi (parr. o par.)
+  const parrMatch = clean.match(/(?:parr?\.)\s*([\d\-–]+)/i);
+  if (parrMatch) return `${code} parr. ${parrMatch[1]}`;
+
+  // 2. Cerca pagine (p. o pp.)
+  const pageMatch = clean.match(/(?:pp?\.)\s*([\d\-–]+)/i);
+  if (pageMatch) return `${code} p. ${pageMatch[1]}`;
+
+  // 3. Se c'è solo un numero isolato (es. "w24.06 12")
+  const numMatch = clean.match(/^[a-zA-Z]+\d[\d\/\.\-]+\s+(\d+)$/);
+  if (numMatch) return `${code} p. ${numMatch[1]}`;
+
+  return clean;
+}
+
 function onPubRefClick(ev, ref) {
   if (ev) { ev.preventDefault(); ev.stopPropagation(); }
   clearTimeout(pubRefTimer);
@@ -2443,14 +2465,9 @@ function showPubRefModal(fullRef) {
   const body = document.getElementById("myReadModalBody");
   if (!modal || !body) { copyPubRefToClipboard(fullRef); return; }
 
-  // Pulizia della query per WOL: togliamo i paragrafi e uniformiamo la pagina
-  let wolQuery = fullRef.replace(/\s+parr?\..*$/i, '').replace(/\s+par\..*$/i, '');
-  const m = wolQuery.match(/^([a-zA-Z]+\d[\d\/\.\-]+)\s+(?:pp?\.\s*)?(\d+)/i);
-  if (m) {
-    wolQuery = `${m[1]} p. ${m[2]}`;
-  }
-  wolQuery = wolQuery.replace(/\s+/g, ' ').trim();
-
+  // Genera la query corretta per WOL
+  const wolQuery = buildWolQuery(fullRef);
+  
   const base = "https://wol.jw.org/it/wol/";
   const tail = "r6/lp-i";
   const url = `${base}s/${tail}?q=${encodeURIComponent(wolQuery)}`;
@@ -2464,14 +2481,28 @@ function showPubRefModal(fullRef) {
       <div style="font-size:16px; font-weight:800; color:#ffffff; margin-bottom:6px;">Riferimento Rilevato</div>
       <div style="font-size:13.5px; color:#e3f2fd; line-height:1.5;">
         <b style="color:#f3e5f5; font-size:15px;">${escapeHtml(fullRef)}</b>
-        <div style="font-size:11px; color:#9ec9ff; margin-top:4px;">Ricerca WOL: <i>${escapeHtml(wolQuery)}</i></div>
       </div>
     </div>
     <div style="display:flex; flex-direction:column; gap:8px;">
-      <button class="myread-action-btn" style="background:#2e7d32;" onclick="copyPubRefToClipboard('${escapeJsStr(fullRef)}')">📋 Copia Riferimento Completo</button>
-      <button class="myread-action-btn" style="background:#0277bd;" onclick="copyPubRefToClipboard('${escapeJsStr(wolQuery)}')">📋 Copia per WOL</button>
-      <button class="myread-action-btn" style="background:#0d47a1;" onclick="window.location.href='${escapeJsStr(chromeIntent)}'; document.getElementById('myReadModal').style.display='none';">🌐 Apri in Chrome</button>
-      <button class="myread-action-btn" style="background:#062356;" onclick="window.location.href='${escapeJsStr(defaultIntent)}'; document.getElementById('myReadModal').style.display='none';">📱 Apri nel Browser</button>
+      
+      <button class="myread-action-btn" style="background:#0d47a1;" onclick="window.location.href='${escapeJsStr(chromeIntent)}'; document.getElementById('myReadModal').style.display='none';">
+        🌐 Apri in Chrome (Forzato)
+      </button>
+
+      <button class="myread-action-btn" style="background:#0277bd;" onclick="window.location.href='${escapeJsStr(defaultIntent)}'; document.getElementById('myReadModal').style.display='none';">
+        📱 Apri nel Browser Predefinito
+      </button>
+
+      <hr style="border:none; border-top:1px solid rgba(255,255,255,0.2); margin:4px 0;">
+      
+      <button class="myread-action-btn" style="background:#2e7d32;" onclick="copyPubRefToClipboard('${escapeJsStr(fullRef)}')">
+        📋 Copia Riferimento Completo
+      </button>
+
+      <button class="myread-action-btn" style="background:#062356; border: 1px solid #29b6f6;" onclick="copyPubRefToClipboard('${escapeJsStr(wolQuery)}')">
+        🔗 Copia per WOL (${escapeHtml(wolQuery)})
+      </button>
+      
       <button class="myread-action-btn" style="background:#1a0033; margin-top:6px;" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
     </div>
   `;
