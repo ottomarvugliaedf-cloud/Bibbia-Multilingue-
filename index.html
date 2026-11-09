@@ -905,35 +905,6 @@
       cursor: pointer;
       display: inline-block;
     }
-/* Riferimenti a pubblicazioni (w, g, it, km, wp, mwb, lff, ia, ws, rp, lvs, kr, ...) — VIOLA per distinguerli dai versetti (blu) */
-.pub-ref-badge {
-  display: inline-block;
-  background: rgba(156, 39, 176, 0.18);
-  color: #e1bee7;
-  border: 1px solid #ba68c8;
-  border-radius: 5px;
-  padding: 0 5px;
-  font-weight: 800;
-  font-size: 0.92em;
-  text-decoration: underline;
-  text-decoration-thickness: 1.5px;
-  text-underline-offset: 2px;
-  cursor: pointer;
-  user-select: none;
-  -webkit-user-select: none;
-  touch-action: manipulation;
-  transition: background-color .15s ease, box-shadow .15s ease;
-}
-.pub-ref-badge:active {
-  background: #ba68c8 !important;
-  color: #1a0033 !important;
-  box-shadow: 0 0 10px rgba(186, 104, 200, 0.9);
-}
-body.dark-mode .pub-ref-badge,
-body.oled-mode .pub-ref-badge {
-  background: rgba(186, 104, 200, 0.22);
-  color: #f3e5f5;
-}
     /* ===== DOVE? / CARTINE BIBLICHE (Stile Uniformato PRO) ===== */
     .bp-viewer { position: fixed; inset: 0; z-index: 1100; display: none; flex-direction: column; background: var(--bg-main); color: var(--text-main); }
     .bp-vhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; padding-top: max(36px, env(safe-area-inset-top, 36px)); background: linear-gradient(135deg, var(--primary-dark), var(--primary-main)); color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.22); flex-shrink: 0; }
@@ -1071,7 +1042,7 @@ body.oled-mode .pub-ref-badge {
     <select id="trans2" class="trans-select" style="display:none;" onchange="onTranslationChange()"></select>
     <select id="trans3" class="trans-select" style="display:none;" onchange="onTranslationChange()"></select>
   </div>
-  <!-- Barra Menu Rapida Sempre Visibile (PRO — Biblioteca) -->
+    <!-- Barra Menu Rapida Sempre Visibile (PRO — Biblioteca) -->
   <div class="quick-menu-bar">
     <button id="booksTabBtn" class="quick-pill" onclick="showBooksView()">🟦 Libri Biblici</button>
     <button id="readTabBtn" class="quick-pill" onclick="openBibleTabFromMenu()">📖 Lettura</button>
@@ -2310,8 +2281,8 @@ function formatNoteLinks(txt, defaultBookId = null) {
   const escaped = escapeHtml(txt);
 
   const chainRegex = /\b(?:(?:([1-3]\s*)?([A-ZÀ-Ý][A-Za-zÀ-ÖØ-öø-ÿ]{1,18})\.?\s+(\d{1,3})(?::(\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?(?::\d{1,3}[a-z]?)?)?(?:\s*,\s*(?!\d{1,3}\s*:)\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?)*))?)|(?:(\d{1,3}):(\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?(?::\d{1,3}[a-z]?)?)?(?:\s*,\s*(?!\d{1,3}\s*:)\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?)*)))((?:\s*[;,]\s*(?![1-3]?\s*[A-Za-zÀ-ÖØ-öø-ÿ]{2})\d{1,3}[a-z]?(?::\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?(?::\d{1,3}[a-z]?)?)?(?:\s*,\s*(?!\d{1,3}\s*:)\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?)*)?(?:\s*[–-]\s*\d{1,3}[a-z]?(?::\d{1,3}[a-z]?)?)?)*)/g;
-
-  let out = escaped.replace(chainRegex, (fullMatch, numPrefix, wordPart, chWithBook, vListWithBook, chImplicit, vListImplicit, tailPart) => {
+  
+  return escaped.replace(chainRegex, (fullMatch, numPrefix, wordPart, chWithBook, vListWithBook, chImplicit, vListImplicit, tailPart) => {
     let bId = null;
     let firstCh = "";
     let firstVList = "";
@@ -2336,421 +2307,37 @@ function formatNoteLinks(txt, defaultBookId = null) {
     const firstToken = fullMatch.slice(0, headEndIdx);
     const firstRef = `${bookName} ${curCh}${firstVList ? ":" + firstVList : ""}`;
 
-    let outSeg = `<span class="tag-badge" onclick="event.stopPropagation(); jumpToRefString('${escapeJsStr(firstRef)}')">📖 ${firstToken}</span>`;
-    if (!tailPart) return outSeg;
+    let out = `<span class="tag-badge" onclick="event.stopPropagation(); jumpToRefString('${escapeJsStr(firstRef)}')">📖 ${firstToken}</span>`;
+    if (!tailPart) return out;
     const crossChMatch = firstToken.match(/[–-]\s*(\d{1,3}):\d{1,3}/);
     if (crossChMatch) curCh = crossChMatch[1];
     let hasColons = Boolean(firstVList);
-
+    
     const segRegex = /(\s*([;,])\s*)(\d{1,3}[a-z]?)(?::(\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?(?:\s*,\s*(?!\d{1,3}\s*:)\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?)*))?(?:\s*[–-]\s*(\d{1,3}[a-z]?))?/g;
 
-    outSeg += tailPart.replace(segRegex, (segMatch, sepFull, sepChar, n1, vListAfterColon, rangeEndNoColon) => {
+    out += tailPart.replace(segRegex, (segMatch, sepFull, sepChar, n1, vListAfterColon, rangeEndNoColon) => {
       const cleanN1 = n1.replace(/\D/g, "");
       let targetRef = "";
+
       if (vListAfterColon) {
-        curCh = cleanN1; hasColons = true;
+        curCh = cleanN1;
+        hasColons = true;
         targetRef = `${bookName} ${curCh}:${vListAfterColon}`;
       } else if (sepChar === "," && hasColons) {
         const vRange = rangeEndNoColon ? `${cleanN1}-${rangeEndNoColon.replace(/\D/g, "")}` : cleanN1;
         targetRef = `${bookName} ${curCh}:${vRange}`;
       } else {
-        curCh = cleanN1; hasColons = false;
+        curCh = cleanN1;
+        hasColons = false;
         targetRef = `${bookName} ${curCh}`;
       }
+
       const labelPart = segMatch.slice(sepFull.length);
       return `${sepFull}<span class="tag-badge" onclick="event.stopPropagation(); jumpToRefString('${escapeJsStr(targetRef)}')">📖 ${labelPart}</span>`;
     });
 
-    return outSeg;
+    return out;
   });
-
- // ─── PASSO 2: riferimenti a PUBBLICAZIONI (badge viola) ───
- // Riconosce formati come: w21.05 p. 12 · g20.3 pp. 4-5 · w24.06 12 parr. 15-16 · lff lez. 12
- const PUB_RE = /\b((?:w|g|it|km|wp|mwb|ws|wb|wh|rp|lvs|kr|iw|wiy|ia|mb|yc|jy|yp|lff|th|rj|we|ct|ds|sn|br|ka|jv|od|cl|be|bhs|ba|bt|lr|fy|wsp|ms|cf|jh|sg|yy|gh|gb|si|sjb|su|ta|lp|ca|dx|dw|wly|rc|bm|bp|yb)(?:\s?[-\u2013\/.]?\s?\d{1,2}(?:\s?[\/.]\s?\d{1,2})?|\s+(?:pp?\.|parr?\.|par\.|pagg?\.|lez\.|cap\.|sez\.|§|pagine?|pagina)\s*\d+)(?:\s+(?:(?:pp?\.|parr?\.|par\.|pagg?\.|lez\.|cap\.|sez\.|§|pagine?|pagina)\s*)?[\d,\-\u2013]+)*)/gi;
-
- const wrapPub = (m) => {
-   const clean = m.replace(/\s+/g, " ").trim();
-   const safeJs = escapeJsStr(clean);
-   return `<span class="pub-ref-badge" onpointerdown="onPubRefDown(event)" onpointerup="onPubRefUp()" onpointerleave="onPubRefUp()" onpointercancel="onPubRefUp()" oncontextmenu="event.preventDefault(); event.stopPropagation(); return false;" onclick="onPubRefClick(event, '${safeJs}')" title="Tocca: apri in Biblioteca Online · Tieni premuto: copia">📚 ${escapeHtml(clean)}</span>`;
- };
-
- out = out.replace(PUB_RE, wrapPub);
-
- return out;
-}
-    
-/* ============================================================================
-   RIFERIMENTI A PUBBLICAZIONI — Android (Pixel + AppsGeyser WebView)
-   Tap = apri Biblioteca Online · Tieni premuto = copia negli appunti
-   ============================================================================ */
-let pubRefPress = { timer: null, triggered: false };
-
-function onPubRefDown(ev) {
-  if (ev && ev.button !== undefined && ev.button !== 0) return;
-  pubRefPress.triggered = false;
-  clearTimeout(pubRefPress.timer);
-  // Il riferimento vero viene passato via onclick: usiamo un riferimento temporaneo dal testo del badge
-  const el = ev && ev.currentTarget;
-  const rawLabel = el ? (el.textContent || "").replace(/^\s*📚\s*/, "").trim() : "";
-  pubRefPress.timer = setTimeout(() => {
-    pubRefPress.triggered = true;
-    bmHaptic(14);
-    copyPubRefToClipboard(rawLabel);
-  }, 550);
-}
-
-function onPubRefUp() {
-  clearTimeout(pubRefPress.timer);
-}
-
-function onPubRefClick(ev, pubRef) {
-  clearTimeout(pubRefPress.timer);
-  if (pubRefPress.triggered) {
-    if (ev) { ev.preventDefault(); ev.stopPropagation(); }
-    pubRefPress.triggered = false;
-    return;
-  }
-  if (ev) { ev.preventDefault(); ev.stopPropagation(); }
-  bmHaptic(10);
-  
-  // Passiamo il riferimento INTATTO (es. "w24.06 12 parr. 15-16")
-  showPubRefModal(pubRef, (typeof getActiveTTSLangCode === "function" ? getActiveTTSLangCode(false) : "it"));
-}
-
-// Funzione di supporto per creare la query corretta per WOL
-function buildWolQuery(fullRef) {
-  let query = String(fullRef).trim();
-  
-  // Rimuove la parte relativa ai paragrafi ("parr. 15-16", "paragrafi 5")
-  query = query.replace(/\s+parr?\.\s*\d+.*/i, '');
-  query = query.replace(/\s+paragraf[oi]\s*\d+.*/i, '');
-  
-  // Rimuove le parole chiave "p.", "pp.", "pag.", "lez.", "cap."
-  query = query.replace(/\b(pp?\.|pagg?\.?|pagine?|pagina|lez\.|cap\.)\s*/gi, '');
-  
-  // Pulisce spazi doppi
-  query = query.replace(/\s+/g, ' ').trim();
-  
-  // Se è tipo "w24.06 12" lo trasforma in "w24.06 p. 12" (WOL lo preferisce)
-  const m = query.match(/^([a-zA-Z]+\d[\d\/\.\-]+)\s+(\d+)$/i);
-  if (m) {
-    query = `${m[1]} p. ${m[2]}`;
-  }
-  
-  return query;
-}
-
-function copyPubRefToClipboard(pubRef) {
-  if (!pubRef) return;
-  const txt = String(pubRef).trim();
-  let success = false;
-
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    try {
-      navigator.clipboard.writeText(txt);
-      success = true;
-    } catch (e) {}
-  }
-
-  if (!success) {
-    try {
-      const ta = document.createElement("textarea");
-      ta.value = txt;
-      ta.style.position = "absolute";
-      ta.style.left = "-9999px";
-      ta.style.top = "0";
-      ta.style.opacity = "0.01";
-      document.body.appendChild(ta);
-      ta.focus();
-      ta.select();
-      ta.setSelectionRange(0, ta.value.length);
-      const res = document.execCommand("copy");
-      document.body.removeChild(ta);
-      if (res) success = true;
-    } catch (e) {}
-  }
-
-  if (success) {
-    showBlueInfoModal("📋 Copiato!", `Il riferimento <b>${escapeHtml(txt)}</b> è pronto negli appunti.`);
-  } else {
-    showBlueInfoModal("⚠️ Copia Manuale", `
-      <div style="margin-bottom:8px;">Il sistema ha bloccato la copia automatica. Tieni premuto sul testo qui sotto e seleziona "Copia":</div>
-      <textarea style="width:100%; height:60px; background:#062356; color:#fff; border:1px solid #29b6f6; border-radius:6px; padding:8px; font-size:14px;" readonly onclick="this.select()">${escapeHtml(txt)}</textarea>
-    `);
-  }
-}
-
-function showPubRefModal(pubRef, lang = "it") {
-  const modal = document.getElementById("myReadModal");
-  const body = document.getElementById("myReadModalBody");
-  if (!modal || !body) { copyPubRefToClipboard(pubRef); return; }
-  
-  // Prepariamo la query pulita SOLO per l'URL, ma mostriamo e copiamo il riferimento completo
-  const wolQuery = buildWolQuery(pubRef);
-  
-  const base = (lang === "en") ? "https://wol.jw.org/en/wol/" : "https://wol.jw.org/it/wol/";
-  const tail = (lang === "en") ? "r1/lp-e" : "r6/lp-i";
-  const url = `${base}s/${tail}?q=${encodeURIComponent(wolQuery)}`;
-  
-  const cleanUrl = url.replace(/^https?:\/\//, '');
-  const chromeIntent = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;end`;
-  const defaultIntent = `intent://${cleanUrl}#Intent;scheme=https;end`;
-
-  body.innerHTML = `
-    <div style="text-align:center; padding:4px 0 12px 0;">
-      <div style="font-size:30px; margin-bottom:8px;">📚</div>
-      <div style="font-size:16px; font-weight:800; color:#ffffff; margin-bottom:6px;">Apri in Biblioteca Online</div>
-      <div style="font-size:13.5px; color:#e3f2fd; line-height:1.5;">
-        Riferimento:<br><b style="color:#00e5ff; font-size:16px;">${escapeHtml(pubRef)}</b>
-        <div style="font-size:11px; margin-top:4px; color:#9ec9ff;">(Ricerca WOL: ${escapeHtml(wolQuery)})</div>
-      </div>
-    </div>
-    
-    <div style="display:flex; flex-direction:column; gap:8px;">
-      
-      <button class="myread-action-btn" style="background:#0d47a1;" onclick="window.location.href='${escapeJsStr(chromeIntent)}'; document.getElementById('myReadModal').style.display='none';">
-        🌐 Apri in Chrome (Forzato)
-      </button>
-
-      <button class="myread-action-btn" style="background:#0277bd;" onclick="window.location.href='${escapeJsStr(defaultIntent)}'; document.getElementById('myReadModal').style.display='none';">
-        📱 Apri nel Browser Predefinito
-      </button>
-
-      <hr style="border:none; border-top:1px solid rgba(255,255,255,0.2); margin:4px 0;">
-      
-      <button class="myread-action-btn" style="background:#2e7d32;" onclick="copyPubRefToClipboard('${escapeJsStr(pubRef)}')">
-        📋 Copia Riferimento Completo
-      </button>
-      
-      <button class="myread-action-btn" style="background:#062356; border: 1px solid #29b6f6;" onclick="copyPubRefToClipboard('${escapeJsStr(url)}')">
-        🔗 Copia Link Diretto
-      </button>
-      
-      <button class="myread-action-btn" style="background:#1a0033; margin-top:6px;" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
-    </div>
-  `;
-  modal.style.display = "flex";
-}
-function copyPubRefToClipboard(pubRef) {
-  if (!pubRef) return;
-  const txt = String(pubRef).trim();
-  let success = false;
-
-  // Metodo 1: Clipboard API moderno
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    try {
-      navigator.clipboard.writeText(txt);
-      success = true;
-    } catch (e) {}
-  }
-
-  // Metodo 2: execCommand (Fallback per WebView Android)
-  if (!success) {
-    try {
-      const ta = document.createElement("textarea");
-      ta.value = txt;
-      // Deve essere visibile per la WebView, ma trasparente per l'utente
-      ta.style.position = "absolute";
-      ta.style.left = "-9999px";
-      ta.style.top = "0";
-      ta.style.opacity = "0.01";
-      document.body.appendChild(ta);
-      ta.focus();
-      ta.select();
-      ta.setSelectionRange(0, ta.value.length);
-      const res = document.execCommand("copy");
-      document.body.removeChild(ta);
-      if (res) success = true;
-    } catch (e) {}
-  }
-
-  // Feedback e Fallback manuale
-  if (success) {
-    showBlueInfoModal("📋 Copiato!", `Il riferimento <b>${escapeHtml(txt)}</b> è pronto negli appunti.`);
-  } else {
-    // Se anche il fallback fallisce, mostriamo il testo in una casella selezionabile
-    showBlueInfoModal("⚠️ Copia Manuale", `
-      <div style="margin-bottom:8px;">Il sistema ha bloccato la copia automatica. Tieni premuto sul testo qui sotto e seleziona "Copia":</div>
-      <textarea style="width:100%; height:60px; background:#062356; color:#fff; border:1px solid #29b6f6; border-radius:6px; padding:8px; font-size:14px;" readonly onclick="this.select()">${escapeHtml(txt)}</textarea>
-    `);
-  }
-}
-
-function showPubRefModal(pubRef, lang = "it") {
-  const modal = document.getElementById("myReadModal");
-  const body = document.getElementById("myReadModalBody");
-  if (!modal || !body) { copyPubRefToClipboard(pubRef); return; }
-  
-  const base = (lang === "en") ? "https://wol.jw.org/en/wol/" : "https://wol.jw.org/it/wol/";
-  const tail = (lang === "en") ? "r1/lp-e" : "r6/lp-i";
-  const url = `${base}s/${tail}?q=${encodeURIComponent(pubRef)}`;
-  
-  // Prepara i link "Intent" per forzare Android ad aprire Chrome
-  const cleanUrl = url.replace(/^https?:\/\//, '');
-  const chromeIntent = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;end`;
-  const defaultIntent = `intent://${cleanUrl}#Intent;scheme=https;end`;
-
-  body.innerHTML = `
-    <div style="text-align:center; padding:4px 0 12px 0;">
-      <div style="font-size:30px; margin-bottom:8px;">📚</div>
-      <div style="font-size:16px; font-weight:800; color:#ffffff; margin-bottom:6px;">Apri in Biblioteca Online</div>
-      <div style="font-size:13.5px; color:#e3f2fd; line-height:1.5;">
-        Riferimento pulito per la ricerca:<br><b style="color:#00e5ff; font-size:16px;">${escapeHtml(pubRef)}</b>
-      </div>
-    </div>
-    
-    <div style="display:flex; flex-direction:column; gap:8px;">
-      
-      <button class="myread-action-btn" style="background:#0d47a1;" onclick="window.location.href='${escapeJsStr(chromeIntent)}'; document.getElementById('myReadModal').style.display='none';">
-        🌐 Apri in Chrome (Forzato)
-      </button>
-
-      <button class="myread-action-btn" style="background:#0277bd;" onclick="window.location.href='${escapeJsStr(defaultIntent)}'; document.getElementById('myReadModal').style.display='none';">
-        📱 Apri nel Browser Predefinito
-      </button>
-
-      <hr style="border:none; border-top:1px solid rgba(255,255,255,0.2); margin:4px 0;">
-      
-      <button class="myread-action-btn" style="background:#2e7d32;" onclick="copyPubRefToClipboard('${escapeJsStr(pubRef)}')">
-        📋 Copia Riferimento
-      </button>
-      
-      <button class="myread-action-btn" style="background:#062356; border: 1px solid #29b6f6;" onclick="copyPubRefToClipboard('${escapeJsStr(url)}')">
-        🔗 Copia Link Diretto
-      </button>
-      
-      <button class="myread-action-btn" style="background:#1a0033; margin-top:6px;" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
-    </div>
-  `;
-  modal.style.display = "flex";
-}
-
-function openPubRefInWOL(pubRef) {
-  if (!pubRef) return;
-  
-  // 1. PULIZIA DELLA QUERY PER WOL
-  let query = String(pubRef).trim();
-  
-  // Rimuove "parr. 15-16" o "par. 15"
-  query = query.replace(/\s+parr?\.\s*\d+.*/i, '');
-  // Rimuove eventuali range di numeri alla fine (es. "15-16")
-  query = query.replace(/\s+\d+(?:[–-]\d+)?\s*$/, '');
-  
-  // Se la query è nel formato "w24.06 12", la trasforma in "w24.06 p. 12" (WOL lo capisce meglio)
-  const m = query.match(/^([a-zA-Z]+\d[\d\/\.\-]+)\s+(?:p+\.?\s*)?(\d+)$/i);
-  if (m) {
-    query = `${m[1]} p. ${m[2]}`;
-  }
-  
-  // 2. GESTIONE OFFLINE E APERTURA
-  const lang = (typeof getActiveTTSLangCode === "function" ? getActiveTTSLangCode(false) : "it");
-
-  if (navigator.onLine === false) {
-    showPubRefModal(query, lang);
-    return;
-  }
-
-  const base = (lang === "en") ? "https://wol.jw.org/en/wol/" : "https://wol.jw.org/it/wol/";
-  const tail = (lang === "en") ? "r1/lp-e" : "r6/lp-i";
-  const url = `${base}s/${tail}?q=${encodeURIComponent(query)}`;
-
-  try {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(query).catch(() => {});
-    }
-  } catch (e) {}
-
-  // 3. TENTA DI APRIRE NEL BROWSER DI SISTEMA
-  // Usiamo window.open con '_system', che su molte WebView (come quelle di AppsGeyser) 
-  // forza l'apertura in Chrome invece che nella WebView interna.
-  const win = window.open(url, '_system');
-  if (!win) {
-    // Se '_system' non funziona, ripiega sul classico link con target="_blank"
-    const a = document.createElement("a");
-    a.href = url;
-    a.target = "_blank";
-    a.rel = "noopener noreferrer";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  }
-}
-
-function copyPubRefToClipboard(pubRef) {
-  if (!pubRef) return;
-  const txt = String(pubRef).trim();
-  // Fallback Android WebView (execCommand('copy') funziona anche se clipboard API è limitata)
-  try {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(txt).catch(() => {});
-    }
-    const ta = document.createElement("textarea");
-    ta.value = txt;
-    ta.style.position = "fixed";
-    ta.style.opacity = "0";
-    ta.style.left = "-9999px";
-    document.body.appendChild(ta);
-    ta.select();
-    ta.setSelectionRange(0, ta.value.length);
-    try { document.execCommand("copy"); } catch (e) {}
-    document.body.removeChild(ta);
-  } catch (e) {}
-  showBlueInfoModal(
-    "📋 Riferimento Copiato",
-    `"${escapeHtml(txt)}" è negli appunti.<br><span style="font-size:12.5px;color:#9ec9ff;">Incollalo in Cerca → Biblioteca Online (o in qualsiasi campo di ricerca).</span>`
-  );
-}
-
-function showPubRefModal(pubRef, lang = "it") {
-  const modal = document.getElementById("myReadModal");
-  const body = document.getElementById("myReadModalBody");
-  if (!modal || !body) { copyPubRefToClipboard(pubRef); return; }
-  
-  const base = (lang === "en") ? "https://wol.jw.org/en/wol/" : "https://wol.jw.org/it/wol/";
-  const tail = (lang === "en") ? "r1/lp-e" : "r6/lp-i";
-  const url = `${base}s/${tail}?q=${encodeURIComponent(pubRef)}`;
-  
-  // Prepara i link "Intent" per forzare Android ad aprire Chrome o il browser predefinito
-  const cleanUrl = url.replace(/^https?:\/\//, '');
-  const chromeIntent = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;end`;
-  const defaultIntent = `intent://${cleanUrl}#Intent;scheme=https;end`;
-
-  body.innerHTML = `
-    <div style="text-align:center; padding:4px 0 12px 0;">
-      <div style="font-size:30px; margin-bottom:8px;">📚</div>
-      <div style="font-size:16px; font-weight:800; color:#ffffff; margin-bottom:6px;">Riferimento Rilevato</div>
-      <div style="font-size:13.5px; color:#e3f2fd; line-height:1.5;">
-        <b style="color:#f3e5f5; font-size:15px;">${escapeHtml(pubRef)}</b>
-      </div>
-    </div>
-    <div style="display:flex; flex-direction:column; gap:8px;">
-      
-      <button class="myread-action-btn" style="background:#2e7d32;" onclick="copyPubRefToClipboard('${escapeJsStr(pubRef)}')">
-        📋 Copia Riferimento (per WOL)
-      </button>
-      
-      <button class="myread-action-btn" style="background:#0277bd;" onclick="copyPubRefToClipboard('${escapeJsStr(url)}')">
-        🔗 Copia Link Diretto
-      </button>
-      
-      <hr style="border:none; border-top:1px solid rgba(255,255,255,0.2); margin:4px 0;">
-      
-      <button class="myread-action-btn" style="background:#0d47a1;" onclick="window.location.href='${escapeJsStr(chromeIntent)}'; document.getElementById('myReadModal').style.display='none';">
-        🌐 Apri in Chrome (Forzato)
-      </button>
-
-      <button class="myread-action-btn" style="background:#062356; border: 1px solid #29b6f6;" onclick="window.location.href='${escapeJsStr(defaultIntent)}'; document.getElementById('myReadModal').style.display='none';">
-        📱 Apri nel Browser Predefinito
-      </button>
-      
-      <div style="font-size:11.5px; color:#9ec9ff; text-align:center; margin-top:8px; line-height:1.4;">
-        💡 Se anche questi pulsanti aprono la schermata difettosa, usa <b>"Copia Link Diretto"</b> e incollalo manualmente in Chrome.
-      </div>
-      
-      <button class="myread-action-btn" style="background:#1a0033; margin-top:6px;" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
-    </div>
-  `;
-  modal.style.display = "flex";
 }
 function filterNotesByTag(tagVal) {
   state.activeTagFilter = tagVal || null;
@@ -2826,7 +2413,7 @@ function deleteNoteById(noteId, refFallback) {
     safeSaveStorage("bm_notes", JSON.stringify(state.notes));
   }
   showNotesView();
-}
+    }
 function searchWordInConcordance(word) {
   if (typeof closeProModal === "function") closeProModal();
   closeActionBar();
