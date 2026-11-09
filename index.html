@@ -2418,10 +2418,9 @@ function showPubRefModal(fullRef) {
   const body = document.getElementById("myReadModalBody");
   if (!modal || !body) return;
 
-  // URL WOL con ricerca automatica
-  const url = "https://wol.jw.org/it/wol/s/r6/lp-i?q=" + encodeURIComponent(fullRef) + "&p=par&st=a";
-  const cleanUrl = url.replace(/^https?:\/\//, '');
-  // Intent per forzare Chrome
+  // URL della HOMEPAGE di WOL (nessun parametro di ricerca → nessun errore)
+  const homeUrl = "https://wol.jw.org/it/wol/h/r6/lp-i";
+  const cleanUrl = homeUrl.replace(/^https?:\/\//, '');
   const chromeIntent = "intent://" + cleanUrl + "#Intent;scheme=https;package=com.android.chrome;end";
 
   body.innerHTML = `
@@ -2432,7 +2431,7 @@ function showPubRefModal(fullRef) {
         <b style="color:#f3e5f5; font-size:15px;">${escapeHtml(fullRef)}</b>
         <div style="font-size:11.5px; color:#9ec9ff; margin-top:8px; line-height:1.4;">
           ✔ Il riferimento è già negli appunti.<br>
-          Quando si apre Chrome, tieni premuto sul campo di ricerca di WOL e scegli <b>Incolla</b>, poi premi Invio.
+          Quando si apre Chrome sulla pagina iniziale della Biblioteca Online, tieni premuto sul campo di ricerca, scegli <b>Incolla</b>, poi premi <b>Invio</b>.
         </div>
       </div>
     </div>
