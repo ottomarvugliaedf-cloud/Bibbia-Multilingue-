@@ -2412,7 +2412,20 @@ function onPubRefClick(ev, pubRef) {
   }
   if (ev) { ev.preventDefault(); ev.stopPropagation(); }
   bmHaptic(10);
-  openPubRefInWOL(pubRef);
+  
+  // 1. Puliamo la query per renderla compatibile con WOL
+  let cleanQuery = String(pubRef).trim();
+  cleanQuery = cleanQuery.replace(/\s+parr?\.\s*\d+.*/i, ''); // rimuove "parr. 15-16"
+  cleanQuery = cleanQuery.replace(/\s+\d+(?:[–-]\d+)?\s*$/, ''); // rimuove range finali
+  
+  // Se è tipo "w24.06 12" lo trasformiamo in "w24.06 p. 12"
+  const m = cleanQuery.match(/^([a-zA-Z]+\d[\d\/\.\-]+)\s+(?:p+\.?\s*)?(\d+)$/i);
+  if (m) {
+    cleanQuery = `${m[1]} p. ${m[2]}`;
+  }
+
+  // 2. Mostriamo il pannello di scelta (Copia / Apri)
+  showPubRefModal(cleanQuery, (typeof getActiveTTSLangCode === "function" ? getActiveTTSLangCode(false) : "it"));
 }
 
 function openPubRefInWOL(pubRef) {
@@ -2495,25 +2508,33 @@ function showPubRefModal(pubRef, lang = "it") {
   const modal = document.getElementById("myReadModal");
   const body = document.getElementById("myReadModalBody");
   if (!modal || !body) { copyPubRefToClipboard(pubRef); return; }
+  
   const base = (lang === "en") ? "https://wol.jw.org/en/wol/" : "https://wol.jw.org/it/wol/";
   const tail = (lang === "en") ? "r1/lp-e" : "r6/lp-i";
   const url = `${base}s/${tail}?q=${encodeURIComponent(pubRef)}`;
+  
   body.innerHTML = `
     <div style="text-align:center; padding:4px 0 12px 0;">
       <div style="font-size:30px; margin-bottom:8px;">📚</div>
-      <div style="font-size:16px; font-weight:800; color:#ffffff; margin-bottom:6px;">Riferimento a Pubblicazione</div>
+      <div style="font-size:16px; font-weight:800; color:#ffffff; margin-bottom:6px;">Riferimento Rilevato</div>
       <div style="font-size:13.5px; color:#e3f2fd; line-height:1.5;">
-        Riferimento: <b style="color:#f3e5f5; font-size:15px;">${escapeHtml(pubRef)}</b>
+        <b style="color:#f3e5f5; font-size:15px;">${escapeHtml(pubRef)}</b>
       </div>
     </div>
     <div style="display:flex; flex-direction:column; gap:8px;">
-      <button class="myread-action-btn" onclick="copyPubRefToClipboard('${escapeJsStr(pubRef)}')">📋 Copia riferimento</button>
-      <button class="myread-action-btn" style="background:#0d47a1;" onclick="window.open('${escapeJsStr(url)}','_blank','noopener'); document.getElementById('myReadModal').style.display='none';">🌐 Apri Biblioteca Online</button>
-      <button class="myread-action-btn" style="background:#062356;" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
+      <button class="myread-action-btn" style="background:#2e7d32;" onclick="copyPubRefToClipboard('${escapeJsStr(pubRef)}')">📋 Copia Riferimento</button>
+      
+      <button class="myread-action-btn" style="background:#0d47a1;" onclick="window.open('${escapeJsStr(url)}','_blank','noopener'); document.getElementById('myReadModal').style.display='none';">🌐 Apri in Chrome</button>
+      
+      <div style="font-size:11.5px; color:#9ec9ff; text-align:center; margin-top:8px; line-height:1.4;">
+        💡 <b>Suggerimento:</b> Se la pagina di WOL si apre male o i pulsanti in alto non sono cliccabili (un limite di AppsGeyser), usa il tasto "Copia Riferimento" e incollalo manualmente in Chrome.
+      </div>
+      
+      <button class="myread-action-btn" style="background:#062356; margin-top:6px;" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
     </div>
   `;
   modal.style.display = "flex";
-} 
+}
 function filterNotesByTag(tagVal) {
   state.activeTagFilter = tagVal || null;
   showNotesView();
