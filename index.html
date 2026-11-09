@@ -905,7 +905,8 @@
       cursor: pointer;
       display: inline-block;
     }
-/* Riferimenti a pubblicazioni (w, g, it, km, wp, mwb, lff, ia, ws, rp, lvs, kr, ...) — VIOLA */
+    
+/* Riferimenti a pubblicazioni (w, g, it, km, wp, ecc.) — VIOLA */
 .pub-ref-badge {
   display: inline-block;
   background: rgba(156, 39, 176, 0.18);
@@ -922,7 +923,6 @@
   user-select: none;
   -webkit-user-select: none;
   touch-action: manipulation;
-  transition: background-color .15s ease, box-shadow .15s ease;
 }
 .pub-ref-badge:active {
   background: #ba68c8 !important;
@@ -934,6 +934,7 @@ body.oled-mode .pub-ref-badge {
   background: rgba(186, 104, 200, 0.22);
   color: #f3e5f5;
 }
+
     /* ===== DOVE? / CARTINE BIBLICHE (Stile Uniformato PRO) ===== */
     .bp-viewer { position: fixed; inset: 0; z-index: 1100; display: none; flex-direction: column; background: var(--bg-main); color: var(--text-main); }
     .bp-vhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; padding-top: max(36px, env(safe-area-inset-top, 36px)); background: linear-gradient(135deg, var(--primary-dark), var(--primary-main)); color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.22); flex-shrink: 0; }
@@ -2309,16 +2310,16 @@ function formatNoteLinks(txt, defaultBookId = null) {
   if (!txt) return "";
   let out = escapeHtml(txt);
 
-  // ─── 1. RIFERIMENTI A PUBBLICAZIONI (badge viola) ───
-  // Riconosce formati come: w24.06 12 parr. 15-16 · g20.3 pp. 4-5 · w 15/4 p. 7 · lff lez. 12 · it-1 p. 345
-  const PUB_RE = /\b((?:w|g|it|km|wp|mwb|ws|wb|wh|rp|lvs|kr|iw|wiy|ia|mb|yc|jy|yp|lff|es|th|rj|we|ct|ds|sn|br|ka|jv|od|cl|be|bhs|ba|bt|lr|fy|wsp|ms|cf|jh|sg|yy|gh|gb|si|sjb|su|ta|lp|ca|dx|dw|wly|rc|bm|bp|yb)(?:\s?\d{1,2}(?:[\/.]\d{1,2})?|(?:\s+(?:pp?\.|p\.|parr?\.|par\.|lez\.|cap\.|sez\.|§|pagine?|pagina))))((?:\s*(?:pp?\.|p\.|parr?\.|par\.|lez\.|cap\.|sez\.|§|pagine?|pagina)?\s*[\d\s,\-\u2013]+)*)/gi;
+  // ─── 1. PUBBLICAZIONI (badge viola) ───
+  // Cattura: codice + [opzionale numero] + ripetizione di [keyword opzionale + numeri/range]
+  const PUB_RE = /\b((?:w|g|it|km|wp|mwb|ws|wb|wh|rp|lvs|kr|iw|wiy|ia|mb|yc|jy|yp|lff|th|rj|we|ct|ds|sn|br|ka|jv|od|cl|be|bhs|ba|bt|lr|fy|wsp|ms|cf|jh|sg|yy|gh|gb|si|sjb|su|ta|lp|ca|dx|dw|wly|rc|bm|bp|yb)(?:\s?[-\u2013\/.]?\s?\d{1,2}(?:\s?[\/.]\s?\d{1,2})?)?)((?:\s+(?:(?:pp?|parr?|par|lez|cap|sez|pag|pagine|pagina)\.?\s*)?\d+(?:\s*[–-]\s*\d+)?(?:\s*,\s*\d+(?:\s*[–-]\s*\d+)?)*)+)/gi;
 
   out = out.replace(PUB_RE, (match) => {
     const clean = match.replace(/\s+/g, ' ').trim();
     return `<span class="pub-ref-badge" data-ref="${clean}" onpointerdown="onPubRefDown(event)" onpointerup="onPubRefUp()" onpointerleave="onPubRefUp()" onpointercancel="onPubRefUp()" onclick="onPubRefClick(event, this.getAttribute('data-ref'))" oncontextmenu="event.preventDefault(); copyPubRefToClipboard(this.getAttribute('data-ref'))">📚 ${clean}</span>`;
   });
 
-  // ─── 2. RIFERIMENTI BIBLICI (versetti) ───
+  // ─── 2. VERSETTI BIBLICI (badge blu) ───
   const chainRegex = /\b(?:(?:([1-3]\s*)?([A-ZÀ-Ý][A-Za-zÀ-ÖØ-öø-ÿ]{1,18})\.?\s+(\d{1,3})(?::(\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?(?::\d{1,3}[a-z]?)?)?(?:\s*,\s*(?!\d{1,3}\s*:)\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?)*))?)|(?:(\d{1,3}):(\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?(?::\d{1,3}[a-z]?)?)?(?:\s*,\s*(?!\d{1,3}\s*:)\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?)*)))((?:\s*[;,]\s*(?![1-3]?\s*[A-Za-zÀ-ÖØ-öø-ÿ]{2})\d{1,3}[a-z]?(?::\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?(?::\d{1,3}[a-z]?)?)?(?:\s*,\s*(?!\d{1,3}\s*:)\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?)*)?(?:\s*[–-]\s*\d{1,3}[a-z]?(?::\d{1,3}[a-z]?)?)?)*)/g;
 
   out = out.replace(chainRegex, (fullMatch, numPrefix, wordPart, chWithBook, vListWithBook, chImplicit, vListImplicit, tailPart) => {
@@ -2377,7 +2378,7 @@ function formatNoteLinks(txt, defaultBookId = null) {
   return out;
 }
 
-// ─── Riferimenti a pubblicazioni: copia e apertura ───
+// ─── Riferimenti a pubblicazioni ───
 let pubRefLongPressFired = false;
 let pubRefTimer = null;
 
@@ -2385,8 +2386,7 @@ function onPubRefDown(ev) {
   if (ev && ev.button !== undefined && ev.button !== 0) return;
   pubRefLongPressFired = false;
   clearTimeout(pubRefTimer);
-  const el = ev.currentTarget;
-  const ref = el.getAttribute('data-ref');
+  const ref = ev.currentTarget.getAttribute('data-ref');
   pubRefTimer = setTimeout(() => {
     pubRefLongPressFired = true;
     copyPubRefToClipboard(ref);
@@ -2395,28 +2395,6 @@ function onPubRefDown(ev) {
 
 function onPubRefUp() {
   clearTimeout(pubRefTimer);
-}
-
-// Funzione intelligente per creare la query corretta per WOL
-function buildWolQuery(fullRef) {
-  let clean = fullRef.replace(/\s+/g, ' ').trim();
-  const codeMatch = clean.match(/^([a-zA-Z]+\d[\d\/\.\-]+)/);
-  if (!codeMatch) return clean;
-  const code = codeMatch[1];
-
-  // 1. Cerca paragrafi (parr. o par.)
-  const parrMatch = clean.match(/(?:parr?\.)\s*([\d\-–]+)/i);
-  if (parrMatch) return `${code} parr. ${parrMatch[1]}`;
-
-  // 2. Cerca pagine (p. o pp.)
-  const pageMatch = clean.match(/(?:pp?\.)\s*([\d\-–]+)/i);
-  if (pageMatch) return `${code} p. ${pageMatch[1]}`;
-
-  // 3. Se c'è solo un numero isolato (es. "w24.06 12")
-  const numMatch = clean.match(/^[a-zA-Z]+\d[\d\/\.\-]+\s+(\d+)$/);
-  if (numMatch) return `${code} p. ${numMatch[1]}`;
-
-  return clean;
 }
 
 function onPubRefClick(ev, ref) {
@@ -2454,7 +2432,7 @@ function copyPubRefToClipboard(txt) {
     } catch(e) {}
   }
   if (success) {
-    showBlueInfoModal("📋 Copiato!", `Riferimento <b>${escapeHtml(txt)}</b> copiato negli appunti.`);
+    showBlueInfoModal("📋 Copiato!", `Riferimento <b>${escapeHtml(txt)}</b> copiato.`);
   } else {
     showBlueInfoModal("⚠️ Copia manuale", `Copia manualmente:<br><textarea style="width:100%; height:50px; margin-top:6px;" readonly onclick="this.select()">${escapeHtml(txt)}</textarea>`);
   }
@@ -2465,12 +2443,9 @@ function showPubRefModal(fullRef) {
   const body = document.getElementById("myReadModalBody");
   if (!modal || !body) { copyPubRefToClipboard(fullRef); return; }
 
-  // Genera la query corretta per WOL
-  const wolQuery = buildWolQuery(fullRef);
-  
+  // NESSUNA PULIZIA: passiamo la stringa INTATTA a WOL
   const base = "https://wol.jw.org/it/wol/";
-  const tail = "r6/lp-i";
-  const url = `${base}s/${tail}?q=${encodeURIComponent(wolQuery)}`;
+  const url = `${base}s/r6/lp-i?q=${encodeURIComponent(fullRef)}`;
   const cleanUrl = url.replace(/^https?:\/\//, '');
   const chromeIntent = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;end`;
   const defaultIntent = `intent://${cleanUrl}#Intent;scheme=https;end`;
@@ -2484,25 +2459,16 @@ function showPubRefModal(fullRef) {
       </div>
     </div>
     <div style="display:flex; flex-direction:column; gap:8px;">
-      
       <button class="myread-action-btn" style="background:#0d47a1;" onclick="window.location.href='${escapeJsStr(chromeIntent)}'; document.getElementById('myReadModal').style.display='none';">
-        🌐 Apri in Chrome (Forzato)
+        🌐 Apri in Chrome
       </button>
-
       <button class="myread-action-btn" style="background:#0277bd;" onclick="window.location.href='${escapeJsStr(defaultIntent)}'; document.getElementById('myReadModal').style.display='none';">
-        📱 Apri nel Browser Predefinito
+        📱 Apri nel Browser
       </button>
-
       <hr style="border:none; border-top:1px solid rgba(255,255,255,0.2); margin:4px 0;">
-      
       <button class="myread-action-btn" style="background:#2e7d32;" onclick="copyPubRefToClipboard('${escapeJsStr(fullRef)}')">
-        📋 Copia Riferimento Completo
+        📋 Copia Riferimento
       </button>
-
-      <button class="myread-action-btn" style="background:#062356; border: 1px solid #29b6f6;" onclick="copyPubRefToClipboard('${escapeJsStr(wolQuery)}')">
-        🔗 Copia per WOL (${escapeHtml(wolQuery)})
-      </button>
-      
       <button class="myread-action-btn" style="background:#1a0033; margin-top:6px;" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
     </div>
   `;
