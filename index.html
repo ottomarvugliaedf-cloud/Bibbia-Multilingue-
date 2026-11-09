@@ -2443,12 +2443,13 @@ function showPubRefModal(fullRef) {
   const body = document.getElementById("myReadModalBody");
   if (!modal || !body) { copyPubRefToClipboard(fullRef); return; }
 
-  // NESSUNA PULIZIA: passiamo la stringa INTATTA a WOL
-  const base = "https://wol.jw.org/it/wol/";
-  const url = `${base}s/r6/lp-i?q=${encodeURIComponent(fullRef)}`;
+  // Usa il path /q/ per forzare l'esecuzione automatica della ricerca su WOL
+  const queryEncoded = encodeURIComponent(fullRef);
+  const url = `https://wol.jw.org/it/wol/s/r6/lp-i/q/${queryEncoded}`;
+  
+  // Forza l'apertura in Chrome tramite Intent (bypassa la WebView dell'app)
   const cleanUrl = url.replace(/^https?:\/\//, '');
   const chromeIntent = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;end`;
-  const defaultIntent = `intent://${cleanUrl}#Intent;scheme=https;end`;
 
   body.innerHTML = `
     <div style="text-align:center; padding:4px 0 12px 0;">
@@ -2459,16 +2460,17 @@ function showPubRefModal(fullRef) {
       </div>
     </div>
     <div style="display:flex; flex-direction:column; gap:8px;">
+      
       <button class="myread-action-btn" style="background:#0d47a1;" onclick="window.location.href='${escapeJsStr(chromeIntent)}'; document.getElementById('myReadModal').style.display='none';">
         🌐 Apri in Chrome
       </button>
-      <button class="myread-action-btn" style="background:#0277bd;" onclick="window.location.href='${escapeJsStr(defaultIntent)}'; document.getElementById('myReadModal').style.display='none';">
-        📱 Apri nel Browser
-      </button>
+
       <hr style="border:none; border-top:1px solid rgba(255,255,255,0.2); margin:4px 0;">
+      
       <button class="myread-action-btn" style="background:#2e7d32;" onclick="copyPubRefToClipboard('${escapeJsStr(fullRef)}')">
         📋 Copia Riferimento
       </button>
+
       <button class="myread-action-btn" style="background:#1a0033; margin-top:6px;" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
     </div>
   `;
