@@ -2443,11 +2443,11 @@ function showPubRefModal(fullRef) {
   const body = document.getElementById("myReadModalBody");
   if (!modal || !body) { copyPubRefToClipboard(fullRef); return; }
 
-  // Usa il path /q/ per forzare l'esecuzione automatica della ricerca su WOL
-  const queryEncoded = encodeURIComponent(fullRef);
-  const url = `https://wol.jw.org/it/wol/s/r6/lp-i/q/${queryEncoded}`;
+  // URL corretto per WOL: usa ?q= e forza l'ambito ai paragrafi con &p=par
+  const base = "https://wol.jw.org/it/wol/s/r6/lp-i";
+  const url = `${base}?q=${encodeURIComponent(fullRef)}&p=par`;
   
-  // Forza l'apertura in Chrome tramite Intent (bypassa la WebView dell'app)
+  // Forza l'apertura in Chrome tramite Intent
   const cleanUrl = url.replace(/^https?:\/\//, '');
   const chromeIntent = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;end`;
 
