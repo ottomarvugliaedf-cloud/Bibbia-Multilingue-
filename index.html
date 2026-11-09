@@ -2439,9 +2439,6 @@ function showPubRefModal(fullRef) {
       <button class="myread-action-btn" style="background:#0d47a1;" onclick="window.location.href='${escapeJsStr(chromeIntent)}'; document.getElementById('myReadModal').style.display='none';">
         🌐 Apri Chrome (Biblioteca Online)
       </button>
-      <button class="myread-action-btn" style="background:#2e7d32;" onclick="copyPubRefToClipboard('${escapeJsStr(fullRef)}'); if(typeof bmHaptic==='function') bmHaptic(14); this.textContent='✔ Copiato negli appunti';">
-        📋 Ricopia il Riferimento
-      </button>
       <button class="myread-action-btn" style="background:#1a0033; margin-top:6px;" onclick="document.getElementById('myReadModal').style.display='none'">
         Chiudi
       </button>
