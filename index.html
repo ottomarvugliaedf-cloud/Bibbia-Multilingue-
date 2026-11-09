@@ -977,6 +977,24 @@
       transform: scale(1.06);
     }
     .jw-btn:active .jw-circle svg { fill: #0a1b33; }
+     
+    /* Pillola viola per i link alle pubblicazioni (stile identico ai versetti) */
+    .pub-badge {
+      display: inline-block;
+      background: rgba(156, 39, 176, 0.16);
+      color: #e1bee7;
+      border: 1px solid #ab47bc;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11.5px;
+      font-weight: 700;
+      margin: 2px;
+      cursor: pointer;
+    }
+    .pub-badge:active {
+      background: #ab47bc !important;
+      color: #ffffff !important;
+    }
   </style>
 </head>
 <body>
@@ -2338,6 +2356,8 @@ function formatNoteLinks(txt, defaultBookId = null) {
 
     return out;
   });
+
+  return linkifyPubRefs(bibleLinkedHtml);
 }
 function filterNotesByTag(tagVal) {
   state.activeTagFilter = tagVal || null;
@@ -2563,7 +2583,96 @@ function openJwLibrary(lang, searchInputId = "searchInput") {
   a.click();
   a.remove();
 }
-       
+
+// ============================================================================
+// BIBLIOTECA ONLINE (WOL) E RICONOSCIMENTO PUBBLICAZIONI
+// ============================================================================
+const JW_TOWER_SVG = `<svg viewBox="0 0 1000 1000"><path d="M200 200H334V267H367V200H434V267H467V200H534V267H566V200H633V267H666V200H800V433H767V467H734V800H266V467H233V433H200Z"/></svg>`;
+
+const PUB_PG = String.raw`(?:\s+(?:pp?\.|pagg?\.)\s*\d+(?:\s*[–-]\s*\d+)?(?:\s*,\s*\d+(?:\s*[–-]\s*\d+)?)*)`;
+const PUB_REF_RE = new RegExp(
+  String.raw`\b(?:` +
+  String.raw`(?:w|wp|ws|g|km|mwb|yb)\d{0,2}\s+\d{1,2}\/\d{1,2}(?:\/\d{2,4})?` + PUB_PG + `?` +
+  `|` +
+  String.raw`(?:w|wp|ws|g|mwb)\d{2}\.\d{1,2}` + PUB_PG + `?` +
+  `|` +
+  String.raw`(?:it-[12]|si|bh|rs|kl|jr|re|ia|cl|lv|lff|lfb|ypq|yp[12]|dp|ed|gt|pm|kr|th|ba|ad|be|bt|od|ol|ct|cv|hl|im|jd|jv|lr|my|ph|pr|rr|sg|sp|tp|uw|wi|fy|gm|gr|jy|nh|yc|lp|rp)\s+(?:cap\.|lez\.|storia|pp?\.|pagg?\.)\s*\d+(?:\s*[–-]\s*\d+)?(?:\s*,\s*\d+(?:\s*[–-]\s*\d+)?)*(?:\s+(?:par\.|parr\.)\s*\d+(?:\s*[–-]\s*\d+)?)?` +
+  `|` +
+  String.raw`Perspicacia,\s+vol\.\s*[12],\s+pp?\.\s*\d+(?:\s*[–-]\s*\d+)?(?:\s*,\s*\d+(?:\s*[–-]\s*\d+)?)*` +
+  `)`, "g");
+
+function linkifyPubRefs(html) {
+  if (!html) return html;
+  let inBadge = false;
+  return String(html).split(/(<[^>]*>)/).map(part => {
+    if (part.startsWith("<")) {
+      if (/^<span[^>]*class="(?:tag-badge|pub-badge)/.test(part)) inBadge = true;
+      else if (inBadge && part === "</span>") inBadge = false;
+      return part;
+    }
+    if (inBadge || !part) return part;
+    return part.replace(PUB_REF_RE, m =>
+      `<span class="pub-badge" onclick="event.stopPropagation(); openPubRef('${escapeJsStr(m)}')">📚 ${m}</span>`
+    );
+  }).join("");
+}
+
+function bmCopyText(txt) {
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).catch(() => {});
+      return;
+    }
+  } catch (e) {}
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = txt;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    ta.remove();
+  } catch (e) {}
+}
+
+function openJwLibrary(lang, inputId, directQuery) {
+  const fromInput = inputId ? (document.getElementById(inputId)?.value || "") : "";
+  const q = String(directQuery != null ? directQuery : fromInput).trim();
+  if (navigator.onLine === false) {
+    showBlueInfoModal("📡 Connessione Assente", "La Biblioteca online richiede una connessione a internet.");
+    return;
+  }
+  const base = lang === "en" ? "https://wol.jw.org/en/wol/" : "https://wol.jw.org/it/wol/";
+  const tail = lang === "en" ? "r1/lp-e" : "r6/lp-i";
+  const url = q ? `${base}s/${tail}?q=${encodeURIComponent(q)}` : `${base}h/${tail}`;
+  const a = document.createElement("a");
+  a.href = url;
+  a.target = "_blank";
+  a.rel = "noopener noreferrer";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+function openPubRef(ref) {
+  bmCopyText(ref);
+  const modal = document.getElementById("myReadModal");
+  const body = document.getElementById("myReadModalBody");
+  if (!modal || !body) { openJwLibrary("it", null, ref); return; }
+  const safe = escapeJsStr(ref);
+  const btnStyle = "width:100%; background:#062356; color:#ffffff; border:1px solid #29b6f6; padding:10px;";
+  body.innerHTML = `
+    <div style="font-size:15.5px; font-weight:900; color:#ccff00; margin-bottom:10px; border-bottom:1px solid rgba(41,182,246,0.4); padding-bottom:6px;">📚 ${escapeHtml(ref)}</div>
+    <div style="margin-bottom:12px; font-size:13.5px; color:#e3f2fd;">Riferimento copiato negli appunti. Scegli dove aprirlo:</div>
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <button class="jw-btn" style="${btnStyle}" onclick="openJwLibrary('it', null, '${safe}'); document.getElementById('myReadModal').style.display='none'"><span class="jw-circle">${JW_TOWER_SVG}</span>Biblioteca online · Italiano</button>
+      <button class="jw-btn" style="${btnStyle}" onclick="openJwLibrary('en', null, '${safe}'); document.getElementById('myReadModal').style.display='none'"><span class="jw-circle">${JW_TOWER_SVG}</span>Online Library · English</button>
+    </div>
+  `;
+  modal.style.display = "flex";
+}
+    
 let currentSearchPage = 1;
 const RESULTS_PER_PAGE = 250;
 let cachedSearchMatches = [];
