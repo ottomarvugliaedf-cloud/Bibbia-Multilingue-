@@ -2413,24 +2413,124 @@ function onPubRefClick(ev, pubRef) {
   if (ev) { ev.preventDefault(); ev.stopPropagation(); }
   bmHaptic(10);
   
-  // 1. PULIZIA ESTREMA DELLA QUERY PER WOL
-  // WOL si confonde se gli passiamo "parr. 15-16" o "p. 12". Vuole solo "w24.06 12".
-  let cleanQuery = String(pubRef).trim();
-  
-  // Rimuove "parr. 15", "par. 15-16", "paragrafi 5"
-  cleanQuery = cleanQuery.replace(/\b(parr?\.|paragraf[oi])\s*\d+.*/gi, '');
-  
-  // Rimuove "p.", "pp.", "pag.", "pagine"
-  cleanQuery = cleanQuery.replace(/\b(pp?\.|pagg?\.?|pagine?|pagina)\s*/gi, '');
-  
-  // Pulisce spazi doppi, virgole e punti finali rimasti
-  cleanQuery = cleanQuery.replace(/\s+/g, ' ').trim();
-  cleanQuery = cleanQuery.replace(/[.,;:]+$/, '');
-
-  // 2. Apre il pannello con la query pulita
-  showPubRefModal(cleanQuery, (typeof getActiveTTSLangCode === "function" ? getActiveTTSLangCode(false) : "it"));
+  // Passiamo il riferimento INTATTO (es. "w24.06 12 parr. 15-16")
+  showPubRefModal(pubRef, (typeof getActiveTTSLangCode === "function" ? getActiveTTSLangCode(false) : "it"));
 }
 
+// Funzione di supporto per creare la query corretta per WOL
+function buildWolQuery(fullRef) {
+  let query = String(fullRef).trim();
+  
+  // Rimuove la parte relativa ai paragrafi ("parr. 15-16", "paragrafi 5")
+  query = query.replace(/\s+parr?\.\s*\d+.*/i, '');
+  query = query.replace(/\s+paragraf[oi]\s*\d+.*/i, '');
+  
+  // Rimuove le parole chiave "p.", "pp.", "pag.", "lez.", "cap."
+  query = query.replace(/\b(pp?\.|pagg?\.?|pagine?|pagina|lez\.|cap\.)\s*/gi, '');
+  
+  // Pulisce spazi doppi
+  query = query.replace(/\s+/g, ' ').trim();
+  
+  // Se è tipo "w24.06 12" lo trasforma in "w24.06 p. 12" (WOL lo preferisce)
+  const m = query.match(/^([a-zA-Z]+\d[\d\/\.\-]+)\s+(\d+)$/i);
+  if (m) {
+    query = `${m[1]} p. ${m[2]}`;
+  }
+  
+  return query;
+}
+
+function copyPubRefToClipboard(pubRef) {
+  if (!pubRef) return;
+  const txt = String(pubRef).trim();
+  let success = false;
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    try {
+      navigator.clipboard.writeText(txt);
+      success = true;
+    } catch (e) {}
+  }
+
+  if (!success) {
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = txt;
+      ta.style.position = "absolute";
+      ta.style.left = "-9999px";
+      ta.style.top = "0";
+      ta.style.opacity = "0.01";
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      ta.setSelectionRange(0, ta.value.length);
+      const res = document.execCommand("copy");
+      document.body.removeChild(ta);
+      if (res) success = true;
+    } catch (e) {}
+  }
+
+  if (success) {
+    showBlueInfoModal("📋 Copiato!", `Il riferimento <b>${escapeHtml(txt)}</b> è pronto negli appunti.`);
+  } else {
+    showBlueInfoModal("⚠️ Copia Manuale", `
+      <div style="margin-bottom:8px;">Il sistema ha bloccato la copia automatica. Tieni premuto sul testo qui sotto e seleziona "Copia":</div>
+      <textarea style="width:100%; height:60px; background:#062356; color:#fff; border:1px solid #29b6f6; border-radius:6px; padding:8px; font-size:14px;" readonly onclick="this.select()">${escapeHtml(txt)}</textarea>
+    `);
+  }
+}
+
+function showPubRefModal(pubRef, lang = "it") {
+  const modal = document.getElementById("myReadModal");
+  const body = document.getElementById("myReadModalBody");
+  if (!modal || !body) { copyPubRefToClipboard(pubRef); return; }
+  
+  // Prepariamo la query pulita SOLO per l'URL, ma mostriamo e copiamo il riferimento completo
+  const wolQuery = buildWolQuery(pubRef);
+  
+  const base = (lang === "en") ? "https://wol.jw.org/en/wol/" : "https://wol.jw.org/it/wol/";
+  const tail = (lang === "en") ? "r1/lp-e" : "r6/lp-i";
+  const url = `${base}s/${tail}?q=${encodeURIComponent(wolQuery)}`;
+  
+  const cleanUrl = url.replace(/^https?:\/\//, '');
+  const chromeIntent = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;end`;
+  const defaultIntent = `intent://${cleanUrl}#Intent;scheme=https;end`;
+
+  body.innerHTML = `
+    <div style="text-align:center; padding:4px 0 12px 0;">
+      <div style="font-size:30px; margin-bottom:8px;">📚</div>
+      <div style="font-size:16px; font-weight:800; color:#ffffff; margin-bottom:6px;">Apri in Biblioteca Online</div>
+      <div style="font-size:13.5px; color:#e3f2fd; line-height:1.5;">
+        Riferimento:<br><b style="color:#00e5ff; font-size:16px;">${escapeHtml(pubRef)}</b>
+        <div style="font-size:11px; margin-top:4px; color:#9ec9ff;">(Ricerca WOL: ${escapeHtml(wolQuery)})</div>
+      </div>
+    </div>
+    
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      
+      <button class="myread-action-btn" style="background:#0d47a1;" onclick="window.location.href='${escapeJsStr(chromeIntent)}'; document.getElementById('myReadModal').style.display='none';">
+        🌐 Apri in Chrome (Forzato)
+      </button>
+
+      <button class="myread-action-btn" style="background:#0277bd;" onclick="window.location.href='${escapeJsStr(defaultIntent)}'; document.getElementById('myReadModal').style.display='none';">
+        📱 Apri nel Browser Predefinito
+      </button>
+
+      <hr style="border:none; border-top:1px solid rgba(255,255,255,0.2); margin:4px 0;">
+      
+      <button class="myread-action-btn" style="background:#2e7d32;" onclick="copyPubRefToClipboard('${escapeJsStr(pubRef)}')">
+        📋 Copia Riferimento Completo
+      </button>
+      
+      <button class="myread-action-btn" style="background:#062356; border: 1px solid #29b6f6;" onclick="copyPubRefToClipboard('${escapeJsStr(url)}')">
+        🔗 Copia Link Diretto
+      </button>
+      
+      <button class="myread-action-btn" style="background:#1a0033; margin-top:6px;" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
+    </div>
+  `;
+  modal.style.display = "flex";
+}
 function copyPubRefToClipboard(pubRef) {
   if (!pubRef) return;
   const txt = String(pubRef).trim();
