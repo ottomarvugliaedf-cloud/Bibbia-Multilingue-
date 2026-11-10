@@ -2568,16 +2568,74 @@ function pubRefOpenChrome(url) {
   if (modal) modal.style.display = "none";
 }
 
+async function openLocalPubRef(code, rawRest) {
+  const modal = document.getElementById("myReadModal");
+  if (modal) modal.style.display = "none";
+  const numMatch = String(rawRest || "").match(/(\d+)/);
+  const targetNum = numMatch ? parseInt(numMatch[1], 10) : 0;
+
+  if (code === "si") {
+    const siData = await getSiData();
+    if (!siData || !Array.isArray(siData.books)) { showSiView(); return; }
+    if (targetNum > 0) {
+      for (let bi = 0; bi < siData.books.length; bi++) {
+        const chs = siData.books[bi].chapters || [];
+        for (let ci = 0; ci < chs.length; ci++) {
+          if (Number(chs[ci].printPage) === targetNum) {
+            showSiReader("b", bi, ci);
+            return;
+          }
+        }
+      }
+      const extras = siExtraItems(siData);
+      for (let xi = 0; xi < extras.length; xi++) {
+        if (Number(extras[xi].chapters?.[0]?.printPage) === targetNum) {
+          showSiReader("x", xi, 0);
+          return;
+        }
+      }
+    }
+    showSiView();
+    return;
+  }
+
+  if (code.startsWith("it") || code.startsWith("perspicacia")) {
+    insightActiveLetter = "TUTTE";
+    insightSearchQuery = targetNum ? `p. ${targetNum}` : "";
+    showInsightView(null);
+  }
+}
+
 function showPubRefModal(fullRef) {
   const modal = document.getElementById("myReadModal");
   const body = document.getElementById("myReadModalBody");
   if (!modal || !body) return;
 
+  const p = pubRefParse(fullRef);
   const t = pubRefTarget(fullRef);
-  const u = escapeJsStr(t.url);
+
+  // 1. URL Risolutore Diretto WOL: normalizza "w24.06 p. 12 parr. 15-16" -> "w24.06 12"
+  // così il motore interno di WOL trova da solo l'articolo esatto di quella pagina!
+  const wolCleanQuery = String(fullRef || "")
+    .replace(/\b(?:pp?\.|pagg?\.|cap\.|lez\.|sez\.)\s*/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  const directWolUrl = `https://wol.jw.org/it/wol/s/r6/lp-i?q=${encodeURIComponent(wolCleanQuery)}&p=par&r=occ`;
+  const uDirect = escapeJsStr(directWolUrl);
+  const uBrowse = escapeJsStr(t.url);
+
+  // 2. Controlla se la pubblicazione è già presente offline nell'app (Tutta la Scrittura / Perspicacia)
+  const isSi = p.code === "si";
+  const isIt = p.code === "it" || p.code === "it-1" || p.code === "it-2" || /^perspicacia/i.test(fullRef);
+  const localBtnHtml = (isSi || isIt) ? `
+    <button class="myread-action-btn btn-color-anim" style="--btn-bg:#00c853; --btn-glow:rgba(0,200,83,0.8); background:#2e7d32;" onclick="openLocalPubRef('${escapeJsStr(p.code || "it")}', '${escapeJsStr(p.rest || "")}')">
+      ⚡ Apri direttamente nell'App (${isSi ? "Tutta la Scrittura" : "Perspicacia"})
+    </button>
+  ` : "";
+
   const detail = t.exact
-    ? `${escapeHtml(t.title)}${t.where ? "<br>" + escapeHtml(t.where) : ""}`
-    : `${escapeHtml(t.title)}<br><span style="opacity:0.85;">Scegli poi l'articolo o il libro dall'elenco.</span>`;
+    ? `${escapeHtml(t.title)}${t.where ? "<br><b style='color:#00e5ff;'>🎯 " + escapeHtml(t.where) + "</b>" : ""}`
+    : `${escapeHtml(t.title)}${t.where ? "<br><b style='color:#00e5ff;'>🎯 " + escapeHtml(t.where) + "</b>" : ""}`;
 
   body.innerHTML = `
     <div style="text-align:center; padding:4px 0 12px 0;">
@@ -2587,14 +2645,14 @@ function showPubRefModal(fullRef) {
       <div style="font-size:13px; color:#e3f2fd; line-height:1.5;">${detail}</div>
     </div>
     <div style="display:flex; flex-direction:column; gap:8px;">
-      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#03a9f4; --btn-glow:rgba(3,169,244,0.75); background:#03a9f4;" onclick="pubRefOpenChrome('${u}')">${CHROME_LOGO_SVG}Apri in Chrome</button>
-      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#1565c0; --btn-glow:rgba(41,182,246,0.75); background:#1565c0;" onclick="pubRefOpenApp('${u}')">📚 Apri nella Biblioteca Online (nell'app)</button>
-      
-      ${t.safeUrl ? `<button class="myread-action-btn btn-color-anim" style="--btn-bg:#8e24aa; --btn-glow:rgba(186,104,200,0.75); background:#6a1b9a;" onclick="pubRefOpenApp('${escapeJsStr(t.safeUrl)}')">📅 Apri l'annata (elenco dei numeri)</button>` : ""}
+      ${localBtnHtml}
+      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#03a9f4; --btn-glow:rgba(3,169,244,0.75); background:#03a9f4;" onclick="pubRefOpenChrome('${uDirect}')">${CHROME_LOGO_SVG}Vai all'Articolo / Pagina (Chrome)</button>
+      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#1565c0; --btn-glow:rgba(41,182,246,0.75); background:#1565c0;" onclick="pubRefOpenApp('${uDirect}')">🎯 Vai all'Articolo / Pagina (nell'app)</button>
+      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#5e35b1; --btn-glow:rgba(149,117,205,0.75); background:#4527a0;" onclick="pubRefOpenApp('${uBrowse}')">📂 Sfoglia Fascicolo / Categoria</button>
       
       <div style="display:flex; gap:8px;">
         <button class="myread-action-btn btn-color-anim" style="--btn-bg:#43a047; --btn-glow:rgba(102,187,106,0.75); background:#43a047; flex:1;" onclick="copyPubRefToClipboard('${escapeJsStr(fullRef)}'); this.textContent='✔ Copiato!';">📋 Riferimento</button>
-        <button class="myread-action-btn btn-color-anim" style="--btn-bg:#2e7d32; --btn-glow:rgba(76,175,80,0.75); background:#2e7d32; flex:1;" onclick="copyPubRefToClipboard('${u}'); this.textContent='✔ Link Copiato!';">🔗 Link</button>
+        <button class="myread-action-btn btn-color-anim" style="--btn-bg:#2e7d32; --btn-glow:rgba(76,175,80,0.75); background:#2e7d32; flex:1;" onclick="copyPubRefToClipboard('${uDirect}'); this.textContent='✔ Link Copiato!';">🔗 Link Diretto</button>
       </div>
       
       <button class="myread-action-btn btn-color-anim" style="--btn-bg:#7b1fa2; --btn-glow:rgba(156,39,176,0.7); background:#1a0033; margin-top:6px;" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
