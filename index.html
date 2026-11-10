@@ -2307,7 +2307,19 @@ function formatNoteLinks(txt, defaultBookId = null) {
   if (!txt) return "";
   let out = escapeHtml(txt);
 
-  const PUB_RE = /\b((?:w|g|it|km|wp|mwb|ws|wb|wh|rp|lvs|kr|iw|wiy|ia|mb|yc|jy|yp|lff|th|rj|we|ct|ds|sn|br|ka|jv|od|cl|be|bhs|ba|bt|lr|fy|wsp|ms|cf|jh|sg|yy|gh|gb|si|sjb|su|ta|lp|ca|dx|dw|wly|rc|bm|bp|yb)(?:\s?[-\u2013\/.]?\s?\d{1,2}(?:\s?[\/.]\s?\d{1,2})?)?)((?:\s+(?:(?:pp?|parr?|par|lez|cap|sez|pag|pagine|pagina)\.?\s*)?\d+(?:\s*[–-]\s*\d+)?(?:\s*,\s*\d+(?:\s*[–-]\s*\d+)?)*)+)/gi;
+  const PUB_NUMS = String.raw`\d+(?:\s*[–-]\s*\d+)?(?:\s*,\s*\d+(?:\s*[–-]\s*\d+)?)*`;
+  const PUB_PG = String.raw`(?:\s+(?:pp?\.|pagg?\.)\s*` + PUB_NUMS + `)`;
+  const PUB_PAR = String.raw`(?:\s+parr?\.\s*` + PUB_NUMS + `)`;
+  const PUB_RE = new RegExp(
+    String.raw`\b(?:` +
+    String.raw`(?:w|wp|ws|g|km|mwb|yb)\d{0,2}\s+\d{1,2}\/\d{1,2}(?:\/\d{2,4})?` + PUB_PG + `?` + PUB_PAR + `?` +
+    `|` +
+    String.raw`(?:w|wp|ws|g|mwb)\d{2}\.\d{1,2}(?:\s+(?:(?:pp?\.|pagg?\.)\s*)?` + PUB_NUMS + `)?` + PUB_PAR + `?` +
+    `|` +
+    String.raw`(?:it-[12]|it|si|bhs|bh|rs|kl|jr|re|ia|cl|lvs|lv|lff|lfb|ypq|yp[12]?|dp|ed|gt|pm|kr|th|ba|ad|be|bt|od|ol|ct|cv|hl|im|jd|jv|lr|my|ph|pr|rr|sg|sp|tp|uw|wiy|wi|wb|wh|iw|fy|gm|gr|jy|nh|yc|lp|rp|cf|ca|mb|rj|we|ds|sn|br|ka|jh|yy|gh|gb|sjb|su|ta|dw|wly|rc|bm|bp|wsp|ms)\s+(?:cap\.|lez\.|sez\.|storia|pp?\.|pagg?\.)\s*` + PUB_NUMS + PUB_PAR + `?` +
+    `|` +
+    String.raw`Perspicacia,\s+vol\.\s*[12],\s+pp?\.\s*` + PUB_NUMS +
+    `)`, "g");
 
   out = out.replace(PUB_RE, (match) => {
     const clean = match.replace(/\s+/g, ' ').trim();
@@ -2413,35 +2425,133 @@ function copyPubRefToClipboard(txt) {
   return success;
 }
 
+function pubRefParse(ref) {
+  const r = String(ref || "").replace(/\s+/g, " ").trim();
+  const yearOf = (yy) => (Number(yy) <= 30 ? 2000 + Number(yy) : 1900 + Number(yy));
+  let m = r.match(/^(w|wp|ws|g|mwb)(\d{2})\.(\d{1,2})\b\s*(.*)$/);
+  if (m) return { code: m[1], fmt: "new", year: yearOf(m[2]), month: Number(m[3]), rest: m[4] };
+  m = r.match(/^(w|wp|ws|g|km|mwb|yb)(\d{0,2})\s+(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\b\s*(.*)$/);
+  if (m) {
+    const y = m[5] ? (m[5].length === 4 ? Number(m[5]) : yearOf(m[5])) : (m[2] ? yearOf(m[2]) : 0);
+    return { code: m[1], fmt: "old", year: y, day: Number(m[3]), month: Number(m[4]), rest: m[6] };
+  }
+  m = r.match(/^([a-z]+(?:-\d)?)\b\s*(.*)$/);
+  return { code: m ? m[1] : "", fmt: "plain", rest: m ? m[2] : r };
+}
+
+function pubRefTarget(ref) {
+  const root = "https://wol.jw.org/it/wol/library/r6/lp-i/tutte-le-pubblicazioni";
+  const mesi = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"];
+  const p = pubRefParse(ref);
+  const out = { url: root, safeUrl: "", exact: false, title: "Biblioteca online · Pubblicazioni", where: "" };
+  let where = p.rest ? p.rest.replace(/\bparr?\./g, "parr.").replace(/\bpp?\./g, "pag.") : "";
+  if (/^\d/.test(where)) where = "pag. " + where;
+  const mese = (n) => mesi[Math.max(1, Math.min(12, n)) - 1];
+  if (p.code === "w") {
+    const tdg = root + "/torre-di-guardia";
+    if (p.fmt === "new" && p.year >= 2016) {
+      out.url = `${tdg}/la-torre-di-guardia-${p.year}/edizione-per-lo-studio/${mese(p.month)}`;
+      out.safeUrl = `${tdg}/la-torre-di-guardia-${p.year}`;
+      out.exact = true;
+      out.title = `Torre di Guardia (studio) · ${mese(p.month)} ${p.year}`;
+    } else if (p.fmt === "old" && p.year && p.year <= 2007 && (p.day === 1 || p.day === 15)) {
+      out.url = `${tdg}/la-torre-di-guardia-${p.year}/${p.day}-${mese(p.month)}`;
+      out.safeUrl = `${tdg}/la-torre-di-guardia-${p.year}`;
+      out.exact = true;
+      out.title = `Torre di Guardia · ${p.day === 1 ? "1°" : "15"} ${mese(p.month)} ${p.year}`;
+    } else if (p.fmt === "old" && p.year >= 2008 && p.year <= 2015 && p.day === 15) {
+      out.url = `${tdg}/la-torre-di-guardia-${p.year}/edizione-per-lo-studio/15-${mese(p.month)}`;
+      out.safeUrl = `${tdg}/la-torre-di-guardia-${p.year}`;
+      out.exact = true;
+      out.title = `Torre di Guardia (studio) · 15 ${mese(p.month)} ${p.year}`;
+    } else if (p.year) {
+      out.url = `${tdg}/la-torre-di-guardia-${p.year}`;
+      out.title = `Torre di Guardia ${p.year}`;
+    } else {
+      out.url = tdg;
+      out.title = "Torre di Guardia";
+    }
+  } else if (p.code === "wp" && p.fmt === "new" && p.year >= 2016) {
+    const tdg = root + "/torre-di-guardia";
+    out.url = `${tdg}/la-torre-di-guardia-${p.year}/edizione-per-il-pubblico/n-${p.month}`;
+    out.safeUrl = `${tdg}/la-torre-di-guardia-${p.year}`;
+    out.exact = true;
+    out.title = `Torre di Guardia (pubblico) · n. ${p.month} ${p.year}`;
+  } else if (p.code === "g") {
+    out.url = root + "/svegliatevi";
+    out.title = "Svegliatevi!";
+  } else if (p.code === "it-1" || p.code === "it-2" || p.code === "it") {
+    out.url = root + "/perspicacia";
+    out.title = "Perspicacia";
+  } else if (p.code === "km") {
+    out.url = root + "/ministero-del-regno";
+    out.title = "Ministero del Regno";
+  } else if (p.code === "mwb") {
+    out.url = root + "/guida-per-ladunanza";
+    out.title = "Guida per l'adunanza";
+  } else if (p.code === "dx") {
+    out.url = root + "/indice";
+    out.title = "Indice";
+  } else if (p.code) {
+    out.url = root + "/libri";
+    out.title = "Libri";
+  }
+  out.where = where;
+  return out;
+}
+
+function pubRefOpenApp(url) {
+  const a = document.createElement("a");
+  a.href = url;
+  a.target = "_blank";
+  a.rel = "noopener noreferrer";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  const modal = document.getElementById("myReadModal");
+  if (modal) modal.style.display = "none";
+}
+
+// Prova ad aprire Chrome tramite un iframe invisibile: se l'app non gestisce gli intent
+// l'errore resta dentro l'iframe e la pagina dell'app NON viene mai sostituita.
+function pubRefOpenChrome(url) {
+  const intent = "intent://" + String(url).replace(/^https?:\/\//, "") + "#Intent;scheme=https;package=com.android.chrome;end";
+  try {
+    const f = document.createElement("iframe");
+    f.style.cssText = "display:none; width:0; height:0; border:0;";
+    f.src = intent;
+    document.body.appendChild(f);
+    setTimeout(() => { try { f.remove(); } catch (e) {} }, 2500);
+  } catch (e) {}
+}
+
 function showPubRefModal(fullRef) {
   const modal = document.getElementById("myReadModal");
   const body = document.getElementById("myReadModalBody");
   if (!modal || !body) return;
 
-  // URL della HOMEPAGE di WOL (nessun parametro di ricerca → nessun errore)
-  const homeUrl = "https://wol.jw.org/it/wol/h/r6/lp-i";
-  const cleanUrl = homeUrl.replace(/^https?:\/\//, '');
-  const chromeIntent = "intent://" + cleanUrl + "#Intent;scheme=https;package=com.android.chrome;end";
+  const t = pubRefTarget(fullRef);
+  const u = escapeJsStr(t.url);
+  const detail = t.exact
+    ? `${escapeHtml(t.title)}${t.where ? "<br>" + escapeHtml(t.where) : ""}`
+    : `${escapeHtml(t.title)}<br><span style="opacity:0.85;">Scegli poi l'articolo o il libro dall'elenco.</span>`;
 
   body.innerHTML = `
     <div style="text-align:center; padding:4px 0 12px 0;">
       <div style="font-size:30px; margin-bottom:8px;">📚</div>
       <div style="font-size:16px; font-weight:800; color:#ffffff; margin-bottom:6px;">Riferimento Copiato</div>
-      <div style="font-size:13.5px; color:#e3f2fd; line-height:1.5;">
-        <b style="color:#f3e5f5; font-size:15px;">${escapeHtml(fullRef)}</b>
-        <div style="font-size:11.5px; color:#9ec9ff; margin-top:8px; line-height:1.4;">
-          ✔ Il riferimento è già negli appunti.<br>
-          Quando si apre Chrome sulla pagina iniziale della Biblioteca Online, tieni premuto sul campo di ricerca, scegli <b>Incolla</b>, poi premi <b>Invio</b>.
-        </div>
-      </div>
+      <div style="font-size:15px; font-weight:800; color:#f3e5f5; margin-bottom:6px;">${escapeHtml(fullRef)}</div>
+      <div style="font-size:13px; color:#e3f2fd; line-height:1.5;">${detail}</div>
     </div>
     <div style="display:flex; flex-direction:column; gap:8px;">
-      <button class="myread-action-btn" style="background:#0d47a1;" onclick="window.location.href='${escapeJsStr(chromeIntent)}'; document.getElementById('myReadModal').style.display='none';">
-        🌐 Apri Chrome (Biblioteca Online)
-      </button>
-      <button class="myread-action-btn" style="background:#1a0033; margin-top:6px;" onclick="document.getElementById('myReadModal').style.display='none'">
-        Chiudi
-      </button>
+      <button class="myread-action-btn" style="background:#0d47a1;" onclick="pubRefOpenChrome('${u}')">🌐 Apri in Chrome</button>
+      <button class="myread-action-btn" style="background:#1565c0;" onclick="pubRefOpenApp('${u}')">📚 Apri nella Biblioteca online (nell'app)</button>
+      ${t.safeUrl ? `<button class="myread-action-btn" style="background:#4a148c;" onclick="pubRefOpenApp('${escapeJsStr(t.safeUrl)}')">📅 Apri l'annata (elenco dei numeri)</button>` : ""}
+      <div style="display:flex; gap:8px;">
+        <button class="myread-action-btn" style="background:#2e7d32; flex:1;" onclick="copyPubRefToClipboard('${escapeJsStr(fullRef)}')">📋 Riferimento</button>
+        <button class="myread-action-btn" style="background:#2e7d32; flex:1;" onclick="copyPubRefToClipboard('${u}')">🔗 Link</button>
+      </div>
+      <button class="myread-action-btn" style="background:#1a0033; margin-top:6px;" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
     </div>
   `;
   modal.style.display = "flex";
@@ -2652,20 +2762,26 @@ function showSearchView(fromBack = false) {
 }
 const JW_TOWER_SVG = `<svg viewBox="0 0 1000 1000"><path d="M200 200H334V267H367V200H434V267H467V200H534V267H566V200H633V267H666V200H800V433H767V467H734V800H266V467H233V433H200Z"/></svg>`;
     
-function openJwLibrary(lang, searchInputId = "searchInput") {
+function openJwLibrary(lang, searchInputId = "searchInput", directQuery) {
+  const fromInput = searchInputId ? (document.getElementById(searchInputId)?.value || "") : "";
+  const q = String(directQuery != null ? directQuery : fromInput).trim();
   if (navigator.onLine === false) {
     const res = document.getElementById("searchResults");
     if (res) res.innerHTML = '<div class="loader">📡 Sei offline: la Biblioteca online richiede la connessione a internet.</div>';
+    else showBlueInfoModal("📡 Connessione assente", "La Biblioteca online richiede una connessione a internet.");
     return;
   }
-  const q = (document.getElementById(searchInputId)?.value || "").trim();
   const base = lang === "en" ? "https://wol.jw.org/en/wol/" : "https://wol.jw.org/it/wol/";
   const tail = lang === "en" ? "r1/lp-e" : "r6/lp-i";
-  const url = q ? (base + "s/" + tail + "?q=" + encodeURIComponent(q) + "&p=par&st=a") : (base + "h/" + tail);
-  const cleanUrl = url.replace(/^https?:\/\//, '');
-  const chromeIntent = "intent://" + cleanUrl + "#Intent;scheme=https;package=com.android.chrome;end";
-  window.location.href = chromeIntent;
-}      
+  const url = q ? (base + "s/" + tail + "?q=" + encodeURIComponent(q) + "&p=par&r=occ") : (base + "h/" + tail);
+  const a = document.createElement("a");
+  a.href = url;
+  a.target = "_blank";
+  a.rel = "noopener noreferrer";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}     
     
 let currentSearchPage = 1;
 const RESULTS_PER_PAGE = 250;
