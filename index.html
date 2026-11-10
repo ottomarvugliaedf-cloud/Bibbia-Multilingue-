@@ -932,81 +932,6 @@ body.oled-mode .pub-ref-badge {
   background: rgba(186, 104, 200, 0.22);
   color: #f3e5f5;
 }
-    /* Proiezione Radiale dal centro verso i bordi scuri per i tasti dei modali e Biblioteca Online */
-    @keyframes bmCenterDarkEdges {
-      0% {
-        background: radial-gradient(circle at 50% 50%, #ffffff 0%, var(--btn-bg, #00e5ff) 32%, #0a367e 72%, #020b1c 100%);
-        transform: scale(0.98);
-      }
-      100% {
-        background: radial-gradient(circle at 50% 50%, #e0f7fa 0%, var(--btn-bg, #00b0ff) 45%, #062356 80%, #010612 100%);
-        transform: scale(0.95);
-      }
-    }
-
-    .btn-color-anim {
-      transition: transform 0.14s ease, box-shadow 0.14s ease;
-    }
-    .btn-color-anim:active {
-      animation: bmCenterDarkEdges 0.24s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
-      background: radial-gradient(circle at 50% 50%, #e0f7fa 0%, var(--btn-bg, #00b0ff) 45%, #062356 80%, #010612 100%) !important;
-      color: #ffffff !important;
-      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85) !important;
-      border-color: #84ffff !important;
-      box-shadow: 0 0 20px var(--btn-glow, rgba(0, 229, 255, 0.85)), inset 0 0 14px rgba(2, 11, 28, 0.85) !important;
-      transform: scale(0.95) !important;
-    }
-
-    /* Biblioteca online JW.org: cerchio azzurro con torre vettoriale + effetto radiale dal centro ai bordi */
-    .jw-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--bg-card);
-      color: var(--text-main);
-      border: 1px solid var(--border-color);
-      border-radius: 24px;
-      padding: 5px 12px 5px 5px;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.18s ease;
-      text-decoration: none;
-    }
-    .jw-btn .jw-circle {
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      background-color: var(--cat-3);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 2px 5px rgba(2, 136, 209, 0.35);
-      flex-shrink: 0;
-      transition: all 0.18s ease;
-    }
-    .jw-btn .jw-circle svg { width: 20px; height: 20px; fill: #ffffff; transition: fill 0.18s ease; }
-
-    .jw-btn:active,
-    .jw-btn.btn-color-anim:active {
-      animation: bmCenterDarkEdges 0.24s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
-      background: radial-gradient(circle at 50% 50%, #e0f7fa 0%, var(--btn-bg, #00b0ff) 45%, #062356 80%, #010612 100%) !important;
-      color: #ffffff !important;
-      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85) !important;
-      border-color: #84ffff !important;
-      box-shadow: 0 0 22px var(--btn-glow, rgba(0, 229, 255, 0.9)), inset 0 0 12px rgba(2, 11, 28, 0.85) !important;
-      transform: scale(0.96) !important;
-    }
-    .jw-btn:active .jw-circle,
-    .jw-btn.btn-color-anim:active .jw-circle {
-      background: radial-gradient(circle at 50% 50%, #ffffff 0%, #84ffff 48%, #0d47a1 85%, #020b1c 100%) !important;
-      box-shadow: 0 0 14px #00e5ff, inset 0 0 6px rgba(2, 11, 28, 0.75) !important;
-      transform: scale(1.06);
-    }
-    .jw-btn:active .jw-circle svg,
-    .jw-btn.btn-color-anim:active .jw-circle svg {
-      fill: #041a42 !important;
-    }
   
     /* ===== DOVE? / CARTINE BIBLICHE (Stile Uniformato PRO) ===== */
     .bp-viewer { position: fixed; inset: 0; z-index: 1100; display: none; flex-direction: column; background: var(--bg-main); color: var(--text-main); }
@@ -2639,6 +2564,8 @@ function pubRefOpenChrome(url) {
     document.body.appendChild(f);
     setTimeout(() => { try { f.remove(); } catch (e) {} }, 2500);
   } catch (e) {}
+  const modal = document.getElementById("myReadModal");
+  if (modal) modal.style.display = "none";
 }
 
 function showPubRefModal(fullRef) {
