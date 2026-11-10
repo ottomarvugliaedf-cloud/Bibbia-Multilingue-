@@ -940,10 +940,10 @@ body.oled-mode .pub-ref-badge {
   animation: none !important;
   background-color: var(--btn-bg) !important;
   color: #ffffff !important;
-  border-color: var(--btn-bg) !important;
-  box-shadow: 0 0 15px var(--btn-glow) !important;
-  transform: scale(0.97) !important;
-  filter: brightness(0.85) !important;
+  border-color: rgba(255, 255, 255, 0.9) !important;
+  box-shadow: 0 0 25px var(--btn-glow), 0 0 8px rgba(255, 255, 255, 0.9), inset 0 0 10px rgba(255, 255, 255, 0.3) !important;
+  transform: scale(0.93) !important;
+  filter: brightness(1.25) saturate(1.2) !important;
 }
 /* Per i tasti Biblioteca Online (jw-btn) l'animazione illumina il cerchietto e il bordo */
 .jw-btn.btn-color-anim:active {
@@ -2572,8 +2572,7 @@ function showPubRefModal(fullRef) {
       <div style="font-size:13px; color:#e3f2fd; line-height:1.5;">${detail}</div>
     </div>
     <div style="display:flex; flex-direction:column; gap:8px;">
-      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#03a9f4; --btn-glow:rgba(3,169,244,0.6); background:#03a9f4;" onclick="pubRefOpenChrome('${u}')">🌐 Apri in Chrome</button>
-      
+      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#03a9f4; --btn-glow:rgba(3,169,244,0.6); background:#03a9f4;" onclick="pubRefOpenChrome('${u}')">${CHROME_LOGO_SVG}Apri in Chrome</button>
       <button class="myread-action-btn btn-color-anim" style="--btn-bg:#1565c0; --btn-glow:rgba(21,101,192,0.6); background:#1565c0;" onclick="pubRefOpenApp('${u}')">📚 Apri nella Biblioteca Online (nell'app)</button>
       
       ${t.safeUrl ? `<button class="myread-action-btn btn-color-anim" style="--btn-bg:#6a1b9a; --btn-glow:rgba(106,27,154,0.6); background:#6a1b9a;" onclick="pubRefOpenApp('${escapeJsStr(t.safeUrl)}')">📅 Apri l'annata (elenco dei numeri)</button>` : ""}
@@ -2793,7 +2792,8 @@ function showSearchView(fromBack = false) {
   `;
 }
 const JW_TOWER_SVG = `<svg viewBox="0 0 1000 1000"><path d="M200 200H334V267H367V200H434V267H467V200H534V267H566V200H633V267H666V200H800V433H767V467H734V800H266V467H233V433H200Z"/></svg>`;
-    
+const CHROME_LOGO_SVG = `<svg viewBox="0 0 48 48" width="20" height="20" style="vertical-align:middle; margin-right:8px; flex-shrink:0;"><path fill="#EA4335" d="M24 24 4.95 13A22 22 0 0 1 43.05 13Z"/><path fill="#FBBC05" d="M24 24l19.05-11A22 22 0 0 1 24 46Z"/><path fill="#34A853" d="M24 24v22A22 22 0 0 1 4.95 13Z"/><circle cx="24" cy="24" r="11" fill="#4285F4"/><circle cx="24" cy="24" r="11" fill="none" stroke="#fff" stroke-width="2.5"/></svg>`;   
+
 function openJwLibrary(lang, searchInputId = "searchInput", directQuery) {
   const fromInput = searchInputId ? (document.getElementById(searchInputId)?.value || "") : "";
   const q = String(directQuery != null ? directQuery : fromInput).trim();
@@ -2834,7 +2834,7 @@ function openJwLibrary(lang, searchInputId = "searchInput", directQuery) {
       <div style="font-size:14px; color:#e3f2fd; line-height:1.5;">${queryDisplay}</div>
     </div>
     <div style="display:flex; flex-direction:column; gap:8px;">
-      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#03a9f4; --btn-glow:rgba(3,169,244,0.6); background:#03a9f4;" onclick="pubRefOpenChrome('${safeUrl}')">🌐 Apri in Chrome</button>
+      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#03a9f4; --btn-glow:rgba(3,169,244,0.6); background:#03a9f4;" onclick="pubRefOpenChrome('${safeUrl}')">${CHROME_LOGO_SVG}Apri in Chrome</button>
       <button class="myread-action-btn btn-color-anim" style="--btn-bg:#1565c0; --btn-glow:rgba(21,101,192,0.6); background:#1565c0;" onclick="pubRefOpenApp('${safeUrl}')">📚 Apri nella Biblioteca Online (nell'app)</button>
       <button class="myread-action-btn" style="background:#1a0033; margin-top:6px;" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
     </div>
@@ -3175,8 +3175,8 @@ function openResetHistoryModal() {
       </div>
     </div>
     <div style="display:flex; gap:10px;">
-      <button class="myread-action-btn" style="background:#062356; flex:1;" onclick="document.getElementById('myReadModal').style.display='none'">Annulla</button>
-      <button class="myread-action-btn" style="flex:1.3;" onclick="confirmResetNavHistory()">🗑️ Azzera memoria</button>
+      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#062356; --btn-glow:rgba(41,182,246,0.6); background:#062356; flex:1;" onclick="document.getElementById('myReadModal').style.display='none'">Annulla</button>
+      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#1565c0; --btn-glow:rgba(21,101,192,0.7); background:#1565c0; flex:1.3;" onclick="confirmResetNavHistory()">🗑️ Azzera memoria</button>
     </div>
   `;
   modal.style.display = "flex";
@@ -6685,8 +6685,8 @@ function openResetMyReadingModal() {
       </div>
     </div>
     <div style="display:flex; gap:10px;">
-      <button class="myread-action-btn" style="background:#062356; flex:1;" onclick="document.getElementById('myReadModal').style.display='none'">Annulla</button>
-      <button class="myread-action-btn" style="flex:1.3;" onclick="confirmResetMyReading()">🗑️ Azzera memoria</button>
+      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#062356; --btn-glow:rgba(41,182,246,0.6); background:#062356; flex:1;" onclick="document.getElementById('myReadModal').style.display='none'">Annulla</button>
+      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#1565c0; --btn-glow:rgba(21,101,192,0.7); background:#1565c0; flex:1.3;" onclick="confirmResetMyReading()">🗑️ Azzera memoria</button>
     </div>
   `;
   modal.style.display = "flex";
@@ -6728,7 +6728,7 @@ function showBlueConfirmToast(savedBookName, savedCh) {
         <b style="font-size:16.5px; color:#ffffff;">📖 ${escapeHtml(savedBookName)} ${savedCh}</b>
       </div>
     </div>
-    <button class="myread-action-btn" onclick="document.getElementById('myReadModal').style.display='none'">OK</button>
+    <button class="myread-action-btn btn-color-anim" style="--btn-bg:#1565c0; --btn-glow:rgba(21,101,192,0.7); background:#1565c0;" onclick="document.getElementById('myReadModal').style.display='none'">OK</button>
   `;
   modal.style.display = "flex";
 }
@@ -6890,7 +6890,7 @@ function showBlueInfoModal(titleTxt, bodyHtml) {
       <div style="font-size:16px; font-weight:800; color:#ffffff; margin-bottom:8px;">${escapeHtml(titleTxt)}</div>
       <div style="font-size:14px; color:#e3f2fd; line-height:1.5;">${bodyHtml}</div>
     </div>
-    <button class="myread-action-btn" onclick="document.getElementById('myReadModal').style.display='none'">OK</button>
+    <button class="myread-action-btn btn-color-anim" style="--btn-bg:#1565c0; --btn-glow:rgba(21,101,192,0.7); background:#1565c0;" onclick="document.getElementById('myReadModal').style.display='none'">OK</button>
   `;
   modal.style.display = "flex";
 }
