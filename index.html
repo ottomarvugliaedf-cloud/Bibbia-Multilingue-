@@ -2773,15 +2773,42 @@ function openJwLibrary(lang, searchInputId = "searchInput", directQuery) {
   }
   const base = lang === "en" ? "https://wol.jw.org/en/wol/" : "https://wol.jw.org/it/wol/";
   const tail = lang === "en" ? "r1/lp-e" : "r6/lp-i";
-  const url = q ? (base + "s/" + tail + "?q=" + encodeURIComponent(q) + "&p=par&r=occ") : (base + "h/" + tail);
-  const a = document.createElement("a");
-  a.href = url;
-  a.target = "_blank";
-  a.rel = "noopener noreferrer";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-}     
+  const url = q
+    ? (base + "s/" + tail + "?q=" + encodeURIComponent(q) + "&p=par&r=occ")
+    : (base + "h/" + tail);
+  const langLabel = lang === "en" ? "English" : "Italiano";
+  const title = q ? `Biblioteca online · ${langLabel}` : `Biblioteca online · ${langLabel} (home)`;
+
+  const modal = document.getElementById("myReadModal");
+  const body = document.getElementById("myReadModalBody");
+  if (!modal || !body) {
+    const a = document.createElement("a");
+    a.href = url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    return;
+  }
+
+  const safeUrl = escapeJsStr(url);
+  const queryDisplay = q ? `🔍 <b>${escapeHtml(q)}</b>` : `🏠 Pagina iniziale`;
+
+  body.innerHTML = `
+    <div style="text-align:center; padding:4px 0 12px 0;">
+      <div style="font-size:30px; margin-bottom:8px;">📚</div>
+      <div style="font-size:16px; font-weight:800; color:#ffffff; margin-bottom:6px;">${escapeHtml(title)}</div>
+      <div style="font-size:14px; color:#e3f2fd; line-height:1.5;">${queryDisplay}</div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <button class="myread-action-btn" style="background:#0d47a1;" onclick="pubRefOpenChrome('${safeUrl}')">🌐 Apri in Chrome</button>
+      <button class="myread-action-btn" style="background:#1565c0;" onclick="pubRefOpenApp('${safeUrl}')">📚 Apri nella Biblioteca online (nell'app)</button>
+      <button class="myread-action-btn" style="background:#1a0033; margin-top:6px;" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
+    </div>
+  `;
+  modal.style.display = "flex";
+}   
     
 let currentSearchPage = 1;
 const RESULTS_PER_PAGE = 250;
