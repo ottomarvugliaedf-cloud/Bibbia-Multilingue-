@@ -2265,7 +2265,7 @@ function saveBookmark() {
     ? Array.from(selectedVersesMap.keys()).sort((a, b) => a - b)
     : (state.selectedVerse ? [state.selectedVerse] : []);
   if (!nums.length) return;
-  bmHaptic(14);
+  bmChimeHaptic();
   const book = getBook(state.bookId);
   const rangeStr = formatSelectedVersesRangeLabel(nums);
   const ref = `${book.name} ${state.chapter}:${rangeStr}`;
@@ -2348,6 +2348,7 @@ function closeNoteModal() {
   document.getElementById("noteModal").style.display = "none";
 }
 function saveNoteFromModal() {
+  bmChimeHaptic();
   const textEl = document.getElementById("noteModalInput");
   const tagsEl = document.getElementById("noteTagsInput");
   const text = textEl ? textEl.value.trim() : "";
@@ -2669,50 +2670,7 @@ async function openLocalPubBridge(code, rawRest, fullRef) {
     showInsightView(null);
   }
 }
-
-async function openLocalPubBridge(code, rawRest, fullRef) {
-  bmChimeHaptic();
-  const modal = document.getElementById("myReadModal");
-  if (modal) modal.style.display = "none";
-  const m = String(rawRest || "").match(/(\d+)/);
-  const targetNum = m ? parseInt(m[1], 10) : 0;
-
-  if (code === "si") {
-    const siData = await getSiData();
-    if (!siData || !Array.isArray(siData.books)) { showSiView(); return; }
-    if (targetNum > 0) {
-      let best = null;
-      siData.books.forEach((b, bi) => {
-        (b.chapters || []).forEach((c, ci) => {
-          const p = Number(c.printPage) || 0;
-          if (p > 0 && p <= targetNum && (!best || p > best.p)) {
-            best = { kind: "b", i: bi, ci, p };
-          }
-        });
-      });
-      const extras = siExtraItems(siData);
-      extras.forEach((x, xi) => {
-        const p = Number(x.chapters?.[0]?.printPage) || 0;
-        if (p > 0 && p <= targetNum && (!best || p > best.p)) {
-          best = { kind: "x", i: xi, ci: 0, p };
-        }
-      });
-      if (best) {
-        showSiReader(best.kind, best.i, best.ci);
-        return;
-      }
-    }
-    showSiView();
-    return;
-  }
-
-  if (code.startsWith("it") || /^perspicacia/i.test(fullRef)) {
-    insightActiveLetter = "TUTTE";
-    insightSearchQuery = targetNum ? String(targetNum) : "";
-    showInsightView(null);
-  }
-}
-
+    
 function showPubRefModal(fullRef) {
   const modal = document.getElementById("myReadModal");
   const body = document.getElementById("myReadModalBody");
@@ -2816,6 +2774,7 @@ function showNotesView(fromBack = false) {
             <span onclick="event.stopPropagation();openNoteModalForVerse('${safeRefJs}')" style="color:var(--primary-light);cursor:pointer;font-size:13px;">✏️ Modifica</span>
             <span onclick="event.stopPropagation();deleteNoteById(${Number(noteId)}, '${safeRefJs}')" style="color:var(--danger);cursor:pointer;font-size:13px;">🗑 Elimina</span>
           </div>
+        </div>
         ${n.verseText ? `<div style="font-size:12.5px;color:var(--text-muted);font-style:italic;margin:6px 0 8px 0;border-left:3px solid var(--primary-light);padding-left:8px;">"${escapeHtml(n.verseText)}"</div>` : ""}
         <div style="margin-top:6px;line-height:1.55;white-space:pre-wrap;font-weight:500;">${formatNoteLinks(n.text)}</div>
         ${(n.tags && n.tags.length) ? `<div style="margin-top:8px;">${n.tags.map(t => `<span class="tag-badge" onclick="event.stopPropagation();filterNotesByTag('${escapeJsStr(t)}')">#${escapeHtml(t)}</span>`).join("")}</div>` : ""}
@@ -6713,12 +6672,6 @@ async function openDeepenDailyModal() {
       placesHtml = `<div class="section-title"><span>Luoghi citati</span><span>${places.length}</span></div>` + places.map(bpCardHtml).join("");
     }
   }
-    window.__lastDailyDossier = {
-    theme: rawTheme || "Scrittura del Giorno",
-    refs: refs,
-    keywords: finalKeywords,
-    comment: rawComment || ""
-  };
   window.__lastDailyDossier = {
     theme: rawTheme || "Scrittura del Giorno",
     refs: refs,
@@ -6959,6 +6912,7 @@ function showBlueConfirmToast(savedBookName, savedCh) {
 }
 
 function confirmMyReadingSelection() {
+  bmChimeHaptic();
   const bSel = document.getElementById("myReadBookSel");
   const cSel = document.getElementById("myReadChSel");
   const chosenBookId = bSel ? Number(bSel.value) : state.bookId;
