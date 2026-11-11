@@ -1045,6 +1045,30 @@ body.oled-mode .pub-ref-badge {
     .jw-btn.btn-color-anim:active .jw-circle svg {
       fill: #041a42 !important;
     }
+
+    /* ===== 1. COMPLICAZIONE ROYAL OAK: Micro-Anglage Speculare, Vetro Zaffiro e Barra Elastica ===== */
+    .result-card, .bp-card, .rp-row, .book-tile, .chapter-tile, .jw-btn, .myread-action-btn, .nav-btn, .search-btn {
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 3px 8px rgba(0, 0, 0, 0.26);
+    }
+    .modal-overlay {
+      backdrop-filter: blur(7px);
+      -webkit-backdrop-filter: blur(7px);
+      transition: opacity 0.18s ease;
+    }
+    .modal-card {
+      box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.32), 0 18px 42px rgba(0, 0, 0, 0.72), 0 0 18px rgba(41, 182, 246, 0.28) !important;
+    }
+    @keyframes bmActionBarSpring {
+      0% { opacity: 0; transform: translate3d(-50%, 24px, 0) scale(0.92); }
+      70% { opacity: 1; transform: translate3d(-50%, -3px, 0) scale(1.02); }
+      100% { opacity: 1; transform: translate3d(-50%, 0, 0) scale(1); }
+    }
+    .verse-action-bar {
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.35), 0 10px 28px rgba(0, 0, 0, 0.55), 0 0 14px rgba(41, 182, 246, 0.35) !important;
+      animation: bmActionBarSpring 0.26s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
   </style>
 </head>
 <body>
@@ -2053,13 +2077,48 @@ function toggleDiffMode() {
     let activeNoteTarget = null;
     let selectedVersesMap = new Map();
 
-function bmHaptic(ms = 12) {
+let bmHapticAudioCtx = null;
+function bmPlayMechanicalTick(isDouble = false) {
   try {
-    if (navigator && typeof navigator.vibrate === "function") {
-      navigator.vibrate(ms);
-    }
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    if (!bmHapticAudioCtx) bmHapticAudioCtx = new AudioCtx();
+    if (bmHapticAudioCtx.state === "suspended") bmHapticAudioCtx.resume();
+    const fireTick = (delaySec, freq, gainVal) => {
+      const osc = bmHapticAudioCtx.createOscillator();
+      const gain = bmHapticAudioCtx.createGain();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(freq, bmHapticAudioCtx.currentTime + delaySec);
+      osc.frequency.exponentialRampToValueAtTime(80, bmHapticAudioCtx.currentTime + delaySec + 0.014);
+      gain.gain.setValueAtTime(gainVal, bmHapticAudioCtx.currentTime + delaySec);
+      gain.gain.exponentialRampToValueAtTime(0.001, bmHapticAudioCtx.currentTime + delaySec + 0.014);
+      osc.connect(gain);
+      gain.connect(bmHapticAudioCtx.destination);
+      osc.start(bmHapticAudioCtx.currentTime + delaySec);
+      osc.stop(bmHapticAudioCtx.currentTime + delaySec + 0.015);
+    };
+    fireTick(0, 1450, 0.08);
+    if (isDouble) fireTick(0.055, 1950, 0.11);
   } catch (e) {}
 }
+
+function bmHaptic(ms = 22) {
+  try {
+    if (navigator && typeof navigator.vibrate === "function") {
+      navigator.vibrate(Array.isArray(ms) ? ms : Math.max(20, Number(ms) || 22));
+    }
+  } catch (e) {}
+  bmPlayMechanicalTick(Array.isArray(ms));
+}
+
+function bmChimeHaptic() {
+  bmHaptic([24, 45, 32]);
+}
+
+document.addEventListener("pointerdown", function(e) {
+  const btn = e.target && e.target.closest ? e.target.closest("button, .pub-ref-badge, .tag-badge, .bm-place-hl, .color-dot") : null;
+  if (btn) bmHaptic(20);
+}, { passive: true });
 
 function formatSelectedVersesRangeLabel(nums) {
   if (!nums || !nums.length) return "";
@@ -2568,16 +2627,111 @@ function pubRefOpenChrome(url) {
   if (modal) modal.style.display = "none";
 }
 
+async function openLocalPubBridge(code, rawRest, fullRef) {
+  bmChimeHaptic();
+  const modal = document.getElementById("myReadModal");
+  if (modal) modal.style.display = "none";
+  const m = String(rawRest || "").match(/(\d+)/);
+  const targetNum = m ? parseInt(m[1], 10) : 0;
+
+  if (code === "si") {
+    const siData = await getSiData();
+    if (!siData || !Array.isArray(siData.books)) { showSiView(); return; }
+    if (targetNum > 0) {
+      let best = null;
+      siData.books.forEach((b, bi) => {
+        (b.chapters || []).forEach((c, ci) => {
+          const p = Number(c.printPage) || 0;
+          if (p > 0 && p <= targetNum && (!best || p > best.p)) {
+            best = { kind: "b", i: bi, ci, p };
+          }
+        });
+      });
+      const extras = siExtraItems(siData);
+      extras.forEach((x, xi) => {
+        const p = Number(x.chapters?.[0]?.printPage) || 0;
+        if (p > 0 && p <= targetNum && (!best || p > best.p)) {
+          best = { kind: "x", i: xi, ci: 0, p };
+        }
+      });
+      if (best) {
+        showSiReader(best.kind, best.i, best.ci);
+        return;
+      }
+    }
+    showSiView();
+    return;
+  }
+
+  if (code.startsWith("it") || /^perspicacia/i.test(fullRef)) {
+    insightActiveLetter = "TUTTE";
+    insightSearchQuery = targetNum ? String(targetNum) : "";
+    showInsightView(null);
+  }
+}
+
+async function openLocalPubBridge(code, rawRest, fullRef) {
+  bmChimeHaptic();
+  const modal = document.getElementById("myReadModal");
+  if (modal) modal.style.display = "none";
+  const m = String(rawRest || "").match(/(\d+)/);
+  const targetNum = m ? parseInt(m[1], 10) : 0;
+
+  if (code === "si") {
+    const siData = await getSiData();
+    if (!siData || !Array.isArray(siData.books)) { showSiView(); return; }
+    if (targetNum > 0) {
+      let best = null;
+      siData.books.forEach((b, bi) => {
+        (b.chapters || []).forEach((c, ci) => {
+          const p = Number(c.printPage) || 0;
+          if (p > 0 && p <= targetNum && (!best || p > best.p)) {
+            best = { kind: "b", i: bi, ci, p };
+          }
+        });
+      });
+      const extras = siExtraItems(siData);
+      extras.forEach((x, xi) => {
+        const p = Number(x.chapters?.[0]?.printPage) || 0;
+        if (p > 0 && p <= targetNum && (!best || p > best.p)) {
+          best = { kind: "x", i: xi, ci: 0, p };
+        }
+      });
+      if (best) {
+        showSiReader(best.kind, best.i, best.ci);
+        return;
+      }
+    }
+    showSiView();
+    return;
+  }
+
+  if (code.startsWith("it") || /^perspicacia/i.test(fullRef)) {
+    insightActiveLetter = "TUTTE";
+    insightSearchQuery = targetNum ? String(targetNum) : "";
+    showInsightView(null);
+  }
+}
+
 function showPubRefModal(fullRef) {
   const modal = document.getElementById("myReadModal");
   const body = document.getElementById("myReadModalBody");
   if (!modal || !body) return;
 
+  const p = pubRefParse(fullRef);
   const t = pubRefTarget(fullRef);
   const u = escapeJsStr(t.url);
+  const isSi = p.code === "si";
+  const isIt = p.code === "it" || p.code === "it-1" || p.code === "it-2" || /^perspicacia/i.test(fullRef);
   const detail = t.exact
     ? `${escapeHtml(t.title)}${t.where ? "<br>" + escapeHtml(t.where) : ""}`
     : `${escapeHtml(t.title)}<br><span style="opacity:0.85;">Scegli poi l'articolo o il libro dall'elenco.</span>`;
+
+  const offlineBridgeBtn = (isSi || isIt) ? `
+    <button class="myread-action-btn btn-color-anim" style="--btn-bg:#00c853; --btn-glow:rgba(0,200,83,0.8); background:#2e7d32;" onclick="openLocalPubBridge('${escapeJsStr(p.code || "it")}', '${escapeJsStr(p.rest || "")}', '${escapeJsStr(fullRef)}')">
+      ⚡ Apri subito nell'App (${isSi ? "Tutta la Scrittura Offline" : "Perspicacia Offline"})
+    </button>
+  ` : "";
 
   body.innerHTML = `
     <div style="text-align:center; padding:4px 0 12px 0;">
@@ -2587,6 +2741,7 @@ function showPubRefModal(fullRef) {
       <div style="font-size:13px; color:#e3f2fd; line-height:1.5;">${detail}</div>
     </div>
     <div style="display:flex; flex-direction:column; gap:8px;">
+      ${offlineBridgeBtn}
       <button class="myread-action-btn btn-color-anim" style="--btn-bg:#03a9f4; --btn-glow:rgba(3,169,244,0.75); background:#03a9f4;" onclick="pubRefOpenChrome('${u}')">${CHROME_LOGO_SVG}Apri in Chrome</button>
       <button class="myread-action-btn btn-color-anim" style="--btn-bg:#1565c0; --btn-glow:rgba(41,182,246,0.75); background:#1565c0;" onclick="pubRefOpenApp('${u}')">📚 Apri nella Biblioteca Online (nell'app)</button>
       
@@ -2656,11 +2811,11 @@ function showNotesView(fromBack = false) {
       <div class="result-card" onclick="openRef(${Number(n.bookId) || 1}, ${Number(n.chapter) || 1})">
         <div class="result-ref" style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;">
           <span>📝 ${escapeHtml(n.ref)} <small style="color:var(--text-muted);font-weight:normal;">(${escapeHtml(n.date || '')})</small></span>
-          <div style="display:flex;gap:10px;">
-            <span onclick="event.stopPropagation();openNoteModalForVerse('${safeRefJs}')" style="color:var(--primary-light);cursor:pointer;font-size:13px;">✏️ Scrivi/Modifica</span>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <span onclick="event.stopPropagation();exportSingleNoteDossier(${Number(noteId)}, '${safeRefJs}')" style="color:#00e5ff;cursor:pointer;font-size:13px;font-weight:800;">📋 Dossier</span>
+            <span onclick="event.stopPropagation();openNoteModalForVerse('${safeRefJs}')" style="color:var(--primary-light);cursor:pointer;font-size:13px;">✏️ Modifica</span>
             <span onclick="event.stopPropagation();deleteNoteById(${Number(noteId)}, '${safeRefJs}')" style="color:var(--danger);cursor:pointer;font-size:13px;">🗑 Elimina</span>
           </div>
-        </div>
         ${n.verseText ? `<div style="font-size:12.5px;color:var(--text-muted);font-style:italic;margin:6px 0 8px 0;border-left:3px solid var(--primary-light);padding-left:8px;">"${escapeHtml(n.verseText)}"</div>` : ""}
         <div style="margin-top:6px;line-height:1.55;white-space:pre-wrap;font-weight:500;">${formatNoteLinks(n.text)}</div>
         ${(n.tags && n.tags.length) ? `<div style="margin-top:8px;">${n.tags.map(t => `<span class="tag-badge" onclick="event.stopPropagation();filterNotesByTag('${escapeJsStr(t)}')">#${escapeHtml(t)}</span>`).join("")}</div>` : ""}
@@ -6558,6 +6713,18 @@ async function openDeepenDailyModal() {
       placesHtml = `<div class="section-title"><span>Luoghi citati</span><span>${places.length}</span></div>` + places.map(bpCardHtml).join("");
     }
   }
+    window.__lastDailyDossier = {
+    theme: rawTheme || "Scrittura del Giorno",
+    refs: refs,
+    keywords: finalKeywords,
+    comment: rawComment || ""
+  };
+  window.__lastDailyDossier = {
+    theme: rawTheme || "Scrittura del Giorno",
+    refs: refs,
+    keywords: finalKeywords,
+    comment: rawComment || ""
+  };
   bpModalOpen("💎 Approfondisci il Tema del Giorno", `
     <div style="font-size:13px; color:var(--text-muted); font-style:italic; margin-bottom:12px; border-left:3px solid var(--primary-light); padding-left:8px;">
       ${escapeHtml(rawTheme || "Scrittura del Giorno")}
@@ -6565,9 +6732,51 @@ async function openDeepenDailyModal() {
     ${refsHtml}
     <div class="section-title"><span>Parole Chiave Estratte dal Tema</span><span>${finalKeywords.length}</span></div>
     ${cardsHtml || `<div class="loader">Nessuna parola chiave estratta.</div>`}
-    ${placesHtml}`);
-  }
+    ${placesHtml}
+    <button class="myread-action-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,176,255,0.75); background:#0d47a1; margin-top:12px;" onclick="exportDailyDossierNow(this)">
+      📋 Copia Dossier di Studio del Giorno
+    </button>`);
+}
+
+function exportSingleNoteDossier(noteId, refFallback) {
+  bmChimeHaptic();
+  let n = state.notes.find(x => Number(x.id) === Number(noteId));
+  if (!n && refFallback) n = state.notes.find(x => x.ref === refFallback);
+  if (!n) return;
+  const tagsStr = (n.tags && n.tags.length) ? n.tags.map(t => `#${t}`).join(" ") : "";
+  const dossier = [
+    `━━━ 💎 DOSSIER DI STUDIO BM PRO ━━━`,
+    `📌 Riferimento: ${n.ref} (${n.date || ""})`,
+    n.verseText ? `📖 Testo: "${n.verseText}"` : "",
+    ``,
+    `📝 Appunto:`,
+    n.text,
+    tagsStr ? `\n🏷️ Tag: ${tagsStr}` : "",
+    `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
+  ].filter(Boolean).join("\n");
+  copyPubRefToClipboard(dossier);
+  showBlueInfoModal("📋 Dossier Copiato!", `Il dossier formattato per <b>${escapeHtml(n.ref)}</b> è pronto negli appunti per essere incollato o condiviso.`);
+}
+
+function exportDailyDossierNow(btnEl) {
+  bmChimeHaptic();
+  const d = window.__lastDailyDossier;
+  if (!d) return;
+  const dossier = [
+    `━━━ ☀️ DOSSIER SCRITTURA DEL GIORNO ━━━`,
+    `💎 Tema: ${d.theme}`,
+    d.refs.length ? `📖 Versetti collegati: ${d.refs.join(", ")}` : "",
+    d.keywords.length ? `🔑 Parole chiave: ${d.keywords.join(", ")}` : "",
+    ``,
+    `📝 Commento:`,
+    d.comment,
+    `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
+  ].filter(Boolean).join("\n");
+  copyPubRefToClipboard(dossier);
+  if (btnEl) btnEl.textContent = "✔ Dossier Copiato negli Appunti!";
+}
 let splashDismissed = false;
+    
 function dismissSplashScreen() {
   if (splashDismissed) return;
   const splash = document.getElementById("splashScreen");
