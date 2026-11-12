@@ -4143,12 +4143,14 @@ function cleanTextForSpeech(rawText) {
   if (!rawText) return "";
   return rawText
     .replace(/<[^>]*>?/gm, " ")
+    .replace(/\([^)]*\)/g, " ")
     .replace(/\[[^\]]*\]/g, " ")
+    .replace(/\{[^}]*\}/g, " ")
     .replace(/\b[HG]\d{1,4}\b/gi, " ")
     .replace(/[{}<>«»""]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-}
+  }
 function splitTextForAudio(text, maxLen = 80) {
   const cleanFull = cleanTextForSpeech(text);
   if (!cleanFull) return [];
