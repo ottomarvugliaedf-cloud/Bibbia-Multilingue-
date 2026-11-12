@@ -3036,16 +3036,13 @@ function formatNoteLinks(txt, defaultBookId = null) {
     // Incolla qualsiasi parentesi di apertura "(", "[", "{" e di chiusura ")", "]", "}" (più eventuale punto/virgola)
     // direttamente alla pillola azzurra (.tag-badge) o viola (.pub-ref-badge) rendendole inseparabili a fine riga!
     out = out
-      .replace(/([(\[{])\s+(<span class="(?:tag-badge|pub-ref-badge)")/g, "$1$2")
-      .replace(/(<\/span>)\s+([)\]}])/g, "$1$2")
-      .replace(/([(\[{«"“]+)?(<span class="(?:tag-badge|pub-ref-badge)"[^>]*>.*?<\/span>)([)\]}»"”.,;!?]+)?/g, (m, openP, pill, closeP) => {
+      .replace(/([(\[{«"“])\s+(<span class="(?:tag-badge|pub-ref-badge)")/g, "$1$2")
+      .replace(/(<\/span>)\s+([)\]}»"”.,;!?])/g, "$1$2")
+      .replace(/([(\[{«"“]+)?(<span class="(?:tag-badge|pub-ref-badge)"[^>]*>[^<]*<\/span>)([)\]}»"”.,;!?]+)?/g, (m, openP, pill, closeP) => {
         if (!openP && !closeP) return pill;
         return `<span class="bm-nowrap-pill">${openP || ""}${pill}${closeP || ""}</span>`;
       });
-
-    return out;
-  }
-    
+  
 // ─── Riferimenti a pubblicazioni: copia + apertura Chrome ───
 
 function onPubRefClick(ev, ref) {
@@ -4235,18 +4232,8 @@ function stripPillsOnlyFromText(rawText) {
   // Rimuove dal clone SOLO le pillole azzurre, le pillole viola, i numeri versetto e gli apici nota
   tmp.querySelectorAll(".tag-badge, .pub-ref-badge, .verse-num, sup, script, style").forEach(el => el.remove());
   return tmp.textContent || "";
-}
-
-function stripPillsOnlyFromText(rawText) {
-  if (!rawText) return "";
-  const tmp = document.createElement("div");
-  // Trasforma i riferimenti biblici e pubblicazioni in .tag-badge (azzurre) e .pub-ref-badge (viola)
-  tmp.innerHTML = typeof formatNoteLinks === "function" ? formatNoteLinks(String(rawText)) : String(rawText);
-  // Rimuove dal clone SOLO le pillole azzurre, le pillole viola, i numeri versetto e gli apici nota
-  tmp.querySelectorAll(".tag-badge, .pub-ref-badge, .verse-num, sup, script, style").forEach(el => el.remove());
-  return tmp.textContent || "";
-}
-
+    }
+  
 function cleanTextForSpeech(rawText) {
   if (!rawText) return "";
   const withoutPills = stripPillsOnlyFromText(rawText);
@@ -4352,6 +4339,7 @@ function stopAllAudio() {
   bmUserStopped = true;
   bmAudioPlaying = false;
   bmAutoNextChapter = false;
+  bmSelectionReadingActive = false;
   if (bmAudioPlayer) {
     try {
       bmAudioPlayer.onended = null;
