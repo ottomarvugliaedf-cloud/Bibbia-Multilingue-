@@ -685,12 +685,12 @@
       cursor: pointer;
       flex-shrink: 0;
     }
-    /* BARRA INFERIORE A 8 SCHEDE CON MARGINE SICURO ANTI-GESTURE ANDROID */
+    /* BARRA INFERIORE A 7 SCHEDE CON MARGINE SICURO ANTI-GESTURE ANDROID */
     nav.bottom-nav {
       background: var(--bg-card);
       border-top: 1px solid var(--border-color);
       display: grid;
-      grid-template-columns: repeat(8, 1fr);
+      grid-template-columns: repeat(7, 1fr);
       align-items: start;
       padding: 6px 2px;
       padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
@@ -1069,6 +1069,220 @@ body.oled-mode .pub-ref-badge {
       box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.35), 0 10px 28px rgba(0, 0, 0, 0.55), 0 0 14px rgba(41, 182, 246, 0.35) !important;
       animation: bmActionBarSpring 0.26s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     }
+    /* ===== CASSETTO IMPOSTAZIONI LATERALE DESTRO (DRAWER PRO A FISARMONICA) ===== */
+    :root {
+      --verse-line-height: 1.58;
+      --verse-text-align: left;
+    }
+    .verse-row, .parallel-row, .parallel-row-3 {
+      line-height: var(--verse-line-height) !important;
+      text-align: var(--verse-text-align);
+    }
+    .bm-hide-inline-badges .verse-row .tag-badge {
+      display: none !important;
+    }
+    .bm-drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 11, 28, 0.58);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 1250;
+      display: none;
+      justify-content: flex-end;
+      opacity: 0;
+      transition: opacity 0.24s ease;
+    }
+    .bm-drawer-overlay.open {
+      display: flex;
+      opacity: 1;
+    }
+    .bm-drawer-panel {
+      width: min(355px, 86vw);
+      height: 100%;
+      background: linear-gradient(180deg, #0a367e 0%, #062356 65%, #041a42 100%);
+      color: #ffffff;
+      border-left: 1.5px solid #29b6f6;
+      box-shadow: -14px 0 42px rgba(0, 0, 0, 0.78), inset 1px 0 0 rgba(255, 255, 255, 0.28);
+      display: flex;
+      flex-direction: column;
+      padding-top: max(36px, env(safe-area-inset-top, 36px));
+      padding-bottom: max(16px, env(safe-area-inset-bottom, 16px));
+      transform: translate3d(100%, 0, 0);
+      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+      overflow: hidden;
+    }
+    .bm-drawer-overlay.open .bm-drawer-panel {
+      transform: translate3d(0, 0, 0);
+    }
+    .bm-drawer-head {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(41, 182, 246, 0.45);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(4, 26, 66, 0.55);
+      flex-shrink: 0;
+    }
+    .bm-drawer-title {
+      font-size: 16.5px;
+      font-weight: 900;
+      letter-spacing: 0.4px;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .bm-drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 12px 12px 24px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+    .bm-acc-card {
+      background: rgba(6, 35, 86, 0.88);
+      border: 1px solid rgba(41, 182, 246, 0.48);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 4px 12px rgba(0, 0, 0, 0.28);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      flex-shrink: 0;
+    }
+    .bm-acc-card.open {
+      border-color: #00e5ff;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 0 16px rgba(0, 229, 255, 0.28);
+    }
+    .bm-acc-head {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: #ffffff;
+      padding: 13px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      text-align: left;
+    }
+    .bm-acc-head-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .bm-acc-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #1565c0, #0d47a1);
+      border: 1px solid rgba(79, 195, 247, 0.55);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      flex-shrink: 0;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.25);
+    }
+    .bm-acc-card.open .bm-acc-icon {
+      background: radial-gradient(circle at 50% 50%, #84ffff 0%, #00b0ff 60%, #0d47a1 100%);
+      border-color: #ffffff;
+    }
+    .bm-acc-label {
+      font-size: 14px;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.2;
+    }
+    .bm-acc-sub {
+      font-size: 11.5px;
+      color: #9ec9ff;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+    .bm-acc-chev {
+      font-size: 13px;
+      color: #4fc3f7;
+      font-weight: 900;
+      transition: transform 0.22s ease;
+    }
+    .bm-acc-card.open .bm-acc-chev {
+      transform: rotate(180deg);
+      color: #00e5ff;
+    }
+    .bm-acc-content {
+      display: none;
+      padding: 4px 12px 12px 12px;
+      border-top: 1px solid rgba(41, 182, 246, 0.25);
+      background: rgba(4, 26, 66, 0.48);
+    }
+    .bm-acc-card.open .bm-acc-content {
+      display: block;
+    }
+    .bm-set-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 9px 4px;
+      border-bottom: 1px solid rgba(41, 182, 246, 0.18);
+      font-size: 13px;
+      font-weight: 700;
+      color: #e3f2fd;
+    }
+    .bm-set-row:last-child {
+      border-bottom: none;
+    }
+    .bm-seg-group {
+      display: inline-flex;
+      background: #041a42;
+      border: 1px solid rgba(41, 182, 246, 0.5);
+      border-radius: 18px;
+      padding: 2px;
+      gap: 2px;
+    }
+    .bm-seg-btn {
+      background: transparent;
+      border: none;
+      color: #9ec9ff;
+      padding: 4px 9px;
+      border-radius: 14px;
+      font-size: 11.5px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .bm-seg-btn.active {
+      background: #00e5ff;
+      color: #041a42;
+      box-shadow: 0 0 8px rgba(0, 229, 255, 0.65);
+    }
+    .bm-switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    .bm-switch input { opacity: 0; width: 0; height: 0; }
+    .bm-slider {
+      position: absolute; cursor: pointer; inset: 0;
+      background-color: #041a42; border: 1px solid #29b6f6;
+      transition: .22s cubic-bezier(0.22, 1, 0.36, 1); border-radius: 24px;
+    }
+    .bm-slider:before {
+      position: absolute; content: ""; height: 18px; width: 18px; left: 2px; bottom: 2px;
+      background-color: #cfe3ff; transition: .22s cubic-bezier(0.22, 1, 0.36, 1); border-radius: 50%;
+    }
+    .bm-switch input:checked + .bm-slider {
+      background-color: #00e5ff; border-color: #84ffff;
+      box-shadow: 0 0 10px rgba(0,229,255,0.7);
+    }
+    .bm-switch input:checked + .bm-slider:before {
+      transform: translateX(20px); background-color: #041a42;
+    }
   </style>
 </head>
 <body>
@@ -1107,7 +1321,7 @@ body.oled-mode .pub-ref-badge {
 })();
   </script>
   
-  <!-- Header Superiore a 3 Colonne: Lettura Quotidiana | Badge Ovale Libro/Capitolo | Controlli ⚡ -->
+  <!-- Header Superiore a 3 Colonne: Lettura Quotidiana | Badge Ovale Libro/Capitolo | Controlli A- A+ ⚡ ⚙️ -->
   <header>
     <div class="header-left">
       <button class="book-selector-btn" onclick="openReadingPlanModal()" title="Piano di Lettura Annuale della Bibbia">
@@ -1122,11 +1336,28 @@ body.oled-mode .pub-ref-badge {
       </button>
     </div>
     <div class="header-controls">
-      <button class="icon-btn" onclick="openQuickJumpModal()" title="Salto Rapido (es. Gv 3 16)">⚡</button>
       <button class="icon-btn" onclick="changeFontSize(-2)" title="Riduci testo">A-</button>
       <button class="icon-btn" onclick="changeFontSize(2)" title="Ingrandisci testo">A+</button>
-      <button class="icon-btn" id="themeBtn" onclick="toggleDarkMode()" title="Tema Chiaro / Scuro / OLED">🌙</button>
+      <button class="icon-btn" onclick="openQuickJumpModal()" title="Salto Rapido (es. Gv 3 16)">⚡</button>
+      <button class="icon-btn" id="settingsGearBtn" onclick="openSettingsDrawer()" title="Impostazioni, Moduli e Backup">⚙️</button>
     </div>
+  </header>
+  <!-- Selettori Traduzioni Attive (Supporta 1x, 2x e 3x) -->
+  <div class="trans-bar">
+    <select id="trans1" class="trans-select" onchange="onTranslationChange()"></select>
+    <select id="trans2" class="trans-select" style="display:none;" onchange="onTranslationChange()"></select>
+    <select id="trans3" class="trans-select" style="display:none;" onchange="onTranslationChange()"></select>
+  </div>
+  <!-- Barra Menu Rapida Sempre Visibile (PRO — Solo Pubblicazioni e Studio) -->
+  <div class="quick-menu-bar">
+    <button id="booksTabBtn" class="quick-pill" onclick="showBooksView()">🟦 Libri Biblici</button>
+    <button id="readTabBtn" class="quick-pill" onclick="openBibleTabFromMenu()">📖 Lettura</button>
+    <button id="insightTabBtn" class="quick-pill" onclick="showInsightView()">📚 Perspicacia (it)</button>
+    <button id="siTabBtn" class="quick-pill" onclick="showSiView()">📘 Tutta la Scrittura</button>
+    <button id="mapsTabBtn" class="quick-pill" onclick="showMapsView()">🗺️ Cartine Bibliche</button>
+    <button id="dailyTabBtn" class="quick-pill highlight" onclick="showDailyTextView()">☀️ Scrittura del Giorno</button>
+    <button id="diffBtn" class="quick-pill" style="display:none;" onclick="toggleDiffMode()">🔍 Diff: OFF</button>
+  </div>
   </header>
   <!-- Selettori Traduzioni Attive (Supporta 1x, 2x e 3x) -->
   <div class="trans-bar">
@@ -1228,7 +1459,18 @@ body.oled-mode .pub-ref-badge {
     </div>
     <div id="bpSheet" class="bp-sheet"></div>
   </div>
-  <!-- Barra Navigazione Inferiore a 8 Strumenti -->
+    <!-- Cassetto Laterale Destro delle Impostazioni (Stile Patek Philippe a Fisarmonica) -->
+  <div id="bmSettingsDrawer" class="bm-drawer-overlay" onclick="if(event.target.id==='bmSettingsDrawer') closeSettingsDrawer()">
+    <div class="bm-drawer-panel">
+      <div class="bm-drawer-head">
+        <div class="bm-drawer-title"><span>⚙️</span><span>Impostazioni PRO</span></div>
+        <button class="nav-btn" style="background:#062356; color:#fff; border:1px solid #29b6f6; padding:4px 10px;" onclick="closeSettingsDrawer()">✕</button>
+      </div>
+      <div id="bmSettingsDrawerBody" class="bm-drawer-body"></div>
+    </div>
+  </div>
+
+  <!-- Barra Navigazione Inferiore a 7 Strumenti (Dedicata al 100% allo Studio) -->
   <nav class="bottom-nav">
     <button class="tab-btn" id="tabSearch" onclick="showSearchView()">
       <span class="tab-icon">🔍</span><span>Cerca</span>
@@ -1250,9 +1492,6 @@ body.oled-mode .pub-ref-badge {
     </button>
     <button class="tab-btn" id="tabNotes" onclick="showNotesView()">
       <span class="tab-icon">📝</span><span>Appunti Studio</span>
-    </button>
-    <button class="tab-btn" id="tabBackup" onclick="openBackupModal()">
-      <span class="tab-icon">💾</span><span>Backup</span>
     </button>
   </nav>
   <script>
@@ -2077,8 +2316,30 @@ function toggleDiffMode() {
     let activeNoteTarget = null;
     let selectedVersesMap = new Map();
 
+let bmSettings = safeJsonParse("bm_user_settings_v1", {
+  haptic: true,
+  soundTick: true,
+  lineHeight: "1.58",
+  textAlign: "left",
+  showInlineBadges: true,
+  openCard: "aspetto"
+});
+
+function saveBmSettings() {
+  safeSaveStorage("bm_user_settings_v1", JSON.stringify(bmSettings));
+  applyBmSettingsToDOM();
+}
+
+function applyBmSettingsToDOM() {
+  document.documentElement.style.setProperty("--verse-line-height", bmSettings.lineHeight || "1.58");
+  document.documentElement.style.setProperty("--verse-text-align", bmSettings.textAlign || "left");
+  document.body.classList.toggle("bm-hide-inline-badges", bmSettings.showInlineBadges === false);
+}
+applyBmSettingsToDOM();
+
 let bmHapticAudioCtx = null;
 function bmPlayMechanicalTick(isDouble = false) {
+  if (bmSettings.soundTick === false) return;
   try {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     if (!AudioCtx) return;
@@ -2103,11 +2364,13 @@ function bmPlayMechanicalTick(isDouble = false) {
 }
 
 function bmHaptic(ms = 22) {
-  try {
-    if (navigator && typeof navigator.vibrate === "function") {
-      navigator.vibrate(Array.isArray(ms) ? ms : Math.max(20, Number(ms) || 22));
-    }
-  } catch (e) {}
+  if (bmSettings.haptic !== false) {
+    try {
+      if (navigator && typeof navigator.vibrate === "function") {
+        navigator.vibrate(Array.isArray(ms) ? ms : Math.max(20, Number(ms) || 22));
+      }
+    } catch (e) {}
+  }
   bmPlayMechanicalTick(Array.isArray(ms));
 }
 
@@ -2119,6 +2382,210 @@ document.addEventListener("pointerdown", function(e) {
   const btn = e.target && e.target.closest ? e.target.closest("button, .pub-ref-badge, .tag-badge, .bm-place-hl, .color-dot") : null;
   if (btn) bmHaptic(20);
 }, { passive: true });
+
+function openSettingsDrawer() {
+  closeActionBar();
+  renderSettingsDrawerContent();
+  const dr = document.getElementById("bmSettingsDrawer");
+  if (dr) dr.classList.add("open");
+}
+
+function closeSettingsDrawer() {
+  const dr = document.getElementById("bmSettingsDrawer");
+  if (dr) dr.classList.remove("open");
+}
+
+function toggleSettingsAccordion(cardId) {
+  bmSettings.openCard = (bmSettings.openCard === cardId) ? "" : cardId;
+  saveBmSettings();
+  renderSettingsDrawerContent();
+}
+
+function setBmThemeDirect(mode) {
+  state.themeMode = mode;
+  safeSaveStorage("bm_theme", state.themeMode);
+  applySavedTheme();
+  renderSettingsDrawerContent();
+}
+
+function setBmSettingProp(key, val) {
+  bmSettings[key] = val;
+  saveBmSettings();
+  renderSettingsDrawerContent();
+}
+
+function renderSettingsDrawerContent() {
+  const body = document.getElementById("bmSettingsDrawerBody");
+  if (!body) return;
+  const openId = bmSettings.openCard || "";
+  const rates = [0.85, 1.0, 1.15, 1.3];
+
+  body.innerHTML = `
+    <!-- SCHEDA 1: ASPETTO & TIPOGRAFIA -->
+    <div class="bm-acc-card ${openId === 'aspetto' ? 'open' : ''}">
+      <button type="button" class="bm-acc-head" onclick="toggleSettingsAccordion('aspetto')">
+        <div class="bm-acc-head-left">
+          <span class="bm-acc-icon">🎨</span>
+          <div>
+            <div class="bm-acc-label">Aspetto & Tipografia</div>
+            <div class="bm-acc-sub">Tema solare/notturno, testo e interlinea</div>
+          </div>
+        </div>
+        <span class="bm-acc-chev">▾</span>
+      </button>
+      <div class="bm-acc-content">
+        <div class="bm-set-row">
+          <span>Tema Colore</span>
+          <div class="bm-seg-group">
+            <button type="button" class="bm-seg-btn ${state.themeMode === 'light' ? 'active' : ''}" onclick="setBmThemeDirect('light')">☀️ Blu</button>
+            <button type="button" class="bm-seg-btn ${state.themeMode === 'dark' ? 'active' : ''}" onclick="setBmThemeDirect('dark')">🌙 Scuro</button>
+            <button type="button" class="bm-seg-btn ${state.themeMode === 'oled' ? 'active' : ''}" onclick="setBmThemeDirect('oled')">🌕 OLED</button>
+          </div>
+        </div>
+        <div class="bm-set-row">
+          <span>Corpo Carattere (${state.fontSize}px)</span>
+          <div class="bm-seg-group">
+            <button type="button" class="bm-seg-btn" onclick="changeFontSize(-2); renderSettingsDrawerContent();">A−</button>
+            <button type="button" class="bm-seg-btn" onclick="changeFontSize(2); renderSettingsDrawerContent();">A+</button>
+          </div>
+        </div>
+        <div class="bm-set-row">
+          <span>Interlinea Versetti</span>
+          <div class="bm-seg-group">
+            <button type="button" class="bm-seg-btn ${bmSettings.lineHeight === '1.42' ? 'active' : ''}" onclick="setBmSettingProp('lineHeight', '1.42')">Compatta</button>
+            <button type="button" class="bm-seg-btn ${bmSettings.lineHeight === '1.58' ? 'active' : ''}" onclick="setBmSettingProp('lineHeight', '1.58')">Normale</button>
+            <button type="button" class="bm-seg-btn ${bmSettings.lineHeight === '1.82' ? 'active' : ''}" onclick="setBmSettingProp('lineHeight', '1.82')">Ampia</button>
+          </div>
+        </div>
+        <div class="bm-set-row">
+          <span>Allineamento</span>
+          <div class="bm-seg-group">
+            <button type="button" class="bm-seg-btn ${bmSettings.textAlign === 'left' ? 'active' : ''}" onclick="setBmSettingProp('textAlign', 'left')">Sinistra</button>
+            <button type="button" class="bm-seg-btn ${bmSettings.textAlign === 'justify' ? 'active' : ''}" onclick="setBmSettingProp('textAlign', 'justify')">Giustificato</button>
+          </div>
+        </div>
+        <div class="bm-set-row">
+          <span>Badge "🔗Paralleli" nei versetti</span>
+          <label class="bm-switch">
+            <input type="checkbox" ${bmSettings.showInlineBadges !== false ? 'checked' : ''} onchange="setBmSettingProp('showInlineBadges', this.checked)">
+            <span class="bm-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCHEDA 2: MODULI & +1397 BIBBIE -->
+    <div class="bm-acc-card ${openId === 'moduli' ? 'open' : ''}">
+      <button type="button" class="bm-acc-head" onclick="toggleSettingsAccordion('moduli')">
+        <div class="bm-acc-head-left">
+          <span class="bm-acc-icon">📚</span>
+          <div>
+            <div class="bm-acc-label">Moduli & +1397 Bibbie</div>
+            <div class="bm-acc-sub">Catalogo globale, EPUB, Perspicacia, Cartine</div>
+          </div>
+        </div>
+        <span class="bm-acc-chev">▾</span>
+      </button>
+      <div class="bm-acc-content">
+        <div style="display:flex; flex-direction:column; gap:8px; padding-top:6px;">
+          <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,176,255,0.75); background:#1565c0;" onclick="closeSettingsDrawer(); showCatalogView();">
+            ⬇️ Catalogo +1397 Bibbie / Lingue (${state.downloadedBibles.length} attive)
+          </button>
+          <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#2e7d32; --btn-glow:rgba(76,175,80,0.75); background:#2e7d32;" onclick="closeSettingsDrawer(); openBackupModal();">
+            📗 Importa Moduli Offline (.epub / .zip / .json)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCHEDA 3: FEEDBACK TATTILE & SCAPPAMENTO -->
+    <div class="bm-acc-card ${openId === 'feedback' ? 'open' : ''}">
+      <button type="button" class="bm-acc-head" onclick="toggleSettingsAccordion('feedback')">
+        <div class="bm-acc-head-left">
+          <span class="bm-acc-icon">📳</span>
+          <div>
+            <div class="bm-acc-label">Tocco & Scappamento</div>
+            <div class="bm-acc-sub">Vibrazione aptica e ticchettio meccanico</div>
+          </div>
+        </div>
+        <span class="bm-acc-chev">▾</span>
+      </button>
+      <div class="bm-acc-content">
+        <div class="bm-set-row">
+          <span>Vibrazione Aptica al tocco</span>
+          <label class="bm-switch">
+            <input type="checkbox" ${bmSettings.haptic !== false ? 'checked' : ''} onchange="setBmSettingProp('haptic', this.checked)">
+            <span class="bm-slider"></span>
+          </label>
+        </div>
+        <div class="bm-set-row">
+          <span>Tic Acustico Meccanico (Patek)</span>
+          <label class="bm-switch">
+            <input type="checkbox" ${bmSettings.soundTick !== false ? 'checked' : ''} onchange="setBmSettingProp('soundTick', this.checked)">
+            <span class="bm-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCHEDA 4: LETTURA VOCALE (TTS) -->
+    <div class="bm-acc-card ${openId === 'audio' ? 'open' : ''}">
+      <button type="button" class="bm-acc-head" onclick="toggleSettingsAccordion('audio')">
+        <div class="bm-acc-head-left">
+          <span class="bm-acc-icon">🔊</span>
+          <div>
+            <div class="bm-acc-label">Lettura Vocale & Audio</div>
+            <div class="bm-acc-sub">Velocità voce (${bmTtsRate}x) e cambio capitolo</div>
+          </div>
+        </div>
+        <span class="bm-acc-chev">▾</span>
+      </button>
+      <div class="bm-acc-content">
+        <div class="bm-set-row">
+          <span>Velocità Voce</span>
+          <div class="bm-seg-group">
+            ${rates.map(r => `<button type="button" class="bm-seg-btn ${Math.abs(bmTtsRate - r) < 0.03 ? 'active' : ''}" onclick="bmTtsRate=${r}; safeSaveStorage('bm_tts_rate','${r}'); renderSettingsDrawerContent();">${r}x</button>`).join("")}
+          </div>
+        </div>
+        <div class="bm-set-row">
+          <span>Passa al Capitolo Succ. a fine audio</span>
+          <label class="bm-switch">
+            <input type="checkbox" ${bmTtsAutoNextPref ? 'checked' : ''} onchange="bmTtsAutoNextPref=this.checked; safeSaveStorage('bm_tts_autonext', this.checked ? '1' : '0'); renderSettingsDrawerContent();">
+            <span class="bm-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCHEDA 5: BACKUP, DATI & MEMORIA -->
+    <div class="bm-acc-card ${openId === 'backup' ? 'open' : ''}">
+      <button type="button" class="bm-acc-head" onclick="toggleSettingsAccordion('backup')">
+        <div class="bm-acc-head-left">
+          <span class="bm-acc-icon">💾</span>
+          <div>
+            <div class="bm-acc-label">Backup & Memoria Studio</div>
+            <div class="bm-acc-sub">Esporta/Importa JSON, Segnalibro e Rientri</div>
+          </div>
+        </div>
+        <span class="bm-acc-chev">▾</span>
+      </button>
+      <div class="bm-acc-content">
+        <div style="display:flex; flex-direction:column; gap:8px; padding-top:6px;">
+          <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,176,255,0.75); background:#1565c0;" onclick="closeSettingsDrawer(); exportBackupJson();">
+            📤 Esporta Backup Completo (.json)
+          </button>
+          <label class="myread-action-btn btn-color-anim" style="--btn-bg:#0288d1; --btn-glow:rgba(2,136,209,0.75); background:#0a367e; text-align:center; display:block;">
+            📥 Importa File di Backup (.json)
+            <input type="file" accept=".json,application/json" style="display:none;" onchange="closeSettingsDrawer(); importBackupJson(event)">
+          </label>
+          <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#5e35b1; --btn-glow:rgba(149,117,205,0.75); background:#062356;" onclick="clearChapterCacheOnly(); showBlueInfoModal('🧹 Cache Capitoli Pulita', 'La cache temporanea dei capitoli online è stata svuotata (le tue Bibbie EPUB e le note sono intatte).');">
+            🧹 Svuota Cache Capitoli Online
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
 
 function formatSelectedVersesRangeLabel(nums) {
   if (!nums || !nums.length) return "";
@@ -4711,7 +5178,7 @@ function parseJwEpubChapterXhtml(xhtml) {
     });
   }
   flushCurrentChapter();
-        }
+}
 // ============================================================================
 // MODULO SCRITTURA DEL GIORNO (Importazione EPUB es27_I.epub & Dashboard Giornaliera)
 // ============================================================================
@@ -7387,6 +7854,14 @@ async function executeOmniSearch() {
       }
       return false;
     };
+
+    const drawerEl = document.getElementById("bmSettingsDrawer");
+    if (drawerEl && drawerEl.classList.contains("open")) {
+      closeSettingsDrawer();
+      bmHaptic(10);
+      try { window.history.pushState({ bmGuard: true }, ""); } catch (e) {}
+      return;
+    }
 
     const handledModal =
       closeIfFlex("bmSelectModal", closeBmSelectModal) ||
