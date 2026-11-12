@@ -2480,14 +2480,14 @@ function renderSettingsDrawerContent() {
       </div>
     </div>
 
-    <!-- SCHEDA 3: FEEDBACK TATTILE & SCAPPAMENTO -->
+    <!-- SCHEDA 3: FEEDBACK TATTILE & SUONI -->
     <div class="bm-acc-card ${openId === 'feedback' ? 'open' : ''}">
       <button type="button" class="bm-acc-head" onclick="toggleSettingsAccordion('feedback')">
         <div class="bm-acc-head-left">
           <span class="bm-acc-icon">📳</span>
           <div>
-            <div class="bm-acc-label">Tocco & Scappamento</div>
-            <div class="bm-acc-sub">Vibrazione aptica e ticchettio meccanico</div>
+            <div class="bm-acc-label">Feedback Tattile & Suoni</div>
+            <div class="bm-acc-sub">Vibrazione aptica e suono al tocco</div>
           </div>
         </div>
         <span class="bm-acc-chev">▾</span>
@@ -2501,7 +2501,7 @@ function renderSettingsDrawerContent() {
           </label>
         </div>
         <div class="bm-set-row">
-          <span>Tic Acustico Meccanico (Patek)</span>
+          <span>Suono al tocco (Click Audio)</span>
           <label class="bm-switch">
             <input type="checkbox" ${bmSettings.soundTick !== false ? 'checked' : ''} onchange="setBmSettingProp('soundTick', this.checked)">
             <span class="bm-slider"></span>
