@@ -266,21 +266,30 @@
       border-radius: 6px;
       transition: all 0.22s ease;
     }
-    /* === Karaoke parola per parola: tono su tono con alone leggermente fluorescente (CSS Custom Highlight API) === */
+    /* === Karaoke parola per parola: TONO SU TONO fluorescente (nessuno sfondo, nessuna sottolineatura) === */
     ::highlight(bm-word) {                       /* Tema Blu */
       color: #ffffff;
-      background-color: rgba(120, 205, 255, 0.30);
-      text-shadow: 0 0 6px rgba(150, 222, 255, 0.95), 0 0 14px rgba(79, 195, 247, 0.65);
+      text-shadow:
+        0 0 3px rgba(255, 255, 255, 1),
+        0 0 8px rgba(230, 245, 255, 0.95),
+        0 0 16px rgba(170, 220, 255, 0.75),
+        0 0 28px rgba(120, 200, 255, 0.45);
     }
     body.dark-mode ::highlight(bm-word) {        /* Tema Scuro */
-      color: #f4f9ff;
-      background-color: rgba(110, 190, 255, 0.26);
-      text-shadow: 0 0 6px rgba(143, 208, 255, 0.90), 0 0 14px rgba(41, 182, 246, 0.60);
+      color: #e6f1ff;
+      text-shadow:
+        0 0 3px rgba(230, 241, 255, 1),
+        0 0 8px rgba(210, 232, 255, 0.95),
+        0 0 16px rgba(150, 210, 255, 0.75),
+        0 0 28px rgba(110, 195, 250, 0.45);
     }
     body.oled-mode ::highlight(bm-word) {        /* Tema OLED */
-      color: #ffffff;
-      background-color: rgba(200, 230, 255, 0.20);
-      text-shadow: 0 0 6px rgba(225, 242, 255, 0.95), 0 0 14px rgba(56, 189, 248, 0.55);
+      color: #f5f5f5;
+      text-shadow:
+        0 0 3px rgba(245, 245, 245, 1),
+        0 0 8px rgba(235, 243, 252, 0.95),
+        0 0 16px rgba(170, 218, 255, 0.75),
+        0 0 28px rgba(130, 205, 250, 0.45);
     }
     /* Transizione Cinematografica a 120Hz sul cambio vista/capitolo */
     @keyframes bmViewFadeIn {
@@ -4178,7 +4187,7 @@ function extractCleanSelectedText() {
 // ============================================================================
 const bmKHL = (typeof CSS !== "undefined" && CSS.highlights && typeof Highlight !== "undefined") ? new Highlight() : null;
 if (bmKHL) CSS.highlights.set("bm-word", bmKHL);
-const bmK = { root: null, dom: [], ptr: 0, toks: [], map: [], cum: [], total: 1, t0: 0, timer: null, boundary: false, cur: -1, lastScroll: 0 };
+const bmK = { root: null, dom: [], ptr: 0, toks: [], map: [], cum: [], total: 1, t0: 0, timer: null, boundary: false, cur: -1, lastScroll: 0, lastBoundaryAt: 0, lastBoundaryIdx: -1 };
 let bmMsUnit = Math.min(140, Math.max(25, Number(localStorage.getItem("bm_tts_msunit")) || 58)); // ms per "unità" (≈ carattere) a velocità 1
 let bmKSamples = localStorage.getItem("bm_tts_msunit") ? 5 : 0;   // al primo uso impara più in fretta dalla voce reale
 
@@ -4212,24 +4221,62 @@ function bmKBuildDom(root) {
   }
   return words;
 }
-// Allinea le parole pronunciate a quelle della pagina (tollera parole mancanti o in più)
+// Allinea le parole pronunciate a quelle della pagina.
+// Strategia: cerca un punto di partenza provando i primi 5 token (non più 3 consecutivi),
+// poi avanza token per token con finestra ampia + fallback fuzzy su prefisso.
 function bmKAlign(toks, dom, ptr) {
   const map = new Array(toks.length).fill(-1);
   const idx = [];
   toks.forEach((t, i) => { if (t.n) idx.push(i); });
   if (!idx.length || !dom.length) return { map, ptr };
-  const probe = idx.slice(0, 3).map(i => toks[i].n);
-  const matchAt = k => probe.every((w, j) => dom[k + j] && dom[k + j].n === w);
-  let start = -1;
-  for (let k = ptr; k < dom.length && start < 0; k++) if (matchAt(k)) start = k;
-  for (let k = 0; k < Math.min(ptr, dom.length) && start < 0; k++) if (matchAt(k)) start = k;
-  if (start < 0) return { map, ptr };
-  let p = start;
-  idx.forEach(i => {
-    for (let k = p; k < Math.min(dom.length, p + 12); k++) {
-      if (dom[k].n === toks[i].n) { map[i] = k; p = k + 1; return; }
+  if (ptr >= dom.length) ptr = 0;
+
+  // 1. Trova un punto di partenza: prova ciascuno dei primi 5 token come "ancora".
+  let start = -1, startTok = -1;
+  const maxProbe = Math.min(5, idx.length);
+  for (let a = 0; a < maxProbe && start < 0; a++) {
+    const target = toks[idx[a]].n;
+    for (let k = ptr; k < dom.length; k++) {
+      if (dom[k].n === target) { start = k; startTok = a; break; }
     }
-  });
+    if (start < 0) {
+      for (let k = 0; k < dom.length; k++) {
+        if (dom[k].n === target) { start = k; startTok = a; break; }
+      }
+    }
+  }
+  if (start < 0) return { map, ptr };
+
+  // 2. Allinea i token da startTok in poi
+  let p = start;
+  for (let i = startTok; i < idx.length; i++) {
+    const ti = idx[i];
+    const target = toks[ti].n;
+    let found = -1;
+
+    // 2a. Match esatto in finestra stretta
+    for (let k = p; k < Math.min(dom.length, p + 6); k++) {
+      if (dom[k].n === target) { found = k; break; }
+    }
+    // 2b. Fallback fuzzy (prefisso comune di 3+ caratteri) nella stessa finestra
+    if (found < 0 && target.length >= 3) {
+      for (let k = p; k < Math.min(dom.length, p + 6); k++) {
+        const dn = dom[k].n;
+        if (dn.length >= 3 && dn.substring(0, 3) === target.substring(0, 3)) {
+          found = k; break;
+        }
+      }
+    }
+    // 2c. Finestra larga (12) solo match esatto, per recuperare parole saltate
+    if (found < 0) {
+      for (let k = p; k < Math.min(dom.length, p + 12); k++) {
+        if (dom[k].n === target) { found = k; break; }
+      }
+    }
+
+    if (found >= 0) { map[ti] = found; p = found + 1; }
+  }
+
   return { map, ptr: p };
 }
 function bmKClearWord() { if (bmKHL) bmKHL.clear(); bmK.cur = -1; }
@@ -4272,11 +4319,13 @@ function bmKaraokeBeginChunk(item) {
   bmKStopTimer();
   bmKClearWord();
   bmK.t0 = 0; bmK.boundary = false; bmK.toks = []; bmK.map = [];
+  bmK.lastBoundaryAt = 0; bmK.lastBoundaryIdx = -1;
   if (!bmKHL || !item || !item.text) return;
   const root = (item.verseNum && document.getElementById("v_" + item.verseNum)) || document.getElementById("mainContainer");
   if (root !== bmK.root || !bmK.dom.length || !bmK.dom[0].node.isConnected) {
     bmK.root = root; bmK.dom = bmKBuildDom(root); bmK.ptr = 0;
   }
+  if (bmK.ptr >= bmK.dom.length) bmK.ptr = 0;   // safety dopo lunghi versetti
   bmK.toks = bmKTokenize(item.text);
   const al = bmKAlign(bmK.toks, bmK.dom, bmK.ptr);
   bmK.map = al.map; bmK.ptr = al.ptr;
@@ -4289,9 +4338,11 @@ function bmKaraokeNativeStart() {
   bmKStopTimer();
   bmK.t0 = performance.now();
   bmK.timer = setInterval(() => {
-    if (bmK.boundary || !bmK.toks.length) return;
+    if (!bmK.toks.length) return;
+    // Se i boundary events sono recenti (< 600ms), lasciali guidare il karaoke (più precisi)
+    if (bmK.lastBoundaryAt && (performance.now() - bmK.lastBoundaryAt) < 600) return;
     bmKShow(bmKIndexAtUnits((performance.now() - bmK.t0) * bmTtsRate / bmMsUnit));
-  }, 60);
+  }, 55);
 }
 function bmKaraokeOnBoundary(ev) {
   if (!ev || (ev.name && ev.name !== "word") || !bmK.toks.length) return;
@@ -4299,6 +4350,23 @@ function bmKaraokeOnBoundary(ev) {
   const ci = ev.charIndex || 0;
   let i = 0;
   for (let k = 0; k < bmK.toks.length; k++) { if (bmK.toks[k].s <= ci) i = k; else break; }
+
+  // Calibrazione continua di bmMsUnit dal parlato reale
+  if (bmK.lastBoundaryAt && bmK.lastBoundaryIdx >= 0 && i > bmK.lastBoundaryIdx) {
+    const elapsedMs = performance.now() - bmK.lastBoundaryAt;
+    const units = bmK.cum[i] - bmK.cum[bmK.lastBoundaryIdx];
+    if (units > 2 && elapsedMs > 15) {
+      const unit = elapsedMs * bmTtsRate / units;
+      if (unit > 20 && unit < 200) {
+        const w = bmKSamples++ < 5 ? 0.45 : 0.12;
+        bmMsUnit = Math.min(140, Math.max(25, bmMsUnit * (1 - w) + unit * w));
+        try { localStorage.setItem("bm_tts_msunit", String(bmMsUnit)); } catch (e) {}
+      }
+    }
+  }
+  bmK.lastBoundaryAt = performance.now();
+  bmK.lastBoundaryIdx = i;
+
   bmKShow(i);
 }
 function bmKaraokeNativeEnd() {
