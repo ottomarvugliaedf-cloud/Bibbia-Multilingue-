@@ -266,38 +266,6 @@
       border-radius: 6px;
       transition: all 0.22s ease;
     }
-    /* === Karaoke parola per parola: PURO TONO SU TONO FLUORESCENTE (ZERO SFONDO / ZERO RIQUADRO) === */
-    .bm-karaoke-word {
-      background: transparent !important;
-      background-color: transparent !important;
-      border: none !important;
-      outline: none !important;
-      color: #ffffff !important;
-      text-shadow:
-        0 0 2px #ffffff,
-        0 0 6px #ffffff,
-        0 0 12px rgba(225, 245, 254, 0.98),
-        0 0 22px rgba(179, 229, 252, 0.9) !important;
-      filter: brightness(1.35) drop-shadow(0 0 5px rgba(255, 255, 255, 0.85));
-    }
-    body.dark-mode .bm-karaoke-word {
-      color: #ffffff !important;
-      text-shadow:
-        0 0 2px #e6f1ff,
-        0 0 6px #e6f1ff,
-        0 0 12px rgba(200, 230, 255, 0.98),
-        0 0 22px rgba(140, 200, 255, 0.9) !important;
-      filter: brightness(1.35) drop-shadow(0 0 5px rgba(230, 241, 255, 0.85));
-    }
-    body.oled-mode .bm-karaoke-word {
-      color: #ffffff !important;
-      text-shadow:
-        0 0 2px #f5f5f5,
-        0 0 6px #f5f5f5,
-        0 0 12px rgba(225, 240, 255, 0.98),
-        0 0 22px rgba(180, 215, 255, 0.9) !important;
-      filter: brightness(1.35) drop-shadow(0 0 5px rgba(245, 245, 245, 0.85));
-    }
     /* Transizione Cinematografica a 120Hz sul cambio vista/capitolo */
     @keyframes bmViewFadeIn {
       from { opacity: 0.35; transform: translate3d(0, 5px, 0); }
@@ -2512,14 +2480,14 @@ function renderSettingsDrawerContent() {
       </div>
     </div>
 
-    <!-- SCHEDA 3: FEEDBACK TATTILE & SUONI -->
+    <!-- SCHEDA 3: FEEDBACK TATTILE & SCAPPAMENTO -->
     <div class="bm-acc-card ${openId === 'feedback' ? 'open' : ''}">
       <button type="button" class="bm-acc-head" onclick="toggleSettingsAccordion('feedback')">
         <div class="bm-acc-head-left">
           <span class="bm-acc-icon">📳</span>
           <div>
-            <div class="bm-acc-label">Feedback Tattile & Suoni</div>
-            <div class="bm-acc-sub">Vibrazione aptica e suono al tocco</div>
+            <div class="bm-acc-label">Tocco & Scappamento</div>
+            <div class="bm-acc-sub">Vibrazione aptica e ticchettio meccanico</div>
           </div>
         </div>
         <span class="bm-acc-chev">▾</span>
@@ -2533,7 +2501,7 @@ function renderSettingsDrawerContent() {
           </label>
         </div>
         <div class="bm-set-row">
-          <span>Suono al tocco (Click Audio)</span>
+          <span>Tic Acustico Meccanico (Patek)</span>
           <label class="bm-switch">
             <input type="checkbox" ${bmSettings.soundTick !== false ? 'checked' : ''} onchange="setBmSettingProp('soundTick', this.checked)">
             <span class="bm-slider"></span>
@@ -4146,466 +4114,45 @@ function getActiveTTSLangCode(fullLocale = false) {
   if (langName.includes("ukra")) return fullLocale ? "uk-UA" : "uk";
   return fullLocale ? "en-US" : "en";
 }
-
 function cleanTextForSpeech(rawText) {
   if (!rawText) return "";
-  return String(rawText)
+  return rawText
     .replace(/<[^>]*>?/gm, " ")
-    .replace(/\([^)]*\)/g, " ")
     .replace(/\[[^\]]*\]/g, " ")
-    .replace(/\{[^}]*\}/g, " ")
-    .replace(/📝\s*Nota/gi, " ")
-    .replace(/🔗\s*Paralleli/gi, " ")
     .replace(/\b[HG]\d{1,4}\b/gi, " ")
-    .replace(/[{}<>«»""“”]/g, " ")
+    .replace(/[{}<>«»""]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
-
-function splitTextForAudio(text, maxLen = 145) {
+function splitTextForAudio(text, maxLen = 165) {
   const cleanFull = cleanTextForSpeech(text);
   if (!cleanFull) return [];
-  const sentences = cleanFull.match(/[^.!?;:]+[.!?;:]*/g) || [cleanFull];
+  const words = cleanFull.split(" ");
   const chunks = [];
-  for (const s of sentences) {
-    const trimmed = s.trim();
-    if (!trimmed) continue;
-    if (trimmed.length <= maxLen) {
-      chunks.push(trimmed);
-    } else {
-      const words = trimmed.split(/\s+/);
-      let cur = "";
-      for (const w of words) {
-        if ((cur + " " + w).trim().length > maxLen) {
-          if (cur.trim()) chunks.push(cur.trim());
-          cur = w;
-        } else {
-          cur = (cur ? cur + " " : "") + w;
-        }
-      }
+  let cur = "";
+  for (const w of words) {
+    if ((cur + " " + w).trim().length > maxLen) {
       if (cur.trim()) chunks.push(cur.trim());
+      cur = w;
+    } else {
+      cur = (cur ? cur + " " : "") + w;
     }
   }
-  return chunks.filter(c => /[\p{L}\p{N}]/u.test(c));
+  if (cur.trim()) chunks.push(cur.trim());
+  return chunks;
 }
-
 let bmAutoNextChapter = false;
-window.__bmActiveUtterance = null;
-let bmWatchdogTimer = null;
 
 function extractCleanSelectedText() {
   const sel = window.getSelection ? window.getSelection() : null;
   if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return "";
   const frag = sel.getRangeAt(0).cloneContents();
-  frag.querySelectorAll(".verse-num, .tag-badge, .pub-ref-badge, sup, script, style").forEach(el => el.remove());
-  return cleanTextForSpeech(frag.textContent || "");
-}
-
-// ============================================================================
-// MOTORE KARAOKE 1:1 CON ALLINEAMENTO DIRETTO SUL DOM (ZERO PAROLE SALTATE)
-// Funziona su: Bibbia, Scrittura del Giorno, Perspicacia, Tutta la Scrittura.
-// Ignora al 100% pillole azzurre (.tag-badge), pillole viola (.pub-ref-badge),
-// numeri di versetto (.verse-num) e qualsiasi testo tra parentesi (), [], {}.
-// ============================================================================
-const BM_KARAOKE_WORD_RE = /[\p{L}\p{N}]+(?:['’ʼʽ\-][\p{L}\p{N}]+)*/gu;
-
-let bmMsUnit = Math.min(105, Math.max(26, Number(localStorage.getItem("bm_tts_msunit")) || 48));
-let bmKSamples = localStorage.getItem("bm_tts_msunit") ? 5 : 0;
-
-const bmK = {
-  activeSpan: null,
-  chunkTokens: [],
-  cum: [],
-  total: 1,
-  curIdx: -1,
-  targetIdx: 0,
-  t0: 0,
-  chunkStartAt: 0,
-  timer: null,
-  lastScroll: 0,
-  lastBoundaryAt: 0,
-  lastBoundaryIdx: -1
-};
-
-// Rimuove lo <span class="bm-karaoke-word"> attivo e fonde il nodo di testo originale
-// così il DOM rimane intatto al 100% (nessuno span residuo).
-function bmKClearWord() {
-  if (bmK.activeSpan) {
-    try {
-      const parent = bmK.activeSpan.parentNode;
-      if (parent) {
-        const txtNode = document.createTextNode(bmK.activeSpan.textContent || "");
-        parent.replaceChild(txtNode, bmK.activeSpan);
-        parent.normalize();
-      }
-    } catch (e) {}
-    bmK.activeSpan = null;
-  }
-  bmK.curIdx = -1;
-}
-
-function bmKStopTimer() {
-  if (bmK.timer) {
-    clearInterval(bmK.timer);
-    bmK.timer = null;
-  }
-}
-
-function bmKEnsureVisible(el) {
-  const now = Date.now();
-  if (now - bmK.lastScroll < 480) return;
-  const main = document.getElementById("mainContainer");
-  if (!main || !el) return;
-  const rect = el.getBoundingClientRect();
-  const mr = main.getBoundingClientRect();
-  if (!rect.height) return;
-  if (rect.top < mr.top + 42 || rect.bottom > mr.bottom - 82) {
-    bmK.lastScroll = now;
-    el.scrollIntoView({ behavior: "smooth", block: "center" });
-  }
-}
-
-// Illumina esattamente il token `idx` del chunk corrente avvolgendolo temporaneamente
-// in <span class="bm-karaoke-word"> (vero Tono-su-Tono fluorescente senza sfondo).
-function bmKHighlightToken(idx) {
-  if (!bmK.chunkTokens.length) return;
-  idx = Math.max(0, Math.min(idx, bmK.chunkTokens.length - 1));
-  if (bmK.curIdx === idx) return;
-
-  // Prima pulisce il token precedente (ripristinando il TextNode originale con normalize())
-  bmKClearWord();
-
-  const tok = bmK.chunkTokens[idx];
-  if (!tok || !tok.blockEl || !tok.blockEl.isConnected) return;
-
-  // Trova il TextNode e l'offset esatto dentro il blocco (immune a qualsiasi normalize precedente)
-  const loc = bmKResolveTokenInBlock(tok.blockEl, tok.wordIndexInBlock);
-  if (!loc || !loc.node || !loc.node.parentNode) return;
-
-  try {
-    const r = document.createRange();
-    r.setStart(loc.node, loc.s);
-    r.setEnd(loc.node, loc.e);
-    const span = document.createElement("span");
-    span.className = "bm-karaoke-word";
-    r.surroundContents(span);
-    bmK.activeSpan = span;
-    bmK.curIdx = idx;
-    bmKEnsureVisible(span);
-  } catch (e) {}
-}
-
-// Rileva la k-esima parola leggibile dentro `blockEl`, saltando pillole, numeri versetto e parentesi
-function bmKResolveTokenInBlock(blockEl, targetWordIndex) {
-  let parenDepth = 0;
-  let currentWordIdx = 0;
-  const walker = document.createTreeWalker(blockEl, NodeFilter.SHOW_TEXT, {
-    acceptNode(node) {
-      const p = node.parentElement;
-      if (!p || !node.nodeValue) return NodeFilter.FILTER_REJECT;
-      if (p.closest(".verse-num, .tag-badge, .pub-ref-badge, sup, script, style, button, select, input, textarea, .chapter-nav-btns, .section-title")) {
-        return NodeFilter.FILTER_REJECT;
-      }
-      return NodeFilter.FILTER_ACCEPT;
-    }
-  });
-  let tn;
-  while ((tn = walker.nextNode())) {
-    const val = tn.nodeValue;
-    let masked = "";
-    for (let i = 0; i < val.length; i++) {
-      const ch = val[i];
-      if (ch === "(" || ch === "[" || ch === "{") {
-        parenDepth++;
-        masked += " ";
-      } else if (ch === ")" || ch === "]" || ch === "}") {
-        if (parenDepth > 0) parenDepth--;
-        masked += " ";
-      } else {
-        masked += parenDepth > 0 ? " " : ch;
-      }
-    }
-    const re = new RegExp(BM_KARAOKE_WORD_RE.source, "gu");
-    let m;
-    while ((m = re.exec(masked))) {
-      const rawW = m[0];
-      if (/^[HG]\d{1,4}$/i.test(rawW)) continue;
-      if (currentWordIdx === targetWordIndex) {
-        return { node: tn, s: m.index, e: m.index + rawW.length };
-      }
-      currentWordIdx++;
-    }
-  }
-  return null;
-}
-
-// Estrae da un blocco DOM (versetto, paragrafo di Perspicacia, Scrittura del Giorno, Tutta la Scrittura)
-// la lista esatta delle parole leggibili (con la punteggiatura che le segue) e costruisce i chunk audio
-// con mappatura 1:1 garantita: ogni parola pronunciata dalla voce ha il suo `wordIndexInBlock` esatto!
-function buildSyncedQueueFromBlock(blockEl, verseNum = null, maxChunkChars = 140) {
-  if (!blockEl) return [];
-  let parenDepth = 0;
-  let wordIndexInBlock = 0;
-  const words = [];
-
-  const walker = document.createTreeWalker(blockEl, NodeFilter.SHOW_TEXT, {
-    acceptNode(node) {
-      const p = node.parentElement;
-      if (!p || !node.nodeValue) return NodeFilter.FILTER_REJECT;
-      if (p.closest(".verse-num, .tag-badge, .pub-ref-badge, sup, script, style, button, select, input, textarea, .chapter-nav-btns, .section-title")) {
-        return NodeFilter.FILTER_REJECT;
-      }
-      return NodeFilter.FILTER_ACCEPT;
-    }
-  });
-
-  let tn;
-  while ((tn = walker.nextNode())) {
-    const val = tn.nodeValue;
-    let masked = "";
-    for (let i = 0; i < val.length; i++) {
-      const ch = val[i];
-      if (ch === "(" || ch === "[" || ch === "{") {
-        parenDepth++;
-        masked += " ";
-      } else if (ch === ")" || ch === "]" || ch === "}") {
-        if (parenDepth > 0) parenDepth--;
-        masked += " ";
-      } else {
-        masked += parenDepth > 0 ? " " : ch;
-      }
-    }
-    const re = new RegExp(BM_KARAOKE_WORD_RE.source, "gu");
-    let m;
-    while ((m = re.exec(masked))) {
-      const rawW = m[0];
-      if (/^[HG]\d{1,4}$/i.test(rawW)) continue;
-      const afterSlice = masked.slice(m.index + rawW.length, m.index + rawW.length + 4);
-      const punctMatch = afterSlice.match(/^[.,!?;:]+/);
-      const punct = punctMatch ? punctMatch[0] : "";
-      words.push({
-        raw: rawW,
-        punct: punct,
-        blockEl: blockEl,
-        wordIndexInBlock: wordIndexInBlock++
-      });
-    }
-  }
-
-  if (!words.length) return [];
-
-  // Raggruppa le parole in chunk di frase (spezzando su . ! ? ; : o quando supera maxChunkChars)
-  const queueItems = [];
-  let curWords = [];
-  let curLen = 0;
-
-  const flushChunk = () => {
-    if (!curWords.length) return;
-    let text = "";
-    const tokens = [];
-    for (let i = 0; i < curWords.length; i++) {
-      const w = curWords[i];
-      if (i > 0) text += " ";
-      const charStart = text.length;
-      text += w.raw + w.punct;
-      const charEnd = charStart + w.raw.length;
-      const pauseW = /[.!?;:]/.test(w.punct) ? 4.2 : (/,/.test(w.punct) ? 2.0 : 0);
-      tokens.push({
-        raw: w.raw,
-        charStart,
-        charEnd,
-        blockEl: w.blockEl,
-        wordIndexInBlock: w.wordIndexInBlock,
-        weight: Math.max(1.6, w.raw.length) + pauseW + 1.1
-      });
-    }
-    queueItems.push({
-      text: text,
-      verseNum: verseNum,
-      tokens: tokens
-    });
-    curWords = [];
-    curLen = 0;
-  };
-
-  for (const w of words) {
-    const pieceLen = w.raw.length + w.punct.length + 1;
-    if (curWords.length > 0 && (curLen + pieceLen > maxChunkChars)) {
-      flushChunk();
-    }
-    curWords.push(w);
-    curLen += pieceLen;
-    if (/[.!?;:]/.test(w.punct) && curLen >= 45) {
-      flushChunk();
-    }
-  }
-  flushChunk();
-  return queueItems;
-}
-
-// Costruisce l'intera coda sincronizzata per Scrittura del Giorno, Perspicacia, Tutta la Scrittura o Appunti
-function buildUniversalDomQueue() {
-  const main = document.getElementById("mainContainer");
-  if (!main) return [];
-  const queue = [];
-
-  // 1. Titolo della vista corrente (es. data della Scrittura del Giorno, voce di Perspicacia, libro SI)
-  const titleEl = main.querySelector(".chapter-header .chapter-title");
-  if (titleEl) {
-    queue.push(...buildSyncedQueueFromBlock(titleEl, null, 140));
-  }
-
-  // 2. Contenuto delle card (Scrittura del Giorno, Perspicacia, Tutta la Scrittura)
-  const cards = [...main.querySelectorAll(".result-card")];
-  cards.forEach(card => {
-    // Se la card è divisa in sotto-blocchi (come in Tutta la Scrittura), scansiona ciascun blocco
-    const subBlocks = [...card.querySelectorAll(":scope > div")];
-    if (subBlocks.length > 1) {
-      subBlocks.forEach(sb => {
-        queue.push(...buildSyncedQueueFromBlock(sb, null, 140));
-      });
-    } else {
-      queue.push(...buildSyncedQueueFromBlock(card, null, 140));
-    }
-  });
-
-  return queue;
-}
-
-function bmKIndexAtUnits(units) {
-  let i = bmK.cum.findIndex(c => c >= units);
-  return i < 0 ? bmK.chunkTokens.length - 1 : i;
-}
-
-function bmKaraokeBeginChunk(item) {
-  bmKStopTimer();
-  bmKClearWord();
-  bmK.chunkStartAt = performance.now();
-  bmK.t0 = bmK.chunkStartAt;
-  bmK.chunkTokens = (item && Array.isArray(item.tokens)) ? item.tokens : [];
-  bmK.cum = [];
-  bmK.curIdx = -1;
-  bmK.targetIdx = 0;
-  bmK.lastBoundaryAt = 0;
-  bmK.lastBoundaryIdx = -1;
-
-  if (!bmK.chunkTokens.length || item.skipKaraoke) return;
-
-  let c = 0;
-  bmK.cum = bmK.chunkTokens.map(t => {
-    c += t.weight || 3;
-    return c;
-  });
-  bmK.total = c || 1;
-
-  // Illumina SUBITO la prima parola fin dal millisecondo zero!
-  bmKHighlightToken(0);
-}
-
-// Timer ad alta frequenza (30ms) con "Stepping Sequenziale Garantito":
-// non salta MAI una parola! Se il target è più avanti (es. boundary passato da 1 a 4),
-// scorre rapidamente le parole intermedie (2, 3, 4) una dopo l'altra.
-function bmKaraokeStartTimerOnly() {
-  if (bmK.timer) return;
-  bmK.timer = setInterval(() => {
-    if (!bmK.chunkTokens.length) return;
-    const elapsedUnits = ((performance.now() - bmK.t0) * bmTtsRate) / bmMsUnit;
-    const timeIdx = bmKIndexAtUnits(elapsedUnits);
-    const desiredIdx = Math.max(bmK.targetIdx, timeIdx);
-    const maxIdx = bmK.chunkTokens.length - 1;
-
-    if (bmK.curIdx < 0) {
-      bmKHighlightToken(0);
-    } else if (bmK.curIdx < Math.min(desiredIdx, maxIdx)) {
-      // Avanza di 1 sola parola alla volta: ZERO parole saltate!
-      bmKHighlightToken(bmK.curIdx + 1);
-    }
-  }, 32);
-}
-
-function bmKaraokeNativeStart() {
-  if (bmK.chunkTokens.length > 0 && bmK.curIdx < 0) {
-    bmKHighlightToken(0);
-  }
-  bmKaraokeStartTimerOnly();
-}
-
-function bmKaraokeOnBoundary(ev) {
-  if (!ev || !bmK.chunkTokens.length) return;
-  if (ev.name && ev.name !== "word" && ev.name !== "sentence") return;
-  const ci = typeof ev.charIndex === "number" ? ev.charIndex : -1;
-  if (ci < 0) return;
-
-  let i = 0;
-  for (let k = 0; k < bmK.chunkTokens.length; k++) {
-    if (bmK.chunkTokens[k].charStart <= ci + 1) i = k;
-    else break;
-  }
-
-  // Calibrazione adattiva della velocità reale della voce sui Pixel
-  if (bmK.lastBoundaryAt && bmK.lastBoundaryIdx >= 0 && i > bmK.lastBoundaryIdx) {
-    const elapsedMs = performance.now() - bmK.lastBoundaryAt;
-    const units = bmK.cum[i] - bmK.cum[bmK.lastBoundaryIdx];
-    if (units > 2 && elapsedMs > 18) {
-      const unit = (elapsedMs * bmTtsRate) / units;
-      if (unit > 24 && unit < 115) {
-        const w = bmKSamples++ < 5 ? 0.42 : 0.16;
-        bmMsUnit = Math.min(105, Math.max(26, bmMsUnit * (1 - w) + unit * w));
-        try { localStorage.setItem("bm_tts_msunit", String(bmMsUnit)); } catch (e) {}
-      }
-    }
-  }
-  bmK.lastBoundaryAt = performance.now();
-  bmK.lastBoundaryIdx = i;
-  bmK.targetIdx = i;
-
-  // Se il cursore è indietro di 1 passo, mostra subito i; se è indietro di più passi,
-  // fa subito un passo avanti e lascia che il timer a 32ms completi gli altri senza saltare nulla!
-  if (bmK.curIdx < i) {
-    bmKHighlightToken(bmK.curIdx + 1);
-  }
-
-  const prevCum = i > 0 ? bmK.cum[i - 1] : 0;
-  const expectedTime = (prevCum * bmMsUnit) / bmTtsRate;
-  bmK.t0 = performance.now() - expectedTime;
-
-  bmKaraokeStartTimerOnly();
-}
-
-function bmKaraokeNativeEnd() {
-  // Prima di chiudere il chunk, garantisce che anche l'ultima parola sia stata illuminata
-  if (bmK.chunkTokens.length > 0 && bmK.curIdx < bmK.chunkTokens.length - 1) {
-    bmKHighlightToken(bmK.chunkTokens.length - 1);
-  }
-  if (bmK.chunkStartAt && bmK.total > 3) {
-    const elapsedMs = performance.now() - bmK.chunkStartAt;
-    if (elapsedMs > 140) {
-      const unit = (elapsedMs * bmTtsRate) / bmK.total;
-      if (unit > 24 && unit < 115) {
-        const w = bmKSamples++ < 3 ? 0.60 : 0.25;
-        bmMsUnit = Math.min(105, Math.max(26, bmMsUnit * (1 - w) + unit * w));
-        try { localStorage.setItem("bm_tts_msunit", String(bmMsUnit)); } catch (e) {}
-      }
-    }
-  }
-  bmKStopTimer();
-}
-
-function bmKaraokeOnTime(audio) {
-  if (!audio || !isFinite(audio.duration) || audio.duration <= 0 || !bmK.chunkTokens.length) return;
-  const target = bmKIndexAtUnits((audio.currentTime / audio.duration) * bmK.total);
-  bmK.targetIdx = target;
-  if (bmK.curIdx < target) {
-    bmKHighlightToken(bmK.curIdx + 1);
-  }
-}
-
-function bmKaraokeReset() {
-  bmKStopTimer();
-  bmKClearWord();
-  bmK.chunkTokens = [];
-  bmK.cum = [];
-  bmK.targetIdx = 0;
+  frag.querySelectorAll(".verse-num, .tag-badge, sup, script, style").forEach(el => el.remove());
+  return (frag.textContent || "")
+    .replace(/📝\s*Nota/gi, " ")
+    .replace(/🔗\s*Paralleli/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function clearTtsKaraokeHighlight() {
@@ -4657,19 +4204,14 @@ function updateMediaSessionMetadata(titleStr, subtitleStr, isPlaying) {
 }
 
 function stopAllAudio() {
-  clearTimeout(bmWatchdogTimer);
-  bmWatchdogTimer = null;
-  window.__bmActiveUtterance = null;
   releaseAudioWakeLock();
   clearTtsKaraokeHighlight();
-  bmKaraokeReset();
   bmSessionId++;
   bmUserStopped = true;
   bmAudioPlaying = false;
   bmAutoNextChapter = false;
   if (bmAudioPlayer) {
     try {
-      bmAudioPlayer.ontimeupdate = null;
       bmAudioPlayer.onended = null;
       bmAudioPlayer.onerror = null;
       bmAudioPlayer.pause();
@@ -4722,7 +4264,6 @@ function playWebViewStreamQueue(queueItems, idx, sessionId) {
   }
   const item = queueItems[idx];
   if (item.verseNum) highlightTtsKaraokeVerse(item.verseNum);
-  bmKaraokeBeginChunk(item);
   const tl = getActiveTTSLangCode(false);
   const q = encodeURIComponent(item.text);
   const urls = [
@@ -4741,10 +4282,8 @@ function playWebViewStreamQueue(queueItems, idx, sessionId) {
     }
     bmAudioPlayer.src = urls[uIdx++];
     bmAudioPlayer.playbackRate = bmTtsRate;
-    bmAudioPlayer.ontimeupdate = () => { if (sessionId === bmSessionId) bmKaraokeOnTime(bmAudioPlayer); };
     bmAudioPlayer.onended = () => {
       if (!bmUserStopped && bmAudioPlaying && sessionId === bmSessionId) {
-        bmAudioPlayer.ontimeupdate = null;
         playWebViewStreamQueue(queueItems, idx + 1, sessionId);
       }
     };
@@ -4764,7 +4303,7 @@ function playWebViewStreamQueue(queueItems, idx, sessionId) {
   };
   tryNextUrl();
 }
-    
+
 function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, mediaTitle = "", mediaSub = "") {
   stopAllAudio();
   if (!queueItems || !queueItems.length) return;
@@ -4785,71 +4324,32 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
   if ("speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined") {
     let idx = 0;
     let nativeOk = false;
-
-    const advanceNext = () => {
-      clearTimeout(bmWatchdogTimer);
-      bmWatchdogTimer = null;
-      if (!bmUserStopped && bmAudioPlaying && mySession === bmSessionId) {
-        idx++;
-        speakNextNative();
-      }
-    };
-
     const speakNextNative = () => {
       if (bmUserStopped || !bmAudioPlaying || mySession !== bmSessionId) return;
-      while (idx < queueItems.length && (!queueItems[idx].text || !/[\p{L}\p{N}]/u.test(queueItems[idx].text))) {
-        idx++;
-      }
       if (idx >= queueItems.length) {
         onSpeechFinishedSession(mySession);
         return;
       }
       const item = queueItems[idx];
       if (item.verseNum) highlightTtsKaraokeVerse(item.verseNum);
-      bmKaraokeBeginChunk(item);
-      if (!item.skipKaraoke) bmKaraokeStartTimerOnly();
-
       try {
-        if (window.speechSynthesis.paused) {
-          try { window.speechSynthesis.resume(); } catch (e) {}
-        }
         const u = new SpeechSynthesisUtterance(item.text);
-        window.__bmActiveUtterance = u;
         u.lang = getActiveTTSLangCode(true);
         u.rate = bmTtsRate;
-
-        const maxWaitMs = Math.max(5500, Math.round((item.text.length * 115) / bmTtsRate) + 4000);
-        clearTimeout(bmWatchdogTimer);
-        bmWatchdogTimer = setTimeout(() => {
-          if (!bmUserStopped && bmAudioPlaying && mySession === bmSessionId) {
-            bmKaraokeNativeEnd();
-            advanceNext();
-          }
-        }, maxWaitMs);
-
-        u.onstart = () => {
-          nativeOk = true;
-          const now = performance.now();
-          if (now - bmK.chunkStartAt > 140) {
-            bmK.chunkStartAt = now;
-            bmK.t0 = now;
-          }
-          if (!item.skipKaraoke) bmKaraokeNativeStart();
-        };
-        u.onboundary = (ev) => {
-          if (!item.skipKaraoke) bmKaraokeOnBoundary(ev);
-        };
+        u.onstart = () => { nativeOk = true; };
         u.onend = () => {
-          bmKaraokeNativeEnd();
-          advanceNext();
+          if (!bmUserStopped && bmAudioPlaying && mySession === bmSessionId) {
+            idx++;
+            speakNextNative();
+          }
         };
         u.onerror = (ev) => {
-          clearTimeout(bmWatchdogTimer);
-          if (bmUserStopped || mySession !== bmSessionId || (ev && (ev.error === "canceled" || ev.error === "interrupted"))) return;
+          if (bmUserStopped || mySession !== bmSessionId || ev.error === "canceled" || ev.error === "interrupted") return;
           if (!nativeOk) {
             playWebViewStreamQueue(queueItems, idx, mySession);
           } else {
-            advanceNext();
+            idx++;
+            speakNextNative();
           }
         };
         window.speechSynthesis.speak(u);
@@ -4858,26 +4358,16 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
       }
     };
     try { window.speechSynthesis.cancel(); } catch (e) {}
-    setTimeout(() => {
-      if (!bmUserStopped && bmAudioPlaying && mySession === bmSessionId) {
-        speakNextNative();
-      }
-    }, 35);
+    speakNextNative();
   } else {
     playWebViewStreamQueue(queueItems, 0, mySession);
   }
 }
 
 function startUniversalSpeech(rawText, updateMainBtn = true, autoNext = false) {
+  const chunks = splitTextForAudio(rawText, 165).map(c => ({ text: c, verseNum: null }));
   const curBook = getBook(state.bookId);
-  const titleStr = currentViewContext.type === "insight" ? "Perspicacia (it)" : (currentViewContext.type === "si" ? "Tutta la Scrittura" : (currentViewContext.type === "daily" ? "Scrittura del Giorno" : `${curBook.name} ${state.chapter}`));
-  // Se non è una selezione parziale, costruisce la coda sincronizzata 1:1 direttamente dai blocchi del DOM!
-  const domQueue = buildUniversalDomQueue();
-  if (domQueue.length > 0) {
-    startQueueSpeech(domQueue, updateMainBtn, autoNext, titleStr, "Bibbia Multilingue PRO");
-    return;
-  }
-  const chunks = splitTextForAudio(rawText, 140).map(c => ({ text: c, verseNum: null, tokens: [] }));
+  const titleStr = currentViewContext.type === "insight" ? "Perspicacia (it)" : (currentViewContext.type === "daily" ? "Scrittura del Giorno" : `${curBook.name} ${state.chapter}`);
   startQueueSpeech(chunks, updateMainBtn, autoNext, titleStr, "Bibbia Multilingue PRO");
 }
 
@@ -4887,21 +4377,15 @@ function startChapterKaraokeSpeech(startFromVerse = 1) {
   const curBook = getBook(state.bookId);
   const queue = [];
   if (startFromVerse <= 1) {
-    const headerTitleEl = document.querySelector(".chapter-header .chapter-title");
-    const headerChunks = headerTitleEl ? buildSyncedQueueFromBlock(headerTitleEl, 1, 140) : [];
-    if (headerChunks.length > 0) {
-      queue.push(...headerChunks);
-    } else {
-      queue.push({ text: `${curBook.name}, capitolo ${state.chapter}.`, verseNum: 1, skipKaraoke: true, tokens: [] });
-    }
+    queue.push({ text: `${curBook.name}, capitolo ${state.chapter}.`, verseNum: 1 });
   }
   rows.forEach(r => {
     const idAttr = r.id || "";
     const vNum = idAttr.startsWith("v_") ? parseInt(idAttr.slice(2), 10) : 0;
     if (vNum >= startFromVerse) {
-      const targetBlock = r.querySelector(".parallel-col") || r;
-      const verseChunks = buildSyncedQueueFromBlock(targetBlock, vNum, 140);
-      queue.push(...verseChunks);
+      const vTxt = r.getAttribute("data-text") || "";
+      const subChunks = splitTextForAudio(vTxt, 165);
+      subChunks.forEach(sc => queue.push({ text: sc, verseNum: vNum }));
     }
   });
   if (queue.length > 0) {
@@ -4917,54 +4401,37 @@ function toggleChapterTTS() {
   }
   const cleanSel = extractCleanSelectedText();
   if (cleanSel.length >= 3) {
-    const chunks = splitTextForAudio(cleanSel, 140).map(c => ({ text: c, verseNum: null, tokens: [] }));
-    startQueueSpeech(chunks, true, false, "Selezione Testo", "Bibbia Multilingue PRO");
+    startUniversalSpeech(cleanSel, true, false);
     return;
   }
-  if (state.selectedVerse && document.getElementById("verseActionBar")?.style.display === "flex") {
-    const row = document.getElementById(`v_${state.selectedVerse}`);
-    if (row) {
-      const vChunks = buildSyncedQueueFromBlock(row, state.selectedVerse, 140);
-      if (vChunks.length > 0) {
-        startQueueSpeech(vChunks, true, false, `${getBook(state.bookId).name} ${state.chapter}:${state.selectedVerse}`, "Bibbia Multilingue PRO");
-        return;
-      }
-    }
+  if (state.selectedVerseText && document.getElementById("verseActionBar")?.style.display === "flex") {
+    startUniversalSpeech(state.selectedVerseText, true, false);
+    return;
   }
   const rows = [...document.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3")];
   if (rows.length > 0) {
     startChapterKaraokeSpeech(1);
     return;
   }
-  // Scrittura del Giorno, Perspicacia, Tutta la Scrittura: usa la coda DOM 1:1!
-  const domQueue = buildUniversalDomQueue();
-  if (domQueue.length > 0) {
-    const titleStr = currentViewContext.type === "insight" ? "Perspicacia (it)" : (currentViewContext.type === "si" ? "Tutta la Scrittura" : "Scrittura del Giorno");
-    startQueueSpeech(domQueue, true, false, titleStr, "Bibbia Multilingue PRO");
+  if (typeof currentInsightSpeechText === "string" && currentInsightSpeechText.trim()) {
+    startUniversalSpeech(currentInsightSpeechText, true, false);
+    return;
+  }
+  if (typeof currentDailySpeechText === "string" && currentDailySpeechText.trim()) {
+    startUniversalSpeech(currentDailySpeechText, true, false);
   }
 }
 
 function speakSelectedVerse() {
   bmHaptic(12);
+  const cleanSel = extractCleanSelectedText();
+  const txtToSpeak = cleanSel.length >= 3 ? cleanSel : state.selectedVerseText;
+  if (!txtToSpeak) return;
   if (bmAudioPlaying) {
     stopAllAudio();
     return;
   }
-  if (state.selectedVerse) {
-    const row = document.getElementById(`v_${state.selectedVerse}`);
-    if (row) {
-      const vChunks = buildSyncedQueueFromBlock(row, state.selectedVerse, 140);
-      if (vChunks.length > 0) {
-        startQueueSpeech(vChunks, false, false, `${getBook(state.bookId).name} ${state.chapter}:${state.selectedVerse}`, "Bibbia Multilingue PRO");
-        return;
-      }
-    }
-  }
-  const cleanSel = extractCleanSelectedText();
-  const txtToSpeak = cleanSel.length >= 3 ? cleanSel : state.selectedVerseText;
-  if (!txtToSpeak) return;
-  const chunks = splitTextForAudio(txtToSpeak, 140).map(c => ({ text: c, verseNum: null, tokens: [] }));
-  startQueueSpeech(chunks, false, false, "Versetto Selezionato", "Bibbia Multilingue PRO");
+  startUniversalSpeech(txtToSpeak, false, false);
 }
     
 function generateVerseCardModal() {
