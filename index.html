@@ -3042,7 +3042,10 @@ function formatNoteLinks(txt, defaultBookId = null) {
         if (!openP && !closeP) return pill;
         return `<span class="bm-nowrap-pill">${openP || ""}${pill}${closeP || ""}</span>`;
       });
-  
+
+  return out;
+}
+
 // ─── Riferimenti a pubblicazioni: copia + apertura Chrome ───
 
 function onPubRefClick(ev, ref) {
