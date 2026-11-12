@@ -4223,21 +4223,6 @@ function bmKBuildDom(root) {
   }
   return words;
 }
-// Parole realmente presenti nella pagina (escluse numerazione, badge, apici e controlli)
-function bmKBuildDom(root) {
-  const words = [];
-  if (!root) return words;
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-    acceptNode(node) {
-      const p = node.parentElement;
-      if (!p || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
-      if (p.closest(".verse-num, .tag-badge, sup, script, style, button, select, input, textarea")) return NodeFilter.FILTER_REJECT;
-      return NodeFilter.FILTER_ACCEPT;
-    }
-  });
-  let tn;
-  while ((tn = walker.nextNode())) {
-    const re = /\S+/g;
     let m;
     while ((m = re.exec(tn.nodeValue))) {
       const n = bmKNorm(m[0]);
@@ -4246,59 +4231,32 @@ function bmKBuildDom(root) {
   }
   return words;
 }
-// Allinea le parole pronunciate a quelle della pagina.
-// Strategia: cerca un punto di partenza provando i primi 5 token (non più 3 consecutivi),
-// poi avanza token per token con finestra ampia + fallback fuzzy su prefisso.
+// Allinea le parole pronunciate a quelle della pagina (stesso tokenizzatore su entrambi i lati).
+// Una parola non trovata resta -1 (non viene forzata su un'altra): il cursore non si blocca mai.
 function bmKAlign(toks, dom, ptr) {
   const map = new Array(toks.length).fill(-1);
   if (!toks.length || !dom.length) return { map, ptr };
-
-  let start = -1, firstTokIdx = -1;
-
-  // 1. Cerca un'ancora forte (parole > 2 lettere) nelle prime 5 parole
-  for (let i = 0; i < Math.min(5, toks.length); i++) {
-    if (toks[i].n.length > 2) {
-      const target = toks[i].n;
-      for (let k = ptr; k < Math.min(dom.length, ptr + 30); k++) {
-        if (dom[k].n === target) { start = k; firstTokIdx = i; break; }
-      }
-      if (start >= 0) break;
+  const WIN = 40; // le parole tra [parentesi] o i codici Strong non si pronunciano ma sono in pagina
+  const find = (target, from) => {
+    for (let k = from; k < Math.min(dom.length, from + WIN); k++) if (dom[k].n === target) return k;
+    return -1;
+  };
+  // Punto di partenza: prima parola pronunciata che si trova vicino al cursore
+  let p = ptr, started = false;
+  for (let i = 0; i < Math.min(8, toks.length) && !started; i++) {
+    const k = find(toks[i].n, ptr);
+    if (k >= 0) { p = k; started = true; }
+  }
+  if (!started) {
+    for (let i = 0; i < Math.min(8, toks.length) && !started; i++) {      // ripiego: ricerca su tutta la pagina
+      const k = dom.findIndex(d => d.n === toks[i].n);
+      if (k >= 0) { p = k; started = true; }
     }
   }
-
-  // 2. Se fallisce, cerca qualsiasi parola > 3 lettere
-  if (start < 0) {
-    for (let i = 0; i < toks.length; i++) {
-      if (toks[i].n.length > 3) {
-        const target = toks[i].n;
-        for (let k = ptr; k < Math.min(dom.length, ptr + 50); k++) {
-          if (dom[k].n === target) { start = k; firstTokIdx = i; break; }
-        }
-        if (start >= 0) break;
-      }
-    }
-  }
-
-  // 3. Fallback assoluto: mappa in sequenza dal ptr
-  if (start < 0) { start = ptr; firstTokIdx = 0; }
-
-  let p = start;
-  for (let i = firstTokIdx; i < toks.length; i++) {
+  for (let i = 0; i < toks.length; i++) {
     if (!toks[i].n) continue;
-    const target = toks[i].n;
-
-    let found = -1;
-    for (let k = p; k < Math.min(dom.length, p + 15); k++) {
-      if (dom[k].n === target) { found = k; break; }
-    }
-
-    if (found >= 0) {
-      map[i] = found;
-      p = found + 1;
-    } else {
-      // MAPPATURA FORZATA: impedisce che la parola venga saltata visivamente
-      map[i] = Math.min(p, dom.length - 1);
-    }
+    const k = find(toks[i].n, p);
+    if (k >= 0) { map[i] = k; p = k + 1; }
   }
   return { map, ptr: p };
 }
@@ -4370,7 +4328,7 @@ function bmKaraokeNativeStart() {
 
     // Blocca il timer dallo "scappare" in avanti se la voce si inceppa
     const lastIdx = bmK.lastBoundaryIdx >= 0 ? bmK.lastBoundaryIdx : 0;
-    const maxAllowedIdx = Math.min(bmK.toks.length - 1, lastIdx + 5);
+    const maxAllowedIdx = Math.min(bmK.toks.length - 1, lastIdx + 8);
 
     bmKShow(Math.min(estimatedIdx, maxAllowedIdx));
   }, 55);
