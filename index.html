@@ -4315,27 +4315,33 @@ function bmKaraokeNativeStart() {
   bmK.t0 = performance.now();
   bmK.timer = setInterval(() => {
     if (!bmK.toks.length) return;
-    if (bmK.lastBoundaryAt && (performance.now() - bmK.lastBoundaryAt) < 800) return;
+    // Cooldown breve: dopo un boundary aspettiamo 150ms per non "strappare"
+    // la parola appena mostrata, poi il timer riprende a interpolare liberamente.
+    if (bmK.lastBoundaryAt && (performance.now() - bmK.lastBoundaryAt) < 150) return;
 
     const estimatedUnits = (performance.now() - bmK.t0) * bmTtsRate / bmMsUnit;
     const estimatedIdx = bmKIndexAtUnits(estimatedUnits);
 
-    // Blocca il timer dallo "scappare" in avanti se la voce si inceppa
-    const lastIdx = bmK.lastBoundaryIdx >= 0 ? bmK.lastBoundaryIdx : 0;
-    const maxAllowedIdx = Math.min(bmK.toks.length - 1, lastIdx + 8);
-
-    bmKShow(Math.min(estimatedIdx, maxAllowedIdx));
+    // Nessun cap a +8: su Android il TTS di sistema emette boundary radi
+    // (spesso per frase), quindi il timer è il motore PRIMARIO del karaoke
+    // e deve poter avanzare fino all'ultima parola del chunk.
+    const maxIdx = bmK.toks.length - 1;
+    bmKShow(Math.min(estimatedIdx, maxIdx));
   }, 55);
 }
 
 function bmKaraokeOnBoundary(ev) {
-  if (!ev || (ev.name && ev.name !== "word") || !bmK.toks.length) return;
+  if (!ev || !bmK.toks.length) return;
+  // Accetta "word", "sentence" e anche eventi senza name.
+  // Su Android Chrome il TTS di sistema può emettere boundary per frase
+  // ("sentence") invece che per parola: scartarli lascia il karaoke
+  // affidato al solo timer, con evidenziazione a scatti.
+  if (ev.name && ev.name !== "word" && ev.name !== "sentence") return;
   bmK.boundary = true;
   const ci = ev.charIndex || 0;
   let i = 0;
   for (let k = 0; k < bmK.toks.length; k++) { if (bmK.toks[k].s <= ci) i = k; else break; }
 
-  // Calibrazione continua in base alla velocità effettiva del motore vocale
   if (bmK.lastBoundaryAt && bmK.lastBoundaryIdx >= 0 && i > bmK.lastBoundaryIdx) {
     const elapsedMs = performance.now() - bmK.lastBoundaryAt;
     const units = bmK.cum[i] - bmK.cum[bmK.lastBoundaryIdx];
@@ -4350,10 +4356,8 @@ function bmKaraokeOnBoundary(ev) {
   }
   bmK.lastBoundaryAt = performance.now();
   bmK.lastBoundaryIdx = i;
-
   bmKShow(i);
 
-  // Sincronizza il timer con l'esatto carattere pronunciato
   const currentUnits = bmK.cum[i];
   const expectedTime = (currentUnits * bmMsUnit) / bmTtsRate;
   bmK.t0 = performance.now() - expectedTime;
