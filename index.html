@@ -252,11 +252,19 @@
       border-radius: 6px;
       transition: background-color 0.2s ease, box-shadow 0.2s ease;
     }
-    /* Evidenziazione Multi-Versetto Attiva (Tocco cumulativo stile Suite PRO) */
+    /* Evidenziazione Multi-Versetto Attiva (Verde Lime = selezionato / già letto) */
     .bm-verse-selected {
       outline: 2px dashed #ccff00 !important;
       background-color: rgba(204, 255, 0, 0.14) !important;
       border-radius: 6px;
+    }
+    /* Evidenziazione Versetto Aggiunto/Riascolto Post-Lettura (Arancione Fluorescente PRO) */
+    .bm-verse-queued-orange {
+      outline: 2.5px dashed #ff9100 !important;
+      background: linear-gradient(90deg, rgba(255, 145, 0, 0.24) 0%, rgba(255, 109, 0, 0.14) 100%) !important;
+      box-shadow: 0 0 14px rgba(255, 145, 0, 0.55) !important;
+      border-radius: 6px;
+      transition: all 0.2s ease;
     }
     /* Karaoke Audio in Tempo Reale (Versetto in corso di lettura vocale) */
     .bm-tts-active-verse {
@@ -265,6 +273,16 @@
       box-shadow: 0 0 16px rgba(204, 255, 0, 0.45) !important;
       border-radius: 6px;
       transition: all 0.22s ease;
+    }
+    /* Catenaccio tipografico: tiene parentesi e punteggiatura incollate alle pillole azzurre/viola */
+    .bm-nowrap-pill {
+      white-space: nowrap !important;
+      display: inline-block;
+    }
+    .bm-nowrap-pill .tag-badge,
+    .bm-nowrap-pill .pub-ref-badge {
+      margin-left: 1px;
+      margin-right: 1px;
     }
     /* Transizione Cinematografica a 120Hz sul cambio vista/capitolo */
     @keyframes bmViewFadeIn {
@@ -2590,6 +2608,12 @@ function formatSelectedVersesRangeLabel(nums) {
   return parts.join(", ");
 }
 
+let spokenVersesSet = new Set();        // Versetti già letti nella sessione di selezione corrente (restano verdi)
+let pendingOrangeVersesSet = new Set(); // Versetti aggiunti/ritoccati per nuova lettura (arancioni fluorescenti)
+let pendingOrangeOrder = [];            // Ordine di tocco dei versetti arancioni
+let bmSelectionReadingActive = false;   // true mentre sta leggendo una selezione di versetti
+let activeTtsQueue = [];                // Coda live: permette di accodare versetti mentre la voce legge!
+
 function syncSelectedVersesState() {
   const nums = Array.from(selectedVersesMap.keys()).sort((a, b) => a - b);
   if (nums.length === 0) {
@@ -2601,15 +2625,78 @@ function syncSelectedVersesState() {
   state.selectedVerseText = nums.map(n => selectedVersesMap.get(n) || "").filter(Boolean).join(" ");
 }
 
+function appendVerseToLiveTtsQueue(vNum, rawText) {
+  const subChunks = splitTextForAudio(rawText || "", 165);
+  subChunks.forEach(sc => {
+    activeTtsQueue.push({ text: sc, verseNum: vNum });
+  });
+}
+
 function onVerseClick(verseNum, text) {
   bmHaptic(10);
   const vNum = Number(verseNum);
   const row = document.getElementById(`v_${vNum}`);
+  const vText = text || (row ? (row.getAttribute("data-text") || "") : "");
+
+  // CASO 1: La voce STA LEGGENDO i versetti selezionati in questo istante ->
+  // Qualsiasi versetto toccato (nuovo o già letto) viene accodato subito in coda alla lettura!
+  if (bmAudioPlaying && bmSelectionReadingActive) {
+    selectedVersesMap.set(vNum, vText);
+    spokenVersesSet.add(vNum);
+    if (row) {
+      row.classList.remove("bm-verse-selected");
+      row.classList.add("bm-verse-queued-orange");
+    }
+    appendVerseToLiveTtsQueue(vNum, vText);
+    syncSelectedVersesState();
+    document.getElementById("verseActionBar").style.display = "flex";
+    return;
+  }
+
+  // CASO 2: Una prima lettura dei versetti selezionati è GIÀ TERMINATA (spokenVersesSet non è vuoto) ->
+  // I nuovi versetti toccati — o i versetti verdi toccati di nuovo — diventano ARANCIONI FLUORESCENTI!
+  if (!bmAudioPlaying && spokenVersesSet.size > 0) {
+    if (pendingOrangeVersesSet.has(vNum)) {
+      // Se era già arancione e lo ritocco:
+      pendingOrangeVersesSet.delete(vNum);
+      pendingOrangeOrder = pendingOrangeOrder.filter(n => n !== vNum);
+      if (spokenVersesSet.has(vNum)) {
+        // Era uno dei verdi precedenti: torna semplicemente verde
+        if (row) {
+          row.classList.remove("bm-verse-queued-orange");
+          row.classList.add("bm-verse-selected");
+        }
+      } else {
+        // Era un versetto nuovo: si deseleziona del tutto
+        selectedVersesMap.delete(vNum);
+        if (row) row.classList.remove("bm-verse-queued-orange", "bm-verse-selected");
+      }
+    } else {
+      // Diventa ARANCIONE FLUORESCENTE (pronto per essere letto da solo o con gli altri arancioni!)
+      selectedVersesMap.set(vNum, vText);
+      pendingOrangeVersesSet.add(vNum);
+      pendingOrangeOrder = pendingOrangeOrder.filter(n => n !== vNum);
+      pendingOrangeOrder.push(vNum);
+      if (row) {
+        row.classList.remove("bm-verse-selected");
+        row.classList.add("bm-verse-queued-orange");
+      }
+    }
+    if (selectedVersesMap.size === 0) {
+      closeActionBar();
+      return;
+    }
+    syncSelectedVersesState();
+    document.getElementById("verseActionBar").style.display = "flex";
+    return;
+  }
+
+  // CASO 3: Selezione normale iniziale (prima di aver avviato la lettura) -> Verde Lime
   if (selectedVersesMap.has(vNum)) {
     selectedVersesMap.delete(vNum);
-    if (row) row.classList.remove("bm-verse-selected");
+    if (row) row.classList.remove("bm-verse-selected", "bm-verse-queued-orange");
   } else {
-    selectedVersesMap.set(vNum, text || "");
+    selectedVersesMap.set(vNum, vText);
     if (row) row.classList.add("bm-verse-selected");
   }
   if (selectedVersesMap.size === 0) {
@@ -2624,7 +2711,13 @@ function closeActionBar() {
   const bar = document.getElementById("verseActionBar");
   if (bar) bar.style.display = "none";
   selectedVersesMap.clear();
-  document.querySelectorAll(".bm-verse-selected").forEach(el => el.classList.remove("bm-verse-selected"));
+  spokenVersesSet.clear();
+  pendingOrangeVersesSet.clear();
+  pendingOrangeOrder = [];
+  bmSelectionReadingActive = false;
+  document.querySelectorAll(".bm-verse-selected, .bm-verse-queued-orange").forEach(el => {
+    el.classList.remove("bm-verse-selected", "bm-verse-queued-orange");
+  });
   state.selectedVerse = null;
   state.selectedVerseText = "";
 }
@@ -2634,7 +2727,12 @@ function selectVerseDataFromDOM(verseNum) {
   const row = document.getElementById(`v_${vNum}`);
   const txt = row ? (row.getAttribute("data-text") || "") : "";
   selectedVersesMap.clear();
-  document.querySelectorAll(".bm-verse-selected").forEach(el => el.classList.remove("bm-verse-selected"));
+  spokenVersesSet.clear();
+  pendingOrangeVersesSet.clear();
+  pendingOrangeOrder = [];
+  document.querySelectorAll(".bm-verse-selected, .bm-verse-queued-orange").forEach(el => {
+    el.classList.remove("bm-verse-selected", "bm-verse-queued-orange");
+  });
   selectedVersesMap.set(vNum, txt);
   state.selectedVerse = vNum;
   state.selectedVerseText = txt;
@@ -2932,11 +3030,22 @@ function formatNoteLinks(txt, defaultBookId = null) {
       return `${sepFull}<span class="tag-badge" onclick="event.stopPropagation(); jumpToRefString('${escapeJsStr(targetRef)}')">📖 ${labelPart}</span>`;
     });
 
-    return outSeg;
-  });
+      return outSeg;
+    });
 
-  return out;
-}
+    // Incolla qualsiasi parentesi di apertura "(", "[", "{" e di chiusura ")", "]", "}" (più eventuale punto/virgola)
+    // direttamente alla pillola azzurra (.tag-badge) o viola (.pub-ref-badge) rendendole inseparabili a fine riga!
+    out = out
+      .replace(/([(\[{])\s+(<span class="(?:tag-badge|pub-ref-badge)")/g, "$1$2")
+      .replace(/(<\/span>)\s+([)\]}])/g, "$1$2")
+      .replace(/([(\[{«"“]+)?(<span class="(?:tag-badge|pub-ref-badge)"[^>]*>.*?<\/span>)([)\]}»"”.,;!?]+)?/g, (m, openP, pill, closeP) => {
+        if (!openP && !closeP) return pill;
+        return `<span class="bm-nowrap-pill">${openP || ""}${pill}${closeP || ""}</span>`;
+      });
+
+    return out;
+  }
+    
 // ─── Riferimenti a pubblicazioni: copia + apertura Chrome ───
 
 function onPubRefClick(ev, ref) {
@@ -4266,6 +4375,21 @@ function stopAllAudio() {
 function onSpeechFinishedSession(sessionId) {
   if (sessionId !== bmSessionId) return;
   clearTtsKaraokeHighlight();
+  // Se stavamo leggendo una selezione di versetti, tutti i versetti letti (inclusi gli arancioni appena ascoltati)
+  // passano allo stato "già letti" (riquadro verde lime), pronti per eventuali nuove aggiunte arancioni!
+  if (bmSelectionReadingActive) {
+    bmSelectionReadingActive = false;
+    pendingOrangeVersesSet.clear();
+    pendingOrangeOrder = [];
+    selectedVersesMap.forEach((_, vNum) => {
+      spokenVersesSet.add(vNum);
+      const row = document.getElementById(`v_${vNum}`);
+      if (row) {
+        row.classList.remove("bm-verse-queued-orange");
+        row.classList.add("bm-verse-selected");
+      }
+    });
+  }
   if (bmAutoNextChapter && bmTtsAutoNextPref && !bmUserStopped && currentViewContext.type === "bible") {
     const book = getBook(state.bookId);
     if (state.chapter < book.ch) {
@@ -4296,7 +4420,14 @@ function playWebViewStreamQueue(queueItems, idx, sessionId) {
     return;
   }
   const item = queueItems[idx];
-  if (item.verseNum) highlightTtsKaraokeVerse(item.verseNum);
+  if (item.verseNum) {
+    const row = document.getElementById(`v_${item.verseNum}`);
+    if (row && row.classList.contains("bm-verse-queued-orange")) {
+      row.classList.remove("bm-verse-queued-orange");
+      row.classList.add("bm-verse-selected");
+    }
+    highlightTtsKaraokeVerse(item.verseNum);
+  }
   const tl = getActiveTTSLangCode(false);
   const q = encodeURIComponent(item.text);
   const urls = [
@@ -4337,9 +4468,11 @@ function playWebViewStreamQueue(queueItems, idx, sessionId) {
   tryNextUrl();
 }
 
-function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, mediaTitle = "", mediaSub = "") {
+function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, mediaTitle = "", mediaSub = "", isSelectionQueue = false) {
   stopAllAudio();
   if (!queueItems || !queueItems.length) return;
+  activeTtsQueue = queueItems;
+  bmSelectionReadingActive = Boolean(isSelectionQueue);
   const mySession = ++bmSessionId;
   bmUserStopped = false;
   bmAudioPlaying = true;
@@ -4359,12 +4492,19 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
     let nativeOk = false;
     const speakNextNative = () => {
       if (bmUserStopped || !bmAudioPlaying || mySession !== bmSessionId) return;
-      if (idx >= queueItems.length) {
+      if (idx >= activeTtsQueue.length) {
         onSpeechFinishedSession(mySession);
         return;
       }
-      const item = queueItems[idx];
-      if (item.verseNum) highlightTtsKaraokeVerse(item.verseNum);
+      const item = activeTtsQueue[idx];
+      if (item.verseNum) {
+        const row = document.getElementById(`v_${item.verseNum}`);
+        if (row && row.classList.contains("bm-verse-queued-orange")) {
+          row.classList.remove("bm-verse-queued-orange");
+          row.classList.add("bm-verse-selected");
+        }
+        highlightTtsKaraokeVerse(item.verseNum);
+      }
       try {
         const u = new SpeechSynthesisUtterance(item.text);
         u.lang = getActiveTTSLangCode(true);
@@ -4379,7 +4519,7 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
         u.onerror = (ev) => {
           if (bmUserStopped || mySession !== bmSessionId || ev.error === "canceled" || ev.error === "interrupted") return;
           if (!nativeOk) {
-            playWebViewStreamQueue(queueItems, idx, mySession);
+            playWebViewStreamQueue(activeTtsQueue, idx, mySession);
           } else {
             idx++;
             speakNextNative();
@@ -4387,13 +4527,13 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
         };
         window.speechSynthesis.speak(u);
       } catch (e) {
-        playWebViewStreamQueue(queueItems, idx, mySession);
+        playWebViewStreamQueue(activeTtsQueue, idx, mySession);
       }
     };
     try { window.speechSynthesis.cancel(); } catch (e) {}
     speakNextNative();
   } else {
-    playWebViewStreamQueue(queueItems, 0, mySession);
+    playWebViewStreamQueue(activeTtsQueue, 0, mySession);
   }
 }
 
@@ -4401,7 +4541,42 @@ function startUniversalSpeech(rawText, updateMainBtn = true, autoNext = false) {
   const chunks = splitTextForAudio(rawText, 165).map(c => ({ text: c, verseNum: null }));
   const curBook = getBook(state.bookId);
   const titleStr = currentViewContext.type === "insight" ? "Perspicacia (it)" : (currentViewContext.type === "daily" ? "Scrittura del Giorno" : `${curBook.name} ${state.chapter}`);
-  startQueueSpeech(chunks, updateMainBtn, autoNext, titleStr, "Bibbia Multilingue PRO");
+  startQueueSpeech(chunks, updateMainBtn, autoNext, titleStr, "Bibbia Multilingue PRO", false);
+}
+
+// Costruisce e avvia la lettura intelligente dei versetti selezionati:
+// - Se ci sono versetti ARANCIONI (aggiunti o ritoccati dopo una lettura), legge SOLO quelli!
+// - Altrimenti legge tutti i versetti selezionati (e segna che sono in lettura, così se ne aggiungi altri in corsa vengono accodati!).
+function startSelectedVersesSmartSpeech(updateMainBtn = true) {
+  const curBook = getBook(state.bookId);
+  let targetVerses = [];
+
+  if (pendingOrangeOrder.length > 0) {
+    // Legge solo i versetti arancioni nell'ordine in cui li hai selezionati (o in ordine di versetto)
+    targetVerses = [...pendingOrangeOrder];
+  } else {
+    targetVerses = Array.from(selectedVersesMap.keys()).sort((a, b) => a - b);
+  }
+
+  if (!targetVerses.length) return false;
+
+  const queue = [];
+  targetVerses.forEach(vNum => {
+    spokenVersesSet.add(vNum);
+    const vTxt = selectedVersesMap.get(vNum) || "";
+    const subChunks = splitTextForAudio(vTxt, 165);
+    subChunks.forEach(sc => queue.push({ text: sc, verseNum: vNum }));
+  });
+
+  pendingOrangeVersesSet.clear();
+  pendingOrangeOrder = [];
+
+  if (queue.length > 0) {
+    const rangeLbl = formatSelectedVersesRangeLabel(targetVerses);
+    startQueueSpeech(queue, updateMainBtn, false, `${curBook.name} ${state.chapter}:${rangeLbl}`, "Versetti Selezionati", true);
+    return true;
+  }
+  return false;
 }
 
 function startChapterKaraokeSpeech(startFromVerse = 1) {
@@ -4422,7 +4597,7 @@ function startChapterKaraokeSpeech(startFromVerse = 1) {
     }
   });
   if (queue.length > 0) {
-    startQueueSpeech(queue, true, true, `${curBook.name} ${state.chapter}`, "Lettura Biblica Sincronizzata");
+    startQueueSpeech(queue, true, true, `${curBook.name} ${state.chapter}`, "Lettura Biblica Sincronizzata", false);
   }
 }
 
@@ -4436,6 +4611,9 @@ function toggleChapterTTS() {
   if (cleanSel.length >= 3) {
     startUniversalSpeech(cleanSel, true, false);
     return;
+  }
+  if (selectedVersesMap.size > 0 && document.getElementById("verseActionBar")?.style.display === "flex") {
+    if (startSelectedVersesSmartSpeech(true)) return;
   }
   if (state.selectedVerseText && document.getElementById("verseActionBar")?.style.display === "flex") {
     startUniversalSpeech(state.selectedVerseText, true, false);
@@ -4457,16 +4635,23 @@ function toggleChapterTTS() {
 
 function speakSelectedVerse() {
   bmHaptic(12);
-  const cleanSel = extractCleanSelectedText();
-  const txtToSpeak = cleanSel.length >= 3 ? cleanSel : state.selectedVerseText;
-  if (!txtToSpeak) return;
   if (bmAudioPlaying) {
     stopAllAudio();
     return;
   }
-  startUniversalSpeech(txtToSpeak, false, false);
+  const cleanSel = extractCleanSelectedText();
+  if (cleanSel.length >= 3) {
+    startUniversalSpeech(cleanSel, false, false);
+    return;
+  }
+  if (selectedVersesMap.size > 0) {
+    if (startSelectedVersesSmartSpeech(false)) return;
+  }
+  if (state.selectedVerseText) {
+    startUniversalSpeech(state.selectedVerseText, false, false);
+  }
 }
-    
+      
 function generateVerseCardModal() {
   const book = getBook(state.bookId);
   const vNum = state.selectedVerse || 1;
