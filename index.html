@@ -266,6 +266,22 @@
       border-radius: 6px;
       transition: all 0.22s ease;
     }
+    /* === Karaoke parola per parola: tono su tono con alone leggermente fluorescente (CSS Custom Highlight API) === */
+    ::highlight(bm-word) {                       /* Tema Blu */
+      color: #ffffff;
+      background-color: rgba(120, 205, 255, 0.30);
+      text-shadow: 0 0 6px rgba(150, 222, 255, 0.95), 0 0 14px rgba(79, 195, 247, 0.65);
+    }
+    body.dark-mode ::highlight(bm-word) {        /* Tema Scuro */
+      color: #f4f9ff;
+      background-color: rgba(110, 190, 255, 0.26);
+      text-shadow: 0 0 6px rgba(143, 208, 255, 0.90), 0 0 14px rgba(41, 182, 246, 0.60);
+    }
+    body.oled-mode ::highlight(bm-word) {        /* Tema OLED */
+      color: #ffffff;
+      background-color: rgba(200, 230, 255, 0.20);
+      text-shadow: 0 0 6px rgba(225, 242, 255, 0.95), 0 0 14px rgba(56, 189, 248, 0.55);
+    }
     /* Transizione Cinematografica a 120Hz sul cambio vista/capitolo */
     @keyframes bmViewFadeIn {
       from { opacity: 0.35; transform: translate3d(0, 5px, 0); }
@@ -4155,6 +4171,158 @@ function extractCleanSelectedText() {
     .trim();
 }
 
+// ============================================================================
+// KARAOKE PAROLA PER PAROLA — illumina la parola letta dalla voce.
+// Usa la CSS Custom Highlight API: NON modifica il DOM (nessuno span, nessun rischio per
+// badge, numeri di versetto, selezione del testo, nomi di luogo sottolineati, salvataggi).
+// ============================================================================
+const bmKHL = (typeof CSS !== "undefined" && CSS.highlights && typeof Highlight !== "undefined") ? new Highlight() : null;
+if (bmKHL) CSS.highlights.set("bm-word", bmKHL);
+const bmK = { root: null, dom: [], ptr: 0, toks: [], map: [], cum: [], total: 1, t0: 0, timer: null, boundary: false, cur: -1, lastScroll: 0 };
+let bmMsUnit = Math.min(140, Math.max(25, Number(localStorage.getItem("bm_tts_msunit")) || 58)); // ms per "unità" (≈ carattere) a velocità 1
+let bmKSamples = localStorage.getItem("bm_tts_msunit") ? 5 : 0;   // al primo uso impara più in fretta dalla voce reale
+
+function bmKNorm(s) { return String(s).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ""); }
+function bmKTokenize(text) {
+  const out = [], re = /\S+/g;
+  let m;
+  while ((m = re.exec(text))) out.push({ s: m.index, e: m.index + m[0].length, n: bmKNorm(m[0]), raw: m[0] });
+  return out;
+}
+// Parole realmente presenti nella pagina (escluse numerazione, badge, apici e controlli)
+function bmKBuildDom(root) {
+  const words = [];
+  if (!root) return words;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      const p = node.parentElement;
+      if (!p || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+      if (p.closest(".verse-num, .tag-badge, sup, script, style, button, select, input, textarea")) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  let tn;
+  while ((tn = walker.nextNode())) {
+    const re = /\S+/g;
+    let m;
+    while ((m = re.exec(tn.nodeValue))) {
+      const n = bmKNorm(m[0]);
+      if (n) words.push({ n, node: tn, s: m.index, e: m.index + m[0].length });
+    }
+  }
+  return words;
+}
+// Allinea le parole pronunciate a quelle della pagina (tollera parole mancanti o in più)
+function bmKAlign(toks, dom, ptr) {
+  const map = new Array(toks.length).fill(-1);
+  const idx = [];
+  toks.forEach((t, i) => { if (t.n) idx.push(i); });
+  if (!idx.length || !dom.length) return { map, ptr };
+  const probe = idx.slice(0, 3).map(i => toks[i].n);
+  const matchAt = k => probe.every((w, j) => dom[k + j] && dom[k + j].n === w);
+  let start = -1;
+  for (let k = ptr; k < dom.length && start < 0; k++) if (matchAt(k)) start = k;
+  for (let k = 0; k < Math.min(ptr, dom.length) && start < 0; k++) if (matchAt(k)) start = k;
+  if (start < 0) return { map, ptr };
+  let p = start;
+  idx.forEach(i => {
+    for (let k = p; k < Math.min(dom.length, p + 12); k++) {
+      if (dom[k].n === toks[i].n) { map[i] = k; p = k + 1; return; }
+    }
+  });
+  return { map, ptr: p };
+}
+function bmKClearWord() { if (bmKHL) bmKHL.clear(); bmK.cur = -1; }
+function bmKStopTimer() { if (bmK.timer) { clearInterval(bmK.timer); bmK.timer = null; } }
+function bmKEnsureVisible(range) {
+  const now = Date.now();
+  if (now - bmK.lastScroll < 600) return;
+  const main = document.getElementById("mainContainer");
+  if (!main) return;
+  const rect = range.getBoundingClientRect(), mr = main.getBoundingClientRect();
+  if (!rect.height) return;
+  if (rect.top < mr.top + 30 || rect.bottom > mr.bottom - 70) {
+    bmK.lastScroll = now;
+    const el = range.startContainer.parentElement;
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+}
+function bmKShow(tokIdx) {
+  if (!bmKHL) return;
+  let k = tokIdx;
+  while (k >= 0 && bmK.map[k] < 0) k--;
+  if (k < 0) return;
+  const di = bmK.map[k], w = bmK.dom[di];
+  if (!w || !w.node.isConnected || bmK.cur === di) return;
+  bmK.cur = di;
+  const r = new Range();
+  r.setStart(w.node, w.s);
+  r.setEnd(w.node, w.e);
+  bmKHL.clear();
+  bmKHL.add(r);
+  bmKEnsureVisible(r);
+}
+function bmKIndexAtUnits(units) {
+  let i = bmK.cum.findIndex(c => c >= units);
+  return i < 0 ? bmK.toks.length - 1 : i;
+}
+
+// --- Chiamate dal motore vocale ---
+function bmKaraokeBeginChunk(item) {
+  bmKStopTimer();
+  bmKClearWord();
+  bmK.t0 = 0; bmK.boundary = false; bmK.toks = []; bmK.map = [];
+  if (!bmKHL || !item || !item.text) return;
+  const root = (item.verseNum && document.getElementById("v_" + item.verseNum)) || document.getElementById("mainContainer");
+  if (root !== bmK.root || !bmK.dom.length || !bmK.dom[0].node.isConnected) {
+    bmK.root = root; bmK.dom = bmKBuildDom(root); bmK.ptr = 0;
+  }
+  bmK.toks = bmKTokenize(item.text);
+  const al = bmKAlign(bmK.toks, bmK.dom, bmK.ptr);
+  bmK.map = al.map; bmK.ptr = al.ptr;
+  let c = 0;
+  bmK.cum = bmK.toks.map(t => { c += Math.max(1, t.n.length) + (/[.!?;:]$/.test(t.raw) ? 5 : (/,$/.test(t.raw) ? 2.5 : 0)) + 1; return c; });
+  bmK.total = c || 1;
+}
+// Voce nativa: se il motore invia i confini di parola si usano quelli, altrimenti una stima che si calibra da sola
+function bmKaraokeNativeStart() {
+  bmKStopTimer();
+  bmK.t0 = performance.now();
+  bmK.timer = setInterval(() => {
+    if (bmK.boundary || !bmK.toks.length) return;
+    bmKShow(bmKIndexAtUnits((performance.now() - bmK.t0) * bmTtsRate / bmMsUnit));
+  }, 60);
+}
+function bmKaraokeOnBoundary(ev) {
+  if (!ev || (ev.name && ev.name !== "word") || !bmK.toks.length) return;
+  bmK.boundary = true;
+  const ci = ev.charIndex || 0;
+  let i = 0;
+  for (let k = 0; k < bmK.toks.length; k++) { if (bmK.toks[k].s <= ci) i = k; else break; }
+  bmKShow(i);
+}
+function bmKaraokeNativeEnd() {
+  if (bmK.t0 && !bmK.boundary && bmK.total > 1) {
+    const unit = (performance.now() - bmK.t0) * bmTtsRate / bmK.total;
+    if (unit > 20 && unit < 200) {
+      const w = bmKSamples++ < 3 ? 0.65 : 0.3;
+      bmMsUnit = Math.min(140, Math.max(25, bmMsUnit * (1 - w) + unit * w));
+      try { localStorage.setItem("bm_tts_msunit", String(bmMsUnit)); } catch (e) {}
+    }
+  }
+  bmKStopTimer();
+}
+// Flusso audio (Google TTS): avanzamento proporzionale alla lunghezza delle parole
+function bmKaraokeOnTime(audio) {
+  if (!audio || !isFinite(audio.duration) || audio.duration <= 0 || !bmK.toks.length) return;
+  bmKShow(bmKIndexAtUnits((audio.currentTime / audio.duration) * bmK.total));
+}
+function bmKaraokeReset() {
+  bmKStopTimer();
+  bmKClearWord();
+  bmK.root = null; bmK.dom = []; bmK.ptr = 0; bmK.toks = []; bmK.map = [];
+}
+    
 function clearTtsKaraokeHighlight() {
   document.querySelectorAll(".bm-tts-active-verse").forEach(el => {
     el.classList.remove("bm-tts-active-verse");
@@ -4206,6 +4374,7 @@ function updateMediaSessionMetadata(titleStr, subtitleStr, isPlaying) {
 function stopAllAudio() {
   releaseAudioWakeLock();
   clearTtsKaraokeHighlight();
+  bmKaraokeReset();
   bmSessionId++;
   bmUserStopped = true;
   bmAudioPlaying = false;
@@ -4264,6 +4433,7 @@ function playWebViewStreamQueue(queueItems, idx, sessionId) {
   }
   const item = queueItems[idx];
   if (item.verseNum) highlightTtsKaraokeVerse(item.verseNum);
+  bmKaraokeBeginChunk(item);
   const tl = getActiveTTSLangCode(false);
   const q = encodeURIComponent(item.text);
   const urls = [
@@ -4282,8 +4452,10 @@ function playWebViewStreamQueue(queueItems, idx, sessionId) {
     }
     bmAudioPlayer.src = urls[uIdx++];
     bmAudioPlayer.playbackRate = bmTtsRate;
+    bmAudioPlayer.ontimeupdate = () => { if (sessionId === bmSessionId) bmKaraokeOnTime(bmAudioPlayer); };
     bmAudioPlayer.onended = () => {
       if (!bmUserStopped && bmAudioPlaying && sessionId === bmSessionId) {
+        bmAudioPlayer.ontimeupdate = null;
         playWebViewStreamQueue(queueItems, idx + 1, sessionId);
       }
     };
@@ -4332,12 +4504,15 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
       }
       const item = queueItems[idx];
       if (item.verseNum) highlightTtsKaraokeVerse(item.verseNum);
+      bmKaraokeBeginChunk(item);
       try {
         const u = new SpeechSynthesisUtterance(item.text);
         u.lang = getActiveTTSLangCode(true);
         u.rate = bmTtsRate;
-        u.onstart = () => { nativeOk = true; };
+        u.onstart = () => { nativeOk = true; bmKaraokeNativeStart(); };
+        u.onboundary = (ev) => bmKaraokeOnBoundary(ev);
         u.onend = () => {
+          bmKaraokeNativeEnd();
           if (!bmUserStopped && bmAudioPlaying && mySession === bmSessionId) {
             idx++;
             speakNextNative();
