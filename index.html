@@ -4223,14 +4223,6 @@ function bmKBuildDom(root) {
   }
   return words;
 }
-    let m;
-    while ((m = re.exec(tn.nodeValue))) {
-      const n = bmKNorm(m[0]);
-      if (n) words.push({ n, node: tn, s: m.index, e: m.index + m[0].length });
-    }
-  }
-  return words;
-}
 // Allinea le parole pronunciate a quelle della pagina (stesso tokenizzatore su entrambi i lati).
 // Una parola non trovata resta -1 (non viene forzata su un'altra): il cursore non si blocca mai.
 function bmKAlign(toks, dom, ptr) {
