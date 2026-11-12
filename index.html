@@ -4223,11 +4223,6 @@ function bmKBuildDom(root) {
   }
   return words;
 }
-  const out = [], re = /\S+/g;
-  let m;
-  while ((m = re.exec(text))) out.push({ s: m.index, e: m.index + m[0].length, n: bmKNorm(m[0]), raw: m[0] });
-  return out;
-}
 // Parole realmente presenti nella pagina (escluse numerazione, badge, apici e controlli)
 function bmKBuildDom(root) {
   const words = [];
