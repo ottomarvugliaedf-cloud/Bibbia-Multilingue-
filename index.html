@@ -498,11 +498,15 @@
       font-size: 14px;
       font-weight: 800;
       cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
       transition: transform 0.1s ease, background-color 0.1s ease, box-shadow 0.1s ease;
     }
-    .verse-num, .tag-badge {
+    button, .tab-btn, .nav-btn, .search-btn, .quick-pill, .verse-num, .tag-badge, .pub-ref-badge, #myReadModal {
       -webkit-user-select: none;
       user-select: none;
+      -webkit-touch-callout: none;
     }
     main {
       flex: 1;
@@ -4114,16 +4118,33 @@ function getActiveTTSLangCode(fullLocale = false) {
   if (langName.includes("ukra")) return fullLocale ? "uk-UA" : "uk";
   return fullLocale ? "en-US" : "en";
 }
+function stripPillsOnlyFromText(rawText) {
+  if (!rawText) return "";
+  const tmp = document.createElement("div");
+  // Trasforma i riferimenti biblici e pubblicazioni in .tag-badge (azzurre) e .pub-ref-badge (viola)
+  tmp.innerHTML = typeof formatNoteLinks === "function" ? formatNoteLinks(String(rawText)) : String(rawText);
+  // Rimuove dal clone SOLO le pillole azzurre, le pillole viola, i numeri versetto e gli apici nota
+  tmp.querySelectorAll(".tag-badge, .pub-ref-badge, .verse-num, sup, script, style").forEach(el => el.remove());
+  return tmp.textContent || "";
+}
+
 function cleanTextForSpeech(rawText) {
   if (!rawText) return "";
-  return rawText
+  const withoutPills = stripPillsOnlyFromText(rawText);
+  return withoutPills
     .replace(/<[^>]*>?/gm, " ")
     .replace(/\[[^\]]*\]/g, " ")
+    // Rimuove SOLO le parentesi rimaste vuote (o con soli segni di punteggiatura/spazi) dopo aver tolto le pillole azzurre/viola,
+    // mantenendo invece intatte tutte le parentesi che contengono parole e spiegazioni!
+    .replace(/\([\s,;:–—.\-]*\)/g, " ")
+    .replace(/📝\s*Nota/gi, " ")
+    .replace(/🔗\s*Paralleli/gi, " ")
     .replace(/\b[HG]\d{1,4}\b/gi, " ")
-    .replace(/[{}<>«»""]/g, " ")
+    .replace(/[{}<>«»""“”]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
+
 function splitTextForAudio(text, maxLen = 165) {
   const cleanFull = cleanTextForSpeech(text);
   if (!cleanFull) return [];
@@ -4147,14 +4168,15 @@ function extractCleanSelectedText() {
   const sel = window.getSelection ? window.getSelection() : null;
   if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return "";
   const frag = sel.getRangeAt(0).cloneContents();
-  frag.querySelectorAll(".verse-num, .tag-badge, sup, script, style").forEach(el => el.remove());
+  frag.querySelectorAll(".verse-num, .tag-badge, .pub-ref-badge, sup, script, style").forEach(el => el.remove());
   return (frag.textContent || "")
+    .replace(/\([\s,;:–—.\-]*\)/g, " ")
     .replace(/📝\s*Nota/gi, " ")
     .replace(/🔗\s*Paralleli/gi, " ")
     .replace(/\s+/g, " ")
     .trim();
-}
-
+  }
+    
 function clearTtsKaraokeHighlight() {
   document.querySelectorAll(".bm-tts-active-verse").forEach(el => {
     el.classList.remove("bm-tts-active-verse");
@@ -7275,6 +7297,7 @@ function onMyReadBtnDown(ev) {
   clearTimeout(bmMyReadLongPressTimer);
   bmMyReadLongPressTimer = setTimeout(() => {
     bmMyReadLongPressTriggered = true;
+    try { if (window.getSelection) window.getSelection().removeAllRanges(); } catch (e) {}
     openResetMyReadingModal();
   }, 550);
 }
@@ -7311,9 +7334,9 @@ function openResetMyReadingModal() {
         <span style="font-size:12.5px; color:#9ec9ff;">La memorizzazione riprenderà immediatamente appena confermerai un nuovo capitolo.</span>
       </div>
     </div>
-    <div style="display:flex; gap:10px;">
-      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#062356; --btn-glow:rgba(41,182,246,0.6); background:#062356; flex:1;" onclick="document.getElementById('myReadModal').style.display='none'">Annulla</button>
-      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#1565c0; --btn-glow:rgba(21,101,192,0.7); background:#1565c0; flex:1.3;" onclick="confirmResetMyReading()">🗑️ Azzera memoria</button>
+    <div style="display:flex; gap:10px;" oncontextmenu="event.preventDefault()">
+      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#062356; --btn-glow:rgba(41,182,246,0.6); background:#062356; flex:1;" oncontextmenu="event.preventDefault()" onclick="document.getElementById('myReadModal').style.display='none'">Annulla</button>
+      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#1565c0; --btn-glow:rgba(21,101,192,0.7); background:#1565c0; flex:1.3;" oncontextmenu="event.preventDefault()" onclick="confirmResetMyReading()">🗑️ Azzera memoria</button>
     </div>
   `;
   modal.style.display = "flex";
