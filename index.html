@@ -4128,23 +4128,33 @@ function stripPillsOnlyFromText(rawText) {
   return tmp.textContent || "";
 }
 
+function stripPillsOnlyFromText(rawText) {
+  if (!rawText) return "";
+  const tmp = document.createElement("div");
+  // Trasforma i riferimenti biblici e pubblicazioni in .tag-badge (azzurre) e .pub-ref-badge (viola)
+  tmp.innerHTML = typeof formatNoteLinks === "function" ? formatNoteLinks(String(rawText)) : String(rawText);
+  // Rimuove dal clone SOLO le pillole azzurre, le pillole viola, i numeri versetto e gli apici nota
+  tmp.querySelectorAll(".tag-badge, .pub-ref-badge, .verse-num, sup, script, style").forEach(el => el.remove());
+  return tmp.textContent || "";
+}
+
 function cleanTextForSpeech(rawText) {
   if (!rawText) return "";
   const withoutPills = stripPillsOnlyFromText(rawText);
   return withoutPills
     .replace(/<[^>]*>?/gm, " ")
     .replace(/\[[^\]]*\]/g, " ")
-    // Rimuove SOLO le parentesi rimaste vuote (o con soli segni di punteggiatura/spazi) dopo aver tolto le pillole azzurre/viola,
-    // mantenendo invece intatte tutte le parentesi che contengono parole e spiegazioni!
-    .replace(/\([\s,;:–—.\-]*\)/g, " ")
+    // Rimuove SOLO le parentesi rimaste vuote (o con soli segni/simboli) dopo aver tolto le pillole azzurre/viola
+    .replace(/\([\s,;:–—.\-*^+#~|§°•†‡]*\)/g, " ")
     .replace(/📝\s*Nota/gi, " ")
     .replace(/🔗\s*Paralleli/gi, " ")
     .replace(/\b[HG]\d{1,4}\b/gi, " ")
-    .replace(/[{}<>«»""“”]/g, " ")
+    // Rimuove ^ (accento circonflesso), * (asterisco) e tutti i simboli tecnici/tipografici che non vanno mai letti
+    .replace(/[\^*+#~_|\\/<>«»""“”{}^\u02C6\u0302`´§°•♦▪▸►★☆†‡※]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-}
-
+  }
+    
 function splitTextForAudio(text, maxLen = 165) {
   const cleanFull = cleanTextForSpeech(text);
   if (!cleanFull) return [];
@@ -4170,9 +4180,10 @@ function extractCleanSelectedText() {
   const frag = sel.getRangeAt(0).cloneContents();
   frag.querySelectorAll(".verse-num, .tag-badge, .pub-ref-badge, sup, script, style").forEach(el => el.remove());
   return (frag.textContent || "")
-    .replace(/\([\s,;:–—.\-]*\)/g, " ")
+    .replace(/\([\s,;:–—.\-*^+#~|§°•†‡]*\)/g, " ")
     .replace(/📝\s*Nota/gi, " ")
     .replace(/🔗\s*Paralleli/gi, " ")
+    .replace(/[\^*+#~_|\\/<>«»""“”{}^\u02C6\u0302`´§°•♦▪▸►★☆†‡※]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
   }
