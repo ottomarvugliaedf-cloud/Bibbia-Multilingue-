@@ -4277,19 +4277,40 @@ let bmTtsAutoNextPref = localStorage.getItem("bm_tts_autonext") !== "0";
 
 // Configurazione Multi-Motore: 'classic' | 'neural' | 'jw_offline'
 let bmTtsEngine = localStorage.getItem("bm_tts_engine") || "neural";
-let bmNeuralVoice = localStorage.getItem("bm_neural_voice") || "it-IT-DiegoNeural";
+let bmNeuralVoice = localStorage.getItem("bm_neural_voice") || "default";
 let bmWordKaraokePref = localStorage.getItem("bm_word_karaoke") !== "0";
 
-const BM_NEURAL_VOICES = [
-  { id: "it-IT-DiegoNeural",    short: "👨 Diego",    label: "Diego (Maschile Profondo)" },
-  { id: "it-IT-GiuseppeNeural", short: "👨 Giuseppe", label: "Giuseppe (Maschile Narrativo)" },
-  { id: "it-IT-ElsaNeural",     short: "👩 Elsa",     label: "Elsa (Femminile Chiara)" },
-  { id: "it-IT-IsabellaNeural", short: "👩 Isabella", label: "Isabella (Femminile Calda)" }
-];
+function getAvailableNeuralVoices() {
+  if (!("speechSynthesis" in window)) return [];
+  const voices = window.speechSynthesis.getVoices() || [];
+  // Filtra le voci italiane e dà priorità a quelle di rete, neurali o wavenet
+  const itVoices = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith("it"));
+  itVoices.sort((a, b) => {
+    const aScore = (a.name.toLowerCase().includes("neural") || a.name.toLowerCase().includes("network") || a.name.toLowerCase().includes("wavenet")) ? 2 : 1;
+    const bScore = (b.name.toLowerCase().includes("neural") || b.name.toLowerCase().includes("network") || b.name.toLowerCase().includes("wavenet")) ? 2 : 1;
+    return bScore - aScore;
+  });
+  return itVoices;
+}
 
 function getNeuralVoiceShortName() {
-  const f = BM_NEURAL_VOICES.find(v => v.id === bmNeuralVoice);
-  return f ? f.short.replace(/^[^\s]+\s/, "") : "Diego";
+  const voices = getAvailableNeuralVoices();
+  const found = voices.find(v => v.name === bmNeuralVoice) || voices[0];
+  if (!found) return "Neurale Standard";
+  return found.name.replace(/italiano|italy|google|microsoft/gi, "").trim().slice(0, 16);
+}
+
+function setBmTtsEngine(eng) {
+  bmTtsEngine = eng;
+  safeSaveStorage("bm_tts_engine", eng);
+}
+function setBmNeuralVoice(vName) {
+  bmNeuralVoice = vName;
+  safeSaveStorage("bm_neural_voice", vName);
+}
+function setBmWordKaraoke(val) {
+  bmWordKaraokePref = Boolean(val);
+  safeSaveStorage("bm_word_karaoke", bmWordKaraokePref ? "1" : "0");
 }
 function setBmTtsEngine(eng) {
   bmTtsEngine = eng;
@@ -5014,6 +5035,60 @@ function playClassicNativeOrStreamQueue(queueItems, startIdx, mySession) {
   }
 }
 
+// Riproduzione Coda con Motore NEURALE PRO (Sfrutta le Voci Neurali di Rete del Pixel)
+function playNeuralProQueue(queueItems, idx, sessionId) {
+  if (bmUserStopped || !bmAudioPlaying || sessionId !== bmSessionId) return;
+  if (idx >= queueItems.length) {
+    onSpeechFinishedSession(sessionId);
+    return;
+  }
+  const item = queueItems[idx];
+  if (item.verseNum) {
+    const row = document.getElementById(`v_${item.verseNum}`);
+    if (row && row.classList.contains("bm-verse-queued-orange")) {
+      row.classList.remove("bm-verse-queued-orange");
+      row.classList.add("bm-verse-selected");
+    }
+    highlightTtsKaraokeVerse(item.verseNum);
+  }
+
+  if (!("speechSynthesis" in window)) {
+    playWebViewStreamQueue(queueItems, idx, sessionId);
+    return;
+  }
+
+  try {
+    if (window.speechSynthesis.paused) {
+      try { window.speechSynthesis.resume(); } catch (e) {}
+    }
+    const u = new SpeechSynthesisUtterance(item.text);
+    u.lang = getActiveTTSLangCode(true);
+    u.rate = bmTtsRate;
+
+    // Assegna la voce neurale scelta dall'utente (o la migliore di rete disponibile sul Pixel)
+    const available = getAvailableNeuralVoices();
+    if (available.length > 0) {
+      const selectedVoice = available.find(v => v.name === bmNeuralVoice) || available[0];
+      if (selectedVoice) u.voice = selectedVoice;
+    }
+
+    u.onend = () => {
+      if (!bmUserStopped && bmAudioPlaying && sessionId === bmSessionId) {
+        playNeuralProQueue(queueItems, idx + 1, sessionId);
+      }
+    };
+    u.onerror = () => {
+      if (!bmUserStopped && bmAudioPlaying && sessionId === bmSessionId) {
+        playWebViewStreamQueue(queueItems, idx + 1, sessionId);
+      }
+    };
+
+    window.speechSynthesis.speak(u);
+  } catch (e) {
+    playWebViewStreamQueue(queueItems, idx, sessionId);
+  }
+}
+
 function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, mediaTitle = "", mediaSub = "", isSelectionQueue = false) {
   stopAllAudio();
   if (!queueItems || !queueItems.length) return;
@@ -5030,10 +5105,15 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
     btn.classList.add("active");
     btn.innerHTML = '<span class="tab-icon">⏹️</span><span>Ferma</span>';
   }
-  if (!bmAudioPlayer) {
-    bmAudioPlayer = new Audio();
-  }
 
+  // Sceglie il motore attivo senza fallback ingannevoli:
+  if (bmTtsEngine === "neural") {
+    playNeuralProQueue(activeTtsQueue, 0, mySession);
+  } else {
+    playClassicNativeOrStreamQueue(activeTtsQueue, 0, mySession);
+  }
+}
+    
   // Smistamento intelligente in base al Motore scelto dall'utente:
   if (bmTtsEngine === "jw_offline" && currentViewContext.type === "bible" && !isSelectionQueue) {
     playJwOrOfflineChapterAudio(mySession, activeTtsQueue);
@@ -8423,11 +8503,13 @@ function openTtsSettingsModal() {
     return `<button type="button" class="myread-action-btn" style="flex:1; padding:9px 4px; font-size:12.5px; background:${isSel ? '#00e5ff' : '#062356'}; color:${isSel ? '#041a42' : '#ffffff'}; border-color:${isSel ? '#84ffff' : '#29b6f6'};" onclick="setBmTtsEngine('${e.id}'); openTtsSettingsModal();">${e.label}</button>`;
   }).join("");
 
-  const voiceBtns = BM_NEURAL_VOICES.map(v => {
-    const isSel = bmNeuralVoice === v.id;
-    return `<button type="button" class="myread-action-btn" style="flex:1; min-width:44%; padding:8px 6px; font-size:12.5px; background:${isSel ? '#00e5ff' : '#062356'}; color:${isSel ? '#041a42' : '#ffffff'}; border-color:${isSel ? '#84ffff' : '#29b6f6'};" onclick="setBmNeuralVoice('${v.id}'); openTtsSettingsModal();">${v.short}</button>`;
-  }).join("");
-
+  const neuralList = getAvailableNeuralVoices();
+  const voiceBtns = neuralList.length > 0 ? neuralList.map(v => {
+    const isSel = bmNeuralVoice === v.name;
+    const labelClean = v.name.replace(/italiano|italy|google|microsoft/gi, "").trim().slice(0, 20);
+    return `<button type="button" class="myread-action-btn" style="flex:1; min-width:44%; padding:8px 6px; font-size:12.5px; background:${isSel ? '#00e5ff' : '#062356'}; color:${isSel ? '#041a42' : '#ffffff'}; border-color:${isSel ? '#84ffff' : '#29b6f6'};" onclick="setBmNeuralVoice('${escapeJsStr(v.name)}'); openTtsSettingsModal();">${escapeHtml(labelClean)}</button>`;
+  }).join("") : `<div style="font-size:12px; color:#cfe3ff; text-align:center;">Nessuna voce neurale aggiuntiva rilevata nel sistema.</div>`;
+  
   body.innerHTML = `
     <div style="text-align:center; padding:2px 0 10px 0;" oncontextmenu="event.preventDefault()">
       <div style="font-size:26px; margin-bottom:4px;">🔊</div>
