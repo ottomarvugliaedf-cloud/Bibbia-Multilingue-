@@ -4304,15 +4304,16 @@ function setBmTtsEngine(eng) {
   bmTtsEngine = eng;
   safeSaveStorage("bm_tts_engine", eng);
 }
-function setBmNeuralVoice(vName) {
-  bmNeuralVoice = vName;
-  safeSaveStorage("bm_neural_voice", vName);
+function setBmNeuralVoice(vId) {
+  bmNeuralVoice = vId;
+  safeSaveStorage("bm_neural_voice", vId);
 }
 function setBmWordKaraoke(val) {
   bmWordKaraokePref = Boolean(val);
   safeSaveStorage("bm_word_karaoke", bmWordKaraokePref ? "1" : "0");
+  if (!bmWordKaraokePref) clearWordKaraokeSpan();
 }
-
+    
 // ============================================================================
 // KARAOKE PAROLA-PER-PAROLA CHIRURGICO (Tono-su-Tono, Zero Riquadri, DOM Intatto)
 // ============================================================================
