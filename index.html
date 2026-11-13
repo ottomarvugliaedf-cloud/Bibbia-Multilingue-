@@ -1391,6 +1391,7 @@ body.oled-mode .pub-ref-badge {
     <button class="icon-btn" style="color:var(--text-main);" title="Rimuovi colore" onclick="applyHighlight('')">🚫</button>
     <button class="icon-btn" style="color:var(--text-main);" title="Copia versetto" onclick="copySelectedVerse()">📋</button>
     <button class="icon-btn" style="color:var(--primary-light);" title="Ascolta versetto" onclick="speakSelectedVerse()">🔊</button>
+    <button class="icon-btn" style="color:#00e5ff;" title="Raggi X: Confronto Versioni & Analisi" onclick="openVerseXRayModal()">🔬</button>
     <button class="icon-btn" style="color:var(--primary-light);" title="Lessico Strong" onclick="openStrongModalForVerse()">🏛️</button>
     <button class="icon-btn" style="color:var(--primary-light);" title="Passi Paralleli" onclick="openCrossRefsModalForVerse()">🔗</button>
     <button class="icon-btn" style="color:var(--primary-light);" title="Card Immagine" onclick="generateVerseCardModal()">🖼️</button>
@@ -8134,6 +8135,218 @@ async function executeOmniSearch() {
     obs.observe(mainEl, { childList: true });
   }
 })();
+    
+// ============================================================================
+// 🔬 LENTE ESEGETICA PRO (RAGGI X DEL VERSETTO: Poliglotta + Radici + Dossier)
+// ============================================================================
+async function openVerseXRayModal() {
+  bmChimeHaptic();
+  const book = getBook(state.bookId);
+  const nums = selectedVersesMap.size > 0
+    ? Array.from(selectedVersesMap.keys()).sort((a, b) => a - b)
+    : (state.selectedVerse ? [state.selectedVerse] : [1]);
+  const vNum = nums[0];
+  const refTitle = `${book.name} ${state.chapter}:${vNum}`;
+  const baseText = selectedVersesMap.get(vNum) || state.selectedVerseText || "";
+
+  closeActionBar();
+  const modal = document.getElementById("proModal");
+  const titleEl = document.getElementById("proModalTitle");
+  const bodyEl = document.getElementById("proModalBody");
+  if (!modal || !titleEl || !bodyEl) return;
+
+  titleEl.textContent = `🔬 Raggi X Esegetici — ${refTitle}`;
+  bodyEl.innerHTML = `<div class="loader">🔬 Scansione poliglotta ed esegetica di <b>${escapeHtml(refTitle)}</b> in corso...</div>`;
+  modal.style.display = "flex";
+
+  // 1. Raccoglie le traduzioni da confrontare: le 3 selezionate nei menu + tutte le Bibbie offline già importate in IndexedDB
+  const candidateIds = [];
+  const pushUnique = (id) => { if (id && !candidateIds.includes(id)) candidateIds.push(id); };
+  pushUnique(state.trans1);
+  pushUnique(state.trans2);
+  pushUnique(state.trans3);
+  LOCAL_EPUB_IDS.forEach(pushUnique);
+  ["gb:riveduta", "gb:giovanni", "gb:kjv", "gb:valera"].forEach(pushUnique);
+
+  const comparedList = [];
+  for (const tid of candidateIds) {
+    try {
+      const meta = dynamicCatalog.find(b => b.id === tid) || CORE_BIBLES.find(b => b.id === tid);
+      if (!meta) continue;
+      // Per le edizioni EPUB locali controlla senza lanciare errori se sono state importate
+      if (LOCAL_EPUB_IDS.includes(tid)) {
+        const off = await getOfflineBible(tid);
+        if (!off || !Array.isArray(off.books)) continue;
+        const bObj = off.books.find(b => Number(b.nr) === Number(state.bookId));
+        const cObj = bObj && bObj.chapters ? bObj.chapters.find(c => Number(c.chapter) === Number(state.chapter)) : null;
+        const vObj = cObj && cObj.verses ? cObj.verses.find(v => Number(v.verse) === Number(vNum)) : null;
+        if (vObj && vObj.text) {
+          comparedList.push({ id: tid, name: meta.name, text: stripTagsToPlainText(vObj.text) });
+        }
+      } else {
+        // Usa solo ciò che è già in cache locale o nelle prime 3 traduzioni attive per velocità istantanea (zero attese di rete)
+        const isTop3 = (tid === state.trans1 || tid === state.trans2 || tid === state.trans3);
+        const cacheKey = `bm_ch_${tid}_${state.bookId}_${state.chapter}`;
+        const hasCache = Boolean(localStorage.getItem(cacheKey)) || memoryBibleCache.has(tid);
+        if (isTop3 || hasCache) {
+          const chData = await fetchChapterData(tid, state.bookId, state.chapter);
+          const vObj = (chData || []).find(v => Number(v.verse) === Number(vNum));
+          if (vObj && vObj.text) {
+            comparedList.push({ id: tid, name: meta.name, text: stripTagsToPlainText(vObj.text) });
+          }
+        }
+      }
+    } catch (e) {}
+  }
+
+  // Evidenzia le sfumature lessicali rispetto alla versione principale (trans1)
+  const primaryText = comparedList.length > 0 ? comparedList[0].text : baseText;
+  const baseWordsSet = new Set(
+    primaryText.toLowerCase().replace(/[.,;:!?"'«»()\[\]]/g, "").split(/\s+/).filter(w => w.length > 2)
+  );
+
+  const highlightNuances = (txt, isPrimary) => {
+    if (isPrimary) return escapeHtml(txt);
+    return txt.split(/(\s+)/).map(tok => {
+      const clean = tok.toLowerCase().replace(/[.,;:!?"'«»()\[\]]/g, "");
+      if (clean.length > 3 && !baseWordsSet.has(clean)) {
+        return `<span class="diff-word" style="font-weight:700;">${escapeHtml(tok)}</span>`;
+      }
+      return escapeHtml(tok);
+    }).join("");
+  };
+
+  // 2. Scansione Lessicale & Radici Ebraico/Greche sul versetto
+  const detectedRoots = [];
+  Object.keys(PRO_STRONG_DICT).forEach(k => {
+    const d = PRO_STRONG_DICT[k];
+    const escapedKey = k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const rgx = new RegExp(`(?:^|[^a-zA-ZÀ-ÿ])${escapedKey}(?:$|[^a-zA-ZÀ-ÿ])`, "i");
+    if (rgx.test(primaryText)) {
+      detectedRoots.push({ word: k, ...d });
+    }
+  });
+
+  // 3. Estrazione Parole Chiave di Studio (per ponte rapido a Perspicacia e Concordanza)
+  const stopQuick = new Set(["della","delle","dello","degli","nella","nelle","nello","negli","sulla","sulle","dalla","dalle","alla","alle","questo","questa","questi","queste","quello","quella","quelli","quelle","essere","avere","tutto","tutti","tutte","anche","ancora","perche","quando","quindi","contro","sempre","prima","dopo","sopra","sotto","dentro","fuori","presso","verso","secondo","nostro","vostro","stesso","proprio","quale","quanto","molto","molti","ogni","alcuni","mentre","allora","coloro","colui","hanno","aveva","sarà","sono","erano","stato","disse","dice","fece","fatto"]);
+  const studyTokens = [...new Set(
+    primaryText.replace(/[^a-zA-ZÀ-ÿ\s]/g, " ").split(/\s+/).filter(w => {
+      const low = w.toLowerCase();
+      return low.length >= 4 && !stopQuick.has(low);
+    })
+  )].slice(0, 7);
+
+  // 4. Salva l'oggetto per l'esportazione o il salvataggio diretto in Appunti Studio
+  window.__lastXRayData = {
+    bookId: state.bookId,
+    chapter: state.chapter,
+    verse: vNum,
+    ref: refTitle,
+    primaryText,
+    comparedList,
+    detectedRoots
+  };
+
+  const versionsHtml = comparedList.map((item, idx) => `
+    <div class="result-card" style="cursor:default; margin-bottom:7px; border-left:${idx === 0 ? '4px solid #00e5ff' : '3px solid var(--primary-light)'};">
+      <div class="result-ref" style="font-size:12.5px; display:flex; justify-content:space-between; align-items:center;">
+        <span>${escapeHtml(item.name)}</span>
+        ${idx === 0 ? '<span class="tag-badge" style="background:#00e5ff; color:#041a42; font-size:10.5px;">Base</span>' : ''}
+      </div>
+      <div style="font-size:14.5px; line-height:1.55; margin-top:3px;">${highlightNuances(item.text, idx === 0)}</div>
+    </div>
+  `).join("");
+
+  const rootsHtml = detectedRoots.length > 0 ? `
+    <div class="section-title"><span>🏛️ Radici Ebraico / Greche nel Versetto</span><span>${detectedRoots.length}</span></div>
+    ${detectedRoots.map(r => `
+      <div class="result-card" style="cursor:default; margin-bottom:6px;">
+        <div class="result-ref" style="font-size:13px;">
+          ${escapeHtml(r.word.toUpperCase())} • <span class="tag-badge">${escapeHtml(r.code)}</span>
+        </div>
+        <div style="font-weight:800; color:#84ffff; font-size:13.5px; margin:2px 0;">${escapeHtml(r.orig)}</div>
+        <div style="font-size:12.5px; color:var(--text-muted); line-height:1.4;">${escapeHtml(r.def)}</div>
+      </div>
+    `).join("")}
+  ` : "";
+
+  const studyPillsHtml = studyTokens.length > 0 ? `
+    <div class="section-title"><span>📚 Ponte Rapido a Perspicacia & Concordanza</span></div>
+    <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
+      ${studyTokens.map(w => `
+        <span class="tag-badge" style="padding:5px 10px; font-size:12.5px; background:var(--primary-main); color:#fff;" onclick="searchWordInInsight('${escapeJsStr(w)}')" title="Cerca in Perspicacia">📚 ${escapeHtml(w)}</span>
+        <span class="tag-badge" style="padding:5px 10px; font-size:12.5px;" onclick="searchWordInConcordance('${escapeJsStr(w)}')" title="Cerca in Concordanza">🔍 ${escapeHtml(w)}</span>
+      `).join("")}
+    </div>
+  ` : "";
+
+  bodyEl.innerHTML = `
+    <div style="font-size:12px; color:#9ec9ff; margin-bottom:8px;">
+      Confronto simultaneo su <b>${comparedList.length} edizioni</b> (le variazioni lessicali rispetto alla versione principale sono evidenziate):
+    </div>
+    ${versionsHtml}
+    ${rootsHtml}
+    ${studyPillsHtml}
+    <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
+      <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,176,255,0.75); background:#1565c0; flex:1;" onclick="copyXRayComparisonReport(this)">
+        📋 Copia Quadro Comparativo
+      </button>
+      <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#2e7d32; --btn-glow:rgba(76,175,80,0.75); background:#2e7d32; flex:1;" onclick="saveXRayAsStudyNote()">
+        📝 Salva in Appunti Studio
+      </button>
+    </div>
+  `;
+}
+
+function buildXRayReportString() {
+  const d = window.__lastXRayData;
+  if (!d) return "";
+  const lines = [
+    `━━━ 🔬 QUADRO COMPARATIVO: ${d.ref} ━━━`,
+    ...d.comparedList.map(c => `• [${c.name.replace(/^[^\s]+\s/, "")}]\n  "${c.text}"`),
+  ];
+  if (d.detectedRoots && d.detectedRoots.length > 0) {
+    lines.push(``, `🏛️ Radici Lessicali:`);
+    d.detectedRoots.forEach(r => {
+      lines.push(`• ${r.word.toUpperCase()} (${r.code}) — ${r.orig}: ${r.def}`);
+    });
+  }
+  lines.push(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+  return lines.join("\n");
+}
+
+function copyXRayComparisonReport(btnEl) {
+  bmChimeHaptic();
+  const txt = buildXRayReportString();
+  if (!txt) return;
+  copyPubRefToClipboard(txt);
+  if (btnEl) btnEl.textContent = "✔ Quadro Copiato!";
+}
+
+function saveXRayAsStudyNote() {
+  bmChimeHaptic();
+  const d = window.__lastXRayData;
+  if (!d) return;
+  const reportText = buildXRayReportString();
+  const noteRef = `${d.ref} (Raggi X)`;
+  const existingIdx = state.notes.findIndex(n => n.ref === noteRef);
+  const noteObj = {
+    id: (existingIdx > -1 && state.notes[existingIdx].id) ? state.notes[existingIdx].id : Date.now(),
+    bookId: d.bookId,
+    chapter: d.chapter,
+    verse: d.verse,
+    ref: noteRef,
+    verseText: d.primaryText,
+    text: reportText,
+    tags: ["raggix", "confronto"],
+    date: new Date().toLocaleDateString("it-IT")
+  };
+  if (existingIdx > -1) state.notes[existingIdx] = noteObj;
+  else state.notes.unshift(noteObj);
+  safeSaveStorage("bm_notes", JSON.stringify(state.notes));
+  closeProModal();
+  showNotesView();
+}
 </script>
 </body>
 </html>
