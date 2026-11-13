@@ -4281,10 +4281,10 @@ let bmNeuralVoice = localStorage.getItem("bm_neural_voice") || "diego";
 let bmWordKaraokePref = localStorage.getItem("bm_word_karaoke") !== "0";
 
 const BM_NEURAL_VOICES = [
-  { id: "diego",    short: "👨 Diego",    edge: "it-IT-DiegoNeural",    polly: "Adriano" },
-  { id: "giuseppe", short: "👨 Giuseppe", edge: "it-IT-GiuseppeNeural", polly: "Giorgio" },
-  { id: "isabella", short: "👩 Isabella", edge: "it-IT-IsabellaNeural", polly: "Bianca"  },
-  { id: "elsa",     short: "👩 Elsa",     edge: "it-IT-ElsaNeural",     polly: "Carla"   }
+  { id: "diego",    short: "👨 Diego",    edge: "it-IT-DiegoNeural",    edgeAlt: ["it-IT-DiegoNeural"],    polly: "Giorgio" },
+  { id: "giuseppe", short: "👨 Giuseppe", edge: "it-IT-GiuseppeMultilingualNeural", edgeAlt: ["it-IT-GiuseppeMultilingualNeural", "it-IT-GiuseppeNeural", "it-IT-DiegoNeural"], polly: "Giorgio" },
+  { id: "isabella", short: "👩 Isabella", edge: "it-IT-IsabellaNeural", edgeAlt: ["it-IT-IsabellaNeural"], polly: "Bianca"  },
+  { id: "elsa",     short: "👩 Elsa",     edge: "it-IT-ElsaNeural",     edgeAlt: ["it-IT-ElsaNeural"],     polly: "Carla"   }
 ];
 
 if (!BM_NEURAL_VOICES.some(v => v.id === bmNeuralVoice)) {
@@ -4416,10 +4416,16 @@ function getNeuralVoiceForCurrentLang() {
   return bmNeuralVoice || "it-IT-DiegoNeural";
 }
 
+const EDGE_TTS_TOKEN = "6A5AA1D4EAFF4E9FB37E23D68491D6F4";
+const EDGE_TTS_CHROMIUM = "143.0.3650.75";
+let edgeClockSkewSec = 0;
+
 async function generateEdgeSecMsGec() {
-  const ticks = Math.floor((Date.now() / 1000 + 11644473600) / 300) * 300 * 1e7;
-  const str = `${ticks.toFixed(0)}6A5AA1D4EAFF4E9FB37E23D68491D6F4`;
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+  const unixSec = Math.floor(Date.now() / 1000) + edgeClockSkewSec;
+  let ticks = BigInt(unixSec) + 11644473600n;
+  ticks -= ticks % 300n;
+  ticks *= 10000000n;
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(ticks.toString() + EDGE_TTS_TOKEN));
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("").toUpperCase();
 }
 
@@ -4428,7 +4434,7 @@ function synthesizeEdgeNeuralChunk(text, voiceName, rateFloat) {
     try {
       const reqId = Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b => b.toString(16).padStart(2, "0")).join("");
       const secMsGec = await generateEdgeSecMsGec();
-      const wsUrl = `wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?TrustedClientToken=6A5AA1D4EAFF4E9FB37E23D68491D6F4&Sec-MS-GEC=${secMsGec}&Sec-MS-GEC-Version=1-130.0.2849.68&ConnectionId=${reqId}`;
+      const wsUrl = `wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?TrustedClientToken=${EDGE_TTS_TOKEN}&Sec-MS-GEC=${secMsGec}&Sec-MS-GEC-Version=1-${EDGE_TTS_CHROMIUM}&ConnectionId=${reqId}`;
       const ws = new WebSocket(wsUrl);
       ws.binaryType = "arraybuffer";
 
@@ -4437,7 +4443,7 @@ function synthesizeEdgeNeuralChunk(text, voiceName, rateFloat) {
       let settled = false;
       const timeout = setTimeout(() => {
         if (!settled) { settled = true; try { ws.close(); } catch (e) {} reject(new Error("EDGE_TIMEOUT")); }
-      }, 7500);
+      }, 12000);
 
       ws.onopen = () => {
         const cfg = JSON.stringify({
@@ -4448,7 +4454,7 @@ function synthesizeEdgeNeuralChunk(text, voiceName, rateFloat) {
         const ratePct = Math.round((rateFloat - 1.0) * 100);
         const rateStr = (ratePct >= 0 ? "+" : "") + ratePct + "%";
         const safeXmlText = String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        const ssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='it-IT'><voice name='${voiceName}'><prosody pitch='+0Hz' rate='${rateStr}' volume='+0%'>${safeXmlText}</prosody></voice></speak>`;
+        const ssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='${String(voiceName).split('-').slice(0,2).join('-')}'><voice name='${voiceName}'><prosody pitch='+0Hz' rate='${rateStr}' volume='+0%'>${safeXmlText}</prosody></voice></speak>`;
         ws.send(`X-RequestId:${reqId}\r\nContent-Type:application/ssml+xml\r\nX-Timestamp:${new Date().toISOString()}Z\r\nPath:ssml\r\n\r\n${ssml}`);
       };
 
@@ -4494,6 +4500,11 @@ function synthesizeEdgeNeuralChunk(text, voiceName, rateFloat) {
       ws.onerror = () => {
         clearTimeout(timeout);
         if (!settled) { settled = true; reject(new Error("EDGE_WS_ERROR")); }
+      };
+
+      ws.onclose = () => {
+        clearTimeout(timeout);
+        if (!settled) { settled = true; reject(new Error("EDGE_WS_CLOSED")); }
       };
     } catch (err) {
       reject(err);
@@ -4852,25 +4863,76 @@ function playWebViewStreamQueue(queueItems, idx, sessionId) {
   tryNextUrl();
 }
 
-// Costruisce la catena di streaming HTTPS per i 4 lettori neurali (compatibile al 100% con AppsGeyser WebView)
-function buildNeuralStreamUrls(text, voiceObj) {
-  const q = encodeURIComponent(text);
-  const edgeVoice = voiceObj.edge;
-  const pollyVoice = voiceObj.polly;
-  const ratePct = Math.round((bmTtsRate - 1.0) * 100);
-  const rateParam = (ratePct >= 0 ? "+" : "") + ratePct + "%";
-  return [
-    `https://tts.travisvn.com/?t=${q}&v=${edgeVoice}&r=${encodeURIComponent(rateParam)}`,
-    `https://edge-tts.vercel.app/api/tts?text=${q}&voice=${edgeVoice}`,
-    `https://api.streamelements.com/kappa/v2/speech?voice=${pollyVoice}&text=${q}`,
-    `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=${getActiveTTSLangCode(false)}&q=${q}`
-  ];
+const bmNeuralBlobCache = new Map();
+let bmNeuralFailStreak = 0;
+
+function bmNeuralNotify(msg) {
+  try {
+    let el = document.getElementById("bmNeuralNotice");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "bmNeuralNotice";
+      el.style.cssText = "position:fixed;left:12px;right:12px;bottom:84px;z-index:99999;background:#062356;color:#fff;border:1px solid #29b6f6;border-radius:12px;padding:10px 14px;font-size:13px;text-align:center;";
+      document.body.appendChild(el);
+    }
+    el.textContent = msg;
+    el.style.display = "block";
+    clearTimeout(el._t);
+    el._t = setTimeout(() => { el.style.display = "none"; }, 5000);
+  } catch (e) {}
 }
 
-// Riproduzione Coda con Motore NEURALE PRO via Stream HTTPS diretto (Zero blocchi WebView)
+function getEdgeVoiceCandidates(vObj) {
+  const loc = getActiveTTSLangCode(true);
+  if (loc.startsWith("it")) return (vObj.edgeAlt && vObj.edgeAlt.length) ? vObj.edgeAlt : [vObj.edge];
+  return [getNeuralVoiceForCurrentLang()];
+}
+
+function fetchEdgeBlobForText(text, vObj) {
+  const key = vObj.id + "|" + bmTtsRate + "|" + text;
+  if (bmNeuralBlobCache.has(key)) return bmNeuralBlobCache.get(key);
+  const prom = (async () => {
+    const voices = getEdgeVoiceCandidates(vObj);
+    let lastErr = null;
+    for (const v of voices) {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          return await synthesizeEdgeNeuralChunk(text, v, bmTtsRate);
+        } catch (e) {
+          lastErr = e;
+          if (attempt === 0) edgeClockSkewSec = edgeClockSkewSec === 0 ? 30 : 0;
+        }
+      }
+    }
+    throw lastErr || new Error("EDGE_FAILED");
+  })();
+  bmNeuralBlobCache.set(key, prom);
+  prom.catch(() => bmNeuralBlobCache.delete(key));
+  if (bmNeuralBlobCache.size > 6) {
+    const first = bmNeuralBlobCache.keys().next().value;
+    const old = bmNeuralBlobCache.get(first);
+    bmNeuralBlobCache.delete(first);
+    old.then(r => { try { URL.revokeObjectURL(r.blobUrl); } catch (e) {} }).catch(() => {});
+  }
+  return prom;
+}
+
+function buildNeuralFallbackUrls(text, vObj) {
+  const q = encodeURIComponent(text.slice(0, 190));
+  const tl = getActiveTTSLangCode(false);
+  const urls = [];
+  if (tl === "it") {
+    urls.push({ url: `https://api.streamelements.com/kappa/v2/speech?voice=${vObj.polly}&text=${q}` });
+  }
+  urls.push({ url: `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=${tl}&q=${q}` });
+  urls.push({ url: `https://translate.googleapis.com/translate_tts?client=tw-ob&ie=UTF-8&tl=${tl}&q=${q}` });
+  return urls;
+}
+
 function playNeuralProQueue(queueItems, idx, sessionId) {
   if (bmUserStopped || !bmAudioPlaying || sessionId !== bmSessionId) return;
   if (idx >= queueItems.length) {
+    bmNeuralFailStreak = 0;
     onSpeechFinishedSession(sessionId);
     return;
   }
@@ -4885,42 +4947,54 @@ function playNeuralProQueue(queueItems, idx, sessionId) {
   }
 
   const vObj = BM_NEURAL_VOICES.find(v => v.id === bmNeuralVoice) || BM_NEURAL_VOICES[0];
-  const urls = buildNeuralStreamUrls(item.text, vObj);
-  let uIdx = 0;
   if (!bmAudioPlayer) bmAudioPlayer = new Audio();
+  const alive = () => !bmUserStopped && bmAudioPlaying && sessionId === bmSessionId;
+  const goNext = () => { if (alive()) playNeuralProQueue(queueItems, idx + 1, sessionId); };
 
-  const tryNextNeuralUrl = () => {
-    if (bmUserStopped || !bmAudioPlaying || sessionId !== bmSessionId) return;
-    if (uIdx >= urls.length) {
-      playNeuralProQueue(queueItems, idx + 1, sessionId);
-      return;
-    }
-    const currentUrl = urls[uIdx++];
-    const isEdgeUrl = uIdx <= 2;
-    bmAudioPlayer.src = currentUrl;
-    bmAudioPlayer.playbackRate = isEdgeUrl ? 1.0 : bmTtsRate;
-
-    bmAudioPlayer.onended = () => {
-      if (!bmUserStopped && bmAudioPlaying && sessionId === bmSessionId) {
-        playNeuralProQueue(queueItems, idx + 1, sessionId);
-      }
-    };
-    bmAudioPlayer.onerror = () => {
-      if (!bmUserStopped && bmAudioPlaying && sessionId === bmSessionId) {
-        tryNextNeuralUrl();
-      }
-    };
-    const p = bmAudioPlayer.play();
-    if (p !== undefined) {
-      p.catch(() => {
-        if (!bmUserStopped && bmAudioPlaying && sessionId === bmSessionId) {
-          tryNextNeuralUrl();
-        }
-      });
-    }
+  const onChunkOk = () => {
+    bmNeuralFailStreak = 0;
+    const nxt = queueItems[idx + 1];
+    if (nxt && nxt.text) fetchEdgeBlobForText(nxt.text, vObj).catch(() => {});
   };
 
-  tryNextNeuralUrl();
+  const playFallbacks = () => {
+    const list = buildNeuralFallbackUrls(item.text, vObj);
+    let i = 0;
+    const tryNext = () => {
+      if (!alive()) return;
+      if (i >= list.length) {
+        bmNeuralFailStreak++;
+        if (bmNeuralFailStreak >= 3) {
+          bmNeuralNotify("Voce Neurale non raggiungibile: controlla la connessione internet.");
+          stopAllAudio();
+          return;
+        }
+        goNext();
+        return;
+      }
+      const f = list[i++];
+      bmAudioPlayer.onended = () => { onChunkOk(); goNext(); };
+      bmAudioPlayer.onerror = () => tryNext();
+      bmAudioPlayer.src = f.url;
+      bmAudioPlayer.playbackRate = bmTtsRate;
+      const p = bmAudioPlayer.play();
+      if (p && p.catch) p.catch(() => tryNext());
+    };
+    tryNext();
+  };
+
+  fetchEdgeBlobForText(item.text, vObj).then(res => {
+    if (!alive()) return;
+    bmAudioPlayer.onended = () => { goNext(); };
+    bmAudioPlayer.onerror = () => { if (alive()) playFallbacks(); };
+    bmAudioPlayer.src = res.blobUrl;
+    bmAudioPlayer.playbackRate = 1.0;
+    const p = bmAudioPlayer.play();
+    if (p && p.catch) p.catch(() => { if (alive()) playFallbacks(); });
+    onChunkOk();
+  }).catch(() => {
+    if (alive()) playFallbacks();
+  });
 }
 
 // Riproduzione Motore 3: Audio Ufficiale JW.org / File MP3 Offline
