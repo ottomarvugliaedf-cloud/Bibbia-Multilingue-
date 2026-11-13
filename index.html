@@ -2577,7 +2577,7 @@ function renderSettingsDrawerContent() {
         <div class="bm-set-row">
           <span>Lettore Neurale (IT)</span>
           <div class="bm-seg-group">
-            ${getAvailableNeuralVoices().slice(0, 4).map((v, idx) => `<button type="button" class="bm-seg-btn ${bmNeuralVoice === v.name ? 'active' : ''}" onclick="setBmNeuralVoice('${escapeJsStr(v.name)}'); renderSettingsDrawerContent();">Voce ${idx + 1}</button>`).join("") || `<span style="font-size:11.5px; padding:4px 8px; color:#9ec9ff;">Predefinita</span>`}
+            ${BM_NEURAL_VOICES.map(v => `<button type="button" class="bm-seg-btn ${bmNeuralVoice === v.id ? 'active' : ''}" onclick="setBmNeuralVoice('${v.id}'); renderSettingsDrawerContent();">${v.short}</button>`).join("")}
           </div>
         </div>
         <div class="bm-set-row">
@@ -4281,18 +4281,14 @@ let bmNeuralVoice = localStorage.getItem("bm_neural_voice") || "diego";
 let bmWordKaraokePref = localStorage.getItem("bm_word_karaoke") !== "0";
 
 const BM_NEURAL_VOICES = [
-  { id: "diego",    short: "👨 Diego",    edge: "it-IT-DiegoNeural",    polly: "Adriano", pitch: 0.92 },
-  { id: "giuseppe", short: "👨 Giuseppe", edge: "it-IT-GiuseppeNeural", polly: "Giorgio", pitch: 1.0  },
-  { id: "isabella", short: "👩 Isabella", edge: "it-IT-IsabellaNeural", polly: "Bianca",  pitch: 1.0  },
-  { id: "elsa",     short: "👩 Elsa",     edge: "it-IT-ElsaNeural",     polly: "Carla",   pitch: 1.05 }
+  { id: "diego",    short: "👨 Diego",    edge: "it-IT-DiegoNeural",    polly: "Adriano" },
+  { id: "giuseppe", short: "👨 Giuseppe", edge: "it-IT-GiuseppeNeural", polly: "Giorgio" },
+  { id: "isabella", short: "👩 Isabella", edge: "it-IT-IsabellaNeural", polly: "Bianca"  },
+  { id: "elsa",     short: "👩 Elsa",     edge: "it-IT-ElsaNeural",     polly: "Carla"   }
 ];
 
 if (!BM_NEURAL_VOICES.some(v => v.id === bmNeuralVoice)) {
   bmNeuralVoice = "diego";
-}
-
-function getAvailableNeuralVoices() {
-  return BM_NEURAL_VOICES.map(v => ({ name: v.id, short: v.short }));
 }
 
 function getNeuralVoiceShortName() {
@@ -4856,17 +4852,29 @@ function playWebViewStreamQueue(queueItems, idx, sessionId) {
   tryNextUrl();
 }
 
-// Riproduzione Coda con Motore NEURALE PRO + Karaoke Parola-per-Parola al millisecondo
-async function playNeuralProQueue(queueItems, idx, sessionId) {
+// Costruisce la catena di streaming HTTPS per i 4 lettori neurali (compatibile al 100% con AppsGeyser WebView)
+function buildNeuralStreamUrls(text, voiceObj) {
+  const q = encodeURIComponent(text);
+  const edgeVoice = voiceObj.edge;
+  const pollyVoice = voiceObj.polly;
+  const ratePct = Math.round((bmTtsRate - 1.0) * 100);
+  const rateParam = (ratePct >= 0 ? "+" : "") + ratePct + "%";
+  return [
+    `https://tts.travisvn.com/?t=${q}&v=${edgeVoice}&r=${encodeURIComponent(rateParam)}`,
+    `https://edge-tts.vercel.app/api/tts?text=${q}&voice=${edgeVoice}`,
+    `https://api.streamelements.com/kappa/v2/speech?voice=${pollyVoice}&text=${q}`,
+    `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=${getActiveTTSLangCode(false)}&q=${q}`
+  ];
+}
+
+// Riproduzione Coda con Motore NEURALE PRO via Stream HTTPS diretto (Zero blocchi WebView)
+function playNeuralProQueue(queueItems, idx, sessionId) {
   if (bmUserStopped || !bmAudioPlaying || sessionId !== bmSessionId) return;
   if (idx >= queueItems.length) {
     onSpeechFinishedSession(sessionId);
     return;
   }
   const item = queueItems[idx];
-  // Salta il titolo sintetico iniziale se vogliamo partire subito col versetto 1, oppure leggilo senza karaoke
-  const isSyntheticIntro = idx === 0 && item.verseNum === 1 && /, capitolo \d+\.$/.test(item.text);
-
   if (item.verseNum) {
     const row = document.getElementById(`v_${item.verseNum}`);
     if (row && row.classList.contains("bm-verse-queued-orange")) {
@@ -4876,62 +4884,46 @@ async function playNeuralProQueue(queueItems, idx, sessionId) {
     highlightTtsKaraokeVerse(item.verseNum);
   }
 
-  try {
-    const voice = getNeuralVoiceForCurrentLang();
-    const { blobUrl, wordBoundaries } = await synthesizeEdgeNeuralChunk(item.text, voice, bmTtsRate);
-    if (bmUserStopped || !bmAudioPlaying || sessionId !== bmSessionId) {
-      URL.revokeObjectURL(blobUrl);
+  const vObj = BM_NEURAL_VOICES.find(v => v.id === bmNeuralVoice) || BM_NEURAL_VOICES[0];
+  const urls = buildNeuralStreamUrls(item.text, vObj);
+  let uIdx = 0;
+  if (!bmAudioPlayer) bmAudioPlayer = new Audio();
+
+  const tryNextNeuralUrl = () => {
+    if (bmUserStopped || !bmAudioPlaying || sessionId !== bmSessionId) return;
+    if (uIdx >= urls.length) {
+      playNeuralProQueue(queueItems, idx + 1, sessionId);
       return;
     }
-    if (!bmAudioPlayer) bmAudioPlayer = new Audio();
-    bmAudioPlayer.src = blobUrl;
-    bmAudioPlayer.playbackRate = 1.0; // La velocità è già scolpita nel prosody SSML neurale per non deformare il timbro!
-
-    const scopeEl = isSyntheticIntro ? null : resolveKaraokeScopeEl(item.verseNum);
-    let lastWordIdx = -1;
-
-    if (bmWordKaraokePref && scopeEl && wordBoundaries.length > 0) {
-      if (bmActiveWordTimer) clearInterval(bmActiveWordTimer);
-      bmActiveWordTimer = setInterval(() => {
-        if (!bmAudioPlayer || bmUserStopped || sessionId !== bmSessionId) return;
-        const curMs = bmAudioPlayer.currentTime * 1000;
-        let activeW = -1;
-        for (let k = 0; k < wordBoundaries.length; k++) {
-          if (curMs + 35 >= wordBoundaries[k].offsetMs) activeW = k;
-          else break;
-        }
-        if (activeW >= 0 && activeW !== lastWordIdx) {
-          lastWordIdx = activeW;
-          highlightNthWordInScope(scopeEl, activeW, wordBoundaries[activeW].text);
-        }
-      }, 28);
-    }
+    const currentUrl = urls[uIdx++];
+    const isEdgeUrl = uIdx <= 2;
+    bmAudioPlayer.src = currentUrl;
+    bmAudioPlayer.playbackRate = isEdgeUrl ? 1.0 : bmTtsRate;
 
     bmAudioPlayer.onended = () => {
-      clearWordKaraokeSpan();
-      URL.revokeObjectURL(blobUrl);
       if (!bmUserStopped && bmAudioPlaying && sessionId === bmSessionId) {
         playNeuralProQueue(queueItems, idx + 1, sessionId);
       }
     };
     bmAudioPlayer.onerror = () => {
-      clearWordKaraokeSpan();
-      URL.revokeObjectURL(blobUrl);
       if (!bmUserStopped && bmAudioPlaying && sessionId === bmSessionId) {
-        playClassicNativeOrStreamQueue(queueItems, idx, sessionId);
+        tryNextNeuralUrl();
       }
     };
-    await bmAudioPlayer.play();
-  } catch (err) {
-    // Se si è offline o il WebSocket non risponde, passa senza interruzioni al motore Classico
-    clearWordKaraokeSpan();
-    if (!bmUserStopped && bmAudioPlaying && sessionId === bmSessionId) {
-      playClassicNativeOrStreamQueue(queueItems, idx, sessionId);
+    const p = bmAudioPlayer.play();
+    if (p !== undefined) {
+      p.catch(() => {
+        if (!bmUserStopped && bmAudioPlaying && sessionId === bmSessionId) {
+          tryNextNeuralUrl();
+        }
+      });
     }
-  }
+  };
+
+  tryNextNeuralUrl();
 }
 
-// Riproduzione Motore 3: Audio Ufficiale JW.org / File MP3 Offline con sincronizzazione versetti
+// Riproduzione Motore 3: Audio Ufficiale JW.org / File MP3 Offline
 async function playJwOrOfflineChapterAudio(sessionId, fallbackQueue) {
   try {
     const { url, markers } = await fetchJwOfficialChapterAudio(state.bookId, state.chapter);
@@ -4965,7 +4957,6 @@ async function playJwOrOfflineChapterAudio(sessionId, fallbackQueue) {
     };
     await bmAudioPlayer.play();
   } catch (e) {
-    // Se per la vista aperta (es. Perspicacia o Note) non c'è un file MP3 di capitolo, usa Neurale PRO!
     if (!bmUserStopped && bmAudioPlaying && sessionId === bmSessionId) {
       playNeuralProQueue(fallbackQueue, 0, sessionId);
     }
@@ -4973,182 +4964,7 @@ async function playJwOrOfflineChapterAudio(sessionId, fallbackQueue) {
 }
 
 function playClassicNativeOrStreamQueue(queueItems, startIdx, mySession) {
-  if ("speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined") {
-    let idx = startIdx;
-    let nativeOk = false;
-    const speakNextNative = () => {
-      if (bmUserStopped || !bmAudioPlaying || mySession !== bmSessionId) return;
-      if (idx >= activeTtsQueue.length) {
-        onSpeechFinishedSession(mySession);
-        return;
-      }
-      const item = activeTtsQueue[idx];
-      if (item.verseNum) {
-        const row = document.getElementById(`v_${item.verseNum}`);
-        if (row && row.classList.contains("bm-verse-queued-orange")) {
-          row.classList.remove("bm-verse-queued-orange");
-          row.classList.add("bm-verse-selected");
-        }
-        highlightTtsKaraokeVerse(item.verseNum);
-      }
-      try {
-        const u = new SpeechSynthesisUtterance(item.text);
-        u.lang = getActiveTTSLangCode(true);
-        u.rate = bmTtsRate;
-        u.onstart = () => { nativeOk = true; };
-        u.onend = () => {
-          if (!bmUserStopped && bmAudioPlaying && mySession === bmSessionId) {
-            idx++;
-            speakNextNative();
-          }
-        };
-        u.onerror = (ev) => {
-          if (bmUserStopped || mySession !== bmSessionId || ev.error === "canceled" || ev.error === "interrupted") return;
-          if (!nativeOk) {
-            playWebViewStreamQueue(activeTtsQueue, idx, mySession);
-          } else {
-            idx++;
-            speakNextNative();
-          }
-        };
-        window.speechSynthesis.speak(u);
-      } catch (e) {
-        playWebViewStreamQueue(activeTtsQueue, idx, mySession);
-      }
-    };
-    try { window.speechSynthesis.cancel(); } catch (e) {}
-    speakNextNative();
-  } else {
-    playWebViewStreamQueue(activeTtsQueue, startIdx, mySession);
-  }
-}
-
-// Calcola i pesi temporali di ogni parola del testo (inclusi piccoli respiri su virgole/punti)
-// per sincronizzare al millisecondo il Karaoke Tono-su-Tono con la durata reale del file audio!
-function buildSyllableWordTimings(rawText) {
-  const tokens = String(rawText || "").trim().split(/\s+/).filter(Boolean);
-  if (!tokens.length) return [];
-  let totalWeight = 0;
-  const items = tokens.map(tok => {
-    const clean = tok.replace(/[^a-zA-ZÀ-ÿ0-9]/g, "");
-    let w = Math.max(1.8, clean.length * 1.0);
-    if (/[,;:]$/.test(tok)) w += 3.2;
-    else if (/[.!?…]$/.test(tok)) w += 5.5;
-    totalWeight += w;
-    return { text: clean || tok, weight: w };
-  });
-  let acc = 0;
-  return items.map(it => {
-    const startRatio = acc / totalWeight;
-    acc += it.weight;
-    return { text: it.text, startRatio, endRatio: acc / totalWeight };
-  });
-}
-
-// Costruisce la lista di endpoint HTTPS Neurali per il lettore scelto (funziona in ogni WebView Android!)
-function buildNeuralStreamUrls(text, voiceObj) {
-  const q = encodeURIComponent(text);
-  const edgeVoice = voiceObj.edge;
-  const pollyVoice = voiceObj.polly;
-  const ratePct = Math.round((bmTtsRate - 1.0) * 100);
-  const rateParam = (ratePct >= 0 ? "+" : "") + ratePct + "%";
-  return [
-    // 1. Endpoint HTTPS diretto Edge Neural TTS (Restituisce MP3 con Diego, Giuseppe, Isabella, Elsa)
-    `https://tts.travisvn.com/?t=${q}&v=${edgeVoice}&r=${encodeURIComponent(rateParam)}`,
-    // 2. Secondo Endpoint HTTPS Edge Neural TTS
-    `https://edge-tts.vercel.app/api/tts?text=${q}&voice=${edgeVoice}`,
-    // 3. Endpoint HTTPS Amazon Polly Neural/Standard (Adriano, Giorgio, Bianca, Carla)
-    `https://api.streamelements.com/kappa/v2/speech?voice=${pollyVoice}&text=${q}`,
-    // 4. Fallback estremo Google Stream
-    `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=${getActiveTTSLangCode(false)}&q=${q}`
-  ];
-}
-
-function playNeuralProQueue(queueItems, idx, sessionId) {
-  if (bmUserStopped || !bmAudioPlaying || sessionId !== bmSessionId) return;
-  if (idx >= queueItems.length) {
-    onSpeechFinishedSession(sessionId);
-    return;
-  }
-  const item = queueItems[idx];
-  const isSyntheticIntro = idx === 0 && item.verseNum === 1 && /, capitolo \d+\.$/.test(item.text);
-
-  if (item.verseNum) {
-    const row = document.getElementById(`v_${item.verseNum}`);
-    if (row && row.classList.contains("bm-verse-queued-orange")) {
-      row.classList.remove("bm-verse-queued-orange");
-      row.classList.add("bm-verse-selected");
-    }
-    highlightTtsKaraokeVerse(item.verseNum);
-  }
-
-  const vObj = BM_NEURAL_VOICES.find(v => v.id === bmNeuralVoice) || BM_NEURAL_VOICES[0];
-  const urls = buildNeuralStreamUrls(item.text, vObj);
-  const wordRatios = isSyntheticIntro ? [] : buildSyllableWordTimings(item.text);
-  const scopeEl = isSyntheticIntro ? null : resolveKaraokeScopeEl(item.verseNum);
-
-  let uIdx = 0;
-  if (!bmAudioPlayer) bmAudioPlayer = new Audio();
-
-  const tryNextNeuralUrl = () => {
-    if (bmUserStopped || !bmAudioPlaying || sessionId !== bmSessionId) return;
-    if (uIdx >= urls.length) {
-      clearWordKaraokeSpan();
-      playNeuralProQueue(queueItems, idx + 1, sessionId);
-      return;
-    }
-    const currentUrl = urls[uIdx++];
-    const isEdgeUrl = uIdx <= 2;
-    bmAudioPlayer.src = currentUrl;
-    bmAudioPlayer.playbackRate = isEdgeUrl ? 1.0 : bmTtsRate;
-
-    let lastWordIdx = -1;
-    if (bmActiveWordTimer) clearInterval(bmActiveWordTimer);
-
-    if (bmWordKaraokePref && scopeEl && wordRatios.length > 0) {
-      bmActiveWordTimer = setInterval(() => {
-        if (!bmAudioPlayer || bmUserStopped || sessionId !== bmSessionId) return;
-        const dur = bmAudioPlayer.duration;
-        const cur = bmAudioPlayer.currentTime;
-        if (!dur || !isFinite(dur) || dur <= 0) return;
-        // Compensa i 90ms di coda silenziosa tipica degli MP3 TTS
-        const effectiveDur = Math.max(0.2, dur - 0.09);
-        const progress = Math.min(1, Math.max(0, (cur + 0.04) / effectiveDur));
-        let activeW = -1;
-        for (let k = 0; k < wordRatios.length; k++) {
-          if (progress >= wordRatios[k].startRatio) activeW = k;
-          else break;
-        }
-        if (activeW >= 0 && activeW !== lastWordIdx) {
-          lastWordIdx = activeW;
-          highlightNthWordInScope(scopeEl, activeW, wordRatios[activeW].text);
-        }
-      }, 30);
-    }
-
-    bmAudioPlayer.onended = () => {
-      clearWordKaraokeSpan();
-      if (!bmUserStopped && bmAudioPlaying && sessionId === bmSessionId) {
-        playNeuralProQueue(queueItems, idx + 1, sessionId);
-      }
-    };
-    bmAudioPlayer.onerror = () => {
-      clearWordKaraokeSpan();
-      if (!bmUserStopped && bmAudioPlaying && sessionId === bmSessionId) {
-        tryNextNeuralUrl();
-      }
-    };
-    const p = bmAudioPlayer.play();
-    if (p !== undefined) {
-      p.catch(() => {
-        if (!bmUserStopped && bmAudioPlaying && sessionId === bmSessionId) {
-          tryNextNeuralUrl();
-        }
-      });
-    }
-  };
-
-  tryNextNeuralUrl();
+  playWebViewStreamQueue(queueItems, startIdx, mySession);
 }
 
 function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, mediaTitle = "", mediaSub = "", isSelectionQueue = false) {
@@ -5167,8 +4983,10 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
     btn.classList.add("active");
     btn.innerHTML = '<span class="tab-icon">⏹️</span><span>Ferma</span>';
   }
+  if (!bmAudioPlayer) {
+    bmAudioPlayer = new Audio();
+  }
 
-  // Smistamento intelligente in base al Motore scelto dall'utente:
   if (bmTtsEngine === "jw_offline" && currentViewContext.type === "bible" && !isSelectionQueue) {
     playJwOrOfflineChapterAudio(mySession, activeTtsQueue);
   } else if (bmTtsEngine === "neural" || bmTtsEngine === "jw_offline") {
@@ -5177,7 +4995,7 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
     playClassicNativeOrStreamQueue(activeTtsQueue, 0, mySession);
   }
 }
-    
+          
 function startUniversalSpeech(rawText, updateMainBtn = true, autoNext = false) {
   const chunks = splitTextForAudio(rawText, 165).map(c => ({ text: c, verseNum: null }));
   const curBook = getBook(state.bookId);
