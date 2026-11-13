@@ -2577,7 +2577,7 @@ function renderSettingsDrawerContent() {
         <div class="bm-set-row">
           <span>Lettore Neurale (IT)</span>
           <div class="bm-seg-group">
-            ${BM_NEURAL_VOICES.map(v => `<button type="button" class="bm-seg-btn ${bmNeuralVoice === v.id ? 'active' : ''}" onclick="setBmNeuralVoice('${v.id}'); renderSettingsDrawerContent();">${v.short}</button>`).join("")}
+            ${getAvailableNeuralVoices().slice(0, 4).map((v, idx) => `<button type="button" class="bm-seg-btn ${bmNeuralVoice === v.name ? 'active' : ''}" onclick="setBmNeuralVoice('${escapeJsStr(v.name)}'); renderSettingsDrawerContent();">Voce ${idx + 1}</button>`).join("") || `<span style="font-size:11.5px; padding:4px 8px; color:#9ec9ff;">Predefinita</span>`}
           </div>
         </div>
         <div class="bm-set-row">
@@ -5094,25 +5094,16 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
     btn.innerHTML = '<span class="tab-icon">⏹️</span><span>Ferma</span>';
   }
 
-  // Sceglie il motore attivo senza fallback ingannevoli:
-  if (bmTtsEngine === "neural") {
+  // Smistamento intelligente in base al Motore scelto dall'utente:
+  if (bmTtsEngine === "jw_offline" && currentViewContext.type === "bible" && !isSelectionQueue) {
+    playJwOrOfflineChapterAudio(mySession, activeTtsQueue);
+  } else if (bmTtsEngine === "neural" || bmTtsEngine === "jw_offline") {
     playNeuralProQueue(activeTtsQueue, 0, mySession);
   } else {
     playClassicNativeOrStreamQueue(activeTtsQueue, 0, mySession);
   }
 }
     
-  // Smistamento intelligente in base al Motore scelto dall'utente:
-  if (bmTtsEngine === "jw_offline" && currentViewContext.type === "bible" && !isSelectionQueue) {
-    playJwOrOfflineChapterAudio(mySession, activeTtsQueue);
-  } else if (bmTtsEngine === "neural" || bmTtsEngine === "jw_offline") {
-    // Unisce i versetti brevi per dare ai lettori neurali (Diego/Elsa) un respiro di frase intero naturale
-    playNeuralProQueue(activeTtsQueue, 0, mySession);
-  } else {
-    playClassicNativeOrStreamQueue(activeTtsQueue, 0, mySession);
-  }
-}
-
 function startUniversalSpeech(rawText, updateMainBtn = true, autoNext = false) {
   const chunks = splitTextForAudio(rawText, 165).map(c => ({ text: c, verseNum: null }));
   const curBook = getBook(state.bookId);
