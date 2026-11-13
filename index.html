@@ -274,30 +274,6 @@
       border-radius: 6px;
       transition: all 0.22s ease;
     }
-    /* Karaoke Parola-per-Parola: PURO TONO SU TONO FLUORESCENTE (Zero Sfondo / Zero Riquadro) */
-    .bm-karaoke-word {
-      background: transparent !important;
-      background-color: transparent !important;
-      border: none !important;
-      outline: none !important;
-      color: #ffffff !important;
-      text-shadow:
-        0 0 2px #ffffff,
-        0 0 7px #ffffff,
-        0 0 14px rgba(0, 229, 255, 0.98),
-        0 0 24px rgba(0, 229, 255, 0.88) !important;
-      filter: brightness(1.38) drop-shadow(0 0 5px rgba(255, 255, 255, 0.85));
-    }
-    body.dark-mode .bm-karaoke-word,
-    body.oled-mode .bm-karaoke-word {
-      color: #ffffff !important;
-      text-shadow:
-        0 0 2px #e6f1ff,
-        0 0 7px #84ffff,
-        0 0 15px rgba(0, 229, 255, 0.98),
-        0 0 26px rgba(41, 182, 246, 0.9) !important;
-      filter: brightness(1.4) drop-shadow(0 0 6px rgba(0, 229, 255, 0.85));
-    }
     /* Catenaccio tipografico: tiene parentesi e punteggiatura incollate alle pillole azzurre/viola */
     .bm-nowrap-pill {
       white-space: nowrap !important;
@@ -1016,7 +992,7 @@ body.oled-mode .pub-ref-badge {
     .bp-it.click:active { background: var(--verse-hover); }
     .bp-g { min-width: 46px; font-weight: 800; color: var(--primary-light); }
 
-    /* Proiezione Radiale dal centro verso i bordi scuri per i tasti dei modali e Biblioteca Online */
+        /* Proiezione Radiale dal centro verso i bordi scuri per i tasti dei modali e Biblioteca Online */
     @keyframes bmCenterDarkEdges {
       0% {
         background: radial-gradient(circle at 50% 50%, #ffffff 0%, var(--btn-bg, #00e5ff) 32%, #0a367e 72%, #020b1c 100%);
@@ -1366,6 +1342,7 @@ body.oled-mode .pub-ref-badge {
   setTimeout(lockCenterAndReveal, 1100);
 })();
   </script>
+  
   <!-- Header Superiore a 3 Colonne: Lettura Quotidiana | Badge Ovale Libro/Capitolo | Controlli A- A+ ⚡ ⚙️ -->
   <header>
     <div class="header-left">
@@ -1495,6 +1472,7 @@ body.oled-mode .pub-ref-badge {
       <div id="bmSettingsDrawerBody" class="bm-drawer-body"></div>
     </div>
   </div>
+
   <!-- Barra Navigazione Inferiore a 7 Strumenti (Dedicata al 100% allo Studio) -->
   <nav class="bottom-nav">
     <button class="tab-btn" id="tabSearch" style="user-select:none;-webkit-user-select:none;" onpointerdown="onSearchBtnDown(event)" onpointerup="onSearchBtnUp()" onpointerleave="onSearchBtnUp()" onpointercancel="onSearchBtnUp()" oncontextmenu="event.preventDefault()" onclick="onSearchBtnClick(event)" title="Tocca per la Ricerca e Concordanza • Tieni premuto per il Salto Rapido (es. Gv 3 16)">
@@ -2559,27 +2537,13 @@ function renderSettingsDrawerContent() {
         <div class="bm-acc-head-left">
           <span class="bm-acc-icon">🔊</span>
           <div>
-            <div class="bm-acc-label">Lettura Vocale & Motori PRO</div>
-            <div class="bm-acc-sub">${bmTtsEngine === 'neural' ? '🎙️ Neurale (' + getNeuralVoiceShortName() + ')' : (bmTtsEngine === 'jw_offline' ? '💿 Audio JW / Offline' : '📱 Sistema')} • ${bmTtsRate}x</div>
+            <div class="bm-acc-label">Lettura Vocale & Audio</div>
+            <div class="bm-acc-sub">Velocità voce (${bmTtsRate}x) e cambio capitolo</div>
           </div>
         </div>
         <span class="bm-acc-chev">▾</span>
       </button>
       <div class="bm-acc-content">
-        <div class="bm-set-row">
-          <span>Motore Audio</span>
-          <div class="bm-seg-group">
-            <button type="button" class="bm-seg-btn ${bmTtsEngine === 'classic' ? 'active' : ''}" onclick="setBmTtsEngine('classic'); renderSettingsDrawerContent();">📱 Classico</button>
-            <button type="button" class="bm-seg-btn ${bmTtsEngine === 'neural' ? 'active' : ''}" onclick="setBmTtsEngine('neural'); renderSettingsDrawerContent();">🎙️ Neurale</button>
-            <button type="button" class="bm-seg-btn ${bmTtsEngine === 'jw_offline' ? 'active' : ''}" onclick="setBmTtsEngine('jw_offline'); renderSettingsDrawerContent();">💿 JW/File</button>
-          </div>
-        </div>
-        <div class="bm-set-row">
-          <span>Lettore Neurale (IT)</span>
-          <div class="bm-seg-group">
-            ${BM_NEURAL_VOICES.map(v => `<button type="button" class="bm-seg-btn ${bmNeuralVoice === v.id ? 'active' : ''}" onclick="setBmNeuralVoice('${v.id}'); renderSettingsDrawerContent();">${v.short}</button>`).join("")}
-          </div>
-        </div>
         <div class="bm-set-row">
           <span>Velocità Voce</span>
           <div class="bm-seg-group">
@@ -2587,23 +2551,10 @@ function renderSettingsDrawerContent() {
           </div>
         </div>
         <div class="bm-set-row">
-          <span>Karaoke Parola (Tono su Tono)</span>
-          <label class="bm-switch">
-            <input type="checkbox" ${bmWordKaraokePref ? 'checked' : ''} onchange="setBmWordKaraoke(this.checked); renderSettingsDrawerContent();">
-            <span class="bm-slider"></span>
-          </label>
-        </div>
-        <div class="bm-set-row">
           <span>Passa al Capitolo Succ. a fine audio</span>
           <label class="bm-switch">
             <input type="checkbox" ${bmTtsAutoNextPref ? 'checked' : ''} onchange="bmTtsAutoNextPref=this.checked; safeSaveStorage('bm_tts_autonext', this.checked ? '1' : '0'); renderSettingsDrawerContent();">
             <span class="bm-slider"></span>
-          </label>
-        </div>
-        <div style="padding-top:6px;">
-          <label class="myread-action-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,176,255,0.75); background:#0d47a1; text-align:center; display:block; font-size:12.5px; padding:9px;">
-            💿 Importa Pacchetto Audio Offline (.json / .mp3)
-            <input type="file" accept=".json,.mp3,.m4a,audio/*,application/json" multiple style="display:none;" onchange="importOfflineAudioPack(event)">
           </label>
         </div>
       </div>
@@ -4274,321 +4225,6 @@ let bmSessionId = 0;
 let bmWakeLock = null;
 let bmTtsRate = Math.min(1.5, Math.max(0.75, Number(localStorage.getItem("bm_tts_rate")) || 1.0));
 let bmTtsAutoNextPref = localStorage.getItem("bm_tts_autonext") !== "0";
-
-// Configurazione Multi-Motore: 'classic' | 'neural' | 'jw_offline'
-let bmTtsEngine = localStorage.getItem("bm_tts_engine") || "neural";
-let bmNeuralVoice = localStorage.getItem("bm_neural_voice") || "diego";
-let bmWordKaraokePref = localStorage.getItem("bm_word_karaoke") !== "0";
-
-const BM_NEURAL_VOICES = [
-  { id: "diego",    short: "👨 Diego",    edge: "it-IT-DiegoNeural",    edgeAlt: ["it-IT-DiegoNeural"],    polly: "Giorgio" },
-  { id: "giuseppe", short: "👨 Giuseppe", edge: "it-IT-GiuseppeMultilingualNeural", edgeAlt: ["it-IT-GiuseppeMultilingualNeural", "it-IT-GiuseppeNeural", "it-IT-DiegoNeural"], polly: "Giorgio" },
-  { id: "isabella", short: "👩 Isabella", edge: "it-IT-IsabellaNeural", edgeAlt: ["it-IT-IsabellaNeural"], polly: "Bianca"  },
-  { id: "elsa",     short: "👩 Elsa",     edge: "it-IT-ElsaNeural",     edgeAlt: ["it-IT-ElsaNeural"],     polly: "Carla"   }
-];
-
-if (!BM_NEURAL_VOICES.some(v => v.id === bmNeuralVoice)) {
-  bmNeuralVoice = "diego";
-}
-
-function getNeuralVoiceShortName() {
-  const f = BM_NEURAL_VOICES.find(v => v.id === bmNeuralVoice) || BM_NEURAL_VOICES[0];
-  return f.short.replace(/^[^\s]+\s/, "");
-}
-
-function setBmTtsEngine(eng) {
-  bmTtsEngine = eng;
-  safeSaveStorage("bm_tts_engine", eng);
-}
-function setBmNeuralVoice(vId) {
-  bmNeuralVoice = vId;
-  safeSaveStorage("bm_neural_voice", vId);
-}
-function setBmWordKaraoke(val) {
-  bmWordKaraokePref = Boolean(val);
-  safeSaveStorage("bm_word_karaoke", bmWordKaraokePref ? "1" : "0");
-  if (!bmWordKaraokePref) clearWordKaraokeSpan();
-}
-    
-// ============================================================================
-// KARAOKE PAROLA-PER-PAROLA CHIRURGICO (Tono-su-Tono, Zero Riquadri, DOM Intatto)
-// ============================================================================
-let bmActiveWordSpan = null;
-let bmActiveWordTimer = null;
-
-function clearWordKaraokeSpan() {
-  if (bmActiveWordTimer) {
-    clearInterval(bmActiveWordTimer);
-    bmActiveWordTimer = null;
-  }
-  if (bmActiveWordSpan) {
-    try {
-      const p = bmActiveWordSpan.parentNode;
-      if (p) {
-        p.replaceChild(document.createTextNode(bmActiveWordSpan.textContent || ""), bmActiveWordSpan);
-        p.normalize();
-      }
-    } catch (e) {}
-    bmActiveWordSpan = null;
-  }
-}
-
-function resolveKaraokeScopeEl(verseNum) {
-  if (verseNum) {
-    const r = document.getElementById(`v_${verseNum}`);
-    if (r) return r.querySelector(".parallel-col") || r;
-  }
-  return document.getElementById("mainContainer");
-}
-
-function highlightNthWordInScope(scopeEl, targetWordOrdinal, wordSurface) {
-  if (!bmWordKaraokePref || !scopeEl) return;
-  clearWordKaraokeSpan();
-  const normTarget = normalizeForSearch(wordSurface || "").replace(/[^a-z0-9]/g, "");
-  if (!normTarget) return;
-
-  const walker = document.createTreeWalker(scopeEl, NodeFilter.SHOW_TEXT, {
-    acceptNode(node) {
-      const p = node.parentElement;
-      if (!p || !node.nodeValue) return NodeFilter.FILTER_REJECT;
-      if (p.closest(".verse-num, .tag-badge, .pub-ref-badge, sup, script, style, button, select, .chapter-nav-btns, .section-title")) {
-        return NodeFilter.FILTER_REJECT;
-      }
-      return NodeFilter.FILTER_ACCEPT;
-    }
-  });
-
-  const wordRe = /[\p{L}\p{N}]+(?:['’ʼʽ\-][\p{L}\p{N}]+)*/gu;
-  const candidates = [];
-  let tn;
-  while ((tn = walker.nextNode())) {
-    const val = tn.nodeValue;
-    let m;
-    wordRe.lastIndex = 0;
-    while ((m = wordRe.exec(val))) {
-      candidates.push({
-        node: tn,
-        s: m.index,
-        e: m.index + m[0].length,
-        norm: normalizeForSearch(m[0]).replace(/[^a-z0-9]/g, "")
-      });
-    }
-  }
-  if (!candidates.length) return;
-
-  // Cerca la parola corrispondente all'ordinale (con finestra di tolleranza ±4 parole per punteggiatura/numeri)
-  let best = null;
-  const startK = Math.max(0, targetWordOrdinal - 4);
-  const endK = Math.min(candidates.length - 1, targetWordOrdinal + 5);
-  for (let k = startK; k <= endK; k++) {
-    if (candidates[k].norm === normTarget) {
-      best = candidates[k];
-      break;
-    }
-  }
-  if (!best && candidates[Math.min(targetWordOrdinal, candidates.length - 1)]) {
-    best = candidates[Math.min(targetWordOrdinal, candidates.length - 1)];
-  }
-  if (!best) return;
-
-  try {
-    const r = document.createRange();
-    r.setStart(best.node, best.s);
-    r.setEnd(best.node, best.e);
-    const span = document.createElement("span");
-    span.className = "bm-karaoke-word";
-    r.surroundContents(span);
-    bmActiveWordSpan = span;
-  } catch (e) {}
-}
-
-// ============================================================================
-// MOTORE 2: MICROSOFT EDGE NEURAL TTS (Voci Umane + Timestamp WordBoundary)
-// ============================================================================
-function getNeuralVoiceForCurrentLang() {
-  const loc = getActiveTTSLangCode(true);
-  if (loc.startsWith("it")) return bmNeuralVoice || "it-IT-DiegoNeural";
-  if (loc.startsWith("en")) return "en-US-AndrewNeural";
-  if (loc.startsWith("es")) return "es-ES-AlvaroNeural";
-  if (loc.startsWith("pt")) return "pt-BR-AntonioNeural";
-  if (loc.startsWith("de")) return "de-DE-ConradNeural";
-  if (loc.startsWith("fr")) return "fr-FR-HenriNeural";
-  return bmNeuralVoice || "it-IT-DiegoNeural";
-}
-
-const EDGE_TTS_TOKEN = "6A5AA1D4EAFF4E9FB37E23D68491D6F4";
-const EDGE_TTS_CHROMIUM = "143.0.3650.75";
-let edgeClockSkewSec = 0;
-
-async function generateEdgeSecMsGec() {
-  const unixSec = Math.floor(Date.now() / 1000) + edgeClockSkewSec;
-  let ticks = BigInt(unixSec) + 11644473600n;
-  ticks -= ticks % 300n;
-  ticks *= 10000000n;
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(ticks.toString() + EDGE_TTS_TOKEN));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("").toUpperCase();
-}
-
-function synthesizeEdgeNeuralChunk(text, voiceName, rateFloat) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const reqId = Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b => b.toString(16).padStart(2, "0")).join("");
-      const secMsGec = await generateEdgeSecMsGec();
-      const wsUrl = `wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?TrustedClientToken=${EDGE_TTS_TOKEN}&Sec-MS-GEC=${secMsGec}&Sec-MS-GEC-Version=1-${EDGE_TTS_CHROMIUM}&ConnectionId=${reqId}`;
-      const ws = new WebSocket(wsUrl);
-      ws.binaryType = "arraybuffer";
-
-      const audioParts = [];
-      const wordBoundaries = [];
-      let settled = false;
-      const timeout = setTimeout(() => {
-        if (!settled) { settled = true; try { ws.close(); } catch (e) {} reject(new Error("EDGE_TIMEOUT")); }
-      }, 12000);
-
-      ws.onopen = () => {
-        const cfg = JSON.stringify({
-          context: { synthesis: { audio: { metadataoptions: { sentenceBoundaryEnabled: "false", wordBoundaryEnabled: "true" }, outputFormat: "audio-24khz-48kbitrate-mono-mp3" } } }
-        });
-        ws.send(`X-Timestamp:${new Date().toISOString()}\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n${cfg}`);
-
-        const ratePct = Math.round((rateFloat - 1.0) * 100);
-        const rateStr = (ratePct >= 0 ? "+" : "") + ratePct + "%";
-        const safeXmlText = String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        const ssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='${String(voiceName).split('-').slice(0,2).join('-')}'><voice name='${voiceName}'><prosody pitch='+0Hz' rate='${rateStr}' volume='+0%'>${safeXmlText}</prosody></voice></speak>`;
-        ws.send(`X-RequestId:${reqId}\r\nContent-Type:application/ssml+xml\r\nX-Timestamp:${new Date().toISOString()}Z\r\nPath:ssml\r\n\r\n${ssml}`);
-      };
-
-      ws.onmessage = (ev) => {
-        if (typeof ev.data === "string") {
-          if (ev.data.includes("Path:audio.metadata")) {
-            const jsonStart = ev.data.indexOf("{");
-            if (jsonStart !== -1) {
-              try {
-                const meta = JSON.parse(ev.data.slice(jsonStart));
-                (meta.Metadata || []).forEach(m => {
-                  if (m.Type === "WordBoundary" && m.Data) {
-                    wordBoundaries.push({
-                      offsetMs: (m.Data.Offset || 0) / 10000,
-                      durationMs: (m.Data.Duration || 0) / 10000,
-                      text: (m.Data.text && m.Data.text.Text) ? m.Data.text.Text : ""
-                    });
-                  }
-                });
-              } catch (e) {}
-            }
-          } else if (ev.data.includes("Path:turn.end")) {
-            clearTimeout(timeout);
-            if (!settled) {
-              settled = true;
-              try { ws.close(); } catch (e) {}
-              if (!audioParts.length) { reject(new Error("EMPTY_NEURAL_AUDIO")); return; }
-              const blob = new Blob(audioParts, { type: "audio/mpeg" });
-              resolve({ blobUrl: URL.createObjectURL(blob), wordBoundaries });
-            }
-          }
-        } else if (ev.data instanceof ArrayBuffer) {
-          const view = new DataView(ev.data);
-          if (ev.data.byteLength > 2) {
-            const headerLen = view.getUint16(0, false);
-            if (ev.data.byteLength > headerLen + 2) {
-              audioParts.push(ev.data.slice(headerLen + 2));
-            }
-          }
-        }
-      };
-
-      ws.onerror = () => {
-        clearTimeout(timeout);
-        if (!settled) { settled = true; reject(new Error("EDGE_WS_ERROR")); }
-      };
-
-      ws.onclose = () => {
-        clearTimeout(timeout);
-        if (!settled) { settled = true; reject(new Error("EDGE_WS_CLOSED")); }
-      };
-    } catch (err) {
-      reject(err);
-    }
-  });
-}
-
-// ============================================================================
-// MOTORE 3: AUDIO UFFICIALE JW.ORG & PACCHETTI AUDIO OFFLINE IMPORTABILI
-// ============================================================================
-async function importOfflineAudioPack(event) {
-  const files = Array.from(event.target.files || []);
-  if (!files.length) return;
-  try {
-    let savedCount = 0;
-    for (const f of files) {
-      const lower = f.name.toLowerCase();
-      if (lower.endsWith(".json")) {
-        const parsed = JSON.parse(await f.text());
-        if (parsed && parsed.chapters) {
-          await saveOfflineBible("bm:audio_pack_meta", parsed);
-          savedCount++;
-        }
-      } else if (/\.(mp3|m4a|ogg|wav)$/i.test(lower)) {
-        // Nome file es. "43_1.mp3" (Giovanni 1) o "gen_1.mp3"
-        const m = lower.match(/(\d{1,2})[_-](\d{1,3})\.(mp3|m4a|ogg|wav)$/);
-        if (m) {
-          const key = `bm:audio_${parseInt(m[1], 10)}_${parseInt(m[2], 10)}`;
-          const dataUri = await new Promise((res, rej) => {
-            const r = new FileReader();
-            r.onload = () => res(r.result);
-            r.onerror = rej;
-            r.readAsDataURL(f);
-          });
-          await saveOfflineBible(key, { dataUri, name: f.name });
-          savedCount++;
-        }
-      }
-    }
-    setBmTtsEngine("jw_offline");
-    renderSettingsDrawerContent();
-    showBlueInfoModal("💿 Audio Offline Salvato", `Importati <b>${savedCount}</b> file audio nel database offline! Il motore è stato impostato su <b>💿 JW/File</b>.`);
-  } catch (e) {
-    showBlueInfoModal("❌ Errore Audio", "Impossibile importare il file selezionato.");
-  } finally {
-    event.target.value = "";
-  }
-}
-
-async function fetchJwOfficialChapterAudio(bookId, chapterNum) {
-  // 1. Controlla prima se l'utente ha importato il capitolo MP3 offline in IndexedDB
-  const localAudio = await getOfflineBible(`bm:audio_${bookId}_${chapterNum}`);
-  if (localAudio && localAudio.dataUri) {
-    return { url: localAudio.dataUri, markers: [] };
-  }
-  // 2. Altrimenti richiede lo stream ufficiale JW.org (TNM Italiano / Inglese / Spagnolo)
-  const langMap = { "it": "I", "en": "E", "es": "S", "pt": "TPO" };
-  const shortLang = getActiveTTSLangCode(false);
-  const jwLang = langMap[shortLang] || "I";
-  const apiUrl = `https://b.jw-cdn.org/apis/pub-media/GETPUBMEDIALINKS?output=json&pub=nwt&fileformat=MP3&alllangs=0&langwritten=${jwLang}&txtCMSLang=${jwLang}&booknum=${bookId}&track=${chapterNum}`;
-  const res = await fetch(apiUrl);
-  if (!res.ok) throw new Error("JW_AUDIO_UNAVAILABLE");
-  const data = await res.json();
-  const filesList = data?.files?.[jwLang]?.MP3;
-  if (!Array.isArray(filesList) || !filesList.length) throw new Error("JW_NO_MP3");
-  const best = filesList[0];
-  const mp3Url = best?.file?.url;
-  if (!mp3Url) throw new Error("JW_NO_URL");
-  const markers = (best?.markers?.markers || []).map(mk => ({
-    verseNum: parseInt(mk.verseNumber, 10) || 1,
-    startSec: parseTimeStrToSec(mk.startTime),
-    durationSec: parseTimeStrToSec(mk.duration)
-  }));
-  return { url: mp3Url, markers };
-}
-
-function parseTimeStrToSec(tStr) {
-  if (!tStr) return 0;
-  const parts = String(tStr).split(":").map(Number);
-  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
-  if (parts.length === 2) return parts[0] * 60 + parts[1];
-  return Number(tStr) || 0;
-}
-
 async function requestAudioWakeLock() {
   if ("wakeLock" in navigator && navigator.wakeLock) {
     try {
@@ -4638,24 +4274,30 @@ function getActiveTTSLangCode(fullLocale = false) {
 function stripPillsOnlyFromText(rawText) {
   if (!rawText) return "";
   const tmp = document.createElement("div");
+  // Trasforma i riferimenti biblici e pubblicazioni in .tag-badge (azzurre) e .pub-ref-badge (viola)
   tmp.innerHTML = typeof formatNoteLinks === "function" ? formatNoteLinks(String(rawText)) : String(rawText);
+  // Rimuove dal clone SOLO le pillole azzurre, le pillole viola, i numeri versetto e gli apici nota
   tmp.querySelectorAll(".tag-badge, .pub-ref-badge, .verse-num, sup, script, style").forEach(el => el.remove());
   return tmp.textContent || "";
-}
+    }
+  
 function cleanTextForSpeech(rawText) {
   if (!rawText) return "";
   const withoutPills = stripPillsOnlyFromText(rawText);
   return withoutPills
     .replace(/<[^>]*>?/gm, " ")
     .replace(/\[[^\]]*\]/g, " ")
+    // Rimuove SOLO le parentesi rimaste vuote (o con soli segni/simboli) dopo aver tolto le pillole azzurre/viola
     .replace(/\([\s,;:–—.\-*^+#~|§°•†‡]*\)/g, " ")
     .replace(/📝\s*Nota/gi, " ")
     .replace(/🔗\s*Paralleli/gi, " ")
     .replace(/\b[HG]\d{1,4}\b/gi, " ")
+    // Rimuove ^ (accento circonflesso), * (asterisco) e tutti i simboli tecnici/tipografici che non vanno mai letti
     .replace(/[\^*+#~_|\\/<>«»""“”{}^\u02C6\u0302`´§°•♦▪▸►★☆†‡※]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-}
+  }
+    
 function splitTextForAudio(text, maxLen = 165) {
   const cleanFull = cleanTextForSpeech(text);
   if (!cleanFull) return [];
@@ -4687,19 +4329,16 @@ function extractCleanSelectedText() {
     .replace(/[\^*+#~_|\\/<>«»""“”{}^\u02C6\u0302`´§°•♦▪▸►★☆†‡※]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-}
-
+  }
+    
 function clearTtsKaraokeHighlight() {
-  clearWordKaraokeSpan();
   document.querySelectorAll(".bm-tts-active-verse").forEach(el => {
     el.classList.remove("bm-tts-active-verse");
   });
 }
 
 function highlightTtsKaraokeVerse(vNum) {
-  document.querySelectorAll(".bm-tts-active-verse").forEach(el => {
-    el.classList.remove("bm-tts-active-verse");
-  });
+  clearTtsKaraokeHighlight();
   if (!vNum) return;
   const row = document.getElementById(`v_${vNum}`);
   if (row) {
@@ -4750,7 +4389,6 @@ function stopAllAudio() {
   bmSelectionReadingActive = false;
   if (bmAudioPlayer) {
     try {
-      bmAudioPlayer.ontimeupdate = null;
       bmAudioPlayer.onended = null;
       bmAudioPlayer.onerror = null;
       bmAudioPlayer.pause();
@@ -4772,6 +4410,8 @@ function stopAllAudio() {
 function onSpeechFinishedSession(sessionId) {
   if (sessionId !== bmSessionId) return;
   clearTtsKaraokeHighlight();
+  // Se stavamo leggendo una selezione di versetti, tutti i versetti letti (inclusi gli arancioni appena ascoltati)
+  // passano allo stato "già letti" (riquadro verde lime), pronti per eventuali nuove aggiunte arancioni!
   if (bmSelectionReadingActive) {
     bmSelectionReadingActive = false;
     pendingOrangeVersesSet.clear();
@@ -4863,298 +4503,6 @@ function playWebViewStreamQueue(queueItems, idx, sessionId) {
   tryNextUrl();
 }
 
-const bmNeuralBlobCache = new Map();
-let bmNeuralFailStreak = 0;
-let bmEdgeWsBlocked = false; // Se la WebView blocca l'Origin del WebSocket Edge, evita di ritentare 6 volte a vuoto su ogni versetto!
-
-function bmNeuralNotify(msg) {
-  try {
-    let el = document.getElementById("bmNeuralNotice");
-    if (!el) {
-      el = document.createElement("div");
-      el.id = "bmNeuralNotice";
-      el.style.cssText = "position:fixed;left:12px;right:12px;bottom:84px;z-index:99999;background:#062356;color:#fff;border:1px solid #29b6f6;border-radius:12px;padding:10px 14px;font-size:13px;text-align:center;";
-      document.body.appendChild(el);
-    }
-    el.textContent = msg;
-    el.style.display = "block";
-    clearTimeout(el._t);
-    el._t = setTimeout(() => { el.style.display = "none"; }, 5000);
-  } catch (e) {}
-}
-
-// Sblocca il player HTML5 esattamente durante il tocco utente (evita il blocco Autoplay di Android dopo le Promise!)
-function unlockBmAudioPlayerSync() {
-  if (!bmAudioPlayer) bmAudioPlayer = new Audio();
-  try {
-    // Micro-WAV muto di 1 millisecondo per acquisire subito il User Gesture Token di Android WebView
-    bmAudioPlayer.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
-    const p = bmAudioPlayer.play();
-    if (p && p.catch) p.catch(() => {});
-  } catch (e) {}
-}
-
-// Calcola i pesi temporali delle parole per far funzionare il Karaoke Parola-per-Parola anche sugli stream HTTPS!
-function buildEstimatedWordBoundaries(rawText) {
-  const words = String(rawText || "").trim().split(/\s+/).filter(Boolean);
-  if (!words.length) return [];
-  let totalW = 0;
-  const items = words.map(w => {
-    const clean = w.replace(/[^a-zA-ZÀ-ÿ0-9]/g, "");
-    let weight = Math.max(1.8, clean.length * 1.0);
-    if (/[,;:]$/.test(w)) weight += 3.0;
-    else if (/[.!?…]$/.test(w)) weight += 5.0;
-    totalW += weight;
-    return { text: clean || w, weight };
-  });
-  let acc = 0;
-  return items.map(it => {
-    const startRatio = acc / totalW;
-    acc += it.weight;
-    return { text: it.text, startRatio };
-  });
-}
-
-function getEdgeVoiceCandidates(vObj) {
-  const loc = getActiveTTSLangCode(true);
-  if (loc.startsWith("it")) return (vObj.edgeAlt && vObj.edgeAlt.length) ? [vObj.edgeAlt[0]] : [vObj.edge];
-  return [getNeuralVoiceForCurrentLang()];
-}
-
-function fetchEdgeBlobForText(text, vObj) {
-  if (bmEdgeWsBlocked) return Promise.reject(new Error("EDGE_ORIGIN_BLOCKED"));
-  const key = vObj.id + "|" + bmTtsRate + "|" + text;
-  if (bmNeuralBlobCache.has(key)) return bmNeuralBlobCache.get(key);
-  const prom = (async () => {
-    const voices = getEdgeVoiceCandidates(vObj);
-    try {
-      return await synthesizeEdgeNeuralChunk(text, voices[0], bmTtsRate);
-    } catch (e) {
-      bmEdgeWsBlocked = true; // Memorizza che la WebView blocca il WebSocket diretto così non rallenta i versetti successivi
-      throw e;
-    }
-  })();
-  bmNeuralBlobCache.set(key, prom);
-  prom.catch(() => bmNeuralBlobCache.delete(key));
-  if (bmNeuralBlobCache.size > 6) {
-    const first = bmNeuralBlobCache.keys().next().value;
-    const old = bmNeuralBlobCache.get(first);
-    bmNeuralBlobCache.delete(first);
-    old.then(r => { try { URL.revokeObjectURL(r.blobUrl); } catch (e) {} }).catch(() => {});
-  }
-  return prom;
-}
-
-function buildNeuralFallbackUrls(text, vObj) {
-  const q = encodeURIComponent(text.slice(0, 190));
-  const tl = getActiveTTSLangCode(false);
-  const urls = [];
-  if (tl === "it") {
-    // 1. StreamElements Polly (Giorgio / Bianca / Carla)
-    urls.push({ url: `https://api.streamelements.com/kappa/v2/speech?voice=${vObj.polly}&text=${q}`, isPolly: true });
-  }
-  // 2. Google TTS Stream (con client gtx e tw-ob compatibili con no-referrer)
-  urls.push({ url: `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=${tl}&q=${q}`, isPolly: false });
-  urls.push({ url: `https://translate.googleapis.com/translate_tts?client=tw-ob&ie=UTF-8&tl=${tl}&q=${q}`, isPolly: false });
-  return urls;
-}
-
-// Configura il timbro vocale (pitch/formanti) quando si usa lo stream HTTPS di fallback così Diego, Giuseppe, Isabella ed Elsa hanno voci distinte
-function applyVoiceProfileToPlayer(player, vObj, isPolly) {
-  if (isPolly) {
-    try { player.preservesPitch = true; player.webkitPreservesPitch = true; } catch (e) {}
-    player.playbackRate = bmTtsRate;
-    return;
-  }
-  // Profili acustici distinti per i 4 lettori:
-  const pitchFactorMap = {
-    diego:    0.84, // Maschile profondo
-    giuseppe: 0.92, // Maschile narrativo
-    isabella: 1.00, // Femminile naturale calda
-    elsa:     1.09  // Femminile chiara brillante
-  };
-  const pFactor = pitchFactorMap[vObj.id] || 1.0;
-  if (Math.abs(pFactor - 1.0) > 0.02) {
-    try {
-      player.preservesPitch = false;
-      player.mozPreservesPitch = false;
-      player.webkitPreservesPitch = false;
-    } catch (e) {}
-    player.playbackRate = Math.min(1.6, Math.max(0.65, bmTtsRate * pFactor));
-  } else {
-    try {
-      player.preservesPitch = true;
-      player.mozPreservesPitch = true;
-      player.webkitPreservesPitch = true;
-    } catch (e) {}
-    player.playbackRate = bmTtsRate;
-  }
-}
-
-function attachRealtimeKaraokeToPlayer(player, item, exactBoundaries) {
-  clearWordKaraokeSpan();
-  const isSyntheticIntro = item.verseNum === 1 && /, capitolo \d+\.$/.test(item.text);
-  if (!bmWordKaraokePref || isSyntheticIntro) return;
-  const scopeEl = resolveKaraokeScopeEl(item.verseNum);
-  if (!scopeEl) return;
-
-  let lastWordIdx = -1;
-  if (exactBoundaries && exactBoundaries.length > 0) {
-    bmActiveWordTimer = setInterval(() => {
-      if (!player || bmUserStopped) return;
-      const curMs = player.currentTime * 1000;
-      let activeW = -1;
-      for (let k = 0; k < exactBoundaries.length; k++) {
-        if (curMs + 35 >= exactBoundaries[k].offsetMs) activeW = k;
-        else break;
-      }
-      if (activeW >= 0 && activeW !== lastWordIdx) {
-        lastWordIdx = activeW;
-        highlightNthWordInScope(scopeEl, activeW, exactBoundaries[activeW].text);
-      }
-    }, 28);
-  } else {
-    const estRatios = buildEstimatedWordBoundaries(item.text);
-    if (!estRatios.length) return;
-    bmActiveWordTimer = setInterval(() => {
-      if (!player || bmUserStopped) return;
-      const dur = player.duration;
-      const cur = player.currentTime;
-      if (!dur || !isFinite(dur) || dur <= 0) return;
-      const effDur = Math.max(0.2, dur - 0.08);
-      const prog = Math.min(1, Math.max(0, (cur + 0.04) / effDur));
-      let activeW = -1;
-      for (let k = 0; k < estRatios.length; k++) {
-        if (prog >= estRatios[k].startRatio) activeW = k;
-        else break;
-      }
-      if (activeW >= 0 && activeW !== lastWordIdx) {
-        lastWordIdx = activeW;
-        highlightNthWordInScope(scopeEl, activeW, estRatios[activeW].text);
-      }
-    }, 30);
-  }
-}
-
-function playNeuralProQueue(queueItems, idx, sessionId) {
-  if (bmUserStopped || !bmAudioPlaying || sessionId !== bmSessionId) return;
-  if (idx >= queueItems.length) {
-    bmNeuralFailStreak = 0;
-    onSpeechFinishedSession(sessionId);
-    return;
-  }
-  const item = queueItems[idx];
-  if (item.verseNum) {
-    const row = document.getElementById(`v_${item.verseNum}`);
-    if (row && row.classList.contains("bm-verse-queued-orange")) {
-      row.classList.remove("bm-verse-queued-orange");
-      row.classList.add("bm-verse-selected");
-    }
-    highlightTtsKaraokeVerse(item.verseNum);
-  }
-
-  const vObj = BM_NEURAL_VOICES.find(v => v.id === bmNeuralVoice) || BM_NEURAL_VOICES[0];
-  if (!bmAudioPlayer) bmAudioPlayer = new Audio();
-  const alive = () => !bmUserStopped && bmAudioPlaying && sessionId === bmSessionId;
-  const goNext = () => {
-    clearWordKaraokeSpan();
-    if (alive()) playNeuralProQueue(queueItems, idx + 1, sessionId);
-  };
-
-  const onChunkOk = () => {
-    bmNeuralFailStreak = 0;
-    const nxt = queueItems[idx + 1];
-    if (nxt && nxt.text && !bmEdgeWsBlocked) fetchEdgeBlobForText(nxt.text, vObj).catch(() => {});
-  };
-
-  const playFallbacks = () => {
-    const list = buildNeuralFallbackUrls(item.text, vObj);
-    let i = 0;
-    const tryNext = () => {
-      if (!alive()) return;
-      if (i >= list.length) {
-        bmNeuralFailStreak++;
-        if (bmNeuralFailStreak >= 3) {
-          bmNeuralNotify("Voce Neurale non raggiungibile: controlla la connessione internet.");
-          stopAllAudio();
-          return;
-        }
-        goNext();
-        return;
-      }
-      const f = list[i++];
-      bmAudioPlayer.onended = () => { onChunkOk(); goNext(); };
-      bmAudioPlayer.onerror = () => { clearWordKaraokeSpan(); tryNext(); };
-      bmAudioPlayer.src = f.url;
-      applyVoiceProfileToPlayer(bmAudioPlayer, vObj, f.isPolly);
-      attachRealtimeKaraokeToPlayer(bmAudioPlayer, item, null);
-      const p = bmAudioPlayer.play();
-      if (p && p.catch) p.catch(() => { clearWordKaraokeSpan(); tryNext(); });
-    };
-    tryNext();
-  };
-
-  fetchEdgeBlobForText(item.text, vObj).then(res => {
-    if (!alive()) return;
-    bmAudioPlayer.onended = () => { goNext(); };
-    bmAudioPlayer.onerror = () => { if (alive()) playFallbacks(); };
-    bmAudioPlayer.src = res.blobUrl;
-    try { bmAudioPlayer.preservesPitch = true; } catch (e) {}
-    bmAudioPlayer.playbackRate = 1.0;
-    attachRealtimeKaraokeToPlayer(bmAudioPlayer, item, res.wordBoundaries);
-    const p = bmAudioPlayer.play();
-    if (p && p.catch) p.catch(() => { if (alive()) playFallbacks(); });
-    onChunkOk();
-  }).catch(() => {
-    if (alive()) playFallbacks();
-  });
-}
-
-// Riproduzione Motore 3: Audio Ufficiale JW.org / File MP3 Offline
-async function playJwOrOfflineChapterAudio(sessionId, fallbackQueue) {
-  try {
-    const { url, markers } = await fetchJwOfficialChapterAudio(state.bookId, state.chapter);
-    if (bmUserStopped || !bmAudioPlaying || sessionId !== bmSessionId) return;
-    if (!bmAudioPlayer) bmAudioPlayer = new Audio();
-    bmAudioPlayer.src = url;
-    try { bmAudioPlayer.preservesPitch = true; } catch (e) {}
-    bmAudioPlayer.playbackRate = bmTtsRate;
-    let lastV = -1;
-    bmAudioPlayer.ontimeupdate = () => {
-      if (bmUserStopped || sessionId !== bmSessionId || !markers.length) return;
-      const t = bmAudioPlayer.currentTime;
-      let curV = markers[0].verseNum;
-      for (let i = 0; i < markers.length; i++) {
-        if (t >= markers[i].startSec) curV = markers[i].verseNum;
-        else break;
-      }
-      if (curV !== lastV) {
-        lastV = curV;
-        highlightTtsKaraokeVerse(curV);
-      }
-    };
-    bmAudioPlayer.onended = () => {
-      if (!bmUserStopped && bmAudioPlaying && sessionId === bmSessionId) {
-        onSpeechFinishedSession(sessionId);
-      }
-    };
-    bmAudioPlayer.onerror = () => {
-      if (!bmUserStopped && bmAudioPlaying && sessionId === bmSessionId) {
-        playNeuralProQueue(fallbackQueue, 0, sessionId);
-      }
-    };
-    await bmAudioPlayer.play();
-  } catch (e) {
-    if (!bmUserStopped && bmAudioPlaying && sessionId === bmSessionId) {
-      playNeuralProQueue(fallbackQueue, 0, sessionId);
-    }
-  }
-}
-
-function playClassicNativeOrStreamQueue(queueItems, startIdx, mySession) {
-  playWebViewStreamQueue(queueItems, startIdx, mySession);
-}
-
 function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, mediaTitle = "", mediaSub = "", isSelectionQueue = false) {
   stopAllAudio();
   if (!queueItems || !queueItems.length) return;
@@ -5171,18 +4519,59 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
     btn.classList.add("active");
     btn.innerHTML = '<span class="tab-icon">⏹️</span><span>Ferma</span>';
   }
-  // FONDAMENTALE: Sblocca subito il player audio nel contesto sincrono del tocco utente!
-  unlockBmAudioPlayerSync();
-
-  if (bmTtsEngine === "jw_offline" && currentViewContext.type === "bible" && !isSelectionQueue) {
-    playJwOrOfflineChapterAudio(mySession, activeTtsQueue);
-  } else if (bmTtsEngine === "neural" || bmTtsEngine === "jw_offline") {
-    playNeuralProQueue(activeTtsQueue, 0, mySession);
+  if (!bmAudioPlayer) {
+    bmAudioPlayer = new Audio();
+  }
+  if ("speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined") {
+    let idx = 0;
+    let nativeOk = false;
+    const speakNextNative = () => {
+      if (bmUserStopped || !bmAudioPlaying || mySession !== bmSessionId) return;
+      if (idx >= activeTtsQueue.length) {
+        onSpeechFinishedSession(mySession);
+        return;
+      }
+      const item = activeTtsQueue[idx];
+      if (item.verseNum) {
+        const row = document.getElementById(`v_${item.verseNum}`);
+        if (row && row.classList.contains("bm-verse-queued-orange")) {
+          row.classList.remove("bm-verse-queued-orange");
+          row.classList.add("bm-verse-selected");
+        }
+        highlightTtsKaraokeVerse(item.verseNum);
+      }
+      try {
+        const u = new SpeechSynthesisUtterance(item.text);
+        u.lang = getActiveTTSLangCode(true);
+        u.rate = bmTtsRate;
+        u.onstart = () => { nativeOk = true; };
+        u.onend = () => {
+          if (!bmUserStopped && bmAudioPlaying && mySession === bmSessionId) {
+            idx++;
+            speakNextNative();
+          }
+        };
+        u.onerror = (ev) => {
+          if (bmUserStopped || mySession !== bmSessionId || ev.error === "canceled" || ev.error === "interrupted") return;
+          if (!nativeOk) {
+            playWebViewStreamQueue(activeTtsQueue, idx, mySession);
+          } else {
+            idx++;
+            speakNextNative();
+          }
+        };
+        window.speechSynthesis.speak(u);
+      } catch (e) {
+        playWebViewStreamQueue(activeTtsQueue, idx, mySession);
+      }
+    };
+    try { window.speechSynthesis.cancel(); } catch (e) {}
+    speakNextNative();
   } else {
-    playClassicNativeOrStreamQueue(activeTtsQueue, 0, mySession);
+    playWebViewStreamQueue(activeTtsQueue, 0, mySession);
   }
 }
-  
+
 function startUniversalSpeech(rawText, updateMainBtn = true, autoNext = false) {
   const chunks = splitTextForAudio(rawText, 165).map(c => ({ text: c, verseNum: null }));
   const curBook = getBook(state.bookId);
@@ -8548,58 +7937,27 @@ function openTtsSettingsModal() {
   const rates = [0.85, 1.0, 1.15, 1.3];
   const rateBtns = rates.map(r => {
     const isSel = Math.abs(bmTtsRate - r) < 0.03;
-    return `<button type="button" class="myread-action-btn" style="flex:1; padding:9px 4px; background:${isSel ? '#00e5ff' : '#062356'}; color:${isSel ? '#041a42' : '#ffffff'}; border-color:${isSel ? '#84ffff' : '#29b6f6'};" onclick="setBmTtsRate(${r})">${r}x</button>`;
+    return `<button type="button" class="myread-action-btn" style="flex:1; padding:10px 6px; background:${isSel ? '#00e5ff' : '#062356'}; color:${isSel ? '#041a42' : '#ffffff'}; border-color:${isSel ? '#84ffff' : '#29b6f6'};" onclick="setBmTtsRate(${r})">${r}x</button>`;
   }).join("");
 
-  const engines = [
-    { id: "neural",     label: "🎙️ Neurale PRO" },
-    { id: "jw_offline", label: "💿 JW / File" },
-    { id: "classic",    label: "📱 Classico" }
-  ];
-  const engineBtns = engines.map(e => {
-    const isSel = bmTtsEngine === e.id;
-    return `<button type="button" class="myread-action-btn" style="flex:1; padding:9px 4px; font-size:12.5px; background:${isSel ? '#00e5ff' : '#062356'}; color:${isSel ? '#041a42' : '#ffffff'}; border-color:${isSel ? '#84ffff' : '#29b6f6'};" onclick="setBmTtsEngine('${e.id}'); openTtsSettingsModal();">${e.label}</button>`;
-  }).join("");
-
-  const voiceBtns = BM_NEURAL_VOICES.map(v => {
-    const isSel = bmNeuralVoice === v.id;
-    return `<button type="button" class="myread-action-btn" style="flex:1; min-width:44%; padding:8px 6px; font-size:12.5px; background:${isSel ? '#00e5ff' : '#062356'}; color:${isSel ? '#041a42' : '#ffffff'}; border-color:${isSel ? '#84ffff' : '#29b6f6'};" onclick="setBmNeuralVoice('${v.id}'); openTtsSettingsModal();">${v.short}</button>`;
-  }).join("");
-  
   body.innerHTML = `
-    <div style="text-align:center; padding:2px 0 10px 0;" oncontextmenu="event.preventDefault()">
-      <div style="font-size:26px; margin-bottom:4px;">🔊</div>
-      <div style="font-size:16px; font-weight:800; color:#ffffff; margin-bottom:2px;">Cabina di Regia Vocale PRO</div>
-      <div style="font-size:12.5px; color:#9ec9ff;">Scegli il motore, il lettore italiano e le opzioni di sincronizzazione:</div>
+    <div style="text-align:center; padding:4px 0 12px 0;">
+      <div style="font-size:28px; margin-bottom:6px;">🔊</div>
+      <div style="font-size:16px; font-weight:800; color:#ffffff; margin-bottom:4px;">Impostazioni Lettura Vocale</div>
+      <div style="font-size:13px; color:#9ec9ff;">Scegli la velocità della voce e il comportamento a fine capitolo:</div>
     </div>
-
-    <div style="font-size:12.5px; font-weight:800; color:#e3f2fd; margin-bottom:5px;">1. Motore di Lettura:</div>
-    <div style="display:flex; gap:6px; margin-bottom:11px;">${engineBtns}</div>
-
-    ${bmTtsEngine !== "classic" ? `
-      <div style="font-size:12.5px; font-weight:800; color:#e3f2fd; margin-bottom:5px;">2. Lettore Neurale Italiano:</div>
-      <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:11px;">${voiceBtns}</div>
-      <div style="font-size:12.5px; font-weight:800; color:#e3f2fd; margin-bottom:5px;">3. Karaoke Parola-per-Parola (Tono su Tono):</div>
-      <div style="display:flex; gap:8px; margin-bottom:11px;">
-        <button type="button" class="myread-action-btn" style="flex:1; padding:8px; font-size:12.5px; background:${bmWordKaraokePref ? '#00e5ff' : '#062356'}; color:${bmWordKaraokePref ? '#041a42' : '#ffffff'};" onclick="setBmWordKaraoke(true); openTtsSettingsModal();">✨ Karaoke Parola: ON</button>
-        <button type="button" class="myread-action-btn" style="flex:1; padding:8px; font-size:12.5px; background:${!bmWordKaraokePref ? '#00e5ff' : '#062356'}; color:${!bmWordKaraokePref ? '#041a42' : '#ffffff'};" onclick="setBmWordKaraoke(false); openTtsSettingsModal();">Solo Versetto</button>
-      </div>
-    ` : ""}
-
-    <div style="font-size:12.5px; font-weight:800; color:#e3f2fd; margin-bottom:5px;">Velocità di lettura:</div>
-    <div style="display:flex; gap:6px; margin-bottom:11px;">${rateBtns}</div>
-
-    <div style="font-size:12.5px; font-weight:800; color:#e3f2fd; margin-bottom:5px;">A fine capitolo biblico:</div>
-    <div style="display:flex; gap:8px; margin-bottom:12px;">
-      <button type="button" class="myread-action-btn" style="flex:1; padding:8px; font-size:12.5px; background:${bmTtsAutoNextPref ? '#00e5ff' : '#062356'}; color:${bmTtsAutoNextPref ? '#041a42' : '#ffffff'};" onclick="setBmTtsAutoNext(true)">▶ Continua al Succ.</button>
-      <button type="button" class="myread-action-btn" style="flex:1; padding:8px; font-size:12.5px; background:${!bmTtsAutoNextPref ? '#00e5ff' : '#062356'}; color:${!bmTtsAutoNextPref ? '#041a42' : '#ffffff'};" onclick="setBmTtsAutoNext(false)">⏹️ Ferma a fine cap.</button>
+    <div style="font-size:13px; font-weight:800; color:#e3f2fd; margin-bottom:6px;">Velocità di lettura:</div>
+    <div style="display:flex; gap:6px; margin-bottom:14px;">${rateBtns}</div>
+    <div style="font-size:13px; font-weight:800; color:#e3f2fd; margin-bottom:6px;">A fine capitolo biblico:</div>
+    <div style="display:flex; gap:8px; margin-bottom:14px;">
+      <button type="button" class="myread-action-btn" style="flex:1; background:${bmTtsAutoNextPref ? '#00e5ff' : '#062356'}; color:${bmTtsAutoNextPref ? '#041a42' : '#ffffff'};" onclick="setBmTtsAutoNext(true)">▶ Continua al Succ.</button>
+      <button type="button" class="myread-action-btn" style="flex:1; background:${!bmTtsAutoNextPref ? '#00e5ff' : '#062356'}; color:${!bmTtsAutoNextPref ? '#041a42' : '#ffffff'};" onclick="setBmTtsAutoNext(false)">⏹️ Ferma a fine cap.</button>
     </div>
-
-    <button type="button" class="myread-action-btn" onclick="document.getElementById('myReadModal').style.display='none'">✔ Conferma e Chiudi</button>
+    <button type="button" class="myread-action-btn" onclick="document.getElementById('myReadModal').style.display='none'">✔ Chiudi</button>
   `;
   modal.style.display = "flex";
 }
-    
+
 function setBmTtsRate(newRate) {
   bmTtsRate = Number(newRate) || 1.0;
   safeSaveStorage("bm_tts_rate", String(bmTtsRate));
