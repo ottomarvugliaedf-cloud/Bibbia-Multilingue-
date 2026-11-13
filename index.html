@@ -4865,6 +4865,7 @@ function playWebViewStreamQueue(queueItems, idx, sessionId) {
 
 const bmNeuralBlobCache = new Map();
 let bmNeuralFailStreak = 0;
+let bmEdgeWsBlocked = false; // Se la WebView blocca l'Origin del WebSocket Edge, evita di ritentare 6 volte a vuoto su ogni versetto!
 
 function bmNeuralNotify(msg) {
   try {
@@ -4882,29 +4883,56 @@ function bmNeuralNotify(msg) {
   } catch (e) {}
 }
 
+// Sblocca il player HTML5 esattamente durante il tocco utente (evita il blocco Autoplay di Android dopo le Promise!)
+function unlockBmAudioPlayerSync() {
+  if (!bmAudioPlayer) bmAudioPlayer = new Audio();
+  try {
+    // Micro-WAV muto di 1 millisecondo per acquisire subito il User Gesture Token di Android WebView
+    bmAudioPlayer.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+    const p = bmAudioPlayer.play();
+    if (p && p.catch) p.catch(() => {});
+  } catch (e) {}
+}
+
+// Calcola i pesi temporali delle parole per far funzionare il Karaoke Parola-per-Parola anche sugli stream HTTPS!
+function buildEstimatedWordBoundaries(rawText) {
+  const words = String(rawText || "").trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return [];
+  let totalW = 0;
+  const items = words.map(w => {
+    const clean = w.replace(/[^a-zA-ZÀ-ÿ0-9]/g, "");
+    let weight = Math.max(1.8, clean.length * 1.0);
+    if (/[,;:]$/.test(w)) weight += 3.0;
+    else if (/[.!?…]$/.test(w)) weight += 5.0;
+    totalW += weight;
+    return { text: clean || w, weight };
+  });
+  let acc = 0;
+  return items.map(it => {
+    const startRatio = acc / totalW;
+    acc += it.weight;
+    return { text: it.text, startRatio };
+  });
+}
+
 function getEdgeVoiceCandidates(vObj) {
   const loc = getActiveTTSLangCode(true);
-  if (loc.startsWith("it")) return (vObj.edgeAlt && vObj.edgeAlt.length) ? vObj.edgeAlt : [vObj.edge];
+  if (loc.startsWith("it")) return (vObj.edgeAlt && vObj.edgeAlt.length) ? [vObj.edgeAlt[0]] : [vObj.edge];
   return [getNeuralVoiceForCurrentLang()];
 }
 
 function fetchEdgeBlobForText(text, vObj) {
+  if (bmEdgeWsBlocked) return Promise.reject(new Error("EDGE_ORIGIN_BLOCKED"));
   const key = vObj.id + "|" + bmTtsRate + "|" + text;
   if (bmNeuralBlobCache.has(key)) return bmNeuralBlobCache.get(key);
   const prom = (async () => {
     const voices = getEdgeVoiceCandidates(vObj);
-    let lastErr = null;
-    for (const v of voices) {
-      for (let attempt = 0; attempt < 2; attempt++) {
-        try {
-          return await synthesizeEdgeNeuralChunk(text, v, bmTtsRate);
-        } catch (e) {
-          lastErr = e;
-          if (attempt === 0) edgeClockSkewSec = edgeClockSkewSec === 0 ? 30 : 0;
-        }
-      }
+    try {
+      return await synthesizeEdgeNeuralChunk(text, voices[0], bmTtsRate);
+    } catch (e) {
+      bmEdgeWsBlocked = true; // Memorizza che la WebView blocca il WebSocket diretto così non rallenta i versetti successivi
+      throw e;
     }
-    throw lastErr || new Error("EDGE_FAILED");
   })();
   bmNeuralBlobCache.set(key, prom);
   prom.catch(() => bmNeuralBlobCache.delete(key));
@@ -4922,11 +4950,90 @@ function buildNeuralFallbackUrls(text, vObj) {
   const tl = getActiveTTSLangCode(false);
   const urls = [];
   if (tl === "it") {
-    urls.push({ url: `https://api.streamelements.com/kappa/v2/speech?voice=${vObj.polly}&text=${q}` });
+    // 1. StreamElements Polly (Giorgio / Bianca / Carla)
+    urls.push({ url: `https://api.streamelements.com/kappa/v2/speech?voice=${vObj.polly}&text=${q}`, isPolly: true });
   }
-  urls.push({ url: `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=${tl}&q=${q}` });
-  urls.push({ url: `https://translate.googleapis.com/translate_tts?client=tw-ob&ie=UTF-8&tl=${tl}&q=${q}` });
+  // 2. Google TTS Stream (con client gtx e tw-ob compatibili con no-referrer)
+  urls.push({ url: `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=${tl}&q=${q}`, isPolly: false });
+  urls.push({ url: `https://translate.googleapis.com/translate_tts?client=tw-ob&ie=UTF-8&tl=${tl}&q=${q}`, isPolly: false });
   return urls;
+}
+
+// Configura il timbro vocale (pitch/formanti) quando si usa lo stream HTTPS di fallback così Diego, Giuseppe, Isabella ed Elsa hanno voci distinte
+function applyVoiceProfileToPlayer(player, vObj, isPolly) {
+  if (isPolly) {
+    try { player.preservesPitch = true; player.webkitPreservesPitch = true; } catch (e) {}
+    player.playbackRate = bmTtsRate;
+    return;
+  }
+  // Profili acustici distinti per i 4 lettori:
+  const pitchFactorMap = {
+    diego:    0.84, // Maschile profondo
+    giuseppe: 0.92, // Maschile narrativo
+    isabella: 1.00, // Femminile naturale calda
+    elsa:     1.09  // Femminile chiara brillante
+  };
+  const pFactor = pitchFactorMap[vObj.id] || 1.0;
+  if (Math.abs(pFactor - 1.0) > 0.02) {
+    try {
+      player.preservesPitch = false;
+      player.mozPreservesPitch = false;
+      player.webkitPreservesPitch = false;
+    } catch (e) {}
+    player.playbackRate = Math.min(1.6, Math.max(0.65, bmTtsRate * pFactor));
+  } else {
+    try {
+      player.preservesPitch = true;
+      player.mozPreservesPitch = true;
+      player.webkitPreservesPitch = true;
+    } catch (e) {}
+    player.playbackRate = bmTtsRate;
+  }
+}
+
+function attachRealtimeKaraokeToPlayer(player, item, exactBoundaries) {
+  clearWordKaraokeSpan();
+  const isSyntheticIntro = item.verseNum === 1 && /, capitolo \d+\.$/.test(item.text);
+  if (!bmWordKaraokePref || isSyntheticIntro) return;
+  const scopeEl = resolveKaraokeScopeEl(item.verseNum);
+  if (!scopeEl) return;
+
+  let lastWordIdx = -1;
+  if (exactBoundaries && exactBoundaries.length > 0) {
+    bmActiveWordTimer = setInterval(() => {
+      if (!player || bmUserStopped) return;
+      const curMs = player.currentTime * 1000;
+      let activeW = -1;
+      for (let k = 0; k < exactBoundaries.length; k++) {
+        if (curMs + 35 >= exactBoundaries[k].offsetMs) activeW = k;
+        else break;
+      }
+      if (activeW >= 0 && activeW !== lastWordIdx) {
+        lastWordIdx = activeW;
+        highlightNthWordInScope(scopeEl, activeW, exactBoundaries[activeW].text);
+      }
+    }, 28);
+  } else {
+    const estRatios = buildEstimatedWordBoundaries(item.text);
+    if (!estRatios.length) return;
+    bmActiveWordTimer = setInterval(() => {
+      if (!player || bmUserStopped) return;
+      const dur = player.duration;
+      const cur = player.currentTime;
+      if (!dur || !isFinite(dur) || dur <= 0) return;
+      const effDur = Math.max(0.2, dur - 0.08);
+      const prog = Math.min(1, Math.max(0, (cur + 0.04) / effDur));
+      let activeW = -1;
+      for (let k = 0; k < estRatios.length; k++) {
+        if (prog >= estRatios[k].startRatio) activeW = k;
+        else break;
+      }
+      if (activeW >= 0 && activeW !== lastWordIdx) {
+        lastWordIdx = activeW;
+        highlightNthWordInScope(scopeEl, activeW, estRatios[activeW].text);
+      }
+    }, 30);
+  }
 }
 
 function playNeuralProQueue(queueItems, idx, sessionId) {
@@ -4949,12 +5056,15 @@ function playNeuralProQueue(queueItems, idx, sessionId) {
   const vObj = BM_NEURAL_VOICES.find(v => v.id === bmNeuralVoice) || BM_NEURAL_VOICES[0];
   if (!bmAudioPlayer) bmAudioPlayer = new Audio();
   const alive = () => !bmUserStopped && bmAudioPlaying && sessionId === bmSessionId;
-  const goNext = () => { if (alive()) playNeuralProQueue(queueItems, idx + 1, sessionId); };
+  const goNext = () => {
+    clearWordKaraokeSpan();
+    if (alive()) playNeuralProQueue(queueItems, idx + 1, sessionId);
+  };
 
   const onChunkOk = () => {
     bmNeuralFailStreak = 0;
     const nxt = queueItems[idx + 1];
-    if (nxt && nxt.text) fetchEdgeBlobForText(nxt.text, vObj).catch(() => {});
+    if (nxt && nxt.text && !bmEdgeWsBlocked) fetchEdgeBlobForText(nxt.text, vObj).catch(() => {});
   };
 
   const playFallbacks = () => {
@@ -4974,11 +5084,12 @@ function playNeuralProQueue(queueItems, idx, sessionId) {
       }
       const f = list[i++];
       bmAudioPlayer.onended = () => { onChunkOk(); goNext(); };
-      bmAudioPlayer.onerror = () => tryNext();
+      bmAudioPlayer.onerror = () => { clearWordKaraokeSpan(); tryNext(); };
       bmAudioPlayer.src = f.url;
-      bmAudioPlayer.playbackRate = bmTtsRate;
+      applyVoiceProfileToPlayer(bmAudioPlayer, vObj, f.isPolly);
+      attachRealtimeKaraokeToPlayer(bmAudioPlayer, item, null);
       const p = bmAudioPlayer.play();
-      if (p && p.catch) p.catch(() => tryNext());
+      if (p && p.catch) p.catch(() => { clearWordKaraokeSpan(); tryNext(); });
     };
     tryNext();
   };
@@ -4988,7 +5099,9 @@ function playNeuralProQueue(queueItems, idx, sessionId) {
     bmAudioPlayer.onended = () => { goNext(); };
     bmAudioPlayer.onerror = () => { if (alive()) playFallbacks(); };
     bmAudioPlayer.src = res.blobUrl;
+    try { bmAudioPlayer.preservesPitch = true; } catch (e) {}
     bmAudioPlayer.playbackRate = 1.0;
+    attachRealtimeKaraokeToPlayer(bmAudioPlayer, item, res.wordBoundaries);
     const p = bmAudioPlayer.play();
     if (p && p.catch) p.catch(() => { if (alive()) playFallbacks(); });
     onChunkOk();
@@ -5004,6 +5117,7 @@ async function playJwOrOfflineChapterAudio(sessionId, fallbackQueue) {
     if (bmUserStopped || !bmAudioPlaying || sessionId !== bmSessionId) return;
     if (!bmAudioPlayer) bmAudioPlayer = new Audio();
     bmAudioPlayer.src = url;
+    try { bmAudioPlayer.preservesPitch = true; } catch (e) {}
     bmAudioPlayer.playbackRate = bmTtsRate;
     let lastV = -1;
     bmAudioPlayer.ontimeupdate = () => {
@@ -5057,9 +5171,8 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
     btn.classList.add("active");
     btn.innerHTML = '<span class="tab-icon">⏹️</span><span>Ferma</span>';
   }
-  if (!bmAudioPlayer) {
-    bmAudioPlayer = new Audio();
-  }
+  // FONDAMENTALE: Sblocca subito il player audio nel contesto sincrono del tocco utente!
+  unlockBmAudioPlayerSync();
 
   if (bmTtsEngine === "jw_offline" && currentViewContext.type === "bible" && !isSelectionQueue) {
     playJwOrOfflineChapterAudio(mySession, activeTtsQueue);
@@ -5069,7 +5182,7 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
     playClassicNativeOrStreamQueue(activeTtsQueue, 0, mySession);
   }
 }
-          
+  
 function startUniversalSpeech(rawText, updateMainBtn = true, autoNext = false) {
   const chunks = splitTextForAudio(rawText, 165).map(c => ({ text: c, verseNum: null }));
   const curBook = getBook(state.bookId);
