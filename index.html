@@ -902,11 +902,12 @@
       cursor: pointer;
       flex-shrink: 0;
     }
-    /* Contrasto Universale Blu #062356 (stile Cerca) per tutti i tasti di navigazione, Biblioteca Online e schede dentro i Modali */
-    .nav-btn, .jw-btn, .modal-card .result-card {
-      background-color: #062356 !important;
-      border: 1px solid #29b6f6 !important;
-      color: #ffffff !important;
+    /* Blu #062356 (stile Cerca) solo per i tasti non personalizzati dentro i modali e nella barra Giorno */
+    .chapter-nav-btns .nav-btn:not(.bm-back-history-btn),
+    .modal-card .nav-btn {
+      background-color: #062356;
+      border: 1px solid #29b6f6;
+      color: #ffffff;
     }
     .map-grid {
       display: grid;
@@ -6900,128 +6901,86 @@ function openReadingPlanModal() {
   document.getElementById("proModal").style.display = "flex";
   renderReadingPlanModalContent(true);
 }
-function openDailyCalendarPickerModal() {
-  bmChimeHaptic();
-  const modal = document.getElementById("myReadModal");
-  const body = document.getElementById("myReadModalBody");
-  if (!modal || !body) return;
-
-  const targetDate = new Date();
-  targetDate.setDate(targetDate.getDate() + currentDailyOffset);
-  const curMonth = targetDate.getMonth() + 1;
-  const curDay = targetDate.getDate();
-
-  const mesiNomi = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
-  const monthOpts = mesiNomi.map((m, idx) => `<option value="${idx + 1}" ${idx + 1 === curMonth ? "selected" : ""}>${m}</option>`).join("");
-  let dayOpts = "";
-  for (let d = 1; d <= 31; d++) {
-    dayOpts += `<option value="${d}" ${d === curDay ? "selected" : ""}>Giorno ${d}</option>`;
+function renderReadingPlanModalContent(scrollToToday = true) {
+  const body = document.getElementById("proModalBody");
+  if (!body) return;
+  const curPlan = READING_PLAN_TYPES.find(p => p.id === rpState.planId) || READING_PLAN_TYPES[0];
+  const schedule = buildYearlySchedule(curPlan.id);
+  const todayIdx = getDayOfYearIndex();
+  let doneCount = 0;
+  let firstUncheckedIdx = -1;
+  for (let i = 0; i < 365; i++) {
+    if (rpState.checked[`${curPlan.id}_${i}`]) {
+      doneCount++;
+    } else if (firstUncheckedIdx === -1) {
+      firstUncheckedIdx = i;
+    }
   }
+  const pct = Math.round((doneCount / 365) * 100);
+  const estChaptersDone = Math.min(1189, Math.round((doneCount / 365) * 1189));
 
-  body.innerHTML = `
-    <div style="text-align:center; padding:4px 0 12px 0;">
-      <div style="font-size:28px; margin-bottom:6px;">📅☀️</div>
-      <div style="font-size:16px; font-weight:800; color:#ffffff; margin-bottom:4px;">Salta a una Data dell'Anno</div>
-      <div style="font-size:13px; color:#9ec9ff;">Scegli il mese e il giorno della Scrittura del Giorno:</div>
+  const pickerHtml = rpPickerOpen ? `
+    <div style="margin-bottom:10px; display:flex; flex-direction:column; gap:6px;">
+      ${READING_PLAN_TYPES.map(p => `
+        <button class="nav-btn" style="text-align:left; padding:9px 12px; ${p.id === curPlan.id ? 'background:var(--primary-main);color:#fff;border-color:var(--primary-light);' : 'background:#062356;color:#fff;border-color:#29b6f6;'}" onclick="selectReadingPlanType('${p.id}')">
+          ${p.id === curPlan.id ? '★ ' : '• '}${escapeHtml(p.name)}
+        </button>
+      `).join("")}
     </div>
-    <div style="display:flex; gap:8px; margin-bottom:14px;">
-      <select id="dailyPickMonth" class="trans-select" style="flex:1.3;">${monthOpts}</select>
-      <select id="dailyPickDay" class="trans-select" style="flex:0.9;">${dayOpts}</select>
-    </div>
-    <div style="display:flex; gap:8px;">
-      <button type="button" class="myread-action-btn" style="background:#062356; flex:1;" onclick="document.getElementById('myReadModal').style.display='none'">Annulla</button>
-      <button type="button" class="myread-action-btn" style="background:#00e5ff; color:#041a42; border-color:#84ffff; flex:1;" onclick="document.getElementById('myReadModal').style.display='none'; showDailyTextView(0, true);">🎯 Oggi</button>
-      <button type="button" class="myread-action-btn" style="flex:1.2;" onclick="jumpToPickedDailyDate()">🚀 Vai</button>
-    </div>
-  `;
-  modal.style.display = "flex";
-}
+  ` : "";
 
-function jumpToPickedDailyDate() {
-  const m = Number(document.getElementById("dailyPickMonth")?.value) || 1;
-  const d = Number(document.getElementById("dailyPickDay")?.value) || 1;
-  const now = new Date();
-  const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const targetMidnight = new Date(now.getFullYear(), m - 1, d);
-  const diffDays = Math.round((targetMidnight - todayMidnight) / 86400000);
-  const modal = document.getElementById("myReadModal");
-  if (modal) modal.style.display = "none";
-  showDailyTextView(diffDays, true);
-}
-
-async function showDailyTextView(dayOffset = 0, fromBack = false) {
-  if (!fromBack && currentViewContext.type !== "daily") saveCurrentPositionToHistory();
-  closeActionBar();
-  stopAllAudio();
-  window.currentInsightSpeechText = "";
-  currentDailyOffset = dayOffset;
-  setActiveTab("", "dailyTabBtn");
-  currentViewContext = { type: "daily", offset: dayOffset };
-  const main = document.getElementById("mainContainer");
-  const targetDate = new Date();
-  targetDate.setDate(targetDate.getDate() + currentDailyOffset);
-  const mm = String(targetDate.getMonth() + 1).padStart(2, "0");
-  const dd = String(targetDate.getDate()).padStart(2, "0");
-  const dayKey = `${mm}-${dd}`;
-  const dateFormatted = targetDate.toLocaleDateString("it-IT", {
-    weekday: "long", day: "numeric", month: "long"
-  });
-  document.getElementById("currentRefLabel").textContent = "☀️ Scrittura del Giorno";
-  const savedDaily = await getOfflineBible("bm:daily_text");
-  if (!savedDaily || !savedDaily.days || !savedDaily.days[dayKey]) {
-    main.innerHTML = `
-      <div class="section-title"><span>☀️ Scrittura del Giorno (${escapeHtml(dateFormatted)})</span></div>
-      <div class="result-card" style="cursor:default; text-align:center; padding:22px 14px;">
-        <div style="font-size:16px; font-weight:800; color:var(--primary-light); margin-bottom:10px;">
-          Benvenuto in Bibbia Multilingue PRO
+  const rowsHtml = schedule.map((item, idx) => {
+    const isToday = idx === todayIdx;
+    const isDone = Boolean(rpState.checked[`${curPlan.id}_${idx}`]);
+    const dayTag = isToday ? "OGGI" : (idx === todayIdx - 1 ? "IERI" : (idx === todayIdx + 1 ? "DOMANI" : formatDayDateShort(idx)));
+    return `
+      <div id="rp_row_${idx}" class="rp-row ${isToday ? 'rp-today' : ''} ${isDone ? 'rp-done' : ''}">
+        <div style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1;" onclick="closeProModal(); openRef(${item.firstBookId}, ${item.firstCh});">
+          <span class="tag-badge" style="min-width:64px; text-align:center; ${isToday ? 'background:#00e5ff;color:#041a42;border-color:#84ffff;font-weight:900;' : 'background:#062356;color:#ffffff;border-color:#29b6f6;'}">${escapeHtml(dayTag)}</span>
+          <span>📖 ${escapeHtml(item.label)}</span>
         </div>
-        <p style="font-size:14px; color:var(--text-muted); line-height:1.55; margin-bottom:16px;">
-          Per visualizzare automaticamente ogni giorno la <b>Scrittura del Giorno</b> con il relativo commento, carica una sola volta il tuo file <b>.epub</b> universale:
-        </p>
-        <div style="display:flex; flex-direction:column; gap:10px; max-width:320px; margin:0 auto;">
-          <label class="search-btn" style="text-align:center; padding:11px; cursor:pointer; background:linear-gradient(135deg, #e65100, #f57c00);">
-            ☀️ Carica ora il file .epub
-            <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importDailyTextEpub(event)">
-          </label>
-          <button class="nav-btn" style="padding:10px;" onclick="loadChapterView()">
-            📖 Vai direttamente alla Bibbia
-          </button>
-        </div>
-        <div id="epubImportStatus" style="margin-top:12px; font-size:13px; font-weight:700; color:var(--primary-light);"></div>
+        <input type="checkbox" class="rp-check" ${isDone ? "checked" : ""} onchange="toggleReadingPlanDay(${idx})" title="Segna come letto">
       </div>
     `;
-    return;
-  }
-  const entry = savedDaily.days[dayKey];
-  window.currentDailySpeechText = `${entry.dateTitle}. ${entry.theme}. ${entry.comment}`;
-  const isToday = currentDailyOffset === 0;
-  main.innerHTML = `
-    <div class="chapter-header" style="flex-wrap:wrap; gap:8px;">
-      <div class="chapter-title" onclick="openDailyCalendarPickerModal()" style="cursor:pointer;" title="Tocca per scegliere un giorno dal calendario">☀️ ${escapeHtml(entry.dateTitle || dateFormatted)} ▾</div>
-      <div class="chapter-nav-btns">
-        ${getBackBtnHtml()}
-        <button class="nav-btn" onclick="showDailyTextView(${currentDailyOffset - 1}, true)">◀ Ieri</button>
-        <button class="nav-btn" style="${isToday ? 'background:#00e5ff !important; color:#041a42 !important; border-color:#84ffff !important; font-weight:900;' : ''}" onclick="showDailyTextView(0, true)">Oggi</button>
-        <button class="nav-btn" onclick="showDailyTextView(${currentDailyOffset + 1}, true)">Domani ▶</button>
-        <button class="nav-btn" onclick="openDailyCalendarPickerModal()" title="Scegli data">📅</button>
+  }).join("");
+
+  body.innerHTML = `
+    <div class="rp-banner" onclick="togglePlanPickerList()" title="Tocca per cambiare piano di lettura annuale">
+      <span>★ Piano: ${escapeHtml(curPlan.name)}</span>
+      <span>▾</span>
+    </div>
+    ${pickerHtml}
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; font-size:12px; color:var(--text-muted); margin-bottom:6px;">
+      <span id="rpProgressText">Completati: ${doneCount} / 365 (${pct}% • ~${estChaptersDone} cap.)</span>
+      <div style="display:flex; gap:10px; align-items:center;">
+        ${firstUncheckedIdx !== -1 && firstUncheckedIdx !== todayIdx ? `<span style="color:#84ffff; cursor:pointer; font-weight:800;" onclick="scrollRpToIndex(${firstUncheckedIdx}, true)">⚡ 1° da leggere</span>` : ""}
+        <span style="color:var(--primary-light); cursor:pointer; font-weight:800;" onclick="scrollRpToToday(true)">🎯 Vai a Oggi</span>
       </div>
     </div>
-    <div class="result-card" style="cursor:default; border-left:4px solid var(--primary-light); padding:14px; margin-bottom:12px; font-size:var(--font-size-verse); line-height:1.55;">
-      <div style="font-style:italic; font-weight:700; color:var(--primary-light);">
-        ${formatNoteLinks(entry.theme)}
-      </div>
+    <div id="rpScrollContainer" class="rp-scroll-window">
+      ${rowsHtml}
     </div>
-    <div class="result-card" style="cursor:default; padding:14px; font-size:var(--font-size-verse); line-height:1.62; white-space:pre-wrap;">${formatNoteLinks(entry.comment)}</div>
-    <div style="display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;">
-      <button class="search-btn" style="flex:1; padding:12px;" onclick="loadChapterView()">
-        📖 Apri la Bibbia (${escapeHtml(getBook(state.bookId).name)} ${state.chapter})
-      </button>
-      <button class="nav-btn" style="padding:12px; border-color:#00e5ff !important; color:#00e5ff !important; font-weight:800;" onclick="openDeepenDailyModal()">
-        💎 Approfondisci
-      </button>
+    <div style="font-size:11.5px; color:var(--text-muted); margin-top:8px; text-align:center;">
+      Tocca i capitoli per aprirli subito • Spunta la casella a fine lettura per colorarli in verde
     </div>
   `;
-  main.scrollTop = 0;
+  if (scrollToToday) {
+    scrollRpToToday(false);
+  }
+}
+function scrollRpToIndex(targetIdx, smooth = false) {
+  const cont = document.getElementById("rpScrollContainer");
+  const prevIdx = Math.max(0, targetIdx - 1);
+  const topRow = document.getElementById(`rp_row_${prevIdx}`);
+  if (cont && topRow) {
+    cont.scrollTo({
+      top: topRow.offsetTop - cont.offsetTop - 4,
+      behavior: smooth ? "smooth" : "auto"
+    });
+  }
+}
+function scrollRpToToday(smooth = false) {
+  scrollRpToIndex(getDayOfYearIndex(), smooth);
 }
 function exportBackupJson() {
   const data = {
