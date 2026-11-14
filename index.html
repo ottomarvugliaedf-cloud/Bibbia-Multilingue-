@@ -1305,6 +1305,134 @@ body.oled-mode .pub-ref-badge {
     .bm-switch input:checked + .bm-slider:before {
       transform: translateX(20px); background-color: #041a42;
     }
+    /* ===== UNIFORMAZIONE ESTETICA BLU ZAFFIRO PRO (Header, Piano Lettura, Cartine & Dove?) ===== */
+    .book-selector-btn {
+      background: linear-gradient(135deg, #0a367e 0%, #062356 100%) !important;
+      border: 1.5px solid rgba(79, 195, 247, 0.72) !important;
+      color: #ffffff !important;
+      padding: 6px 11px !important;
+      border-radius: 999px !important;
+      font-size: 12.5px !important;
+      font-weight: 800 !important;
+      letter-spacing: 0.2px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 3px 10px rgba(0, 0, 0, 0.38), 0 0 10px rgba(41, 182, 246, 0.28) !important;
+    }
+    .rp-banner {
+      background: linear-gradient(135deg, #1565c0 0%, #0a367e 100%) !important;
+      border: 1px solid #00e5ff !important;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 4px 14px rgba(0, 0, 0, 0.4) !important;
+    }
+    .rp-scroll-window {
+      background: #062356 !important;
+      border: 1px solid rgba(41, 182, 246, 0.55) !important;
+      box-shadow: inset 0 2px 8px rgba(2, 11, 28, 0.65) !important;
+    }
+    .rp-row {
+      background: #0a367e !important;
+      border: 1px solid rgba(41, 182, 246, 0.42) !important;
+      color: #ffffff !important;
+    }
+    .rp-row.rp-today {
+      outline: 2px solid #00e5ff !important;
+      background: #1565c0 !important;
+      box-shadow: 0 0 12px rgba(0, 229, 255, 0.45) !important;
+    }
+    /* Uniformazione Cartine Bibliche e Modale "📍 Dove?" (Zero riquadri neri) */
+    .map-card {
+      background: linear-gradient(180deg, #0a367e 0%, #062356 100%) !important;
+      border: 1px solid rgba(41, 182, 246, 0.55) !important;
+      border-radius: 12px !important;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 6px 16px rgba(0, 0, 0, 0.38) !important;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+    }
+    .map-card:active {
+      transform: scale(0.97);
+      border-color: #00e5ff !important;
+      box-shadow: 0 0 16px rgba(0, 229, 255, 0.75) !important;
+    }
+    .bp-viewer {
+      background: #041a42 !important;
+      color: #ffffff !important;
+    }
+    .bp-stage {
+      background: radial-gradient(circle at 50% 50%, #0a367e 0%, #062356 58%, #041a42 100%) !important;
+    }
+    .bp-vbtn, .bp-tool-btn {
+      background: linear-gradient(135deg, #1565c0, #0a367e) !important;
+      border: 1px solid #4fc3f7 !important;
+      color: #ffffff !important;
+      border-radius: 8px !important;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 2px 6px rgba(0, 0, 0, 0.35) !important;
+    }
+    .bp-vtools {
+      background: linear-gradient(180deg, #0a367e 0%, #062356 100%) !important;
+      border-top: 1px solid #29b6f6 !important;
+    }
+    .bp-sheet {
+      background: linear-gradient(180deg, #0a367e 0%, #062356 100%) !important;
+      color: #ffffff !important;
+      border-top: 2px solid #00e5ff !important;
+      box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.7) !important;
+    }
+    .bp-card {
+      background: linear-gradient(180deg, #062356 0%, #041a42 100%) !important;
+      border: 1px solid rgba(41, 182, 246, 0.55) !important;
+      border-radius: 11px !important;
+      padding: 11px 12px !important;
+      margin: 9px 0 !important;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 4px 12px rgba(0, 0, 0, 0.35) !important;
+    }
+    .bp-title {
+      font-weight: 800 !important;
+      font-size: 15px !important;
+      color: #ffffff !important;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .bp-pname {
+      font-weight: 800 !important;
+      font-size: 13.5px !important;
+      color: #84ffff !important;
+      margin-top: 6px !important;
+    }
+    .bp-sub, .bp-cnt, .bp-chiplabel, .bp-empty, .bp-note {
+      color: #cfe3ff !important;
+    }
+    .bp-ref {
+      background: linear-gradient(135deg, #0a367e 0%, #1565c0 100%) !important;
+      border: 1px solid rgba(79, 195, 247, 0.65) !important;
+      color: #ffffff !important;
+      border-radius: 9px !important;
+      padding: 9px 11px !important;
+      margin-top: 7px !important;
+      font-weight: 700 !important;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 3px 8px rgba(0, 0, 0, 0.3) !important;
+    }
+    .bp-ref b {
+      color: #00e5ff !important;
+      background: rgba(4, 26, 66, 0.65);
+      border: 1px solid rgba(0, 229, 255, 0.55);
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-size: 12px;
+    }
+    .bp-h, .bp-gt {
+      color: #00e5ff !important;
+      border-bottom: 1.5px solid rgba(0, 229, 255, 0.45);
+      padding-bottom: 4px;
+      margin-top: 14px !important;
+    }
+    .bp-hl {
+      border-color: #00e5ff !important;
+      background: rgba(0, 229, 255, 0.24) !important;
+      box-shadow: 0 0 0 calc(2px * var(--inv, 1)) #041a42, 0 0 18px rgba(0, 229, 255, 0.95) !important;
+    }
+    @keyframes bpPulse {
+      50% { background: rgba(204, 255, 0, 0.38) !important; border-color: #ccff00 !important; }
+    }
   </style>
 </head>
 <body>
@@ -6993,12 +7121,13 @@ function confirmImportBackupNow() {
   }
 }
 // ============================================================================
-// MODULO "📍 DOVE SI TROVA?" (Universale) & "💎 APPROFONDISCI" (Scrittura del Giorno)
+// MODULO "📍 DOVE SI TROVA?" PRO (Atlante Intelligente, Salto ai Versetti & Radar)
 // ============================================================================
 const BP_WORD = /[\p{L}\p{M}]+(?:[-ʽ][\p{L}\p{M}]+)*/gu;
 const BP_PREP = new Set(["a","ad","da","di","in","presso","verso","fino","città","monte","paese","terra","valle","regione","deserto","nel","nella","dal","dalla","del","della","al","alla","sul","sulla","tra","fra"]);
-const bpUi = { sel: [], all: [], scope: "", selLabel: "", byKey: new Map(), mapScore: new Map(), mapBest: 0 };
-// Più luoghi del testo compaiono su una cartina, più quella cartina è consigliata
+const bpUi = { sel: [], all: [], scope: "", selLabel: "", byKey: new Map(), mapScore: new Map(), mapBest: 0, bestMapId: "", hlActive: true };
+
+// Calcola la cartina più pertinente per il capitolo/testo aperto in base alla densità dei luoghi citati
 function bpComputeMapScore(results) {
   const score = new Map();
   results.forEach(r => {
@@ -7007,7 +7136,12 @@ function bpComputeMapScore(results) {
     maps.forEach(m => score.set(m, (score.get(m) || 0) + 1));
   });
   bpUi.mapScore = score;
-  bpUi.mapBest = Math.max(0, ...score.values());
+  let bestVal = 0, bestId = "";
+  score.forEach((val, mId) => {
+    if (val > bestVal) { bestVal = val; bestId = mId; }
+  });
+  bpUi.mapBest = bestVal;
+  bpUi.bestMapId = bestId;
 }
 
 function bpModalOpen(title, html) {
@@ -7019,8 +7153,7 @@ function bpKeyOf(txt) {
   return (String(txt || "").replace(/[\u2010\u2011]/g, "-").match(BP_WORD) || []).map(w => w.toLowerCase()).join(" ");
 }
 
-// ---------- Riconoscimento dei luoghi nel testo ----------
-// Restituisce le occorrenze con posizione: { s, e, key, idxs }
+// ---------- Riconoscimento intelligente dei luoghi nel testo ----------
 function bpFindMatches(text) {
   const out = [];
   if (!bpMeta || !bpPlaceMap) return out;
@@ -7046,7 +7179,6 @@ function bpFindMatches(text) {
     if (hit) {
       let accept = true;
       if (hit.every(ix => places[ix].w)) {
-        // nome ambiguo (Ai, Ur, Tema, Giuda...): vale solo dopo una preposizione o “città di”, mai a inizio frase
         accept = i > 0 && BP_PREP.has(toks[i - 1].lw) && /^[ \t\u00a0]+$/.test(t.slice(toks[i - 1].e, toks[i].s));
       }
       if (accept) out.push({ s: toks[i].s, e: toks[i + hitN - 1].e, key, idxs: hit });
@@ -7055,32 +7187,55 @@ function bpFindMatches(text) {
   }
   return out;
 }
-function bpScanText(text) {
+
+// Scansiona il testo (e se siamo in un capitolo biblico estrae anche i numeri esatti dei versetti per ogni luogo!)
+function bpScanText(text, verseRows = null) {
   const t = String(text || "").replace(/[\u2010\u2011]/g, "-");
   const found = new Map();
   bpFindMatches(t).forEach(m => {
     const f = found.get(m.key);
     if (f) f.count++;
-    else found.set(m.key, { key: m.key, surface: t.slice(m.s, m.e), idxs: m.idxs, count: 1, first: m.s });
+    else found.set(m.key, { key: m.key, surface: t.slice(m.s, m.e), idxs: m.idxs, count: 1, first: m.s, verses: [] });
   });
+
+  if (Array.isArray(verseRows) && verseRows.length > 0) {
+    verseRows.forEach(r => {
+      const idAttr = r.id || "";
+      const vNum = idAttr.startsWith("v_") ? parseInt(idAttr.slice(2), 10) : 0;
+      if (!vNum) return;
+      const vTxt = r.getAttribute("data-text") || r.textContent || "";
+      bpFindMatches(vTxt).forEach(m => {
+        const item = found.get(m.key);
+        if (item && !item.verses.includes(vNum)) {
+          item.verses.push(vNum);
+        }
+      });
+    });
+  }
+
   return [...found.values()].sort((a, b) => a.first - b.first);
 }
+
 function bpGetViewText() {
   const main = document.getElementById("mainContainer");
-  const out = { full: "", selected: "", scope: "", selLabel: "" };
+  const out = { full: "", selected: "", scope: "", selLabel: "", rows: [] };
   if (!main) return out;
   const type = (typeof currentViewContext !== "undefined" && currentViewContext) ? currentViewContext.type : "";
   const rows = [...main.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3")];
   if (rows.length) {
+    out.rows = rows;
     out.full = rows.map(r => r.getAttribute("data-text") || r.textContent || "").join("\n");
     try {
       out.scope = `${getBook(state.bookId).name} ${state.chapter}`;
-      if (state.selectedVerse) {
-        const r = document.getElementById("v_" + state.selectedVerse);
-        if (r) {
-          out.selected = r.getAttribute("data-text") || r.textContent || "";
-          out.selLabel = `${getBook(state.bookId).abbr} ${state.chapter}:${state.selectedVerse}`;
-        }
+      const selNums = selectedVersesMap.size > 0
+        ? Array.from(selectedVersesMap.keys()).sort((a, b) => a - b)
+        : (state.selectedVerse ? [state.selectedVerse] : []);
+      if (selNums.length > 0) {
+        out.selected = selNums.map(n => {
+          const r = document.getElementById("v_" + n);
+          return r ? (r.getAttribute("data-text") || r.textContent || "") : "";
+        }).join("\n");
+        out.selLabel = `${getBook(state.bookId).abbr} ${state.chapter}:${formatSelectedVersesRangeLabel(selNums)}`;
       }
     } catch (e) { out.scope = "Bibbia"; }
     return out;
@@ -7090,7 +7245,7 @@ function bpGetViewText() {
   return out;
 }
 
-// ---------- Schede dei luoghi e rimandi alle cartine ----------
+// ---------- Schede PRO dei luoghi, Salto nel Testo e Rimandi alle Cartine ----------
 function bpGroupRefs(p) {
   const by = new Map();
   const add = (mapId, page, cell, alt) => {
@@ -7105,34 +7260,70 @@ function bpGroupRefs(p) {
     .map(g => ({ ...g, pages: [...g.pages].sort((a, b) => a - b) }))
     .sort((a, b) => (a.alt - b.alt) || ((bpUi.mapScore.get(b.mapId) || 0) - (bpUi.mapScore.get(a.mapId) || 0)) || (!!b.cells.length - !!a.cells.length) || a.mapId.localeCompare(b.mapId));
 }
+
 function bpRefButton(pi, gi, g) {
   const map = bpMapById(g.mapId);
   if (!map) return "";
-  const star = (bpUi.mapBest >= 2 && (bpUi.mapScore.get(g.mapId) || 0) === bpUi.mapBest) ? "⭐ " : "";
-  const cells = g.cells.length ? g.cells.join(", ") : (map.hasGrid ? "" : "senza griglia");
-  return `<button class="bp-ref" onclick="bpOpen(${pi}, ${gi})">
-    <span>🗺️ ${star}${escapeHtml(map.title)}${g.alt ? " <i>(alternativa)</i>" : ""}<span class="bp-sub"> · ${escapeHtml(bpPages(g.pages.length ? g.pages : map.pages))}</span></span>
+  const isBest = bpUi.mapBest >= 2 && (bpUi.mapScore.get(g.mapId) || 0) === bpUi.mapBest;
+  const star = isBest ? `<span class="tag-badge" style="background:#00e5ff; color:#041a42; font-size:10px; padding:1px 6px; margin-right:4px;">★ Consigliata</span>` : "";
+  const cells = g.cells.length ? g.cells.join(", ") : (map.hasGrid ? "vedi mappa" : "senza griglia");
+  return `<button class="bp-ref btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,229,255,0.75);" onclick="bpOpen(${pi}, ${gi})">
+    <span>🗺️ ${star}${escapeHtml(map.title)}${g.alt ? " <i>(alt.)</i>" : ""}<span class="bp-sub"> · ${escapeHtml(bpPages(g.pages.length ? g.pages : map.pages))}</span></span>
     <b>${escapeHtml(cells)}</b></button>`;
 }
+
 function bpPlaceBlock(pi) {
   const p = bpMeta.places[pi];
   const groups = bpGroupRefs(p);
   const first = groups.slice(0, 4).map((g, gi) => bpRefButton(pi, gi, g)).join("");
   const rest = groups.slice(4).map((g, gi) => bpRefButton(pi, gi + 4, g)).join("");
   return `<div class="bp-place">
-    <div class="bp-pname">${escapeHtml(p.n)}${p.see ? ` <span class="bp-sub">→ vedi ${escapeHtml(p.see)}</span>` : ""}</div>
-    ${first}${rest ? `<details><summary class="bp-more">${groups.length - 4 === 1 ? "Un'altra cartina" : "Altre " + (groups.length - 4) + " cartine"}</summary>${rest}</details>` : ""}
+    <div class="bp-pname">🏛️ ${escapeHtml(p.n)}${p.see ? ` <span class="bp-sub">→ vedi ${escapeHtml(p.see)}</span>` : ""}</div>
+    ${first}${rest ? `<details><summary class="bp-more">➕ ${groups.length - 4 === 1 ? "Mostra 1 altra cartina" : "Mostra altre " + (groups.length - 4) + " cartine"}</summary>${rest}</details>` : ""}
   </div>`;
 }
+
+// Salta dal modale "Dove?" direttamente al versetto del capitolo in cui il luogo è nominato!
+function bpJumpToVerseInDom(verseNum) {
+  bmChimeHaptic();
+  closeProModal();
+  scrollToVerseAndHighlight(verseNum);
+}
+
 function bpCardHtml(r) {
-  const cnt = r.count > 1 ? ` <span class="bp-cnt">×${r.count}</span>` : "";
+  const cntBadge = r.count > 1 ? `<span class="tag-badge" style="font-size:11px; background:#0a367e; color:#84ffff; border-color:#29b6f6;">${r.count} occorrenze</span>` : "";
+  const versePills = (r.verses && r.verses.length > 0)
+    ? `<div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; align-items:center;">
+         <span style="font-size:11.5px; color:#9ec9ff; font-weight:700;">Nel capitolo:</span>
+         ${r.verses.map(v => `<span class="tag-badge" style="background:rgba(0,229,255,0.16); color:#00e5ff; border-color:#00e5ff; font-size:11.5px; padding:2px 8px;" onclick="bpJumpToVerseInDom(${v})" title="Salta al versetto ${v}">📖 v. ${v}</span>`).join("")}
+       </div>`
+    : "";
+
+  const quickStudyBar = `
+    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; padding-top:7px; border-top:1px dashed rgba(41,182,246,0.3);">
+      <span class="tag-badge" style="background:var(--primary-main); color:#fff; font-size:11.5px; padding:3px 9px;" onclick="searchWordInInsight('${escapeJsStr(r.surface)}')">📚 Voce in Perspicacia</span>
+      <span class="tag-badge" style="font-size:11.5px; padding:3px 9px;" onclick="searchWordInConcordance('${escapeJsStr(r.surface)}')">🔍 Cerca nella Bibbia</span>
+    </div>
+  `;
+
   if (r.idxs.length === 1) {
     const p = bpMeta.places[r.idxs[0]];
     const same = bpKeyOf(p.n) === bpKeyOf(r.surface);
-    return `<div class="bp-card"><div class="bp-title">📍 ${escapeHtml(r.surface)}${cnt}${same ? "" : ` <span class="bp-sub">(${escapeHtml(p.n)})</span>`}</div>${bpPlaceBlock(r.idxs[0])}</div>`;
+    return `<div class="bp-card">
+      <div class="bp-title"><span>📍 ${escapeHtml(r.surface)}${same ? "" : ` <span class="bp-sub">(${escapeHtml(p.n)})</span>`}</span>${cntBadge}</div>
+      ${versePills}
+      ${bpPlaceBlock(r.idxs[0])}
+      ${quickStudyBar}
+    </div>`;
   }
-  return `<div class="bp-card"><div class="bp-title">📍 ${escapeHtml(r.surface)}${cnt} <span class="bp-sub">· ${r.idxs.length} luoghi con questo nome</span></div>${r.idxs.map(bpPlaceBlock).join("")}</div>`;
+  return `<div class="bp-card">
+    <div class="bp-title"><span>📍 ${escapeHtml(r.surface)} <span class="bp-sub">· ${r.idxs.length} luoghi omonimi</span></span>${cntBadge}</div>
+    ${versePills}
+    ${r.idxs.map(bpPlaceBlock).join("")}
+    ${quickStudyBar}
+  </div>`;
 }
+
 function bpSearchPlaces(q) {
   const qk = bpKeyOf(q);
   if (qk.length < 2 || !bpMeta) return [];
@@ -7150,6 +7341,7 @@ function bpSearchPlaces(q) {
   scored.sort((a, b) => b[0] - a[0] || a[1] - b[1]);
   return scored.slice(0, 30).map(s => s[1]);
 }
+
 function bpOpen(pi, gi) {
   const g = bpGroupRefs(bpMeta.places[pi])[gi];
   if (g) {
@@ -7157,7 +7349,7 @@ function bpOpen(pi, gi) {
     openMapViewer(g.mapId, g.cells, bpMeta.places[pi].n);
   }
 }
-// tocco su un nome evidenziato nel testo
+
 function bpOpenSurface(key, surface) {
   const idxs = bpPlaceMap && bpPlaceMap.get(key);
   if (!idxs) return;
@@ -7166,24 +7358,27 @@ function bpOpenSurface(key, surface) {
     const prim = bpGroupRefs(p).filter(g => !g.alt);
     if (prim.length === 1) { openMapViewer(prim[0].mapId, prim[0].cells, p.n); return; }
   }
-  bpModalOpen("📍 " + surface, bpCardHtml({ surface, idxs, count: 1 }));
-}  
+  bpModalOpen("📍 " + surface, bpCardHtml({ surface, idxs, count: 1, verses: [] }));
+}
 
-// ---------- Evidenziazione dei luoghi nel testo aperto ----------
+// ---------- Evidenziazione interattiva dei luoghi nel testo aperto ----------
 function bpClearHighlights() {
   const main = document.getElementById("mainContainer");
   if (!main) return;
   main.querySelectorAll("span.bm-place-hl").forEach(el => el.replaceWith(document.createTextNode(el.textContent || "")));
   main.normalize();
+  bpUi.hlActive = false;
 }
+
 function bpHighlightDom() {
   const main = document.getElementById("mainContainer");
   if (!main || (currentViewContext && currentViewContext.type === "maps")) return;
   bpClearHighlights();
+  bpUi.hlActive = true;
   const walker = document.createTreeWalker(main, NodeFilter.SHOW_TEXT, {
     acceptNode(node) {
       const p = node.parentElement;
-      if (!p || p.closest("button, select, input, textarea, script, style, .tag-badge, .chapter-header, .section-title, .verse-num, .bm-place-hl")) return NodeFilter.FILTER_REJECT;
+      if (!p || p.closest("button, select, input, textarea, script, style, .tag-badge, .pub-ref-badge, .chapter-header, .section-title, .verse-num, .bm-place-hl")) return NodeFilter.FILTER_REJECT;
       return /\p{Lu}/u.test(node.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
     }
   });
@@ -7211,61 +7406,139 @@ function bpHighlightDom() {
   });
 }
 
-// ---------- 📍 Dove? — da qualsiasi testo aperto ----------
+function bpToggleDomHighlights(btnEl) {
+  bmHaptic(14);
+  if (bpUi.hlActive) {
+    bpClearHighlights();
+    if (btnEl) btnEl.textContent = "✨ Sottolinea nel testo: OFF";
+  } else {
+    bpHighlightDom();
+    if (btnEl) btnEl.textContent = "✨ Sottolinea nel testo: ON";
+  }
+}
+
+function bpCopyGeoDossier(btnEl) {
+  bmChimeHaptic();
+  const list = [...bpUi.sel, ...bpUi.all];
+  if (!list.length) return;
+  const lines = [
+    `━━━ 📍 DOSSIER GEOGRAFICO: ${bpUi.scope || "Studio"} ━━━`,
+    ...list.map(r => {
+      const p = bpMeta.places[r.idxs[0]];
+      const groups = bpGroupRefs(p);
+      const topMap = groups[0] ? bpMapById(groups[0].mapId) : null;
+      const vStr = (r.verses && r.verses.length) ? ` (vv. ${r.verses.join(", ")})` : "";
+      const mStr = topMap ? ` → 🗺️ ${topMap.title} [${groups[0].cells.join(",") || bpPages(topMap.pages)}]` : "";
+      return `• ${r.surface}${vStr}${mStr}`;
+    }),
+    `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
+  ];
+  copyPubRefToClipboard(lines.join("\n"));
+  if (btnEl) btnEl.textContent = "✔ Luoghi Copiati!";
+}
+
+// ---------- 📍 Dove? — Console Geografica Intelligente ----------
 async function openWhereIsItModal() {
+  bmChimeHaptic();
   if (typeof closeActionBar === "function") closeActionBar();
   const meta = await bpGetMeta();
   if (!meta) {
-    bpModalOpen("📍 Dove si trova?", `
-      <p style="font-size:13px; color:var(--text-muted); line-height:1.5; margin-bottom:12px;">
-        Carica una sola volta il file <b>vedete_il_buon_paese.json</b>. Poi, da qualsiasi testo aperto (Bibbia, Scrittura del Giorno, Perspicacia, Tutta la Scrittura), arrivi alla cartina giusta con il quadrato evidenziato.
-      </p>
-      <label class="search-btn" style="display:block; text-align:center; padding:11px; cursor:pointer; background:linear-gradient(135deg, #00695c, #00897b);">
-        🗺️ Carica vedete_il_buon_paese.json
-        <input type="file" accept=".json,application/json" style="display:none;" onchange="importMapsArchive(event)">
-      </label>
-      <div id="epubImportStatus" style="margin-top:12px; font-size:13px; font-weight:700; color:var(--primary-light);"></div>`);
+    bpModalOpen("📍 Atlante & Luoghi Biblici", `
+      <div class="result-card" style="cursor:default; text-align:center; padding:18px 12px;">
+        <div style="font-size:28px; margin-bottom:6px;">🗺️</div>
+        <div style="font-size:15px; font-weight:800; color:#00e5ff; margin-bottom:8px;">Atlante “Vedete il buon paese”</div>
+        <p style="font-size:13px; color:#cfe3ff; line-height:1.5; margin-bottom:14px;">
+          Carica una sola volta il file <b>vedete_il_buon_paese.json</b>. Da qualsiasi capitolo biblico, voce di Perspicacia o Scrittura del Giorno potrai individuare subito ogni luogo sulla cartina HD con il quadrato lampeggiante.
+        </p>
+        <label class="myread-action-btn btn-color-anim" style="display:block; text-align:center; cursor:pointer; --btn-bg:#00b0ff; background:#1565c0;">
+          🗺️ Carica vedete_il_buon_paese.json
+          <input type="file" accept=".json,application/json" style="display:none;" onchange="importMapsArchive(event)">
+        </label>
+        <div id="epubImportStatus" style="margin-top:12px; font-size:13px; font-weight:700; color:var(--primary-light);"></div>
+      </div>`);
     return;
   }
   const src = bpGetViewText();
   bpUi.scope = src.scope;
   bpUi.selLabel = src.selLabel;
-  bpUi.sel = src.selected ? bpScanText(src.selected) : [];
+  bpUi.sel = src.selected ? bpScanText(src.selected, src.rows) : [];
   const selKeys = new Set(bpUi.sel.map(r => r.key));
-  bpUi.all = bpScanText(src.full).filter(r => !selKeys.has(r.key));
+  bpUi.all = bpScanText(src.full, src.rows).filter(r => !selKeys.has(r.key));
   bpComputeMapScore([...bpUi.sel, ...bpUi.all]);
-  bpModalOpen("📍 Dove si trova?", `
-    <input type="search" id="bpQuery" class="bp-search" placeholder="🔍 Cerca un luogo (es. Betania, Ur, Mar Salato)" autocomplete="off" oninput="bpOnQuery(this.value)">
+  bpHighlightDom();
+
+  const totalPlaces = bpUi.sel.length + bpUi.all.length;
+  bpModalOpen(`📍 Dove si trova? — ${src.scope || "Atlante"}`, `
+    <input type="search" id="bpQuery" class="bp-search" placeholder="🔍 Cerca fra i ${meta.places.length} luoghi biblici (es. Betania, Ur, Gerico)..." autocomplete="off" oninput="bpOnQuery(this.value)">
+    ${totalPlaces > 0 ? `
+      <div style="display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
+        <button type="button" class="nav-btn" style="flex:1; font-size:12px; padding:6px 8px; background:#062356; border-color:#29b6f6; color:#84ffff;" onclick="bpToggleDomHighlights(this)">
+          ✨ Sottolinea nel testo: ON
+        </button>
+        <button type="button" class="nav-btn" style="flex:1; font-size:12px; padding:6px 8px; background:#062356; border-color:#29b6f6; color:#ffffff;" onclick="bpCopyGeoDossier(this)">
+          📋 Copia Dossier (${totalPlaces} luoghi)
+        </button>
+      </div>
+    ` : ""}
     <div id="bpBody"></div>`);
   bpRenderBody("");
-  bpHighlightDom();
 }
+
 let bpQueryTimer = null;
 function bpOnQuery(v) {
   clearTimeout(bpQueryTimer);
   bpQueryTimer = setTimeout(() => bpRenderBody(v), 120);
 }
+
 function bpRenderBody(q) {
   const body = document.getElementById("bpBody");
   if (!body) return;
   let html = "";
+
+  // Ricerca diretta nell'intero database dei 670 luoghi
   if (q && q.trim().length >= 2) {
     const res = bpSearchPlaces(q);
     bpUi.mapScore = new Map(); bpUi.mapBest = 0;
     body.innerHTML = res.length
-      ? `<div class="bp-h">Risultati (${res.length})</div>` + res.map(pi => `<div class="bp-card">${bpPlaceBlock(pi)}</div>`).join("")
-      : `<div class="bp-empty">Nessun luogo trovato per “${escapeHtml(q.trim())}”.</div>`;
+      ? `<div class="bp-h">🔍 Risultati nell'Atlante Biblico (${res.length})</div>` + res.map(pi => {
+          const p = bpMeta.places[pi];
+          return `<div class="bp-card">
+            <div class="bp-title"><span>📍 ${escapeHtml(p.n)}</span></div>
+            ${bpPlaceBlock(pi)}
+            <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; padding-top:7px; border-top:1px dashed rgba(41,182,246,0.3);">
+              <span class="tag-badge" style="background:var(--primary-main); color:#fff; font-size:11.5px; padding:3px 9px;" onclick="searchWordInInsight('${escapeJsStr(p.n)}')">📚 Voce in Perspicacia</span>
+              <span class="tag-badge" style="font-size:11.5px; padding:3px 9px;" onclick="searchWordInConcordance('${escapeJsStr(p.n)}')">🔍 Cerca nella Bibbia</span>
+            </div>
+          </div>`;
+        }).join("")
+      : `<div class="bp-empty">Nessun luogo trovato per “<b>${escapeHtml(q.trim())}</b>”.</div>`;
     return;
   }
-  if (bpUi.sel.length) html += `<div class="bp-h">Nel versetto selezionato (${escapeHtml(bpUi.selLabel)})</div>` + bpUi.sel.map(bpCardHtml).join("");
+
+  // Banner Cartina Principale Consigliata per il Capitolo (se almeno 2 luoghi convergono sulla stessa mappa)
+  if (bpUi.bestMapId && bpUi.mapBest >= 2) {
+    const bestMap = bpMapById(bpUi.bestMapId);
+    if (bestMap) {
+      html += `
+        <div class="result-card" style="background:linear-gradient(135deg, #0d47a1, #1565c0) !important; border:1.5px solid #00e5ff !important; margin-bottom:10px;" onclick="closeProModal(); openMapViewer('${bestMap.id}', [], '')">
+          <div style="font-size:11px; font-weight:900; color:#84ffff; text-transform:uppercase; letter-spacing:0.5px;">⭐ Cartina Principale di ${escapeHtml(bpUi.scope)}</div>
+          <div style="font-size:15px; font-weight:900; color:#ffffff; margin:2px 0;">🗺️ ${escapeHtml(bestMap.title)}</div>
+          <div style="font-size:12px; color:#e3f2fd;">Include <b>${bpUi.mapBest} luoghi</b> citati in questa pagina · ${escapeHtml(bpPages(bestMap.pages))} →</div>
+        </div>
+      `;
+    }
+  }
+
+  if (bpUi.sel.length) {
+    html += `<div class="bp-h">🎯 Nel versetto selezionato (${escapeHtml(bpUi.selLabel)})</div>` + bpUi.sel.map(bpCardHtml).join("");
+  }
   if (bpUi.all.length) {
-    html += `<div class="bp-h">${bpUi.sel.length ? "Altri luoghi in" : "Luoghi in"} ${escapeHtml(bpUi.scope)} (${bpUi.all.length})</div>` + bpUi.all.map(bpCardHtml).join("");
-    html += `<div class="bp-note">I nomi riconosciuti sono sottolineati anche nel testo: toccali per aprire la cartina. <a href="#" onclick="bpClearHighlights(); return false;">Togli sottolineature</a></div>`;
+    html += `<div class="bp-h">📍 ${bpUi.sel.length ? "Altri luoghi in" : "Luoghi rilevati in"} ${escapeHtml(bpUi.scope)} (${bpUi.all.length})</div>` + bpUi.all.map(bpCardHtml).join("");
   }
   if (!bpUi.sel.length && !bpUi.all.length) {
-    html += `<div class="bp-empty">Nessun luogo riconosciuto in ${escapeHtml(bpUi.scope || "questa pagina")}. Scrivi un nome nella casella di ricerca qui sopra, oppure sfoglia le cartine.</div>`;
+    html += `<div class="bp-empty" style="text-align:center; padding:14px 6px;">Nessun nome geografico rilevato automaticamente in <b>${escapeHtml(bpUi.scope || "questa pagina")}</b>.<br>Digita qualsiasi luogo nella barra di ricerca qui sopra o apri la galleria completa delle cartine HD.</div>`;
   }
-  html += `<button class="search-btn" style="width:100%; margin-top:12px;" onclick="closeProModal(); showMapsView(null);">🗺️ Apri tutte le ${bpMeta.maps.length} cartine</button>`;
+  html += `<button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,176,255,0.75); background:#1565c0; margin-top:12px;" onclick="closeProModal(); showMapsView(null);">🗺️ Sfoglia tutte le ${bpMeta.maps.length} Cartine Bibliche HD</button>`;
   body.innerHTML = html;
 }
 
