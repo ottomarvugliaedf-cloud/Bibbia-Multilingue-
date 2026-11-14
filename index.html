@@ -8138,11 +8138,13 @@ async function executeOmniSearch() {
 })();
     
 // ============================================================================
-// 🔬 LENTE ESEGETICA PRO (RAGGI X DEL VERSETTO: Poliglotta Ordinato + Radici + Dossier)
+// 🔬 LENTE ESEGETICA PRO (RAGGI X DEL VERSETTO: Navigazione Versetti + Ritorno Rapido)
 // ============================================================================
+let bmXRayReturnState = null;
+
 function getXRayCleanSortTitle(nameStr) {
   return String(nameStr || "")
-    .replace(/^[^:]+:\s*/, "") // Rimuove prefisso bandiera/lingua (es. "🇮🇹 Italiano: ")
+    .replace(/^[^:]+:\s*/, "")
     .replace(/^Bibbia\s+/i, "")
     .trim();
 }
@@ -8158,7 +8160,6 @@ function sortXRayBiblesHierarchy(biblesList) {
   };
 
   const tnmPriorityRank = (id) => {
-    // 1° TNM 1987/1984 (bi12), 2° TNM moderna (nwt), 3° tutte le altre in ordine alfabetico
     if (id === "gb:bi12" || id === "gb:bi12_s" || id === "gb:bi12_e") return 1;
     if (id === "gb:nwt"  || id === "gb:nwt_s"  || id === "gb:nwt_tpo" || id === "gb:nwt_e") return 2;
     return 3;
@@ -8169,13 +8170,11 @@ function sortXRayBiblesHierarchy(biblesList) {
     const gB = langGroupRank(b.lang);
     if (gA !== gB) return gA - gB;
 
-    // Se sono nel gruppo 5 (altre lingue), ordina prima alfabeticamente per nome lingua
     if (gA === 5) {
       const langCmp = String(a.lang || "").localeCompare(String(b.lang || ""), "it", { sensitivity: "base" });
       if (langCmp !== 0) return langCmp;
     }
 
-    // All'interno della stessa lingua: prima TNM 87, poi TNM 2013/moderna, poi ordine alfabetico
     const pA = tnmPriorityRank(a.id);
     const pB = tnmPriorityRank(b.id);
     if (pA !== pB) return pA - pB;
@@ -8184,8 +8183,73 @@ function sortXRayBiblesHierarchy(biblesList) {
   });
 }
 
+// Inietta nella schermata di Ricerca o Perspicacia il pulsante per tornare direttamente alla scheda Raggi X
+// oppure al capitolo col versetto riquadrato!
+function injectXRayReturnBanner() {
+  if (!bmXRayReturnState) return;
+  const { bookId, chapter, verse } = bmXRayReturnState;
+  const bMeta = getBook(bookId);
+  const shortRef = `${bMeta.abbr} ${chapter}:${verse}`;
+
+  setTimeout(() => {
+    const main = document.getElementById("mainContainer");
+    if (!main) return;
+    const oldBanner = document.getElementById("bmXRayReturnBar");
+    if (oldBanner) oldBanner.remove();
+
+    const banner = document.createElement("div");
+    banner.id = "bmXRayReturnBar";
+    banner.style.cssText = "display:flex; gap:8px; align-items:center; justify-content:space-between; background:linear-gradient(135deg, #041a42, #0d47a1); border:1.5px solid #00e5ff; border-radius:10px; padding:8px 10px; margin-bottom:12px; box-shadow:0 0 14px rgba(0,229,255,0.35); flex-wrap:wrap;";
+    banner.innerHTML = `
+      <span style="font-size:12.5px; font-weight:800; color:#84ffff;">🔬 Partito da <b>${escapeHtml(shortRef)}</b>:</span>
+      <div style="display:flex; gap:6px; flex-wrap:wrap;">
+        <button type="button" class="nav-btn" style="background:#00e5ff; color:#041a42; border-color:#84ffff; font-weight:900; padding:5px 10px;" onclick="returnToXRayModalNow()">
+          🔬 Torna a Raggi X (${escapeHtml(shortRef)})
+        </button>
+        <button type="button" class="nav-btn" style="background:#062356; color:#ffffff; border-color:#29b6f6; font-weight:800; padding:5px 10px;" onclick="returnToXRayChapterHighlighted()">
+          📖 Cap. ${escapeHtml(shortRef)}
+        </button>
+      </div>
+    `;
+    main.insertBefore(banner, main.firstChild);
+  }, 50);
+}
+
+async function returnToXRayModalNow() {
+  if (!bmXRayReturnState) return;
+  bmChimeHaptic();
+  const { bookId, chapter, verse } = bmXRayReturnState;
+  state.bookId = bookId;
+  state.chapter = chapter;
+  state.selectedVerse = verse;
+  if (currentViewContext.type !== "bible") {
+    await loadChapterView();
+  }
+  scrollToVerseAndHighlight(verse);
+  openVerseXRayModal(verse);
+}
+
+function returnToXRayChapterHighlighted() {
+  if (!bmXRayReturnState) return;
+  bmHaptic(14);
+  const { bookId, chapter, verse } = bmXRayReturnState;
+  openRef(bookId, chapter, verse);
+}
+
+function prepareXRayJumpContext() {
+  const d = window.__lastXRayData;
+  if (!d) return;
+  bmXRayReturnState = { bookId: d.bookId, chapter: d.chapter, verse: d.verse };
+  // Fissa il versetto anche su state.selectedVerse prima che saveCurrentPositionToHistory scatti,
+  // così anche il tasto standard "⬅️" sa sempre qual era il versetto esatto e lo riquadra al ritorno!
+  state.bookId = d.bookId;
+  state.chapter = d.chapter;
+  state.selectedVerse = d.verse;
+}
+
 async function openStrongCodeFromXRay(codeStr, fallbackWord) {
   bmHaptic(14);
+  prepareXRayJumpContext();
   const cleanCode = String(codeStr || "").trim().toUpperCase();
   closeProModal();
   showSearchView();
@@ -8194,10 +8258,8 @@ async function openStrongCodeFromXRay(codeStr, fallbackWord) {
   const inp = document.getElementById("searchInput");
   if (!inp) return;
 
-  // Controlla se kjv_strongs è REALMENTE salvata con tutti i libri in IndexedDB,
-  // altrimenti usa la Bibbia principale attiva dell'utente (es. TNM 1987 bi12 o Riveduta) senza mai bloccarsi!
   let useStrongsBible = false;
-  if ( /^[HG]\d{1,4}$/i.test(cleanCode)) {
+  if (/^[HG]\d{1,4}$/i.test(cleanCode)) {
     const offStrong = await getOfflineBible("gb:kjv_strongs");
     if (offStrong && Array.isArray(offStrong.books) && offStrong.books.some(b => b.chapters && b.chapters.length > 0)) {
       useStrongsBible = true;
@@ -8208,7 +8270,6 @@ async function openStrongCodeFromXRay(codeStr, fallbackWord) {
     bibleSel.value = "gb:kjv_strongs";
     inp.value = cleanCode;
   } else {
-    // Usa la Bibbia attiva (o TNM 1987 bi12) e cerca direttamente il termine italiano della radice!
     if (bibleSel) {
       const preferredBible = state.downloadedBibles.includes(state.trans1) ? state.trans1 : (state.downloadedBibles.includes("gb:bi12") ? "gb:bi12" : "gb:riveduta");
       bibleSel.value = preferredBible;
@@ -8216,29 +8277,81 @@ async function openStrongCodeFromXRay(codeStr, fallbackWord) {
     inp.value = fallbackWord || cleanCode;
   }
   executeSearch(1);
+  injectXRayReturnBanner();
 }
 
-async function openVerseXRayModal() {
+function openConcordanceFromXRay(word) {
+  bmHaptic(14);
+  prepareXRayJumpContext();
+  searchWordInConcordance(word);
+  injectXRayReturnBanner();
+}
+
+function openInsightFromXRay(word) {
+  bmHaptic(14);
+  prepareXRayJumpContext();
+  searchWordInInsight(word);
+  injectXRayReturnBanner();
+}
+
+async function stepXRayVerse(delta) {
+  bmHaptic(14);
+  const d = window.__lastXRayData;
+  const curV = d ? Number(d.verse) : (state.selectedVerse || 1);
+  const targetV = Math.max(1, curV + delta);
+  await openVerseXRayModal(targetV);
+}
+
+async function openVerseXRayModal(explicitVerseNum = null) {
   bmChimeHaptic();
   const book = getBook(state.bookId);
-  const nums = selectedVersesMap.size > 0
-    ? Array.from(selectedVersesMap.keys()).sort((a, b) => a - b)
-    : (state.selectedVerse ? [state.selectedVerse] : [1]);
-  const vNum = nums[0];
+  let vNum = Number(explicitVerseNum) || 0;
+  if (!vNum) {
+    const nums = selectedVersesMap.size > 0
+      ? Array.from(selectedVersesMap.keys()).sort((a, b) => a - b)
+      : (state.selectedVerse ? [state.selectedVerse] : []);
+    if (nums.length > 0) {
+      vNum = nums[0];
+    } else {
+      // Se aveva già un versetto incorniciato da .bm-persist-hl nel capitolo, usa quello!
+      const persistedEl = document.querySelector(".bm-persist-hl");
+      if (persistedEl && persistedEl.id && persistedEl.id.startsWith("v_")) {
+        vNum = parseInt(persistedEl.id.slice(2), 10) || 1;
+      } else {
+        vNum = 1;
+      }
+    }
+  }
+
   const refTitle = `${book.name} ${state.chapter}:${vNum}`;
-  const baseText = selectedVersesMap.get(vNum) || state.selectedVerseText || "";
+  const domRow = document.getElementById(`v_${vNum}`);
+  const baseText = (domRow && domRow.getAttribute("data-text")) || selectedVersesMap.get(vNum) || state.selectedVerseText || "";
 
   closeActionBar();
+
+  // Mantiene SEMPRE incorniciato col riquadro azzurro (.bm-persist-hl) il versetto in esame nel capitolo sottostante!
+  state.selectedVerse = vNum;
+  state.selectedVerseText = baseText;
+  bmXRayReturnState = { bookId: state.bookId, chapter: state.chapter, verse: vNum };
+  if (domRow) {
+    clearPersistentVerseHighlight();
+    domRow.classList.add("bm-persist-hl");
+    domRow.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
   const modal = document.getElementById("proModal");
   const titleEl = document.getElementById("proModalTitle");
   const bodyEl = document.getElementById("proModalBody");
   if (!modal || !titleEl || !bodyEl) return;
 
-  titleEl.textContent = `🔬 Raggi X Esegetici — ${refTitle}`;
+  titleEl.textContent = `🔬 Raggi X — ${book.abbr} ${state.chapter}:${vNum}`;
   bodyEl.innerHTML = `<div class="loader">🔬 Scansione poliglotta ed esegetica di <b>${escapeHtml(refTitle)}</b> in corso...</div>`;
   modal.style.display = "flex";
 
-  // 1. Raccoglie tutte le Bibbie candidate (quelle nei 3 selettori, i moduli EPUB e le Bibbie attive)
+  // Conta quanti versetti ha il capitolo attuale per abilitare/disabilitare "Vers. Succ. ▶"
+  let maxVerseInChapter = document.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3").length;
+
+  // 1. Raccoglie tutte le Bibbie candidate e le ordina secondo la gerarchia IT -> ES -> PT -> EN -> Altre
   const candidateIds = [];
   const pushUnique = (id) => { if (id && !candidateIds.includes(id)) candidateIds.push(id); };
   LOCAL_EPUB_IDS.forEach(pushUnique);
@@ -8252,7 +8365,6 @@ async function openVerseXRayModal() {
     .map(tid => dynamicCatalog.find(b => b.id === tid) || CORE_BIBLES.find(b => b.id === tid))
     .filter(Boolean);
 
-  // Ordina rigorosamente secondo la gerarchia richiesta (IT -> ES -> PT -> EN -> Altre lingue)
   const sortedMetaList = sortXRayBiblesHierarchy(rawCandidatesMeta);
 
   const comparedList = [];
@@ -8264,6 +8376,9 @@ async function openVerseXRayModal() {
         if (!off || !Array.isArray(off.books)) continue;
         const bObj = off.books.find(b => Number(b.nr) === Number(state.bookId));
         const cObj = bObj && bObj.chapters ? bObj.chapters.find(c => Number(c.chapter) === Number(state.chapter)) : null;
+        if (cObj && Array.isArray(cObj.verses) && cObj.verses.length > maxVerseInChapter) {
+          maxVerseInChapter = cObj.verses.length;
+        }
         const vObj = cObj && cObj.verses ? cObj.verses.find(v => Number(v.verse) === Number(vNum)) : null;
         if (vObj && vObj.text) {
           comparedList.push({ id: tid, name: meta.name, lang: meta.lang, text: stripTagsToPlainText(vObj.text) });
@@ -8275,6 +8390,9 @@ async function openVerseXRayModal() {
         const isOfflineSaved = Boolean(await getOfflineBible(tid));
         if (isSelectedInTopBar || hasCache || isOfflineSaved) {
           const chData = await fetchChapterData(tid, state.bookId, state.chapter);
+          if (Array.isArray(chData) && chData.length > maxVerseInChapter) {
+            maxVerseInChapter = chData.length;
+          }
           const vObj = (chData || []).find(v => Number(v.verse) === Number(vNum));
           if (vObj && vObj.text) {
             comparedList.push({ id: tid, name: meta.name, lang: meta.lang, text: stripTagsToPlainText(vObj.text) });
@@ -8284,7 +8402,8 @@ async function openVerseXRayModal() {
     } catch (e) {}
   }
 
-  // Testo di riferimento per evidenziare le variazioni e rilevare le radici italiane
+  if (!maxVerseInChapter) maxVerseInChapter = 176;
+
   const referenceItalianItem = comparedList.find(c => String(c.lang).toLowerCase().includes("ital")) || comparedList[0];
   const primaryText = referenceItalianItem ? referenceItalianItem.text : baseText;
   const baseWordsSet = new Set(
@@ -8317,7 +8436,7 @@ async function openVerseXRayModal() {
     }
   });
 
-  // 3. Estrazione Parole Chiave di Studio (per ponte rapido a Perspicacia e Concordanza)
+  // 3. Estrazione Parole Chiave di Studio
   const stopQuick = new Set(["della","delle","dello","degli","nella","nelle","nello","negli","sulla","sulle","dalla","dalle","alla","alle","questo","questa","questi","queste","quello","quella","quelli","quelle","essere","avere","tutto","tutti","tutte","anche","ancora","perche","quando","quindi","contro","sempre","prima","dopo","sopra","sotto","dentro","fuori","presso","verso","secondo","nostro","vostro","stesso","proprio","quale","quanto","molto","molti","ogni","alcuni","mentre","allora","coloro","colui","hanno","aveva","sarà","sono","erano","stato","disse","dice","fece","fatto"]);
   const studyTokens = [...new Set(
     primaryText.replace(/[^a-zA-ZÀ-ÿ\s]/g, " ").split(/\s+/).filter(w => {
@@ -8335,6 +8454,23 @@ async function openVerseXRayModal() {
     comparedList,
     detectedRoots
   };
+
+  // Barra di navigazione Versetto Precedente / Versetto Successivo dentro Raggi X
+  const hasPrevV = vNum > 1;
+  const hasNextV = vNum < maxVerseInChapter;
+  const verseStepperBar = `
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; background:#062356; border:1px solid #29b6f6; border-radius:10px; padding:6px 8px; margin-bottom:10px;">
+      <button type="button" class="nav-btn" ${!hasPrevV ? 'disabled style="opacity:0.38; cursor:default;"' : 'style="background:#0d47a1; color:#fff; border-color:#4fc3f7;"'} onclick="stepXRayVerse(-1)">
+        ◀ Vers. ${hasPrevV ? vNum - 1 : ''}
+      </button>
+      <span style="font-size:13.5px; font-weight:900; color:#00e5ff; text-align:center;">
+        📖 ${escapeHtml(book.abbr)} ${state.chapter}:${vNum} <small style="color:#9ec9ff; font-weight:700;">/ ${maxVerseInChapter}</small>
+      </span>
+      <button type="button" class="nav-btn" ${!hasNextV ? 'disabled style="opacity:0.38; cursor:default;"' : 'style="background:#0d47a1; color:#fff; border-color:#4fc3f7;"'} onclick="stepXRayVerse(1)">
+        Vers. ${hasNextV ? vNum + 1 : ''} ▶
+      </button>
+    </div>
+  `;
 
   const versionsHtml = comparedList.map((item, idx) => `
     <div class="result-card" style="cursor:default; margin-bottom:7px; border-left:${idx === 0 ? '4px solid #00e5ff' : '3px solid var(--primary-light)'};">
@@ -8357,7 +8493,7 @@ async function openVerseXRayModal() {
       <div class="result-card" style="cursor:default; margin-bottom:6px;">
         <div class="result-ref" style="font-size:13px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">
           <span>${escapeHtml(r.word.toUpperCase())} ${codeBadges}</span>
-          <span class="tag-badge" onclick="searchWordInConcordance('${escapeJsStr(r.word)}')">🔍 Concordanza</span>
+          <span class="tag-badge" onclick="openConcordanceFromXRay('${escapeJsStr(r.word)}')">🔍 Concordanza</span>
         </div>
         <div style="font-weight:800; color:#84ffff; font-size:13.5px; margin:2px 0;">${escapeHtml(r.orig)}</div>
         <div style="font-size:12.5px; color:var(--text-muted); line-height:1.4;">${escapeHtml(r.def)}</div>
@@ -8369,20 +8505,22 @@ async function openVerseXRayModal() {
     <div class="section-title"><span>📚 Ponte Rapido a Perspicacia & Concordanza</span></div>
     <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
       ${studyTokens.map(w => `
-        <span class="tag-badge" style="padding:5px 10px; font-size:12.5px; background:var(--primary-main); color:#fff;" onclick="searchWordInInsight('${escapeJsStr(w)}')" title="Cerca in Perspicacia">📚 ${escapeHtml(w)}</span>
-        <span class="tag-badge" style="padding:5px 10px; font-size:12.5px;" onclick="searchWordInConcordance('${escapeJsStr(w)}')" title="Cerca in Concordanza">🔍 ${escapeHtml(w)}</span>
+        <span class="tag-badge" style="padding:5px 10px; font-size:12.5px; background:var(--primary-main); color:#fff;" onclick="openInsightFromXRay('${escapeJsStr(w)}')" title="Cerca in Perspicacia">📚 ${escapeHtml(w)}</span>
+        <span class="tag-badge" style="padding:5px 10px; font-size:12.5px;" onclick="openConcordanceFromXRay('${escapeJsStr(w)}')" title="Cerca in Concordanza">🔍 ${escapeHtml(w)}</span>
       `).join("")}
     </div>
   ` : "";
 
   bodyEl.innerHTML = `
+    ${verseStepperBar}
     <div style="font-size:12px; color:#9ec9ff; margin-bottom:8px;">
       Confronto gerarchico su <b>${comparedList.length} edizioni</b> (IT → ES → PT → EN → Altre):
     </div>
     ${versionsHtml}
     ${rootsHtml}
     ${studyPillsHtml}
-    <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
+    ${verseStepperBar}
+    <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
       <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,176,255,0.75); background:#1565c0; flex:1;" onclick="copyXRayComparisonReport(this)">
         📋 Copia Quadro Comparativo
       </button>
@@ -8391,6 +8529,7 @@ async function openVerseXRayModal() {
       </button>
     </div>
   `;
+  bodyEl.scrollTop = 0;
 }
 
 function buildXRayReportString() {
