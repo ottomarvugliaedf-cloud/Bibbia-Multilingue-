@@ -3588,7 +3588,8 @@ async function executeSearch(page = 1) {
     try {
       let fullBible = await getOfflineBible(searchTransId);
       if (!fullBible && !LOCAL_EPUB_IDS.includes(searchTransId)) {
-        const code = searchTransId.split(":")[1];
+        let code = searchTransId.split(":")[1];
+        if (code === "kjv_strongs") code = "kjv"; // Fallback automatico: kjv_strongs non esiste su API v2 di GetBible
         const res = await fetch(`https://api.getbible.net/v2/${code}.json`);
         if (res.ok) {
           fullBible = await res.json();
@@ -8186,20 +8187,35 @@ function sortXRayBiblesHierarchy(biblesList) {
 async function openStrongCodeFromXRay(codeStr, fallbackWord) {
   bmHaptic(14);
   const cleanCode = String(codeStr || "").trim().toUpperCase();
-  // Se l'utente ha attiva o scaricata la KJV Strongs, cerca direttamente il codice Strong (es. H7225) nella Concordanza
-  const hasKjvStrongs = state.downloadedBibles.includes("gb:kjv_strongs");
   closeProModal();
   showSearchView();
+
   const bibleSel = document.getElementById("searchBibleSelect");
   const inp = document.getElementById("searchInput");
-  if (hasKjvStrongs && bibleSel && inp && /^[HG]\d{1,4}$/i.test(cleanCode)) {
+  if (!inp) return;
+
+  // Controlla se kjv_strongs è REALMENTE salvata con tutti i libri in IndexedDB,
+  // altrimenti usa la Bibbia principale attiva dell'utente (es. TNM 1987 bi12 o Riveduta) senza mai bloccarsi!
+  let useStrongsBible = false;
+  if ( /^[HG]\d{1,4}$/i.test(cleanCode)) {
+    const offStrong = await getOfflineBible("gb:kjv_strongs");
+    if (offStrong && Array.isArray(offStrong.books) && offStrong.books.some(b => b.chapters && b.chapters.length > 0)) {
+      useStrongsBible = true;
+    }
+  }
+
+  if (useStrongsBible && bibleSel) {
     bibleSel.value = "gb:kjv_strongs";
     inp.value = cleanCode;
-    executeSearch(1);
-  } else if (inp) {
+  } else {
+    // Usa la Bibbia attiva (o TNM 1987 bi12) e cerca direttamente il termine italiano della radice!
+    if (bibleSel) {
+      const preferredBible = state.downloadedBibles.includes(state.trans1) ? state.trans1 : (state.downloadedBibles.includes("gb:bi12") ? "gb:bi12" : "gb:riveduta");
+      bibleSel.value = preferredBible;
+    }
     inp.value = fallbackWord || cleanCode;
-    executeSearch(1);
   }
+  executeSearch(1);
 }
 
 async function openVerseXRayModal() {
