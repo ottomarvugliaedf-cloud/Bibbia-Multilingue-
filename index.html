@@ -992,7 +992,7 @@ body.oled-mode .pub-ref-badge {
     .bp-it.click:active { background: var(--verse-hover); }
     .bp-g { min-width: 46px; font-weight: 800; color: var(--primary-light); }
 
-        /* Proiezione Radiale dal centro verso i bordi scuri per i tasti dei modali e Biblioteca Online */
+    /* Proiezione Radiale dal centro verso i bordi scuri per i tasti dei modali e Biblioteca Online */
     @keyframes bmCenterDarkEdges {
       0% {
         background: radial-gradient(circle at 50% 50%, #ffffff 0%, var(--btn-bg, #00e5ff) 32%, #0a367e 72%, #020b1c 100%);
@@ -1381,7 +1381,7 @@ body.oled-mode .pub-ref-badge {
   </div>
   <!-- Contenitore Principale (Lettura, Griglia 66 Libri, Ricerca, Note, Catalogo) -->
   <main id="mainContainer"></main>
-  <!-- Barra Azioni Versetto (Colori + Copia + Preferiti + Appunti + Voce + Strong + Passi Paralleli + Card) -->
+  <!-- Barra Azioni Versetto (Ordine Personalizzato PRO) -->
   <div id="verseActionBar" class="verse-action-bar">
     <div class="color-dot" style="background:#ffeb3b;" onclick="applyHighlight('hl-yellow')"></div>
     <div class="color-dot" style="background:#03a9f4;" onclick="applyHighlight('hl-blue')"></div>
@@ -1389,11 +1389,11 @@ body.oled-mode .pub-ref-badge {
     <div class="color-dot" style="background:#e91e63;" onclick="applyHighlight('hl-pink')"></div>
     <div class="color-dot" style="background:#9c27b0;" onclick="applyHighlight('hl-purple')"></div>
     <button class="icon-btn" style="color:var(--text-main);" title="Rimuovi colore" onclick="applyHighlight('')">🚫</button>
-    <button class="icon-btn" style="color:var(--text-main);" title="Copia versetto" onclick="copySelectedVerse()">📋</button>
-    <button class="icon-btn" style="color:var(--primary-light);" title="Ascolta versetto" onclick="speakSelectedVerse()">🔊</button>
-    <button class="icon-btn" style="color:#00e5ff;" title="Raggi X: Confronto Versioni & Analisi" onclick="openVerseXRayModal()">🔬</button>
-    <button class="icon-btn" style="color:var(--primary-light);" title="Lessico Strong" onclick="openStrongModalForVerse()">🏛️</button>
     <button class="icon-btn" style="color:var(--primary-light);" title="Passi Paralleli" onclick="openCrossRefsModalForVerse()">🔗</button>
+    <button class="icon-btn" style="color:var(--primary-light);" title="Lessico Strong" onclick="openStrongModalForVerse()">🏛️</button>
+    <button class="icon-btn" style="color:#00e5ff;" title="Raggi X: Confronto Versioni & Analisi" onclick="openVerseXRayModal()">🔬</button>
+    <button class="icon-btn" style="color:var(--primary-light);" title="Ascolta versetto" onclick="speakSelectedVerse()">🔊</button>
+    <button class="icon-btn" style="color:var(--text-main);" title="Copia versetto" onclick="copySelectedVerse()">📋</button>
     <button class="icon-btn" style="color:var(--primary-light);" title="Card Immagine" onclick="generateVerseCardModal()">🖼️</button>
     <button class="icon-btn" style="color:var(--primary-light);" title="Salva Preferito" onclick="saveBookmark()">🔖</button>
     <button class="icon-btn" style="color:#ffb300;" title="Aggiungi Appunto" onclick="openNoteModalForVerse()">📝</button>
@@ -8137,8 +8137,71 @@ async function executeOmniSearch() {
 })();
     
 // ============================================================================
-// 🔬 LENTE ESEGETICA PRO (RAGGI X DEL VERSETTO: Poliglotta + Radici + Dossier)
+// 🔬 LENTE ESEGETICA PRO (RAGGI X DEL VERSETTO: Poliglotta Ordinato + Radici + Dossier)
 // ============================================================================
+function getXRayCleanSortTitle(nameStr) {
+  return String(nameStr || "")
+    .replace(/^[^:]+:\s*/, "") // Rimuove prefisso bandiera/lingua (es. "🇮🇹 Italiano: ")
+    .replace(/^Bibbia\s+/i, "")
+    .trim();
+}
+
+function sortXRayBiblesHierarchy(biblesList) {
+  const langGroupRank = (lang) => {
+    const l = String(lang || "").toLowerCase();
+    if (l.includes("ital")) return 1;
+    if (l.includes("span") || l.includes("espa")) return 2;
+    if (l.includes("port")) return 3;
+    if (l.includes("engl")) return 4;
+    return 5;
+  };
+
+  const tnmPriorityRank = (id) => {
+    // 1° TNM 1987/1984 (bi12), 2° TNM moderna (nwt), 3° tutte le altre in ordine alfabetico
+    if (id === "gb:bi12" || id === "gb:bi12_s" || id === "gb:bi12_e") return 1;
+    if (id === "gb:nwt"  || id === "gb:nwt_s"  || id === "gb:nwt_tpo" || id === "gb:nwt_e") return 2;
+    return 3;
+  };
+
+  return [...biblesList].sort((a, b) => {
+    const gA = langGroupRank(a.lang);
+    const gB = langGroupRank(b.lang);
+    if (gA !== gB) return gA - gB;
+
+    // Se sono nel gruppo 5 (altre lingue), ordina prima alfabeticamente per nome lingua
+    if (gA === 5) {
+      const langCmp = String(a.lang || "").localeCompare(String(b.lang || ""), "it", { sensitivity: "base" });
+      if (langCmp !== 0) return langCmp;
+    }
+
+    // All'interno della stessa lingua: prima TNM 87, poi TNM 2013/moderna, poi ordine alfabetico
+    const pA = tnmPriorityRank(a.id);
+    const pB = tnmPriorityRank(b.id);
+    if (pA !== pB) return pA - pB;
+
+    return getXRayCleanSortTitle(a.name).localeCompare(getXRayCleanSortTitle(b.name), "it", { sensitivity: "base" });
+  });
+}
+
+async function openStrongCodeFromXRay(codeStr, fallbackWord) {
+  bmHaptic(14);
+  const cleanCode = String(codeStr || "").trim().toUpperCase();
+  // Se l'utente ha attiva o scaricata la KJV Strongs, cerca direttamente il codice Strong (es. H7225) nella Concordanza
+  const hasKjvStrongs = state.downloadedBibles.includes("gb:kjv_strongs");
+  closeProModal();
+  showSearchView();
+  const bibleSel = document.getElementById("searchBibleSelect");
+  const inp = document.getElementById("searchInput");
+  if (hasKjvStrongs && bibleSel && inp && /^[HG]\d{1,4}$/i.test(cleanCode)) {
+    bibleSel.value = "gb:kjv_strongs";
+    inp.value = cleanCode;
+    executeSearch(1);
+  } else if (inp) {
+    inp.value = fallbackWord || cleanCode;
+    executeSearch(1);
+  }
+}
+
 async function openVerseXRayModal() {
   bmChimeHaptic();
   const book = getBook(state.bookId);
@@ -8159,21 +8222,27 @@ async function openVerseXRayModal() {
   bodyEl.innerHTML = `<div class="loader">🔬 Scansione poliglotta ed esegetica di <b>${escapeHtml(refTitle)}</b> in corso...</div>`;
   modal.style.display = "flex";
 
-  // 1. Raccoglie le traduzioni da confrontare: le 3 selezionate nei menu + tutte le Bibbie offline già importate in IndexedDB
+  // 1. Raccoglie tutte le Bibbie candidate (quelle nei 3 selettori, i moduli EPUB e le Bibbie attive)
   const candidateIds = [];
   const pushUnique = (id) => { if (id && !candidateIds.includes(id)) candidateIds.push(id); };
+  LOCAL_EPUB_IDS.forEach(pushUnique);
   pushUnique(state.trans1);
   pushUnique(state.trans2);
   pushUnique(state.trans3);
-  LOCAL_EPUB_IDS.forEach(pushUnique);
-  ["gb:riveduta", "gb:giovanni", "gb:kjv", "gb:valera"].forEach(pushUnique);
+  ["gb:riveduta", "gb:giovanni", "gb:valera", "gb:sagradas", "gb:rvg", "gb:almeida", "gb:kjv", "gb:kjv_strongs", "gb:web", "gb:asv", "gb:ylt"].forEach(pushUnique);
+  (state.downloadedBibles || []).forEach(pushUnique);
+
+  const rawCandidatesMeta = candidateIds
+    .map(tid => dynamicCatalog.find(b => b.id === tid) || CORE_BIBLES.find(b => b.id === tid))
+    .filter(Boolean);
+
+  // Ordina rigorosamente secondo la gerarchia richiesta (IT -> ES -> PT -> EN -> Altre lingue)
+  const sortedMetaList = sortXRayBiblesHierarchy(rawCandidatesMeta);
 
   const comparedList = [];
-  for (const tid of candidateIds) {
+  for (const meta of sortedMetaList) {
+    const tid = meta.id;
     try {
-      const meta = dynamicCatalog.find(b => b.id === tid) || CORE_BIBLES.find(b => b.id === tid);
-      if (!meta) continue;
-      // Per le edizioni EPUB locali controlla senza lanciare errori se sono state importate
       if (LOCAL_EPUB_IDS.includes(tid)) {
         const off = await getOfflineBible(tid);
         if (!off || !Array.isArray(off.books)) continue;
@@ -8181,32 +8250,36 @@ async function openVerseXRayModal() {
         const cObj = bObj && bObj.chapters ? bObj.chapters.find(c => Number(c.chapter) === Number(state.chapter)) : null;
         const vObj = cObj && cObj.verses ? cObj.verses.find(v => Number(v.verse) === Number(vNum)) : null;
         if (vObj && vObj.text) {
-          comparedList.push({ id: tid, name: meta.name, text: stripTagsToPlainText(vObj.text) });
+          comparedList.push({ id: tid, name: meta.name, lang: meta.lang, text: stripTagsToPlainText(vObj.text) });
         }
       } else {
-        // Usa solo ciò che è già in cache locale o nelle prime 3 traduzioni attive per velocità istantanea (zero attese di rete)
-        const isTop3 = (tid === state.trans1 || tid === state.trans2 || tid === state.trans3);
+        const isSelectedInTopBar = (tid === state.trans1 || tid === state.trans2 || tid === state.trans3);
         const cacheKey = `bm_ch_${tid}_${state.bookId}_${state.chapter}`;
         const hasCache = Boolean(localStorage.getItem(cacheKey)) || memoryBibleCache.has(tid);
-        if (isTop3 || hasCache) {
+        const isOfflineSaved = Boolean(await getOfflineBible(tid));
+        if (isSelectedInTopBar || hasCache || isOfflineSaved) {
           const chData = await fetchChapterData(tid, state.bookId, state.chapter);
           const vObj = (chData || []).find(v => Number(v.verse) === Number(vNum));
           if (vObj && vObj.text) {
-            comparedList.push({ id: tid, name: meta.name, text: stripTagsToPlainText(vObj.text) });
+            comparedList.push({ id: tid, name: meta.name, lang: meta.lang, text: stripTagsToPlainText(vObj.text) });
           }
         }
       }
     } catch (e) {}
   }
 
-  // Evidenzia le sfumature lessicali rispetto alla versione principale (trans1)
-  const primaryText = comparedList.length > 0 ? comparedList[0].text : baseText;
+  // Testo di riferimento per evidenziare le variazioni e rilevare le radici italiane
+  const referenceItalianItem = comparedList.find(c => String(c.lang).toLowerCase().includes("ital")) || comparedList[0];
+  const primaryText = referenceItalianItem ? referenceItalianItem.text : baseText;
   const baseWordsSet = new Set(
     primaryText.toLowerCase().replace(/[.,;:!?"'«»()\[\]]/g, "").split(/\s+/).filter(w => w.length > 2)
   );
 
-  const highlightNuances = (txt, isPrimary) => {
-    if (isPrimary) return escapeHtml(txt);
+  const highlightNuances = (txt, isFirstRef, transId) => {
+    if (transId === "gb:kjv_strongs") {
+      return formatInlineStrongs(txt, vNum);
+    }
+    if (isFirstRef) return escapeHtml(txt);
     return txt.split(/(\s+)/).map(tok => {
       const clean = tok.toLowerCase().replace(/[.,;:!?"'«»()\[\]]/g, "");
       if (clean.length > 3 && !baseWordsSet.has(clean)) {
@@ -8217,12 +8290,13 @@ async function openVerseXRayModal() {
   };
 
   // 2. Scansione Lessicale & Radici Ebraico/Greche sul versetto
+  const combinedScanText = comparedList.map(c => c.text).join(" ") || primaryText;
   const detectedRoots = [];
   Object.keys(PRO_STRONG_DICT).forEach(k => {
     const d = PRO_STRONG_DICT[k];
     const escapedKey = k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const rgx = new RegExp(`(?:^|[^a-zA-ZÀ-ÿ])${escapedKey}(?:$|[^a-zA-ZÀ-ÿ])`, "i");
-    if (rgx.test(primaryText)) {
+    if (rgx.test(combinedScanText)) {
       detectedRoots.push({ word: k, ...d });
     }
   });
@@ -8236,7 +8310,6 @@ async function openVerseXRayModal() {
     })
   )].slice(0, 7);
 
-  // 4. Salva l'oggetto per l'esportazione o il salvataggio diretto in Appunti Studio
   window.__lastXRayData = {
     bookId: state.bookId,
     chapter: state.chapter,
@@ -8251,23 +8324,29 @@ async function openVerseXRayModal() {
     <div class="result-card" style="cursor:default; margin-bottom:7px; border-left:${idx === 0 ? '4px solid #00e5ff' : '3px solid var(--primary-light)'};">
       <div class="result-ref" style="font-size:12.5px; display:flex; justify-content:space-between; align-items:center;">
         <span>${escapeHtml(item.name)}</span>
-        ${idx === 0 ? '<span class="tag-badge" style="background:#00e5ff; color:#041a42; font-size:10.5px;">Base</span>' : ''}
+        ${idx === 0 ? '<span class="tag-badge" style="background:#00e5ff; color:#041a42; font-size:10.5px;">Rif. Base</span>' : ''}
       </div>
-      <div style="font-size:14.5px; line-height:1.55; margin-top:3px;">${highlightNuances(item.text, idx === 0)}</div>
+      <div style="font-size:14.5px; line-height:1.55; margin-top:3px;">${highlightNuances(item.text, idx === 0, item.id)}</div>
     </div>
   `).join("");
 
   const rootsHtml = detectedRoots.length > 0 ? `
     <div class="section-title"><span>🏛️ Radici Ebraico / Greche nel Versetto</span><span>${detectedRoots.length}</span></div>
-    ${detectedRoots.map(r => `
+    ${detectedRoots.map(r => {
+      const codes = String(r.code || "").split(/\s*\/\s*/).filter(Boolean);
+      const codeBadges = codes.map(c =>
+        `<span class="tag-badge" style="background:rgba(0,229,255,0.18); border-color:#00e5ff; color:#84ffff; cursor:pointer;" title="Cerca codice ${escapeHtml(c)} o termine nella Concordanza" onclick="openStrongCodeFromXRay('${escapeJsStr(c)}', '${escapeJsStr(r.word)}')">🏛️ ${escapeHtml(c)}</span>`
+      ).join(" ");
+      return `
       <div class="result-card" style="cursor:default; margin-bottom:6px;">
-        <div class="result-ref" style="font-size:13px;">
-          ${escapeHtml(r.word.toUpperCase())} • <span class="tag-badge">${escapeHtml(r.code)}</span>
+        <div class="result-ref" style="font-size:13px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">
+          <span>${escapeHtml(r.word.toUpperCase())} ${codeBadges}</span>
+          <span class="tag-badge" onclick="searchWordInConcordance('${escapeJsStr(r.word)}')">🔍 Concordanza</span>
         </div>
         <div style="font-weight:800; color:#84ffff; font-size:13.5px; margin:2px 0;">${escapeHtml(r.orig)}</div>
         <div style="font-size:12.5px; color:var(--text-muted); line-height:1.4;">${escapeHtml(r.def)}</div>
-      </div>
-    `).join("")}
+      </div>`;
+    }).join("")}
   ` : "";
 
   const studyPillsHtml = studyTokens.length > 0 ? `
@@ -8282,7 +8361,7 @@ async function openVerseXRayModal() {
 
   bodyEl.innerHTML = `
     <div style="font-size:12px; color:#9ec9ff; margin-bottom:8px;">
-      Confronto simultaneo su <b>${comparedList.length} edizioni</b> (le variazioni lessicali rispetto alla versione principale sono evidenziate):
+      Confronto gerarchico su <b>${comparedList.length} edizioni</b> (IT → ES → PT → EN → Altre):
     </div>
     ${versionsHtml}
     ${rootsHtml}
