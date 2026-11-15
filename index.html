@@ -8838,7 +8838,7 @@ async function stepXRayVerse(delta) {
   bmHaptic(14);
   const d = window.__lastXRayData;
   const curV = d && d.verse ? Number(d.verse) : (state.selectedVerse || 1);
-  
+
   // Tetto reale = numero più alto tra i versetti mostrati a schermo (vale per qualsiasi Bibbia, online o offline)
   let maxV = 0;
   document.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3").forEach(r => {
