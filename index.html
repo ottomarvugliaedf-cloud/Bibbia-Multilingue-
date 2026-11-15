@@ -1820,10 +1820,6 @@ let state = {
 };
 if (!Array.isArray(state.downloadedBibles) || state.downloadedBibles.length === 0) {
   state.downloadedBibles = [...DEFAULT_ACTIVE_IDS];
-} else {
-  [...LOCAL_EPUB_IDS].reverse().forEach(id => {
-    if (!state.downloadedBibles.includes(id)) state.downloadedBibles.unshift(id);
-  });
 }
 if (!Array.isArray(state.bookmarks)) state.bookmarks = [];
 if (!Array.isArray(state.notes)) state.notes = [];
@@ -3486,13 +3482,16 @@ function filterCatalogList() {
 async function toggleDownload(id) {
   const safeId = id.replace(/[^a-zA-Z0-9_-]/g, "_");
   const btn = document.getElementById(`btn_${safeId}`);
-    if (state.downloadedBibles.includes(id)) {
-     if (state.downloadedBibles.length <= 1) {
+  if (state.downloadedBibles.includes(id)) {
+    if (state.downloadedBibles.length <= 1) {
       showBlueInfoModal("⚠️ Attenzione", "Devi mantenere almeno una traduzione attiva!");
       return;
     }
     state.downloadedBibles = state.downloadedBibles.filter(item => item !== id);
-    await removeOfflineBible(id);
+    // Se è una Bibbia EPUB locale (TNM, CEI, NR, TILC), conserva intatti i 66 libri nel DB offline!
+    if (!LOCAL_EPUB_IDS.includes(id)) {
+      await removeOfflineBible(id);
+    }
     safeSaveStorage("bm_v10_pro_bibles", JSON.stringify(state.downloadedBibles));
     await populateSelects();
     filterCatalogList();
@@ -3500,7 +3499,7 @@ async function toggleDownload(id) {
     if (btn) { btn.textContent = "⏳Scarico..."; btn.classList.add("downloading"); }
     if (!state.downloadedBibles.includes(id)) state.downloadedBibles.push(id);
     safeSaveStorage("bm_v10_pro_bibles", JSON.stringify(state.downloadedBibles));
-        if (!id.startsWith("helloao:") && !LOCAL_EPUB_IDS.includes(id)) {
+    if (!id.startsWith("helloao:") && !LOCAL_EPUB_IDS.includes(id)) {
       try {
         const code = id.split(":")[1];
         const res = await fetch(`https://api.getbible.net/v2/${code}.json`);
@@ -3514,7 +3513,7 @@ async function toggleDownload(id) {
     filterCatalogList();
   }
 }
-
+  
 function showSearchView(fromBack = false) {
   if (!fromBack && currentViewContext.type !== "search") saveCurrentPositionToHistory();
   closeActionBar();
@@ -4884,10 +4883,16 @@ function speakSelectedVerse() {
       
 function generateVerseCardModal() {
   const book = getBook(state.bookId);
-  const vNum = state.selectedVerse || 1;
-  const ref = `${book.name} ${state.chapter}:${vNum}`;
-  const text = `"${state.selectedVerseText}"`;
-  document.getElementById("proModalTitle").textContent = "🖼️ Card Immagine Versetto";
+  const nums = selectedVersesMap.size > 0
+    ? Array.from(selectedVersesMap.keys()).sort((a, b) => a - b)
+    : [state.selectedVerse || 1];
+  const rangeStr = formatSelectedVersesRangeLabel(nums);
+  const ref = `${book.name} ${state.chapter}:${rangeStr}`;
+  const rawBody = nums.length > 1
+    ? nums.map(n => selectedVersesMap.get(n) || "").filter(Boolean).join(" ")
+    : (state.selectedVerseText || selectedVersesMap.get(nums[0]) || "");
+  const text = `"${rawBody}"`;
+  document.getElementById("proModalTitle").textContent = nums.length > 1 ? `🖼️ Card Immagine (${nums.length} Versetti)` : "🖼️ Card Immagine Versetto";
   document.getElementById("proModalBody").innerHTML = `
     <div style="text-align:center;">
       <canvas id="verseCanvas" width="1080" height="1080" style="width:100%; max-width:320px; border-radius:12px; margin-bottom:12px; box-shadow:0 6px 18px rgba(0,0,0,0.3);"></canvas>
