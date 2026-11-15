@@ -8838,12 +8838,29 @@ async function stepXRayVerse(delta) {
   bmHaptic(14);
   const d = window.__lastXRayData;
   const curV = d && d.verse ? Number(d.verse) : (state.selectedVerse || 1);
-  const maxDomV = document.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3").length || 176;
-  const targetV = Math.min(maxDomV, Math.max(1, curV + delta));
+  
+  // Determina il tetto massimo reale basandosi sui dati in cache/memoria del capitolo corrente o sul DOM, con un solido fallback a 176 (Salmo 119)
+  let maxV = 176;
+  try {
+    const cachedCh = localStorage.getItem(`bm_ch_${state.trans1}_${state.bookId}_${state.chapter}`);
+    if (cachedCh) {
+      const arr = JSON.parse(cachedCh);
+      if (Array.isArray(arr) && arr.length > 0) {
+        maxV = Math.max(...arr.map(v => Number(v.verse) || 1));
+      }
+    } else {
+      const domCount = document.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3").length;
+      if (domCount > 0) maxV = Math.max(176, domCount);
+    }
+  } catch (e) {
+    console.debug(e);
+  }
+
+  const targetV = Math.min(maxV, Math.max(1, curV + delta));
   selectVerseDataFromDOM(targetV);
   await openVerseXRayModal(targetV);
 }
-
+    
 let bmXRayDiffActive = false;
 let bmXRayRootsActive = true;
 
