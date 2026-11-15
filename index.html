@@ -8935,8 +8935,8 @@ async function openVerseXRayModal() {
     <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
       ${words.map(w => `
         <span style="display:inline-flex; align-items:center; background:#062356; border:1px solid #29b6f6; border-radius:14px; overflow:hidden;">
-          <span style="padding:4px 8px; font-size:12.5px; font-weight:800; color:#fff; cursor:pointer;" onclick="xraySearchInsight('${escapeJsStr(w)}')" title="Cerca in Perspicacia">📚 ${escapeHtml(w)}</span>
-          <span style="padding:4px 7px; font-size:12px; background:#1565c0; color:#84ffff; font-weight:800; cursor:pointer; border-left:1px solid #29b6f6;" onclick="xraySearchConcordance('${escapeJsStr(w)}')" title="Cerca in Concordanza">🔍</span>
+          <span style="padding:4px 8px; font-size:12.5px; font-weight:800; color:#fff; cursor:pointer;" onclick="openInsightFromXRay('${escapeJsStr(w)}')" title="Cerca in Perspicacia">📚 ${escapeHtml(w)}</span>
+          <span style="padding:4px 7px; font-size:12px; background:#1565c0; color:#84ffff; font-weight:800; cursor:pointer; border-left:1px solid #29b6f6;" onclick="openConcordanceFromXRay('${escapeJsStr(w)}')" title="Cerca in Concordanza">🔍</span>
         </span>
       `).join("")}
     </div>
@@ -8959,28 +8959,6 @@ setInterval(() => {
     safeSaveStorage("bm_study_minutes_v1", String(mins));
   }
 }, 60000);
-
-// Sovrascrive in modo sicuro searchWordInConcordance per usare sempre una Bibbia pronta offline
-// e mantenere il banner di rientro a Raggi X anche dopo il completamento della ricerca
-window.searchWordInConcordance = function(word) {
-  if (typeof closeProModal === "function") closeProModal();
-  closeActionBar();
-  showSearchView();
-  const selEl = document.getElementById("searchBibleSelect");
-  if (selEl && state.trans1 && !state.trans1.startsWith("helloao:")) {
-    const hasOpt = Array.from(selEl.options).some(o => o.value === state.trans1);
-    if (hasOpt && memoryBibleCache.has(state.trans1)) {
-      selEl.value = state.trans1;
-    }
-  }
-  const inp = document.getElementById("searchInput");
-  if (inp) {
-    inp.value = word;
-    Promise.resolve(executeSearch(1)).finally(() => {
-      if (bmXRayReturnState) injectXRayReturnBanner();
-    });
-  }
-};
 
 // 📊 Mappa Termica (Heatmap) e Statistiche Avanzate dei 66 Libri
 function openStudyAnalyticsModal() {
@@ -9017,7 +8995,7 @@ function openStudyAnalyticsModal() {
   const totalBm = (state.bookmarks || []).length;
   const totalNotes = (state.notes || []).length;
   const touchedBooks = Array.from(bookStats.values()).filter(s => s.total > 0).length;
-  const studyMins = Number(localStorage.getItem("bm_study_minutes_v1")) || 1;
+  const studyMins = Number(localStorage.getItem("bm_study_minutes_v1")) || 0;
   const studyTimeFormatted = studyMins >= 60
     ? `${Math.floor(studyMins / 60)}h ${studyMins % 60}m`
     : `${studyMins} min`;
@@ -9091,9 +9069,9 @@ function toggleBmZenMode() {
   const transBar = document.querySelector(".trans-bar");
   const quickBar = document.querySelector(".quick-menu-bar");
   const botNav = document.querySelector("nav.bottom-nav");
-  if (transBar) transBar.style.display = bmZenModeActive ? "none" : "flex";
-  if (quickBar) quickBar.style.display = bmZenModeActive ? "none" : "flex";
-  if (botNav) botNav.style.display = bmZenModeActive ? "none" : "grid";
+  if (transBar) transBar.style.display = bmZenModeActive ? "none" : "";
+  if (quickBar) quickBar.style.display = bmZenModeActive ? "none" : "";
+  if (botNav) botNav.style.display = bmZenModeActive ? "none" : "";
 
   let zenExitBtn = document.getElementById("bmZenExitFloatingBtn");
   if (bmZenModeActive) {
@@ -9106,7 +9084,7 @@ function toggleBmZenMode() {
       document.body.appendChild(zenExitBtn);
     }
     zenExitBtn.style.display = "inline-flex";
-    } else if (zenExitBtn) {
+  } else if (zenExitBtn) {
     zenExitBtn.style.display = "none";
   }
 }
