@@ -8839,22 +8839,13 @@ async function stepXRayVerse(delta) {
   const d = window.__lastXRayData;
   const curV = d && d.verse ? Number(d.verse) : (state.selectedVerse || 1);
   
-  // Determina il tetto massimo reale basandosi sui dati in cache/memoria del capitolo corrente o sul DOM, con un solido fallback a 176 (Salmo 119)
-  let maxV = 176;
-  try {
-    const cachedCh = localStorage.getItem(`bm_ch_${state.trans1}_${state.bookId}_${state.chapter}`);
-    if (cachedCh) {
-      const arr = JSON.parse(cachedCh);
-      if (Array.isArray(arr) && arr.length > 0) {
-        maxV = Math.max(...arr.map(v => Number(v.verse) || 1));
-      }
-    } else {
-      const domCount = document.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3").length;
-      if (domCount > 0) maxV = Math.max(176, domCount);
-    }
-  } catch (e) {
-    console.debug(e);
-  }
+  // Tetto reale = numero più alto tra i versetti mostrati a schermo (vale per qualsiasi Bibbia, online o offline)
+  let maxV = 0;
+  document.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3").forEach(r => {
+    const n = parseInt((r.id || "").replace("v_", ""), 10);
+    if (n > maxV) maxV = n;
+  });
+  if (!maxV) maxV = 176;
 
   const targetV = Math.min(maxV, Math.max(1, curV + delta));
   selectVerseDataFromDOM(targetV);
