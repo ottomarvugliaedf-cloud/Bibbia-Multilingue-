@@ -8590,7 +8590,7 @@ async function executeOmniSearch() {
   try {
     window.history.replaceState({ bmGuard: true }, "");
     window.history.pushState({ bmGuard: true }, "");
-  } catch (e) {}
+  } catch (e) { console.debug(e); }
 
   window.addEventListener("popstate", function () {
     const closeIfFlex = (id, fn) => {
@@ -8606,7 +8606,7 @@ async function executeOmniSearch() {
     if (drawerEl && drawerEl.classList.contains("open")) {
       closeSettingsDrawer();
       bmHaptic(10);
-      try { window.history.pushState({ bmGuard: true }, ""); } catch (e) {}
+      try { window.history.pushState({ bmGuard: true }, ""); } catch (e) { console.debug(e); }
       return;
     }
 
@@ -8620,14 +8620,14 @@ async function executeOmniSearch() {
 
     if (handledModal) {
       bmHaptic(10);
-      try { window.history.pushState({ bmGuard: true }, ""); } catch (e) {}
+      try { window.history.pushState({ bmGuard: true }, ""); } catch (e) { console.debug(e); }
       return;
     }
 
     if (navHistory.length > 0) {
       bmHaptic(12);
       goBackHistory();
-      try { window.history.pushState({ bmGuard: true }, ""); } catch (e) {}
+      try { window.history.pushState({ bmGuard: true }, ""); } catch (e) { console.debug(e); }
     }
   });
 
