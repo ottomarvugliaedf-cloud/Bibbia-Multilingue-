@@ -2465,6 +2465,14 @@ function renderSettingsDrawerContent() {
   const rates = [0.85, 1.0, 1.15, 1.3];
 
   body.innerHTML = `
+    <div style="display:flex; gap:8px; margin-bottom:4px; flex-shrink:0;">
+      <button type="button" class="myread-action-btn btn-color-anim" style="flex:1; padding:10px 8px; font-size:12.5px; background:linear-gradient(135deg, #0d47a1, #1565c0); border-color:#00e5ff;" onclick="openStudyAnalyticsModal()">
+        📊 Heatmap Studio
+      </button>
+      <button type="button" class="myread-action-btn btn-color-anim" style="flex:1; padding:10px 8px; font-size:12.5px; background:#062356; border-color:#29b6f6;" onclick="closeSettingsDrawer(); toggleBmZenMode();">
+        🧘 ${typeof bmZenModeActive !== 'undefined' && bmZenModeActive ? "Disattiva Focus" : "Modalità Focus"}
+      </button>
+    </div>
     <!-- SCHEDA 1: ASPETTO & TIPOGRAFIA -->
     <div class="bm-acc-card ${openId === 'aspetto' ? 'open' : ''}">
       <button type="button" class="bm-acc-head" onclick="toggleSettingsAccordion('aspetto')">
@@ -5114,10 +5122,19 @@ function matchItalianBookNameToId(rawTitle, isStrictFromBody = false) {
   if (isStrictFromBody && clean.length <= 3 && clean !== "rut") return null;
   return exactBookMap[clean] || null;
     }
+function getActiveEpubStatusEl() {
+  const proModal = document.getElementById("proModal");
+  if (proModal && proModal.style.display === "flex") {
+    const modalStatus = proModal.querySelector("#epubImportStatus");
+    if (modalStatus) return modalStatus;
+  }
+  return document.getElementById("epubImportStatus");
+}
+
 async function importUniversalEpubFiles(event, targetId, labelName) {
   const files = Array.from(event.target.files || []);
   if (!files.length) return;
-  const statusEl = document.getElementById("epubImportStatus");        
+  const statusEl = getActiveEpubStatusEl();
   if (typeof JSZip === "undefined") {
     showBlueInfoModal("⚠️ Libreria Mancante", "Libreria JSZip non caricata. Verifica la connessione internet.");
     return;
@@ -5584,11 +5601,11 @@ let currentDailyOffset = 0;
 async function importDailyTextEpub(event) {
   const file = event.target.files?.[0];
   if (!file) return;
-  const statusEl = document.getElementById("epubImportStatus");
+  const statusEl = getActiveEpubStatusEl();
   if (typeof JSZip === "undefined") {
     showBlueInfoModal("⚠️ Libreria Mancante", "Libreria JSZip non caricata. Verifica la connessione internet.");
     return;
-   }
+  }
   try {
     statusEl.innerHTML = `⏳ Estrazione dei 365 giorni da <b>${escapeHtml(file.name)}</b>...`;
     const zip = await JSZip.loadAsync(file);
@@ -5881,7 +5898,7 @@ function splitCleanTextIntoEntries(rawText, entriesArray) {
 async function importInsightFiles(event) {
   const files = Array.from(event.target.files || []);
   if (!files.length) return;
-  const statusEl = document.getElementById("epubImportStatus");
+  const statusEl = getActiveEpubStatusEl();
   if (typeof JSZip === "undefined") {
     showBlueInfoModal("⚠️ Libreria Mancante", "Libreria JSZip non caricata. Verifica la connessione internet.");
     return;
@@ -6267,7 +6284,7 @@ function siRenderParas(text, defaultBookId = null) {
 async function importSiFile(event) {
   const file = event.target.files && event.target.files[0];
   if (!file) return;
-  const statusEl = document.getElementById("epubImportStatus");
+  const statusEl = getActiveEpubStatusEl();
   const setStatus = html => {
     if (statusEl) statusEl.innerHTML = html;
   };
@@ -6590,7 +6607,7 @@ async function importMapsArchive(event) {
   const inputEl = event.target;
   const file = inputEl && inputEl.files && inputEl.files[0];
   if (!file) return;
-  const statusEl = document.getElementById("epubImportStatus");
+  const statusEl = getActiveEpubStatusEl();
   const topStatusEl = document.getElementById("mapsImportStatusTop");
   const setStatus = html => {
     if (statusEl) statusEl.innerHTML = html;
@@ -9077,29 +9094,10 @@ function toggleBmZenMode() {
       document.body.appendChild(zenExitBtn);
     }
     zenExitBtn.style.display = "inline-flex";
-  } else if (zenExitBtn) {
+    } else if (zenExitBtn) {
     zenExitBtn.style.display = "none";
   }
 }
-
-// Aggiunge i 2 pulsanti PRO ("📊 Heatmap Studio" e "🧘 Modalità Focus Zen") in cima al cassetto Impostazioni
-const _origRenderSettingsDrawerContent = renderSettingsDrawerContent;
-renderSettingsDrawerContent = function() {
-  _origRenderSettingsDrawerContent();
-  const body = document.getElementById("bmSettingsDrawerBody");
-  if (!body) return;
-  const proBar = document.createElement("div");
-  proBar.style.cssText = "display:flex; gap:8px; margin-bottom:4px; flex-shrink:0;";
-  proBar.innerHTML = `
-    <button type="button" class="myread-action-btn btn-color-anim" style="flex:1; padding:10px 8px; font-size:12.5px; background:linear-gradient(135deg, #0d47a1, #1565c0); border-color:#00e5ff;" onclick="openStudyAnalyticsModal()">
-      📊 Heatmap Studio
-    </button>
-    <button type="button" class="myread-action-btn btn-color-anim" style="flex:1; padding:10px 8px; font-size:12.5px; background:#062356; border-color:#29b6f6;" onclick="closeSettingsDrawer(); toggleBmZenMode();">
-      🧘 ${bmZenModeActive ? "Disattiva Focus" : "Modalità Focus"}
-    </button>
-  `;
-  body.insertBefore(proBar, body.firstChild);
-};  
 </script>
 </body>
 </html>
