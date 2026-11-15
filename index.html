@@ -3857,7 +3857,22 @@ function removeSingleHighlightFromSaved(hlKey) {
   showSavedView(true);
 }
 
-function showSavedView(fromBack = false) {
+async function copyFilteredHighlightsDossier(btnEl) {
+  bmChimeHaptic();
+  const cards = document.querySelectorAll(".bm-hl-saved-item");
+  if (!cards.length) return;
+  const lines = [`━━━ 🎨 DOSSIER VERSETTI EVIDENZIATI (${savedColorFilter === "ALL" ? "Tutti i colori" : savedColorFilter.replace("hl-", "").toUpperCase()}) ━━━`];
+  cards.forEach(c => {
+    const ref = c.getAttribute("data-ref") || "";
+    const txt = c.getAttribute("data-vtext") || "";
+    lines.push(txt ? `• ${ref} — "${txt}"` : `• ${ref}`);
+  });
+  lines.push(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+  copyPubRefToClipboard(lines.join("\n"));
+  if (btnEl) btnEl.textContent = "✔ Copiati negli Appunti!";
+}
+
+async function showSavedView(fromBack = false) {
   if (!fromBack && currentViewContext.type !== "saved") saveCurrentPositionToHistory();
   closeActionBar();
   setActiveTab("tabSaved");
@@ -3865,12 +3880,12 @@ function showSavedView(fromBack = false) {
   const main = document.getElementById("mainContainer");
 
   const colorMeta = [
-    { id: "ALL",       label: "Tutti",  dot: "#4fc3f7" },
-    { id: "hl-yellow", label: "Giallo", dot: "#ffeb3b" },
-    { id: "hl-blue",   label: "Azzurro",dot: "#03a9f4" },
-    { id: "hl-green",  label: "Verde",  dot: "#4caf50" },
-    { id: "hl-pink",   label: "Rosa",   dot: "#e91e63" },
-    { id: "hl-purple", label: "Viola",  dot: "#9c27b0" }
+    { id: "ALL",       label: "Tutti",   dot: "#4fc3f7" },
+    { id: "hl-yellow", label: "Giallo",  dot: "#ffeb3b" },
+    { id: "hl-blue",   label: "Azzurro", dot: "#03a9f4" },
+    { id: "hl-green",  label: "Verde",   dot: "#4caf50" },
+    { id: "hl-pink",   label: "Rosa",    dot: "#e91e63" },
+    { id: "hl-purple", label: "Viola",   dot: "#9c27b0" }
   ];
 
   const hlEntries = Object.entries(state.highlights || {})
@@ -3885,16 +3900,39 @@ function showSavedView(fromBack = false) {
     ? hlEntries
     : hlEntries.filter(x => x.cls === savedColorFilter);
 
+  // Recupera il testo dei versetti evidenziati dalla Bibbia attiva in cache/DB
+  const activeBible = await getOfflineBible(state.trans1);
+  const getFastVerseText = (bId, chNum, vNum) => {
+    try {
+      if (activeBible && Array.isArray(activeBible.books)) {
+        const bObj = activeBible.books.find(b => Number(b.nr) === Number(bId));
+        const cObj = bObj && bObj.chapters ? bObj.chapters.find(c => Number(c.chapter) === Number(chNum)) : null;
+        const vObj = cObj && cObj.verses ? cObj.verses.find(v => Number(v.verse) === Number(vNum)) : null;
+        if (vObj && vObj.text) return stripTagsToPlainText(vObj.text);
+      }
+      const rawCache = localStorage.getItem(`bm_ch_${state.trans1}_${bId}_${chNum}`);
+      if (rawCache) {
+        const arr = JSON.parse(rawCache);
+        const found = Array.isArray(arr) ? arr.find(v => Number(v.verse) === Number(vNum)) : null;
+        if (found && found.text) return stripTagsToPlainText(found.text);
+      }
+    } catch (e) {}
+    return "";
+  };
+
   const colorPillsHtml = `
-    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;">
-      ${colorMeta.map(c => {
-        const cnt = c.id === "ALL" ? hlEntries.length : hlEntries.filter(x => x.cls === c.id).length;
-        const isAct = savedColorFilter === c.id;
-        return `<span class="tag-badge" style="display:inline-flex; align-items:center; gap:5px; padding:5px 10px; font-size:12px; ${isAct ? 'background:#00e5ff; color:#041a42; border-color:#84ffff; font-weight:900;' : 'background:#062356; color:#fff; border-color:#29b6f6;'}" onclick="filterSavedByColor('${c.id}')">
-          <span style="width:10px; height:10px; border-radius:50%; background:${c.dot}; display:inline-block;"></span>
-          <span>${c.label} (${cnt})</span>
-        </span>`;
-      }).join("")}
+    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; align-items:center; justify-content:space-between;">
+      <div style="display:flex; gap:5px; flex-wrap:wrap;">
+        ${colorMeta.map(c => {
+          const cnt = c.id === "ALL" ? hlEntries.length : hlEntries.filter(x => x.cls === c.id).length;
+          const isAct = savedColorFilter === c.id;
+          return `<span class="tag-badge" style="display:inline-flex; align-items:center; gap:5px; padding:5px 10px; font-size:12px; ${isAct ? 'background:#00e5ff; color:#041a42; border-color:#84ffff; font-weight:900;' : 'background:#062356; color:#fff; border-color:#29b6f6;'}" onclick="filterSavedByColor('${c.id}')">
+            <span style="width:10px; height:10px; border-radius:50%; background:${c.dot}; display:inline-block;"></span>
+            <span>${c.label} (${cnt})</span>
+          </span>`;
+        }).join("")}
+      </div>
+      ${filteredHl.length > 0 ? `<button class="nav-btn" style="font-size:11.5px; padding:5px 10px; border-color:#00e5ff; color:#84ffff;" onclick="copyFilteredHighlightsDossier(this)">📋 Copia (${filteredHl.length})</button>` : ""}
     </div>
   `;
 
@@ -3910,13 +3948,18 @@ function showSavedView(fromBack = false) {
     : `<div class="loader" style="padding:14px;">Nessun preferito salvato col tasto 🔖.</div>`;
 
   const highlightsHtml = filteredHl.length
-    ? `<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:7px; margin-bottom:16px;">
+    ? `<div style="display:flex; flex-direction:column; gap:7px; margin-bottom:16px;">
         ${filteredHl.map(h => {
           const bObj = getBook(h.bookId);
+          const fullRef = `${bObj.name} ${h.chapter}:${h.verse}`;
+          const vTxt = getFastVerseText(h.bookId, h.chapter, h.verse);
           return `
-            <div class="result-card ${escapeHtml(h.cls)}" style="margin-bottom:0; padding:9px 11px; display:flex; justify-content:space-between; align-items:center;" onclick="openRef(${h.bookId}, ${h.chapter}, ${h.verse})">
-              <span style="font-weight:800; font-size:13.5px; color:#ffffff;">🎨 ${escapeHtml(bObj.abbr)} ${h.chapter}:${h.verse}</span>
-              <span onclick="event.stopPropagation(); removeSingleHighlightFromSaved('${escapeJsStr(h.key)}')" title="Rimuovi evidenziazione" style="color:#ffd54f; font-size:13px; padding:2px 5px;">✕</span>
+            <div class="result-card bm-hl-saved-item ${escapeHtml(h.cls)}" data-ref="${escapeHtml(fullRef)}" data-vtext="${escapeHtml(vTxt)}" style="margin-bottom:0; padding:10px 12px;" onclick="openRef(${h.bookId}, ${h.chapter}, ${h.verse})">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:${vTxt ? '4px' : '0'};">
+                <span style="font-weight:900; font-size:14px; color:#ffffff;">🎨 ${escapeHtml(fullRef)}</span>
+                <span onclick="event.stopPropagation(); removeSingleHighlightFromSaved('${escapeJsStr(h.key)}')" title="Rimuovi evidenziazione" style="color:#ffd54f; font-weight:800; font-size:12.5px; padding:2px 6px;">✕ Rimuovi</span>
+              </div>
+              ${vTxt ? `<div style="font-size:13.5px; color:#f5f9ff; line-height:1.45;">"${escapeHtml(vTxt)}"</div>` : ""}
             </div>`;
         }).join("")}
       </div>`
@@ -4961,7 +5004,7 @@ function openBackupModal() {
   `;
   document.getElementById("proModal").style.display = "flex";
 }
-  function matchItalianBookNameToId(rawTitle, isStrictFromBody = false) {
+function matchItalianBookNameToId(rawTitle, isStrictFromBody = false) {
   if (!rawTitle) return null;
   const lower = rawTitle.toLowerCase()
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -7138,11 +7181,24 @@ function scrollRpToToday(smooth = false) {
 function exportBackupJson() {
   const data = {
     app: "BibbiaMultilingue_PRO",
+    version: "PRO_v12",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
+    trans1: state.trans1,
+    trans2: state.trans2,
+    trans3: state.trans3,
     fontSize: state.fontSize,
     themeMode: state.themeMode,
+    bmSettings: bmSettings,
+    ttsRate: bmTtsRate,
+    ttsAutoNext: bmTtsAutoNextPref,
+    personalReading: {
+      book: localStorage.getItem("bm_pers_book") || "",
+      ch: localStorage.getItem("bm_pers_ch") || "",
+      scroll: localStorage.getItem("bm_pers_scroll") || "0"
+    },
+    studyMinutes: Number(localStorage.getItem("bm_study_minutes_v1")) || 0,
     highlights: state.highlights,
     bookmarks: state.bookmarks,
     notes: state.notes,
@@ -7182,7 +7238,7 @@ async function importBackupJson(e) {
         <div style="font-size:16px; font-weight:800; color:#ffffff; margin-bottom:8px;">Conferma Ripristino Backup</div>
         <div style="font-size:14px; color:#e3f2fd; line-height:1.5;">
           Vuoi importare il file <b>${escapeHtml(file.name)}</b>?<br>
-          <span style="font-size:12.5px; color:#9ec9ff;">I tuoi appunti, preferiti, colori e piani di lettura verranno aggiornati.</span>
+          <span style="font-size:12.5px; color:#9ec9ff;">Appunti, preferiti, colori, Mia Lettura, impostazioni e piani di lettura verranno ripristinati.</span>
         </div>
       </div>
       <div style="display:flex; gap:10px;">
@@ -7219,6 +7275,30 @@ function confirmImportBackupNow() {
       safeSaveStorage("bm_theme", state.themeMode);
       applySavedTheme();
     }
+    if (parsed.bmSettings && typeof parsed.bmSettings === "object") {
+      bmSettings = { ...bmSettings, ...parsed.bmSettings };
+      saveBmSettings();
+    }
+    if (parsed.ttsRate) {
+      bmTtsRate = Number(parsed.ttsRate) || 1.0;
+      safeSaveStorage("bm_tts_rate", String(bmTtsRate));
+    }
+    if (parsed.ttsAutoNext !== undefined) {
+      bmTtsAutoNextPref = Boolean(parsed.ttsAutoNext);
+      safeSaveStorage("bm_tts_autonext", bmTtsAutoNextPref ? "1" : "0");
+    }
+    if (parsed.personalReading && typeof parsed.personalReading === "object") {
+      if (parsed.personalReading.book && parsed.personalReading.ch) {
+        safeSaveStorage("bm_pers_book", String(parsed.personalReading.book));
+        safeSaveStorage("bm_pers_ch", String(parsed.personalReading.ch));
+        safeSaveStorage("bm_pers_scroll", String(parsed.personalReading.scroll || "0"));
+      }
+      updateMyReadingLabel();
+    }
+    if (typeof parsed.studyMinutes === "number" && parsed.studyMinutes > 0) {
+      const curMins = Number(localStorage.getItem("bm_study_minutes_v1")) || 0;
+      safeSaveStorage("bm_study_minutes_v1", String(Math.max(curMins, parsed.studyMinutes)));
+    }
     if (parsed.highlights && typeof parsed.highlights === "object") {
       state.highlights = parsed.highlights;
       safeSaveStorage("bm_hl", JSON.stringify(state.highlights));
@@ -7238,11 +7318,12 @@ function confirmImportBackupNow() {
     }
     closeProModal();
     loadChapterView();
-    showBlueInfoModal("✔ Backup Ripristinato", "Tutti i tuoi dati di studio sono stati ripristinati con successo!");
+    showBlueInfoModal("✔ Backup Ripristinato", "Tutti i tuoi dati di studio, impostazioni e il segnalibro Mia Lettura sono stati ripristinati!");
   } catch (err) {
     showBlueInfoModal("❌ File Non Valido", "Errore nel formato del file di backup (.json).");
   }
 }
+    
 // ============================================================================
 // MODULO "📍 DOVE SI TROVA?" PRO (Atlante Intelligente, Salto ai Versetti & Radar)
 // ============================================================================
@@ -8698,288 +8779,6 @@ async function stepXRayVerse(delta) {
   await openVerseXRayModal(targetV);
 }
 
-async function openVerseXRayModal(explicitVerseNum = null) {
-  bmChimeHaptic();
-  const book = getBook(state.bookId);
-  let vNum = Number(explicitVerseNum) || 0;
-  if (!vNum) {
-    const nums = selectedVersesMap.size > 0
-      ? Array.from(selectedVersesMap.keys()).sort((a, b) => a - b)
-      : (state.selectedVerse ? [state.selectedVerse] : []);
-    if (nums.length > 0) {
-      vNum = nums[0];
-    } else {
-      // Se aveva già un versetto incorniciato da .bm-persist-hl nel capitolo, usa quello!
-      const persistedEl = document.querySelector(".bm-persist-hl");
-      if (persistedEl && persistedEl.id && persistedEl.id.startsWith("v_")) {
-        vNum = parseInt(persistedEl.id.slice(2), 10) || 1;
-      } else {
-        vNum = 1;
-      }
-    }
-  }
-
-  const refTitle = `${book.name} ${state.chapter}:${vNum}`;
-  const domRow = document.getElementById(`v_${vNum}`);
-  const baseText = (domRow && domRow.getAttribute("data-text")) || selectedVersesMap.get(vNum) || state.selectedVerseText || "";
-
-  closeActionBar();
-
-  // Mantiene SEMPRE incorniciato col riquadro azzurro (.bm-persist-hl) il versetto in esame nel capitolo sottostante!
-  state.selectedVerse = vNum;
-  state.selectedVerseText = baseText;
-  bmXRayReturnState = { bookId: state.bookId, chapter: state.chapter, verse: vNum };
-  if (domRow) {
-    clearPersistentVerseHighlight();
-    domRow.classList.add("bm-persist-hl");
-    domRow.scrollIntoView({ behavior: "smooth", block: "center" });
-  }
-
-  const modal = document.getElementById("proModal");
-  const titleEl = document.getElementById("proModalTitle");
-  const bodyEl = document.getElementById("proModalBody");
-  if (!modal || !titleEl || !bodyEl) return;
-
-  titleEl.textContent = `🔬 Raggi X — ${book.abbr} ${state.chapter}:${vNum}`;
-  bodyEl.innerHTML = `<div class="loader">🔬 Scansione poliglotta ed esegetica di <b>${escapeHtml(refTitle)}</b> in corso...</div>`;
-  modal.style.display = "flex";
-
-  // Conta quanti versetti ha il capitolo attuale per abilitare/disabilitare "Vers. Succ. ▶"
-  let maxVerseInChapter = document.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3").length;
-
-  // 1. Raccoglie tutte le Bibbie candidate e le ordina secondo la gerarchia IT -> ES -> PT -> EN -> Altre
-  const candidateIds = [];
-  const pushUnique = (id) => { if (id && !candidateIds.includes(id)) candidateIds.push(id); };
-  LOCAL_EPUB_IDS.forEach(pushUnique);
-  pushUnique(state.trans1);
-  pushUnique(state.trans2);
-  pushUnique(state.trans3);
-  ["gb:riveduta", "gb:giovanni", "gb:valera", "gb:sagradas", "gb:rvg", "gb:almeida", "gb:kjv", "gb:kjv_strongs", "gb:web", "gb:asv", "gb:ylt"].forEach(pushUnique);
-  (state.downloadedBibles || []).forEach(pushUnique);
-
-  const rawCandidatesMeta = candidateIds
-    .map(tid => dynamicCatalog.find(b => b.id === tid) || CORE_BIBLES.find(b => b.id === tid))
-    .filter(Boolean);
-
-  const sortedMetaList = sortXRayBiblesHierarchy(rawCandidatesMeta);
-
-  const comparedList = [];
-  for (const meta of sortedMetaList) {
-    const tid = meta.id;
-    try {
-      if (LOCAL_EPUB_IDS.includes(tid)) {
-        const off = await getOfflineBible(tid);
-        if (!off || !Array.isArray(off.books)) continue;
-        const bObj = off.books.find(b => Number(b.nr) === Number(state.bookId));
-        const cObj = bObj && bObj.chapters ? bObj.chapters.find(c => Number(c.chapter) === Number(state.chapter)) : null;
-        if (cObj && Array.isArray(cObj.verses) && cObj.verses.length > maxVerseInChapter) {
-          maxVerseInChapter = cObj.verses.length;
-        }
-        const vObj = cObj && cObj.verses ? cObj.verses.find(v => Number(v.verse) === Number(vNum)) : null;
-        if (vObj && vObj.text) {
-          comparedList.push({ id: tid, name: meta.name, lang: meta.lang, text: stripTagsToPlainText(vObj.text) });
-        }
-      } else {
-        const isSelectedInTopBar = (tid === state.trans1 || tid === state.trans2 || tid === state.trans3);
-        const cacheKey = `bm_ch_${tid}_${state.bookId}_${state.chapter}`;
-        const hasCache = Boolean(localStorage.getItem(cacheKey)) || memoryBibleCache.has(tid);
-        const isOfflineSaved = Boolean(await getOfflineBible(tid));
-        if (isSelectedInTopBar || hasCache || isOfflineSaved) {
-          const chData = await fetchChapterData(tid, state.bookId, state.chapter);
-          if (Array.isArray(chData) && chData.length > maxVerseInChapter) {
-            maxVerseInChapter = chData.length;
-          }
-          const vObj = (chData || []).find(v => Number(v.verse) === Number(vNum));
-          if (vObj && vObj.text) {
-            comparedList.push({ id: tid, name: meta.name, lang: meta.lang, text: stripTagsToPlainText(vObj.text) });
-          }
-        }
-      }
-    } catch (e) {}
-  }
-
-  if (!maxVerseInChapter) maxVerseInChapter = 176;
-
-  const referenceItalianItem = comparedList.find(c => String(c.lang).toLowerCase().includes("ital")) || comparedList[0];
-  const primaryText = referenceItalianItem ? referenceItalianItem.text : baseText;
-  const baseWordsSet = new Set(
-    primaryText.toLowerCase().replace(/[.,;:!?"'«»()\[\]]/g, "").split(/\s+/).filter(w => w.length > 2)
-  );
-
-  const highlightNuances = (txt, isFirstRef, transId) => {
-    if (transId === "gb:kjv_strongs") {
-      return formatInlineStrongs(txt, vNum);
-    }
-    if (isFirstRef) return escapeHtml(txt);
-    return txt.split(/(\s+)/).map(tok => {
-      const clean = tok.toLowerCase().replace(/[.,;:!?"'«»()\[\]]/g, "");
-      if (clean.length > 3 && !baseWordsSet.has(clean)) {
-        return `<span class="diff-word" style="font-weight:700;">${escapeHtml(tok)}</span>`;
-      }
-      return escapeHtml(tok);
-    }).join("");
-  };
-
-  // 2. Scansione Lessicale & Radici Ebraico/Greche sul versetto
-  const combinedScanText = comparedList.map(c => c.text).join(" ") || primaryText;
-  const detectedRoots = [];
-  Object.keys(PRO_STRONG_DICT).forEach(k => {
-    const d = PRO_STRONG_DICT[k];
-    const escapedKey = k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const rgx = new RegExp(`(?:^|[^a-zA-ZÀ-ÿ])${escapedKey}(?:$|[^a-zA-ZÀ-ÿ])`, "i");
-    if (rgx.test(combinedScanText)) {
-      detectedRoots.push({ word: k, ...d });
-    }
-  });
-
-  // 3. Estrazione Parole Chiave di Studio
-  const stopQuick = new Set(["della","delle","dello","degli","nella","nelle","nello","negli","sulla","sulle","dalla","dalle","alla","alle","questo","questa","questi","queste","quello","quella","quelli","quelle","essere","avere","tutto","tutti","tutte","anche","ancora","perche","quando","quindi","contro","sempre","prima","dopo","sopra","sotto","dentro","fuori","presso","verso","secondo","nostro","vostro","stesso","proprio","quale","quanto","molto","molti","ogni","alcuni","mentre","allora","coloro","colui","hanno","aveva","sarà","sono","erano","stato","disse","dice","fece","fatto"]);
-  const studyTokens = [...new Set(
-    primaryText.replace(/[^a-zA-ZÀ-ÿ\s]/g, " ").split(/\s+/).filter(w => {
-      const low = w.toLowerCase();
-      return low.length >= 4 && !stopQuick.has(low);
-    })
-  )].slice(0, 7);
-
-  window.__lastXRayData = {
-    bookId: state.bookId,
-    chapter: state.chapter,
-    verse: vNum,
-    ref: refTitle,
-    primaryText,
-    comparedList,
-    detectedRoots
-  };
-
-  // Barra di navigazione Versetto Precedente / Versetto Successivo dentro Raggi X
-  const hasPrevV = vNum > 1;
-  const hasNextV = vNum < maxVerseInChapter;
-  const verseStepperBar = `
-    <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; background:#062356; border:1px solid #29b6f6; border-radius:10px; padding:6px 8px; margin-bottom:10px;">
-      <button type="button" class="nav-btn" ${!hasPrevV ? 'disabled style="opacity:0.38; cursor:default;"' : 'style="background:#0d47a1; color:#fff; border-color:#4fc3f7;"'} onclick="stepXRayVerse(-1)">
-        ◀ Vers. ${hasPrevV ? vNum - 1 : ''}
-      </button>
-      <span style="font-size:13.5px; font-weight:900; color:#00e5ff; text-align:center;">
-        📖 ${escapeHtml(book.abbr)} ${state.chapter}:${vNum} <small style="color:#9ec9ff; font-weight:700;">/ ${maxVerseInChapter}</small>
-      </span>
-      <button type="button" class="nav-btn" ${!hasNextV ? 'disabled style="opacity:0.38; cursor:default;"' : 'style="background:#0d47a1; color:#fff; border-color:#4fc3f7;"'} onclick="stepXRayVerse(1)">
-        Vers. ${hasNextV ? vNum + 1 : ''} ▶
-      </button>
-    </div>
-  `;
-
-  const versionsHtml = comparedList.map((item, idx) => `
-    <div class="result-card" style="cursor:default; margin-bottom:7px; border-left:${idx === 0 ? '4px solid #00e5ff' : '3px solid var(--primary-light)'};">
-      <div class="result-ref" style="font-size:12.5px; display:flex; justify-content:space-between; align-items:center;">
-        <span>${escapeHtml(item.name)}</span>
-        ${idx === 0 ? '<span class="tag-badge" style="background:#00e5ff; color:#041a42; font-size:10.5px;">Rif. Base</span>' : ''}
-      </div>
-      <div style="font-size:14.5px; line-height:1.55; margin-top:3px;">${highlightNuances(item.text, idx === 0, item.id)}</div>
-    </div>
-  `).join("");
-
-  const rootsHtml = detectedRoots.length > 0 ? `
-    <div class="section-title"><span>🏛️ Radici Ebraico / Greche nel Versetto</span><span>${detectedRoots.length}</span></div>
-    ${detectedRoots.map(r => {
-      const codes = String(r.code || "").split(/\s*\/\s*/).filter(Boolean);
-      const codeBadges = codes.map(c =>
-        `<span class="tag-badge" style="background:rgba(0,229,255,0.18); border-color:#00e5ff; color:#84ffff; cursor:pointer;" title="Cerca codice ${escapeHtml(c)} o termine nella Concordanza" onclick="openStrongCodeFromXRay('${escapeJsStr(c)}', '${escapeJsStr(r.word)}')">🏛️ ${escapeHtml(c)}</span>`
-      ).join(" ");
-      return `
-      <div class="result-card" style="cursor:default; margin-bottom:6px;">
-        <div class="result-ref" style="font-size:13px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">
-          <span>${escapeHtml(r.word.toUpperCase())} ${codeBadges}</span>
-          <span class="tag-badge" onclick="openConcordanceFromXRay('${escapeJsStr(r.word)}')">🔍 Concordanza</span>
-        </div>
-        <div style="font-weight:800; color:#84ffff; font-size:13.5px; margin:2px 0;">${escapeHtml(r.orig)}</div>
-        <div style="font-size:12.5px; color:var(--text-muted); line-height:1.4;">${escapeHtml(r.def)}</div>
-      </div>`;
-    }).join("")}
-  ` : "";
-
-  const studyPillsHtml = studyTokens.length > 0 ? `
-    <div class="section-title"><span>📚 Ponte Rapido a Perspicacia & Concordanza</span></div>
-    <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
-      ${studyTokens.map(w => `
-        <span class="tag-badge" style="padding:5px 10px; font-size:12.5px; background:var(--primary-main); color:#fff;" onclick="openInsightFromXRay('${escapeJsStr(w)}')" title="Cerca in Perspicacia">📚 ${escapeHtml(w)}</span>
-        <span class="tag-badge" style="padding:5px 10px; font-size:12.5px;" onclick="openConcordanceFromXRay('${escapeJsStr(w)}')" title="Cerca in Concordanza">🔍 ${escapeHtml(w)}</span>
-      `).join("")}
-    </div>
-  ` : "";
-
-  bodyEl.innerHTML = `
-    ${verseStepperBar}
-    <div style="font-size:12px; color:#9ec9ff; margin-bottom:8px;">
-      Confronto gerarchico su <b>${comparedList.length} edizioni</b> (IT → ES → PT → EN → Altre):
-    </div>
-    ${versionsHtml}
-    ${rootsHtml}
-    ${studyPillsHtml}
-    ${verseStepperBar}
-    <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
-      <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,176,255,0.75); background:#1565c0; flex:1;" onclick="copyXRayComparisonReport(this)">
-        📋 Copia Quadro Comparativo
-      </button>
-      <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#2e7d32; --btn-glow:rgba(76,175,80,0.75); background:#2e7d32; flex:1;" onclick="saveXRayAsStudyNote()">
-        📝 Salva in Appunti Studio
-      </button>
-    </div>
-  `;
-  bodyEl.scrollTop = 0;
-}
-
-function buildXRayReportString() {
-  const d = window.__lastXRayData;
-  if (!d) return "";
-  const lines = [
-    `━━━ 🔬 QUADRO COMPARATIVO: ${d.ref} ━━━`,
-    ...d.comparedList.map(c => `• [${c.name.replace(/^[^\s]+\s/, "")}]\n  "${c.text}"`),
-  ];
-  if (d.detectedRoots && d.detectedRoots.length > 0) {
-    lines.push(``, `🏛️ Radici Lessicali:`);
-    d.detectedRoots.forEach(r => {
-      lines.push(`• ${r.word.toUpperCase()} (${r.code}) — ${r.orig}: ${r.def}`);
-    });
-  }
-  lines.push(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
-  return lines.join("\n");
-}
-
-function copyXRayComparisonReport(btnEl) {
-  bmChimeHaptic();
-  const txt = buildXRayReportString();
-  if (!txt) return;
-  copyPubRefToClipboard(txt);
-  if (btnEl) btnEl.textContent = "✔ Quadro Copiato!";
-}
-
-function saveXRayAsStudyNote() {
-  bmChimeHaptic();
-  const d = window.__lastXRayData;
-  if (!d) return;
-  const reportText = buildXRayReportString();
-  const noteRef = `${d.ref} (Raggi X)`;
-  const existingIdx = state.notes.findIndex(n => n.ref === noteRef);
-  const noteObj = {
-    id: (existingIdx > -1 && state.notes[existingIdx].id) ? state.notes[existingIdx].id : Date.now(),
-    bookId: d.bookId,
-    chapter: d.chapter,
-    verse: d.verse,
-    ref: noteRef,
-    verseText: d.primaryText,
-    text: reportText,
-    tags: ["raggix", "confronto"],
-    date: new Date().toLocaleDateString("it-IT")
-  };
-  if (existingIdx > -1) state.notes[existingIdx] = noteObj;
-  else state.notes.unshift(noteObj);
-  safeSaveStorage("bm_notes", JSON.stringify(state.notes));
-  closeProModal();
-  showNotesView();
-}
-// ============================================================================
-// 🏆 SUITE PREMIUM PRO: Heatmap 66 Libri, Modalità Zen & Diff Raggi X
-// ============================================================================
 let bmXRayDiffActive = false;
 
 function toggleXRayDiffHighlight() {
@@ -8988,7 +8787,152 @@ function toggleXRayDiffHighlight() {
   openVerseXRayModal();
 }
 
+function formatXRayDiffWords(baseText, targetText) {
+  if (!bmXRayDiffActive || !baseText || !targetText || baseText === targetText) {
+    return escapeHtml(targetText);
+  }
+  const baseWords = new Set(
+    String(baseText).toLowerCase().replace(/[.,;:!?"'«»()\[\]—–-]/g, " ").split(/\s+/).filter(w => w.length > 2)
+  );
+  return String(targetText).split(/(\s+)/).map(tok => {
+    const cleanW = tok.toLowerCase().replace(/[.,;:!?"'«»()\[\]—–-]/g, "");
+    if (cleanW.length > 2 && !baseWords.has(cleanW)) {
+      return `<span class="diff-word" style="font-weight:800;">${escapeHtml(tok)}</span>`;
+    }
+    return escapeHtml(tok);
+  }).join("");
+}
+
+function copyXRayComparisonDossier(btnEl) {
+  bmChimeHaptic();
+  const d = window.__lastXRayDossier;
+  if (!d) return;
+  const lines = [
+    `━━━ 🔬 CONFRONTO ESEGETICO RAGGI X: ${d.ref} ━━━`,
+    ...d.rows.map(r => `• ${r.name}:\n  "${r.text}"`),
+    `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
+  ];
+  copyPubRefToClipboard(lines.join("\n"));
+  if (btnEl) btnEl.textContent = "✔ Confronto Copiato!";
+}
+
+async function openVerseXRayModal() {
+  bmChimeHaptic();
+  const book = getBook(state.bookId);
+  const vNum = state.selectedVerse || 1;
+  if (!state.selectedVerseText) selectVerseDataFromDOM(vNum);
+  const rawVerse = state.selectedVerseText || "";
+  const refStr = `${book.name} ${state.chapter}:${vNum}`;
+  closeActionBar();
+
+  document.getElementById("proModalTitle").textContent = `🔬 Raggi X: ${refStr}`;
+  const body = document.getElementById("proModalBody");
+  body.innerHTML = `<div class="loader">🔬 Scansione poliglotta ed esegetica di <b>${escapeHtml(refStr)}</b> in corso...</div>`;
+  document.getElementById("proModal").style.display = "flex";
+
+  const candidateIds = [...new Set([state.trans1, state.trans2, state.trans3, ...state.downloadedBibles])];
+  const rawLoadedList = [];
+
+  for (const tId of candidateIds) {
+    const bMeta = dynamicCatalog.find(b => b.id === tId) || CORE_BIBLES.find(b => b.id === tId);
+    if (!bMeta) continue;
+    let vTxt = "";
+    const fullOff = await getOfflineBible(tId);
+    if (fullOff && Array.isArray(fullOff.books)) {
+      const bObj = fullOff.books.find(b => Number(b.nr) === Number(state.bookId));
+      const cObj = bObj && bObj.chapters ? bObj.chapters.find(c => Number(c.chapter) === Number(state.chapter)) : null;
+      const vObj = cObj && cObj.verses ? cObj.verses.find(v => Number(v.verse) === Number(vNum)) : null;
+      if (vObj && vObj.text) vTxt = stripTagsToPlainText(vObj.text);
+    } else {
+      const cachedCh = localStorage.getItem(`bm_ch_${tId}_${state.bookId}_${state.chapter}`);
+      if (cachedCh) {
+        try {
+          const arr = JSON.parse(cachedCh);
+          const vObj = arr.find(v => Number(v.verse) === Number(vNum));
+          if (vObj && vObj.text) vTxt = stripTagsToPlainText(vObj.text);
+        } catch (e) {}
+      }
+    }
+    if (vTxt) {
+      rawLoadedList.push({ id: tId, name: bMeta.name, lang: bMeta.lang || "Global", text: vTxt });
+    }
+  }
+
+  const sortedVersions = sortXRayBiblesHierarchy(rawLoadedList);
+  const baseTextForDiff = (rawLoadedList.find(r => r.id === state.trans1) || sortedVersions[0] || {}).text || rawVerse;
+  window.__lastXRayDossier = { ref: refStr, rows: sortedVersions };
+
+  const versionsHtml = sortedVersions.map(r => `
+    <div class="result-card" style="cursor:default; margin-bottom:7px; padding:10px; ${r.id === state.trans1 ? 'border-left:3.5px solid #00e5ff;' : ''}">
+      <div style="font-size:12px; font-weight:800; color:#84ffff; margin-bottom:3px; display:flex; justify-content:space-between; align-items:center;">
+        <span>${escapeHtml(r.name)}</span>
+        ${r.id === state.trans1 ? '<span style="font-size:10px; background:#00e5ff; color:#041a42; padding:1px 6px; border-radius:8px; font-weight:900;">ATTIVA</span>' : ''}
+      </div>
+      <div style="font-size:14.5px; line-height:1.5; color:#ffffff;">${r.id === state.trans1 ? escapeHtml(r.text) : formatXRayDiffWords(baseTextForDiff, r.text)}</div>
+    </div>
+  `).join("");
+
+  const stopSet = new Set(["della","delle","dello","degli","nella","nelle","nello","negli","sulla","sulle","dalla","dalle","alla","alle","questo","questa","questi","queste","quello","quella","quelli","quelle","essere","avere","tutto","tutti","tutte","altro","altri","anche","ancora","perche","quando","quindi","contro","sempre","prima","dopo","sopra","sotto","dentro","fuori","presso","verso","secondo","nostro","nostra","vostro","vostra","stesso","stessa","proprio","propria","quale","quali","quanto","molto","molti","ogni","alcuni","nessuno","mentre","invece","allora","insieme","attraverso","durante","mediante","coloro","colui","hanno","aveva","avevano","sara","saranno","fosse","sono","erano","stato","stata","disse","dice","detto","fece","fatto"]);
+  const words = [...new Set(rawVerse.replace(/[^a-zA-ZÀ-ÿ\s]/g, " ").split(/\s+/).filter(w => w.length >= 4 && !stopSet.has(w.toLowerCase())))].slice(0, 10);
+
+  const refs = buildUniversalRefsForVerse(state.bookId, state.chapter, vNum, rawVerse);
+
+  body.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:10px; background:#041a42; padding:7px 9px; border-radius:10px; border:1px solid rgba(41,182,246,0.45); flex-wrap:wrap;">
+      <button type="button" class="nav-btn" style="padding:5px 10px;" onclick="stepXRayVerse(-1)">◀ Vers. Prec.</button>
+      <span style="font-size:13.5px; font-weight:900; color:#00e5ff;">📖 ${escapeHtml(book.abbr)} ${state.chapter}:${vNum}</span>
+      <button type="button" class="nav-btn" style="padding:5px 10px;" onclick="stepXRayVerse(1)">Vers. Succ. ▶</button>
+    </div>
+
+    ${sortedVersions.length > 1 ? `
+      <div style="display:flex; gap:6px; margin-bottom:10px;">
+        <button type="button" class="nav-btn" style="flex:1; font-size:12px; padding:6px 8px; background:${bmXRayDiffActive ? '#00e5ff' : '#062356'}; color:${bmXRayDiffActive ? '#041a42' : '#84ffff'}; border-color:#00e5ff; font-weight:800;" onclick="toggleXRayDiffHighlight()">
+          ✨ Diff Lessicale: ${bmXRayDiffActive ? "ON" : "OFF"}
+        </button>
+        <button type="button" class="nav-btn" style="flex:1; font-size:12px; padding:6px 8px;" onclick="copyXRayComparisonDossier(this)">
+          📋 Copia Confronto (${sortedVersions.length})
+        </button>
+      </div>
+    ` : ""}
+
+    <div class="section-title">
+      <span>🌍 Confronto Versioni Pronte</span>
+      <span>${sortedVersions.length} edizioni</span>
+    </div>
+    ${versionsHtml || `<div class="result-card">"${escapeHtml(rawVerse)}"</div>`}
+
+    <div class="section-title"><span>💎 Esplora Termini in Perspicacia & Concordanza</span></div>
+    <div style="font-size:12px; color:#9ec9ff; margin-bottom:6px;">Tocca un termine per aprirlo in Perspicacia (📚) o nella Concordanza (🔍):</div>
+    <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
+      ${words.map(w => `
+        <span style="display:inline-flex; align-items:center; background:#062356; border:1px solid #29b6f6; border-radius:14px; overflow:hidden;">
+          <span style="padding:4px 8px; font-size:12.5px; font-weight:800; color:#fff; cursor:pointer;" onclick="xraySearchInsight('${escapeJsStr(w)}')" title="Cerca in Perspicacia">📚 ${escapeHtml(w)}</span>
+          <span style="padding:4px 7px; font-size:12px; background:#1565c0; color:#84ffff; font-weight:800; cursor:pointer; border-left:1px solid #29b6f6;" onclick="xraySearchConcordance('${escapeJsStr(w)}')" title="Cerca in Concordanza">🔍</span>
+        </span>
+      `).join("")}
+    </div>
+
+    <div class="section-title"><span>🔗 Passi Paralleli Chiave</span></div>
+    <div style="display:flex; flex-wrap:wrap; gap:6px;">
+      ${refs.map(r => `<span class="tag-badge" style="padding:6px 10px; font-size:13px;" onclick="jumpToRefString('${escapeJsStr(r)}')">📖 ${escapeHtml(r)}</span>`).join("")}
+    </div>
+  `;
+}
+
+// ============================================================================
+// 🏆 SUITE PREMIUM PRO: Timer Studio Automatico, Heatmap 66 Libri & Focus Zen
+// ============================================================================
+
+// Cronometro silenzioso che registra i minuti reali di studio attivo nell'app
+setInterval(() => {
+  if (document.visibilityState === "visible") {
+    const mins = (Number(localStorage.getItem("bm_study_minutes_v1")) || 0) + 1;
+    safeSaveStorage("bm_study_minutes_v1", String(mins));
+  }
+}, 60000);
+
 // Sovrascrive in modo sicuro searchWordInConcordance per usare sempre una Bibbia pronta offline
+// e mantenere il banner di rientro a Raggi X anche dopo il completamento della ricerca
 window.searchWordInConcordance = function(word) {
   if (typeof closeProModal === "function") closeProModal();
   closeActionBar();
@@ -9003,7 +8947,9 @@ window.searchWordInConcordance = function(word) {
   const inp = document.getElementById("searchInput");
   if (inp) {
     inp.value = word;
-    executeSearch(1);
+    Promise.resolve(executeSearch(1)).finally(() => {
+      if (bmXRayReturnState) injectXRayReturnBanner();
+    });
   }
 };
 
@@ -9042,6 +8988,10 @@ function openStudyAnalyticsModal() {
   const totalBm = (state.bookmarks || []).length;
   const totalNotes = (state.notes || []).length;
   const touchedBooks = Array.from(bookStats.values()).filter(s => s.total > 0).length;
+  const studyMins = Number(localStorage.getItem("bm_study_minutes_v1")) || 1;
+  const studyTimeFormatted = studyMins >= 60
+    ? `${Math.floor(studyMins / 60)}h ${studyMins % 60}m`
+    : `${studyMins} min`;
 
   const heatmapGrid = BIBLE_BOOKS.map(b => {
     const st = bookStats.get(b.id);
@@ -9068,20 +9018,24 @@ function openStudyAnalyticsModal() {
 
   document.getElementById("proModalTitle").textContent = "📊 Statistiche & Heatmap Studio PRO";
   document.getElementById("proModalBody").innerHTML = `
+    <div style="background:linear-gradient(135deg, #041a42, #062356); border:1px solid #00e5ff; border-radius:9px; padding:8px 12px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-size:12.5px; font-weight:800; color:#cfe3ff;">⏱️ Tempo di Studio Attivo:</span>
+      <span style="font-size:14.5px; font-weight:900; color:#00e5ff;">${studyTimeFormatted}</span>
+    </div>
     <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; margin-bottom:12px; text-align:center;">
       <div style="background:#062356; border:1px solid #29b6f6; border-radius:8px; padding:8px 4px;">
         <div style="font-size:17px; font-weight:900; color:#00e5ff;">${touchedBooks}/66</div>
         <div style="font-size:10.5px; color:#9ec9ff; font-weight:700;">Libri Studiati</div>
       </div>
-      <div style="background:#062356; border:1px solid #29b6f6; border-radius:8px; padding:8px 4px;">
+      <div style="background:#062356; border:1px solid #29b6f6; border-radius:8px; padding:8px 4px; cursor:pointer;" onclick="closeProModal(); showSavedView();">
         <div style="font-size:17px; font-weight:900; color:#ffeb3b;">${totalHl}</div>
         <div style="font-size:10.5px; color:#9ec9ff; font-weight:700;">Evidenziati</div>
       </div>
-      <div style="background:#062356; border:1px solid #29b6f6; border-radius:8px; padding:8px 4px;">
+      <div style="background:#062356; border:1px solid #29b6f6; border-radius:8px; padding:8px 4px; cursor:pointer;" onclick="closeProModal(); showSavedView();">
         <div style="font-size:17px; font-weight:900; color:#4fc3f7;">${totalBm}</div>
         <div style="font-size:10.5px; color:#9ec9ff; font-weight:700;">Preferiti</div>
       </div>
-      <div style="background:#062356; border:1px solid #29b6f6; border-radius:8px; padding:8px 4px;">
+      <div style="background:#062356; border:1px solid #29b6f6; border-radius:8px; padding:8px 4px; cursor:pointer;" onclick="closeProModal(); showNotesView();">
         <div style="font-size:17px; font-weight:900; color:#ccff00;">${totalNotes}</div>
         <div style="font-size:10.5px; color:#9ec9ff; font-weight:700;">Appunti</div>
       </div>
@@ -9093,7 +9047,7 @@ function openStudyAnalyticsModal() {
     <div style="font-size:11.5px; color:#cfe3ff; margin-bottom:8px;">
       Più un libro è luminoso, più versetti evidenziati, preferiti e note di studio contiene:
     </div>
-    <div style="display:grid; grid-template-columns:repeat(6, 1fr); gap:5px; max-height:42vh; overflow-y:auto; padding:2px;">
+    <div style="display:grid; grid-template-columns:repeat(6, 1fr); gap:5px; max-height:40vh; overflow-y:auto; padding:2px;">
       ${heatmapGrid}
     </div>
   `;
@@ -9145,7 +9099,7 @@ renderSettingsDrawerContent = function() {
     </button>
   `;
   body.insertBefore(proBar, body.firstChild);
-};
+};  
 </script>
 </body>
 </html>
