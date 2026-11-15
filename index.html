@@ -7235,6 +7235,7 @@ function exportBackupJson() {
     trans1: state.trans1,
     trans2: state.trans2,
     trans3: state.trans3,
+    downloadedBibles: state.downloadedBibles,
     fontSize: state.fontSize,
     themeMode: state.themeMode,
     bmSettings: bmSettings,
@@ -7358,13 +7359,20 @@ function confirmImportBackupNow() {
       state.notes = parsed.notes.map((n, idx) => ({ ...n, id: n.id || (Date.now() + idx) }));
       safeSaveStorage("bm_notes", JSON.stringify(state.notes));
     }
+    if (Array.isArray(parsed.downloadedBibles) && parsed.downloadedBibles.length > 0) {
+      state.downloadedBibles = parsed.downloadedBibles;
+      safeSaveStorage("bm_v10_pro_bibles", JSON.stringify(state.downloadedBibles));
+    }
+    if (parsed.trans1) { state.trans1 = parsed.trans1; safeSaveStorage("bm_trans1", state.trans1); }
+    if (parsed.trans2) { state.trans2 = parsed.trans2; safeSaveStorage("bm_trans2", state.trans2); }
+    if (parsed.trans3) { state.trans3 = parsed.trans3; safeSaveStorage("bm_trans3", state.trans3); }
     if (parsed.readingPlan && typeof parsed.readingPlan === "object") {
       rpState = parsed.readingPlan;
       safeSaveStorage("bm_reading_plan_v1", JSON.stringify(rpState));
       updateReadingPlanHeaderBtn();
     }
     closeProModal();
-    loadChapterView();
+    populateSelects().finally(() => loadChapterView());
     showBlueInfoModal("✔ Backup Ripristinato", "Tutti i tuoi dati di studio, impostazioni e il segnalibro Mia Lettura sono stati ripristinati!");
   } catch (err) {
     showBlueInfoModal("❌ File Non Valido", "Errore nel formato del file di backup (.json).");
@@ -8823,13 +8831,10 @@ function openInsightFromXRay(word) {
 async function stepXRayVerse(delta) {
   bmHaptic(14);
   const d = window.__lastXRayData;
-  const curV = d ? Number(d.verse) : (state.selectedVerse || 1);
-  let targetV = Math.max(1, curV + delta);
-  const verseRows = document.querySelectorAll('#mainContainer [id^="v_"]');
-  if (verseRows.length) {
-    const maxV = Math.max(...Array.from(verseRows).map(r => parseInt(r.id.slice(2), 10) || 0));
-    if (maxV > 0 && targetV > maxV) targetV = maxV;
-}
+  const curV = d && d.verse ? Number(d.verse) : (state.selectedVerse || 1);
+  const maxDomV = document.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3").length || 176;
+  const targetV = Math.min(maxDomV, Math.max(1, curV + delta));
+  selectVerseDataFromDOM(targetV);
   await openVerseXRayModal(targetV);
 }
 
@@ -8839,13 +8844,15 @@ let bmXRayRootsActive = true;
 function toggleXRayDiffHighlight() {
   bmHaptic(14);
   bmXRayDiffActive = !bmXRayDiffActive;
-  openVerseXRayModal(window.__lastXRayData ? window.__lastXRayData.verse : undefined);
+  const curV = (window.__lastXRayData && window.__lastXRayData.verse) || state.selectedVerse || 1;
+  openVerseXRayModal(curV);
 }
 
 function toggleXRayRootsLens() {
   bmHaptic(14);
   bmXRayRootsActive = !bmXRayRootsActive;
-  openVerseXRayModal(window.__lastXRayData ? window.__lastXRayData.verse : undefined);
+  const curV = (window.__lastXRayData && window.__lastXRayData.verse) || state.selectedVerse || 1;
+  openVerseXRayModal(curV);
 }
 
 function showXRayRootPopup(dictKey) {
@@ -8912,33 +8919,36 @@ function copyXRayComparisonDossier(btnEl) {
   bmChimeHaptic();
   const d = window.__lastXRayDossier;
   if (!d) return;
+  const rowsList = d.rows || d.editions || [];
   const lines = [
     `━━━ 🔬 CONFRONTO ESEGETICO RAGGI X: ${d.ref} ━━━`,
-    ...d.rows.map(r => `• ${r.name}:\n  "${r.text}"`),
+    ...rowsList.map(r => `• ${r.name || r.label}:\n  "${r.text}"`),
     `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
   ];
   copyPubRefToClipboard(lines.join("\n"));
-  if (btnEl) btnEl.textContent = "✔ Confronto Copiato!";
+  if (btnEl) btnEl.textContent = "✔ Copiato!";
 }
 
 function saveXRayDossierAsNote(btnEl) {
   bmChimeHaptic();
   const d = window.__lastXRayDossier;
   if (!d) return;
+  const rowsList = d.rows || d.editions || [];
   const bodyLines = [
     `🔬 Confronto Multilingue Raggi X (${d.ref}):`,
-    ...d.rows.map(r => `• ${r.name}: "${r.text}"`)
+    ...rowsList.map(r => `• ${r.name || r.label}: "${r.text}"`)
   ].join("\n");
 
   const noteTitle = `${d.ref} (Raggi X)`;
   const existingIdx = state.notes.findIndex(n => n.ref === noteTitle);
+  const curV = (window.__lastXRayData && window.__lastXRayData.verse) || state.selectedVerse || 1;
   const noteObj = {
     id: (existingIdx > -1 && state.notes[existingIdx].id) ? state.notes[existingIdx].id : Date.now(),
     bookId: state.bookId,
     chapter: state.chapter,
-    verse: state.selectedVerse || 1,
+    verse: curV,
     ref: noteTitle,
-    verseText: d.rows[0] ? d.rows[0].text : "",
+    verseText: rowsList[0] ? rowsList[0].text : "",
     text: bodyLines,
     tags: ["raggi-x", "confronto"],
     date: new Date().toLocaleDateString("it-IT")
@@ -8949,16 +8959,23 @@ function saveXRayDossierAsNote(btnEl) {
   if (btnEl) btnEl.textContent = "✔ Salvato in Appunti!";
 }
 
-async function openVerseXRayModal(forcedVerse) {
+async function openVerseXRayModal(forcedVerseNum) {
   bmHaptic(14);
   const book = getBook(state.bookId);
-  const forced = Number(forcedVerse) > 0 ? Number(forcedVerse) : 0;
-  const vNum = forced || state.selectedVerse || 1;
-  if (forced || !state.selectedVerseText) selectVerseDataFromDOM(vNum);
+  const vNum = (typeof forcedVerseNum === "number" && forcedVerseNum > 0)
+    ? forcedVerseNum
+    : (state.selectedVerse || 1);
+  state.selectedVerse = vNum;
+  const domRow = document.getElementById(`v_${vNum}`);
+  if (domRow) {
+    state.selectedVerseText = domRow.getAttribute("data-text") || state.selectedVerseText || "";
+  } else if (!state.selectedVerseText) {
+    selectVerseDataFromDOM(vNum);
+  }
   const rawVerse = state.selectedVerseText || "";
   const refStr = `${book.name} ${state.chapter}:${vNum}`;
-  window.__lastXRayData = { bookId: state.bookId, chapter: state.chapter, verse: vNum };
-  closeActionBar();
+  window.__lastXRayData = { bookId: state.bookId, chapter: state.chapter, verse: vNum, ref: refStr };
+  if (typeof forcedVerseNum !== "number") closeActionBar();
 
   document.getElementById("proModalTitle").textContent = `🔬 Raggi X: ${refStr}`;
   const body = document.getElementById("proModalBody");
@@ -8993,7 +9010,9 @@ async function openVerseXRayModal(forcedVerse) {
     }
   }
 
-  const sortedVersions = sortXRayBiblesHierarchy(rawLoadedList);
+  const sortedVersions = typeof sortXRayBiblesHierarchy === "function"
+    ? sortXRayBiblesHierarchy(rawLoadedList)
+    : rawLoadedList;
   const baseTextForDiff = (rawLoadedList.find(r => r.id === state.trans1) || sortedVersions[0] || {}).text || rawVerse;
   window.__lastXRayDossier = { ref: refStr, rows: sortedVersions };
 
@@ -9008,9 +9027,19 @@ async function openVerseXRayModal(forcedVerse) {
   `).join("");
 
   const stopSet = new Set(["della","delle","dello","degli","nella","nelle","nello","negli","sulla","sulle","dalla","dalle","alla","alle","questo","questa","questi","queste","quello","quella","quelli","quelle","essere","avere","tutto","tutti","tutte","altro","altri","anche","ancora","perche","quando","quindi","contro","sempre","prima","dopo","sopra","sotto","dentro","fuori","presso","verso","secondo","nostro","nostra","vostro","vostra","stesso","stessa","proprio","propria","quale","quali","quanto","molto","molti","ogni","alcuni","nessuno","mentre","invece","allora","insieme","attraverso","durante","mediante","coloro","colui","hanno","aveva","avevano","sara","saranno","fosse","sono","erano","stato","stata","disse","dice","detto","fece","fatto"]);
-  const words = [...new Set(rawVerse.replace(/[^a-zA-ZÀ-ÿ\s]/g, " ").split(/\s+/).filter(w => w.length >= 4 && !stopSet.has(w.toLowerCase())))].slice(0, 10);
+  const words = [...new Set(baseTextForDiff.replace(/[^a-zA-ZÀ-ÿ\s]/g, " ").split(/\s+/).filter(w => w.length >= 4 && !stopSet.has(w.toLowerCase())))].slice(0, 10);
 
-  const refs = buildUniversalRefsForVerse(state.bookId, state.chapter, vNum, rawVerse);
+  const refs = buildUniversalRefsForVerse(state.bookId, state.chapter, vNum, baseTextForDiff);
+
+  let placesHtml = "";
+  const mapMeta = await bpGetMeta();
+  if (mapMeta && baseTextForDiff) {
+    const foundPlaces = bpScanText(baseTextForDiff);
+    if (foundPlaces.length > 0) {
+      bpComputeMapScore(foundPlaces);
+      placesHtml = `<div class="section-title"><span>📍 Luoghi nel Versetto</span><span>${foundPlaces.length}</span></div>` + foundPlaces.map(bpCardHtml).join("");
+    }
+  }
 
   body.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:10px; background:#041a42; padding:7px 9px; border-radius:10px; border:1px solid rgba(41,182,246,0.45); flex-wrap:wrap;">
@@ -9020,16 +9049,16 @@ async function openVerseXRayModal(forcedVerse) {
     </div>
 
     <div style="display:flex; gap:5px; margin-bottom:10px; flex-wrap:wrap;">
-      <button type="button" class="nav-btn" style="font-size:11px; padding:4px 8px; background:${bmXRayRootsActive ? '#ffd54f' : '#062356'}; color:${bmXRayRootsActive ? '#041a42' : '#ffd54f'}; border-color:#ffd54f; font-weight:900;" onclick="toggleXRayRootsLens()">
+      <button type="button" class="nav-btn" style="flex:1; font-size:11px; padding:5px 6px; background:${bmXRayRootsActive ? '#ffd54f' : '#062356'}; color:${bmXRayRootsActive ? '#041a42' : '#ffd54f'}; border-color:#ffd54f; font-weight:900;" onclick="toggleXRayRootsLens()">
         🏛️ Radici: ${bmXRayRootsActive ? 'ON' : 'OFF'}
       </button>
-      <button type="button" class="nav-btn" style="font-size:11px; padding:4px 8px; background:${bmXRayDiffActive ? '#00e5ff' : '#062356'}; color:${bmXRayDiffActive ? '#041a42' : '#84ffff'}; border-color:#00e5ff; font-weight:800;" onclick="toggleXRayDiffHighlight()">
+      <button type="button" class="nav-btn" style="flex:1; font-size:11px; padding:5px 6px; background:${bmXRayDiffActive ? '#00e5ff' : '#062356'}; color:${bmXRayDiffActive ? '#041a42' : '#84ffff'}; border-color:#00e5ff; font-weight:800;" onclick="toggleXRayDiffHighlight()">
         ✨ Diff: ${bmXRayDiffActive ? 'ON' : 'OFF'}
       </button>
-      <button type="button" class="nav-btn" style="font-size:11px; padding:4px 8px; border-color:#29b6f6; color:#ffffff; font-weight:800;" onclick="copyXRayComparisonDossier(this)">
+      <button type="button" class="nav-btn" style="flex:1; font-size:11px; padding:5px 6px; border-color:#29b6f6; color:#ffffff; font-weight:800;" onclick="copyXRayComparisonDossier(this)">
         📋 Copia
       </button>
-      <button type="button" class="nav-btn" style="font-size:11px; padding:4px 8px; border-color:#ccff00; color:#ccff00; font-weight:800;" onclick="saveXRayDossierAsNote(this)">
+      <button type="button" class="nav-btn" style="flex:1; font-size:11px; padding:5px 6px; border-color:#ccff00; color:#ccff00; font-weight:800;" onclick="saveXRayDossierAsNote(this)">
         📝 Salva Nota
       </button>
     </div>
@@ -9054,11 +9083,13 @@ async function openVerseXRayModal(forcedVerse) {
     </div>
 
     <div class="section-title"><span>🔗 Passi Paralleli Chiave</span></div>
-    <div style="display:flex; flex-wrap:wrap; gap:6px;">
-      ${refs.map(r => `<span class="tag-badge" style="padding:6px 10px; font-size:13px;" onclick="jumpToRefString('${escapeJsStr(r)}')">📖 ${escapeHtml(r)}</span>`).join("")}
+    <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
+      ${refs.map(r => `<span class="tag-badge" style="padding:6px 10px; font-size:13px;" onclick="closeProModal(); jumpToRefString('${escapeJsStr(r)}')">📖 ${escapeHtml(r)}</span>`).join("")}
     </div>
+
+    ${placesHtml}
   `;
-  }
+}
                            
 // ============================================================================
 // 🏆 SUITE PREMIUM PRO: Timer Studio Automatico, Heatmap 66 Libri & Focus Zen
