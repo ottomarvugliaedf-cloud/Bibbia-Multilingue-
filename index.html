@@ -3401,15 +3401,27 @@ function deleteNoteById(noteId, refFallback) {
     safeSaveStorage("bm_notes", JSON.stringify(state.notes));
   }
   showNotesView();
-    }
+}
+
 function searchWordInConcordance(word) {
   if (typeof closeProModal === "function") closeProModal();
   closeActionBar();
   showSearchView();
+  const selEl = document.getElementById("searchBibleSelect");
+  if (selEl && state.trans1 && !state.trans1.startsWith("helloao:")) {
+    const hasOpt = Array.from(selEl.options).some(o => o.value === state.trans1);
+    if (hasOpt && memoryBibleCache.has(state.trans1)) {
+      selEl.value = state.trans1;
+    }
+  }
   const inp = document.getElementById("searchInput");
   if (inp) {
     inp.value = word;
-    executeSearch();
+    Promise.resolve(executeSearch(1)).finally(() => {
+      if (typeof bmXRayReturnState !== "undefined" && bmXRayReturnState) {
+        injectXRayReturnBanner();
+      }
+    });
   }
 }
 async function showCatalogView() {
