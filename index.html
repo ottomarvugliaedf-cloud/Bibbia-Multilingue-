@@ -2954,6 +2954,14 @@ function saveNoteFromModal() {
   const text = textEl ? textEl.value.trim() : "";
   const rawTags = tagsEl ? tagsEl.value : "";
   const tags = rawTags.split(",").map(t => t.trim().replace(/^#/, "")).filter(Boolean);
+  const freeTitleEl = document.getElementById("freeNoteTitleInput");
+  if (freeTitleEl && activeNoteTarget) {
+    const baseTitle = freeTitleEl.value.trim() || activeNoteTarget.ref;
+    let uniqueRef = baseTitle;
+    let dupN = 2;
+    while (state.notes.some(x => x.ref === uniqueRef)) uniqueRef = `${baseTitle} (${dupN++})`;
+    activeNoteTarget.ref = uniqueRef;
+  }
   if (!activeNoteTarget) {
     const book = getBook(state.bookId);
     const vNum = state.selectedVerse || 1;
@@ -3621,7 +3629,7 @@ async function executeSearch(page = 1) {
   if (isNewSearch) {
     resDiv.innerHTML = `<div class="loader">Ricerca nella Concordanza di "<b>${escapeHtml(rawQuery)}</b>" in corso...</div>`;
     const normalizeForPhrase = (str) => String(str || "").toLowerCase()
-      .replace(/[^a-z0-9\u00C0-\u017F\s]/gi, " ")
+      .replace(/[^\p{L}\p{M}\p{N}\s]/gu, " ")
       .replace(/\s+/g, " ")
       .trim();
     const queryNorm = normalizeForPhrase(rawQuery);
@@ -3641,6 +3649,7 @@ async function executeSearch(page = 1) {
         const any = qRaw.split(/\s+or\s+/i).map(p => p.trim().toLowerCase()).filter(Boolean);
         return (txt) => { const low = txt.toLowerCase(); return any.some(p => low.includes(p)); };
       }
+      if (!queryWords.length) return () => false;
       if (mode === "exact_phrase") return (txt) => normalizeForPhrase(txt).includes(queryNorm);
       return (txt) => { const normTxt = normalizeForPhrase(txt); return queryWords.every(w => normTxt.includes(w)); };
     };
@@ -6637,7 +6646,7 @@ async function importMapsArchive(event) {
     if (!parsed || parsed.format !== "vedete-il-buon-paese" || !Array.isArray(parsed.chapters) || !Array.isArray(parsed.places)) {
       throw new Error("File non valido: serve vedete_il_buon_paese.json.");
     }
-    const chapters = [parsed.front, ...parsed.chapters];
+    const chapters = [parsed.front, ...parsed.chapters].filter(Boolean);
     const list = [];
     chapters.forEach(c => (c.maps || []).forEach(m => list.push({ m, c })));
     const metaMaps = [];
@@ -8728,6 +8737,7 @@ async function returnToXRayModalNow() {
   if (!bmXRayReturnState) return;
   bmChimeHaptic();
   const { bookId, chapter, verse } = bmXRayReturnState;
+  bmXRayReturnState = null;
   state.bookId = bookId;
   state.chapter = chapter;
   state.selectedVerse = verse;
@@ -8742,6 +8752,7 @@ function returnToXRayChapterHighlighted() {
   if (!bmXRayReturnState) return;
   bmHaptic(14);
   const { bookId, chapter, verse } = bmXRayReturnState;
+  bmXRayReturnState = null;
   openRef(bookId, chapter, verse);
 }
 
@@ -8807,7 +8818,12 @@ async function stepXRayVerse(delta) {
   bmHaptic(14);
   const d = window.__lastXRayData;
   const curV = d ? Number(d.verse) : (state.selectedVerse || 1);
-  const targetV = Math.max(1, curV + delta);
+  let targetV = Math.max(1, curV + delta);
+  const verseRows = document.querySelectorAll('#mainContainer [id^="v_"]');
+  if (verseRows.length) {
+    const maxV = Math.max(...Array.from(verseRows).map(r => parseInt(r.id.slice(2), 10) || 0));
+    if (maxV > 0 && targetV > maxV) targetV = maxV;
+}
   await openVerseXRayModal(targetV);
 }
 
@@ -8817,13 +8833,13 @@ let bmXRayRootsActive = true;
 function toggleXRayDiffHighlight() {
   bmHaptic(14);
   bmXRayDiffActive = !bmXRayDiffActive;
-  openVerseXRayModal();
+  openVerseXRayModal(window.__lastXRayData ? window.__lastXRayData.verse : undefined);
 }
 
 function toggleXRayRootsLens() {
   bmHaptic(14);
   bmXRayRootsActive = !bmXRayRootsActive;
-  openVerseXRayModal();
+  openVerseXRayModal(window.__lastXRayData ? window.__lastXRayData.verse : undefined);
 }
 
 function showXRayRootPopup(dictKey) {
@@ -8927,13 +8943,15 @@ function saveXRayDossierAsNote(btnEl) {
   if (btnEl) btnEl.textContent = "✔ Salvato in Appunti!";
 }
 
-async function openVerseXRayModal() {
+async function openVerseXRayModal(forcedVerse) {
   bmHaptic(14);
   const book = getBook(state.bookId);
-  const vNum = state.selectedVerse || 1;
-  if (!state.selectedVerseText) selectVerseDataFromDOM(vNum);
+  const forced = Number(forcedVerse) > 0 ? Number(forcedVerse) : 0;
+  const vNum = forced || state.selectedVerse || 1;
+  if (forced || !state.selectedVerseText) selectVerseDataFromDOM(vNum);
   const rawVerse = state.selectedVerseText || "";
   const refStr = `${book.name} ${state.chapter}:${vNum}`;
+  window.__lastXRayData = { bookId: state.bookId, chapter: state.chapter, verse: vNum };
   closeActionBar();
 
   document.getElementById("proModalTitle").textContent = `🔬 Raggi X: ${refStr}`;
