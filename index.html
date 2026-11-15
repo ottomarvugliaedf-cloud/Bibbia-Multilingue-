@@ -7239,12 +7239,15 @@ function exportBackupJson() {
   const jsonStr = JSON.stringify(data, null, 2);
   const fileName = `BM_PRO_Backup_${new Date().toISOString().slice(0,10)}.json`;
   const blob = new Blob([jsonStr], { type: "application/json" });
-    if (navigator.canShare({ files: [file] })) {
-      navigator.share({ files: [file], title: "Backup Bibbia Multilingue PRO" }).catch(() => {});
-      return;
-    }
-  } catch (e) { console.debug(e); }
-}
+  if (navigator.canShare) {
+    try {
+      const file = new File([blob], fileName, { type: "application/json" });
+      if (navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: "Backup Bibbia Multilingue PRO" }).catch(() => {});
+        return;
+      }
+    } catch (e) { console.debug(e); }
+  }
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = fileName;
