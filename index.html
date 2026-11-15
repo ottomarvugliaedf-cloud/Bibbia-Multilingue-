@@ -6083,17 +6083,21 @@ async function renderInsightFilteredList() {
 // MODULO TUTTA LA SCRITTURA (si_I — JSON offline: 66 libri + introduzione e studi)
 // ============================================================================
 let siMemCache = null;
+
 function siSnippet(txt, len = 145) {
-const clean = String(txt || "").replace(/\[[a-z]{1,2}\]/g, "").replace(/\s+/g, " ").trim();
-return clean.slice(0, len) + (clean.length > len ? "…" : "");
+  const clean = String(txt || "").replace(/\[[a-z]{1,2}\]/g, "").replace(/\s+/g, " ").trim();
+  return clean.slice(0, len) + (clean.length > len ? "…" : "");
 }
+
 function siPageBadge(p) {
-return p ? `<span class="tag-badge" style="font-size:11px; margin-left:6px;">p. ${escapeHtml(String(p))}</span>` : "";
+  return p ? `<span class="tag-badge" style="font-size:11px; margin-left:6px;">p. ${escapeHtml(String(p))}</span>` : "";
 }
+
 function siBookLabel(b) {
-const ref = BIBLE_BOOKS.find(x => x.id === Number(b.bookNumber));
-return ref ? ref.name : (b.bookName || `Libro ${b.bookNumber}`);
+  const ref = BIBLE_BOOKS.find(x => x.id === Number(b.bookNumber));
+  return ref ? ref.name : (b.bookName || `Libro ${b.bookNumber}`);
 }
+
 function siExtraItems(data) {
   const flatExtras = [];
   const rawList = [...(data.frontMatter || []), ...(data.extras || [])];
@@ -6115,7 +6119,8 @@ function siExtraItems(data) {
 
 function siRenderParas(text, defaultBookId = null) {
   return String(text || "").split(/\n{2,}/).map(p => p.trim()).filter(Boolean).map(p => {
-    const html = formatNoteLinks(p, defaultBookId).replace(/\[([a-z]{1,2})\]/g,
+    const html = formatNoteLinks(p, defaultBookId).replace(
+      /\[([a-z]{1,2})\]/g,
       '<sup onclick="document.getElementById(\'si_fn_$1\')?.scrollIntoView({behavior:\'smooth\',block:\'center\'})" style="color:var(--primary-light); font-weight:800; cursor:pointer; padding:0 2px;">[$1]</sup>'
     );
     const isMeta = /^(?:Scrittore|Scrittori|Dove fu scritto|Quando fu completato|Tempo a cui si riferisce):/i.test(p);
@@ -6128,121 +6133,137 @@ function siRenderParas(text, defaultBookId = null) {
       : `<div style="margin:0 0 10px 0;">${html}</div>`;
   }).join("");
 }
+
 async function importSiFile(event) {
-const file = event.target.files && event.target.files[0];
-if (!file) return;
-const statusEl = document.getElementById("epubImportStatus");
-const setStatus = html => { if (statusEl) statusEl.innerHTML = html; };
-try {
-setStatus(`⏳ Analisi di <b>${escapeHtml(file.name)}</b> in corso...`);
-const parsed = JSON.parse(await file.text());
-if (!parsed || !Array.isArray(parsed.books)) {
-throw new Error("File non valido: manca l'elenco dei libri (books). Carica tutta_la_scrittura.json.");
-}
-const books = parsed.books
-.filter(b => b && Array.isArray(b.chapters) && b.chapters.length > 0)
-.sort((a, b) => (Number(a.bookNumber) || 0) - (Number(b.bookNumber) || 0));
-if (books.length === 0) {
-throw new Error("Nessun libro valido trovato nel file JSON.");
-}
-const payload = {
-updated: Date.now(),
-title: parsed.title || "Tutta la Scrittura è ispirata da Dio e utile",
-frontMatter: Array.isArray(parsed.frontMatter) ? parsed.frontMatter : [],
-books,
-extras: Array.isArray(parsed.extras) ? parsed.extras : []
-};
-siMemCache = payload;
-setStatus(`💾 Salvataggio di ${books.length} libri nel database offline...`);
-await saveOfflineBible("bm:si_it", payload);
-setStatus(`✔ Tutta la Scrittura salvata offline (${books.length} libri pronti)!`);
-setTimeout(() => {
-closeProModal();
-showSiView();
-}, 900);
-} catch (err) {
-setStatus(`❌ Errore: ${escapeHtml(err.message)}`);
-}
-}
-async function getSiData() {
-if (siMemCache && Array.isArray(siMemCache.books)) return siMemCache;
-try {
-const db = await openDB();
-return new Promise(res => {
-const tx = db.transaction("bibles", "readonly");
-const req = tx.objectStore("bibles").get("bm:si_it");
-req.onsuccess = () => {
-if (req.result) siMemCache = req.result;
-res(req.result || null);
-};
-req.onerror = () => res(null);
-});
-} catch (e) { return null; }
-}
-async function showSiView(fromBack = false) {
-if (!fromBack && currentViewContext.type !== "si") saveCurrentPositionToHistory();
-closeActionBar();
-stopAllAudio();
-window.currentInsightSpeechText = "";
-setActiveTab("", "siTabBtn");
-currentViewContext = { type: "si", mode: "index", label: "📘 Tutta la Scrittura" };
-document.getElementById("currentRefLabel").textContent = "📘 Tutta la Scrittura";
-const main = document.getElementById("mainContainer");
-const data = await getSiData();
-if (!data || !Array.isArray(data.books) || data.books.length === 0) {
-main.innerHTML = `
-<div class="section-title"><span>📘 Tutta la Scrittura è ispirata da Dio e utile</span><span>${getBackBtnHtml()}</span></div>
-<div class="result-card" style="cursor:default; text-align:center; padding:22px 14px;">
-<div style="font-size:16px; font-weight:800; color:var(--primary-light); margin-bottom:10px;">
-“Tutta la Scrittura è ispirata da Dio e utile”
-</div>
-<p style="font-size:14px; color:var(--text-muted); line-height:1.55; margin-bottom:16px;">
-Carica il file <b>tutta_la_scrittura.json</b> per consultare offline tutti i 66 libri, l'introduzione e gli studi:
-</p>
-<div style="display:flex; flex-direction:column; gap:10px; max-width:320px; margin:0 auto;">
-<label class="search-btn" style="text-align:center; padding:11px; cursor:pointer; background:linear-gradient(135deg, #2e7d32, #43a047);">
-📘 Carica ora Tutta la Scrittura (.json)
-<input type="file" accept=".json,application/json" style="display:none;" onchange="importSiFile(event)">
-</label>
-<button class="nav-btn" style="padding:10px;" onclick="loadChapterView()">
-📖 Torna alla Bibbia
-</button>
-</div>
-<div id="epubImportStatus" style="margin-top:12px; font-size:13px; font-weight:700; color:var(--primary-light);"></div>
-</div>
-`;
-return;
-}
-const idxByNum = new Map(data.books.map((b, i) => [Number(b.bookNumber), i]));
-const tiles = list => list.map(b => {
-const bi = idxByNum.get(b.id);
-return bi === undefined
-? `<button class="book-tile cat-${b.cat}" style="opacity:0.35;" disabled>${escapeHtml(b.abbr)}</button>`
-: `<button class="book-tile cat-${b.cat}" onclick="showSiBook(${bi})">${escapeHtml(b.abbr)}</button>`;
-}).join("");
-const ot = BIBLE_BOOKS.filter(b => b.sec === "OT");
-const nt = BIBLE_BOOKS.filter(b => b.sec === "NT");
-const extras = siExtraItems(data);
-const extraCards = extras.map((x, i) => `
-<div class="result-card" onclick="showSiReader('x', ${i}, 0)">
-<div class="result-ref">📘 ${escapeHtml(x.title)} ${siPageBadge(x.chapters[0].printPage)}</div>
-<div style="font-size:13.5px; color:var(--text-muted); line-height:1.45;">${escapeHtml(siSnippet(x.chapters[0].content))}</div>
-</div>
-`).join("");
-main.innerHTML = `
-<div class="section-title"><span>📘 Tutta la Scrittura è ispirata da Dio e utile</span><span>${getBackBtnHtml()}</span></div>
-<div style="display:flex; gap:8px; flex-wrap:wrap; margin:10px 0;">
-  <button class="jw-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,176,255,0.6);" onclick="openJwLibrary('it')" title="Cerca nella Biblioteca Online Watchtower (italiano)"><span class="jw-circle">${JW_TOWER_SVG}</span>Biblioteca Online · Italiano</button>
-  <button class="jw-btn btn-color-anim" style="--btn-bg:#2962ff; --btn-glow:rgba(41,98,255,0.6);" onclick="openJwLibrary('en')" title="Search the Watchtower Online Library (English)"><span class="jw-circle">${JW_TOWER_SVG}</span>Online Library · English</button>
-</div>
-<div class="section-title"><span>Scritture Ebraico-Aramaiche</span><span>39 Libri</span></div>
-<div class="books-grid">${tiles(ot)}</div>
-<div class="section-title"><span>Scritture Greche Cristiane</span><span>27 Libri</span></div>
-<div class="books-grid">${tiles(nt)}</div>
-${extras.length ? `<div class="section-title"><span>Introduzione e Studi</span><span>${extras.length}</span></div>${extraCards}` : ""}
-`;
-main.scrollTop = 0;
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById("epubImportStatus");
+  const setStatus = html => {
+    if (statusEl) statusEl.innerHTML = html;
+  };
+  try {
+    setStatus(`⏳ Analisi di <b>${escapeHtml(file.name)}</b> in corso...`);
+    const parsed = JSON.parse(await file.text());
+    if (!parsed || !Array.isArray(parsed.books)) {
+      throw new Error("File non valido: manca l'elenco dei libri (books). Carica tutta_la_scrittura.json.");
     }
+    const books = parsed.books
+      .filter(b => b && Array.isArray(b.chapters) && b.chapters.length > 0)
+      .sort((a, b) => (Number(a.bookNumber) || 0) - (Number(b.bookNumber) || 0));
+    if (books.length === 0) {
+      throw new Error("Nessun libro valido trovato nel file JSON.");
+    }
+    const payload = {
+      updated: Date.now(),
+      title: parsed.title || "Tutta la Scrittura è ispirata da Dio e utile",
+      frontMatter: Array.isArray(parsed.frontMatter) ? parsed.frontMatter : [],
+      books,
+      extras: Array.isArray(parsed.extras) ? parsed.extras : []
+    };
+    siMemCache = payload;
+    setStatus(`💾 Salvataggio di ${books.length} libri nel database offline...`);
+    await saveOfflineBible("bm:si_it", payload);
+    setStatus(`✔ Tutta la Scrittura salvata offline (${books.length} libri pronti)!`);
+    setTimeout(() => {
+      closeProModal();
+      showSiView();
+    }, 900);
+  } catch (err) {
+    setStatus(`❌ Errore: ${escapeHtml(err.message)}`);
+  }
+}
+
+async function getSiData() {
+  if (siMemCache && Array.isArray(siMemCache.books)) return siMemCache;
+  try {
+    const db = await openDB();
+    return new Promise(res => {
+      const tx = db.transaction("bibles", "readonly");
+      const req = tx.objectStore("bibles").get("bm:si_it");
+      req.onsuccess = () => {
+        if (req.result) siMemCache = req.result;
+        res(req.result || null);
+      };
+      req.onerror = () => res(null);
+    });
+  } catch (e) {
+    return null;
+  }
+}
+
+async function showSiView(fromBack = false) {
+  if (!fromBack && currentViewContext.type !== "si") {
+    saveCurrentPositionToHistory();
+  }
+  closeActionBar();
+  stopAllAudio();
+  window.currentInsightSpeechText = "";
+  setActiveTab("", "siTabBtn");
+  currentViewContext = { type: "si", mode: "index", label: "📘 Tutta la Scrittura" };
+  document.getElementById("currentRefLabel").textContent = "📘 Tutta la Scrittura";
+  const main = document.getElementById("mainContainer");
+  const data = await getSiData();
+  if (!data || !Array.isArray(data.books) || data.books.length === 0) {
+    main.innerHTML = `
+      <div class="section-title">
+        <span>📘 Tutta la Scrittura è ispirata da Dio e utile</span>
+        <span>${getBackBtnHtml()}</span>
+      </div>
+      <div class="result-card" style="cursor:default; text-align:center; padding:22px 14px;">
+        <div style="font-size:16px; font-weight:800; color:var(--primary-light); margin-bottom:10px;">
+          “Tutta la Scrittura è ispirata da Dio e utile”
+        </div>
+        <p style="font-size:14px; color:var(--text-muted); line-height:1.55; margin-bottom:16px;">
+          Carica il file <b>tutta_la_scrittura.json</b> per consultare offline tutti i 66 libri, l'introduzione e gli studi:
+        </p>
+        <div style="display:flex; flex-direction:column; gap:10px; max-width:320px; margin:0 auto;">
+          <label class="search-btn" style="text-align:center; padding:11px; cursor:pointer; background:linear-gradient(135deg, #2e7d32, #43a047);">
+            📘 Carica ora Tutta la Scrittura (.json)
+            <input type="file" accept=".json,application/json" style="display:none;" onchange="importSiFile(event)">
+          </label>
+          <button class="nav-btn" style="padding:10px;" onclick="loadChapterView()">
+            📖 Torna alla Bibbia
+          </button>
+        </div>
+        <div id="epubImportStatus" style="margin-top:12px; font-size:13px; font-weight:700; color:var(--primary-light);"></div>
+      </div>
+    `;
+    return;
+  }
+  const idxByNum = new Map(data.books.map((b, i) => [Number(b.bookNumber), i]));
+  const tiles = list => list.map(b => {
+    const bi = idxByNum.get(b.id);
+    return bi === undefined
+      ? `<button class="book-tile cat-${b.cat}" style="opacity:0.35;" disabled>${escapeHtml(b.abbr)}</button>`
+      : `<button class="book-tile cat-${b.cat}" onclick="showSiBook(${bi})">${escapeHtml(b.abbr)}</button>`;
+  }).join("");
+  const ot = BIBLE_BOOKS.filter(b => b.sec === "OT");
+  const nt = BIBLE_BOOKS.filter(b => b.sec === "NT");
+  const extras = siExtraItems(data);
+  const extraCards = extras.map((x, i) => `
+    <div class="result-card" onclick="showSiReader('x', ${i}, 0)">
+      <div class="result-ref">📘 ${escapeHtml(x.title)} ${siPageBadge(x.chapters[0].printPage)}</div>
+      <div style="font-size:13.5px; color:var(--text-muted); line-height:1.45;">${escapeHtml(siSnippet(x.chapters[0].content))}</div>
+    </div>
+  `).join("");
+  main.innerHTML = `
+    <div class="section-title">
+      <span>📘 Tutta la Scrittura è ispirata da Dio e utile</span>
+      <span>${getBackBtnHtml()}</span>
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin:10px 0;">
+      <button class="jw-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,176,255,0.6);" onclick="openJwLibrary('it')" title="Cerca nella Biblioteca Online Watchtower (italiano)"><span class="jw-circle">${JW_TOWER_SVG}</span>Biblioteca Online · Italiano</button>
+      <button class="jw-btn btn-color-anim" style="--btn-bg:#2962ff; --btn-glow:rgba(41,98,255,0.6);" onclick="openJwLibrary('en')" title="Search the Watchtower Online Library (English)"><span class="jw-circle">${JW_TOWER_SVG}</span>Online Library · English</button>
+    </div>
+    <div class="section-title"><span>Scritture Ebraico-Aramaiche</span><span>39 Libri</span></div>
+    <div class="books-grid">${tiles(ot)}</div>
+    <div class="section-title"><span>Scritture Greche Cristiane</span><span>27 Libri</span></div>
+    <div class="books-grid">${tiles(nt)}</div>
+    ${extras.length ? `<div class="section-title"><span>Introduzione e Studi</span><span>${extras.length}</span></div>${extraCards}` : ""}
+  `;
+  main.scrollTop = 0;
+}
+
 function extractSiPillLabel(kind, item, ch) {
   if (kind !== "x") return siBookLabel(item);
   const raw = String((ch && ch.title) || (item && item.title) || "").trim();
@@ -6254,101 +6275,122 @@ function extractSiPillLabel(kind, item, ch) {
   }
   return raw;
 }
+
 async function showSiBook(bi, fromBack = false) {
-if (!fromBack) saveCurrentPositionToHistory();
-closeActionBar();
-stopAllAudio();
-window.currentInsightSpeechText = "";
-setActiveTab("", "siTabBtn");
-currentViewContext = { type: "si", mode: "book", i: bi, label: "📘 Tutta la Scrittura" };
-document.getElementById("currentRefLabel").textContent = "📘 Tutta la Scrittura";
-const main = document.getElementById("mainContainer");
-const data = await getSiData();
-const book = data && data.books ? data.books[bi] : null;
-if (!book) { showSiView(true); return; }
-setHeaderCenterPill(siBookLabel(book), "si_index");
-const cards = book.chapters.map((c, ci) => `
-<div class="result-card" onclick="showSiReader('b', ${bi}, ${ci})">
-<div class="result-ref">📘 ${escapeHtml(c.title)} ${siPageBadge(c.printPage)}</div>
-<div style="font-size:13.5px; color:var(--text-muted); line-height:1.45;">${escapeHtml(siSnippet(c.content))}</div>
-</div>
-`).join("");
-main.innerHTML = `
-<div class="chapter-header">
-<div class="chapter-title">📘 ${escapeHtml(siBookLabel(book))}</div>
-<div class="chapter-nav-btns">${getBackBtnHtml()}<button class="nav-btn" onclick="showSiView(true)">← Tutti i Libri</button></div>
-</div>
-${cards}
-`;
-main.scrollTop = 0;
+  if (!fromBack) {
+    saveCurrentPositionToHistory();
+  }
+  closeActionBar();
+  stopAllAudio();
+  window.currentInsightSpeechText = "";
+  setActiveTab("", "siTabBtn");
+  currentViewContext = { type: "si", mode: "book", i: bi, label: "📘 Tutta la Scrittura" };
+  document.getElementById("currentRefLabel").textContent = "📘 Tutta la Scrittura";
+  const main = document.getElementById("mainContainer");
+  const data = await getSiData();
+  const book = data && data.books ? data.books[bi] : null;
+  if (!book) {
+    showSiView(true);
+    return;
+  }
+  setHeaderCenterPill(siBookLabel(book), "si_index");
+  const cards = book.chapters.map((c, ci) => `
+    <div class="result-card" onclick="showSiReader('b', ${bi}, ${ci})">
+      <div class="result-ref">📘 ${escapeHtml(c.title)} ${siPageBadge(c.printPage)}</div>
+      <div style="font-size:13.5px; color:var(--text-muted); line-height:1.45;">${escapeHtml(siSnippet(c.content))}</div>
+    </div>
+  `).join("");
+  main.innerHTML = `
+    <div class="chapter-header">
+      <div class="chapter-title">📘 ${escapeHtml(siBookLabel(book))}</div>
+      <div class="chapter-nav-btns">
+        ${getBackBtnHtml()}
+        <button class="nav-btn" onclick="showSiView(true)">← Tutti i Libri</button>
+      </div>
+    </div>
+    ${cards}
+  `;
+  main.scrollTop = 0;
 }
+
 async function showSiReader(kind, i, ci, fromBack = false) {
   if (!fromBack && currentViewContext.type === "si" && (currentViewContext.mode !== "reader" || currentViewContext.i !== i || currentViewContext.ci !== ci)) {
     saveCurrentPositionToHistory();
   }
-closeActionBar();
-stopAllAudio();
-setActiveTab("", "siTabBtn");
-currentViewContext = { type: "si", mode: "reader", kind, i, ci, label: "📘 Tutta la Scrittura" };
-document.getElementById("currentRefLabel").textContent = "📘 Tutta la Scrittura";
-const main = document.getElementById("mainContainer");
-const data = await getSiData();
-if (!data) { showSiView(); return; }
-const list = kind === "x" ? siExtraItems(data) : data.books;
-const item = list[i];
-const ch = item && item.chapters ? item.chapters[ci] : null;
-if (!ch) { showSiView(); return; }
-const itemName = kind === "x" ? item.title : siBookLabel(item);
-const title = item.chapters.length > 1 ? `${itemName} — ${ch.title}` : itemName;
-setHeaderCenterPill(extractSiPillLabel(kind, item, ch), kind === "x" ? "si_index" : "si_book");
-window.currentInsightSpeechText = `${title}. ${String(ch.content || "").replace(/\[[a-z]{1,2}\]/g, "").replace(/[ \t]+/g, " ").trim()}`;
-let prev = null, next = null;
-if (ci > 0) prev = [i, ci - 1];
-else if (i > 0) prev = [i - 1, list[i - 1].chapters.length - 1];
-if (ci < item.chapters.length - 1) next = [i, ci + 1];
-else if (i < list.length - 1) next = [i + 1, 0];
-const backBtn = kind === "x"
-? `<button class="nav-btn" onclick="showSiView()">← Indice</button>`
-: `<button class="nav-btn" onclick="showSiBook(${i})">← Libro</button>`;
-const centerBtn = kind === "x"
-? `<button class="search-btn" onclick="showSiView()">📘 Torna all'Indice</button>`
-: `<button class="search-btn" onclick="showSiBook(${i})">📘 Torna al Libro</button>`;
-const prevBtn = prev
-? `<button class="nav-btn" onclick="showSiReader('${kind}', ${prev[0]}, ${prev[1]})">◀ Prec.</button>`
-: `<button class="nav-btn" disabled style="opacity:0.4">◀ Prec.</button>`;
-const nextBtn = next
-? `<button class="nav-btn" onclick="showSiReader('${kind}', ${next[0]}, ${next[1]})">Succ. ▶</button>`
-: `<button class="nav-btn" disabled style="opacity:0.4">Succ. ▶</button>`;
-const notes = Array.isArray(ch.footnotes) ? ch.footnotes : [];
-const notesHtml = notes.length ? `
-<div class="section-title"><span>Note</span><span>${notes.length}</span></div>
-<div class="result-card" style="cursor:default; padding:12px; font-size:13.5px; line-height:1.5; color:var(--text-muted);">
-${notes.map(n => `<div id="si_fn_${escapeHtml(n.label)}" style="margin-bottom:6px;"><sup style="color:var(--primary-light); font-weight:800;">[${escapeHtml(n.label)}]</sup> ${formatNoteLinks(n.text, kind === 'b' ? Number(item.bookNumber) : null)}</div>`).join("")}
-</div>
-` : "";
-const pageInfo = ch.printPage
-? `<div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">Edizione stampata: p. ${escapeHtml(String(ch.printPage))}</div>`
-: "";
-main.innerHTML = `
-<div class="chapter-header" style="flex-wrap:wrap; gap:8px;">
-<div class="chapter-title">📘 ${escapeHtml(title)}</div>
-<div class="chapter-nav-btns">
-${getBackBtnHtml()}
-${backBtn}
-<button class="nav-btn" onclick="toggleChapterTTS()">🔊 Ascolta</button>
-</div>
-</div>
-${pageInfo}
-<div class="result-card" style="cursor:default; padding:15px; font-size:var(--font-size-verse); line-height:1.64;">${siRenderParas(ch.content, kind === 'b' ? Number(item.bookNumber) : null)}</div>
-${notesHtml}
-<div style="display:flex; justify-content:space-between; margin-top:14px; gap:8px;">
-${prevBtn}
-${centerBtn}
-${nextBtn}
-</div>
-`;
+  closeActionBar();
+  stopAllAudio();
+  setActiveTab("", "siTabBtn");
+  currentViewContext = { type: "si", mode: "reader", kind, i, ci, label: "📘 Tutta la Scrittura" };
+  document.getElementById("currentRefLabel").textContent = "📘 Tutta la Scrittura";
+  const main = document.getElementById("mainContainer");
+  const data = await getSiData();
+  if (!data) {
+    showSiView();
+    return;
+  }
+  const list = kind === "x" ? siExtraItems(data) : data.books;
+  const item = list[i];
+  const ch = item && item.chapters ? item.chapters[ci] : null;
+  if (!ch) {
+    showSiView();
+    return;
+  }
+  const itemName = kind === "x" ? item.title : siBookLabel(item);
+  const title = item.chapters.length > 1 ? `${itemName} — ${ch.title}` : itemName;
+  setHeaderCenterPill(extractSiPillLabel(kind, item, ch), kind === "x" ? "si_index" : "si_book");
+  window.currentInsightSpeechText = `${title}. ${String(ch.content || "").replace(/\[[a-z]{1,2}\]/g, "").replace(/[ \t]+/g, " ").trim()}`;
+  let prev = null, next = null;
+  if (ci > 0) prev = [i, ci - 1];
+  else if (i > 0) prev = [i - 1, list[i - 1].chapters.length - 1];
+  if (ci < item.chapters.length - 1) next = [i, ci + 1];
+  else if (i < list.length - 1) next = [i + 1, 0];
+  const backBtn = kind === "x"
+    ? `<button class="nav-btn" onclick="showSiView()">← Indice</button>`
+    : `<button class="nav-btn" onclick="showSiBook(${i})">← Libro</button>`;
+  const centerBtn = kind === "x"
+    ? `<button class="search-btn" onclick="showSiView()">📘 Torna all'Indice</button>`
+    : `<button class="search-btn" onclick="showSiBook(${i})">📘 Torna al Libro</button>`;
+  const prevBtn = prev
+    ? `<button class="nav-btn" onclick="showSiReader('${kind}', ${prev[0]}, ${prev[1]})">◀ Prec.</button>`
+    : `<button class="nav-btn" disabled style="opacity:0.4">◀ Prec.</button>`;
+  const nextBtn = next
+    ? `<button class="nav-btn" onclick="showSiReader('${kind}', ${next[0]}, ${next[1]})">Succ. ▶</button>`
+    : `<button class="nav-btn" disabled style="opacity:0.4">Succ. ▶</button>`;
+  const notes = Array.isArray(ch.footnotes) ? ch.footnotes : [];
+  const notesHtml = notes.length ? `
+    <div class="section-title"><span>Note</span><span>${notes.length}</span></div>
+    <div class="result-card" style="cursor:default; padding:12px; font-size:13.5px; line-height:1.5; color:var(--text-muted);">
+      ${notes.map(n => `
+        <div id="si_fn_${escapeHtml(n.label)}" style="margin-bottom:6px;">
+          <sup style="color:var(--primary-light); font-weight:800;">[${escapeHtml(n.label)}]</sup> ${formatNoteLinks(n.text, kind === 'b' ? Number(item.bookNumber) : null)}
+        </div>
+      `).join("")}
+    </div>
+  ` : "";
+  const pageInfo = ch.printPage
+    ? `<div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">Edizione stampata: p. ${escapeHtml(String(ch.printPage))}</div>`
+    : "";
+  main.innerHTML = `
+    <div class="chapter-header" style="flex-wrap:wrap; gap:8px;">
+      <div class="chapter-title">📘 ${escapeHtml(title)}</div>
+      <div class="chapter-nav-btns">
+        ${getBackBtnHtml()}
+        ${backBtn}
+        <button class="nav-btn" onclick="toggleChapterTTS()">🔊 Ascolta</button>
+      </div>
+    </div>
+    ${pageInfo}
+    <div class="result-card" style="cursor:default; padding:15px; font-size:var(--font-size-verse); line-height:1.64;">${siRenderParas(ch.content, kind === 'b' ? Number(item.bookNumber) : null)}</div>
+    ${notesHtml}
+    <div style="display:flex; justify-content:space-between; margin-top:14px; gap:8px;">
+      ${prevBtn}
+      ${centerBtn}
+      ${nextBtn}
+    </div>
+  `;
   main.scrollTop = 0;
 }
+    
 // ============================================================================
 // MODULO CARTINE BIBLICHE HD ("Vedete il buon paese" — JSON ufficiale 23 cartine / 670 luoghi)
 // ============================================================================
