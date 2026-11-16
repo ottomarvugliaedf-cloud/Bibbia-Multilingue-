@@ -2675,6 +2675,13 @@ function renderSettingsDrawerContent() {
           </div>
         </div>
         <div class="bm-set-row">
+          <span>📜 Modalità Carta (stile Kindle)</span>
+          <label class="bm-switch">
+            <input type="checkbox" ${bmSettings.paperMode === true ? 'checked' : ''} onchange="setBmSettingProp('paperMode', this.checked)">
+            <span class="bm-slider"></span>
+          </label>
+        </div>
+        <div class="bm-set-row">
           <span>Corpo Carattere (${state.fontSize}px)</span>
           <div class="bm-seg-group">
             <button type="button" class="bm-seg-btn" onclick="changeFontSize(-2); renderSettingsDrawerContent();">A−</button>
@@ -2700,13 +2707,6 @@ function renderSettingsDrawerContent() {
           <span>Badge "🔗Paralleli" nei versetti</span>
           <label class="bm-switch">
             <input type="checkbox" ${bmSettings.showInlineBadges !== false ? 'checked' : ''} onchange="setBmSettingProp('showInlineBadges', this.checked)">
-            <span class="bm-slider"></span>
-          </label>
-        </div>
-        <div class="bm-set-row">
-          <span>📜 Modalità Carta (stile Kindle)</span>
-          <label class="bm-switch">
-            <input type="checkbox" ${bmSettings.paperMode === true ? 'checked' : ''} onchange="setBmSettingProp('paperMode', this.checked)">
             <span class="bm-slider"></span>
           </label>
         </div>
