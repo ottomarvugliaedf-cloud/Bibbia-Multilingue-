@@ -9434,6 +9434,1071 @@ function toggleBmZenMode() {
     zenExitBtn.style.display = "none";
   }
 }
+
+<!-- ============================================================================
+     MODULO PRO: ASSISTENTE LAMPADINA ANIMATA DELLE PROFEZIE MESSIANICHE (365+)
+     Da Genesi 3:15 in poi • Drag & Drop • Salto con Riquadro • Long-Press Origine
+     ============================================================================ -->
+<style>
+  /* Contenitore flottante trascinabile */
+  #bmProphecyWidget {
+    position: fixed;
+    right: 14px;
+    bottom: 84px;
+    z-index: 950;
+    display: none;
+    align-items: flex-end;
+    gap: 10px;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    pointer-events: none;
+  }
+  #bmProphecyWidget.visible {
+    display: flex;
+  }
+
+  /* Lampadina animata in stile XP Assistant / Zaffiro & Oro PRO */
+  .bm-bulb-orb {
+    pointer-events: auto;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fff9c4 0%, #ffd54f 26%, #1565c0 68%, #041a42 100%);
+    border: 2px solid #00e5ff;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65), 0 0 22px rgba(255, 213, 79, 0.75), inset 0 2px 4px rgba(255, 255, 255, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    position: relative;
+    flex-shrink: 0;
+    animation: bmBulbFloat 3.2s ease-in-out infinite;
+    transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease;
+  }
+  .bm-bulb-orb:active {
+    cursor: grabbing;
+    transform: scale(0.94);
+  }
+  .bm-bulb-orb svg {
+    width: 34px;
+    height: 34px;
+    filter: drop-shadow(0 0 6px rgba(255, 235, 59, 0.95));
+    animation: bmBulbFilamentGlow 1.9s ease-in-out infinite alternate;
+  }
+  /* Scintille attorno alla lampadina */
+  .bm-bulb-spark {
+    position: absolute;
+    inset: -5px;
+    border-radius: 50%;
+    border: 1.5px dashed rgba(255, 235, 59, 0.65);
+    animation: bmSparkSpin 12s linear infinite;
+    pointer-events: none;
+  }
+  /* Badge contatore sulla lampadina */
+  .bm-bulb-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: linear-gradient(135deg, #00e5ff, #0288d1);
+    color: #041a42;
+    font-size: 10.5px;
+    font-weight: 900;
+    padding: 2px 6px;
+    border-radius: 999px;
+    border: 1.5px solid #ffffff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.45);
+  }
+
+  @keyframes bmBulbFloat {
+    0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+    25% { transform: translate3d(0, -5px, 0) rotate(-3deg); }
+    75% { transform: translate3d(0, 3px, 0) rotate(3deg); }
+  }
+  @keyframes bmBulbFilamentGlow {
+    0% { filter: drop-shadow(0 0 4px rgba(255, 213, 79, 0.7)); transform: scale(0.97); }
+    100% { filter: drop-shadow(0 0 12px rgba(255, 255, 141, 1)); transform: scale(1.05); }
+  }
+  @keyframes bmSparkSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* Fumetto Blu Elegante a lato della lampadina */
+  .bm-prophecy-bubble {
+    pointer-events: auto;
+    width: min(315px, calc(100vw - 88px));
+    background: linear-gradient(160deg, #0a367e 0%, #062356 62%, #041a42 100%);
+    color: #ffffff;
+    border: 1.5px solid #00e5ff;
+    border-radius: 16px 16px 4px 16px;
+    padding: 11px 13px;
+    box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.32), 0 14px 34px rgba(0, 0, 0, 0.72), 0 0 20px rgba(0, 229, 255, 0.35);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transform-origin: bottom right;
+    animation: bmBubblePopIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    position: relative;
+  }
+  .bm-prophecy-bubble.minimized {
+    display: none;
+  }
+  @keyframes bmBubblePopIn {
+    0% { opacity: 0; transform: scale(0.84) translate3d(12px, 10px, 0); }
+    100% { opacity: 1; transform: scale(1) translate3d(0, 0, 0); }
+  }
+
+  .bm-pb-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    border-bottom: 1px solid rgba(41, 182, 246, 0.4);
+    padding-bottom: 6px;
+    margin-bottom: 7px;
+  }
+  .bm-pb-kicker {
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #ffd54f;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .bm-pb-close {
+    background: rgba(4, 26, 66, 0.65);
+    border: 1px solid rgba(79, 195, 247, 0.55);
+    color: #cfe3ff;
+    border-radius: 6px;
+    padding: 1px 7px;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .bm-pb-title {
+    font-size: 14px;
+    font-weight: 900;
+    color: #00e5ff;
+    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .bm-pb-desc {
+    font-size: 12.5px;
+    line-height: 1.42;
+    color: #e3f2fd;
+    margin-bottom: 9px;
+  }
+
+  /* Barra controlli: Freccia Indietro (con Long-Press), Freccia Avanti e Tasto Speciale NT */
+  .bm-pb-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .bm-pb-arrow {
+    background: linear-gradient(135deg, #1565c0 0%, #0a367e 100%);
+    color: #ffffff;
+    border: 1px solid #4fc3f7;
+    border-radius: 9px;
+    padding: 7px 11px;
+    font-size: 13px;
+    font-weight: 900;
+    cursor: pointer;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 2px 6px rgba(0,0,0,0.35);
+    user-select: none;
+    -webkit-user-select: none;
+    transition: transform 0.12s ease, background 0.15s ease;
+  }
+  .bm-pb-arrow:active {
+    transform: scale(0.93);
+    background: #00e5ff;
+    color: #041a42;
+  }
+
+  /* TASTO SPECIALE DIVERSO DALLE FRECCE: Scritture Greche Cristiane */
+  .bm-pb-greek-btn {
+    flex: 1;
+    background: linear-gradient(135deg, #ffd54f 0%, #ffb300 50%, #ff8f00 100%);
+    color: #041a42;
+    border: 1.5px solid #ffffff;
+    border-radius: 10px;
+    padding: 7px 9px;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.2px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    box-shadow: 0 0 14px rgba(255, 213, 79, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.75);
+    transition: transform 0.14s ease, box-shadow 0.18s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .bm-pb-greek-btn:active {
+    transform: scale(0.95);
+    box-shadow: 0 0 22px rgba(0, 229, 255, 0.95);
+  }
+
+  .bm-pb-footer-hint {
+    font-size: 10.5px;
+    color: #9ec9ff;
+    margin-top: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* Riquadro Speciale Dorato/Ciano per i versetti della Profezia Messianica nel capitolo */
+  .bm-messianic-verse-box {
+    outline: 2.5px solid #ffd54f !important;
+    box-shadow: 0 0 16px rgba(255, 213, 79, 0.55), inset 0 0 12px rgba(0, 229, 255, 0.22) !important;
+    background: linear-gradient(90deg, rgba(255, 213, 79, 0.16) 0%, rgba(0, 229, 255, 0.10) 100%) !important;
+    border-radius: 8px !important;
+    position: relative;
+    transition: all 0.25s ease;
+  }
+  main.bm-paper-reading .bm-messianic-verse-box {
+    outline: 2.5px solid #b45309 !important;
+    background: rgba(245, 158, 11, 0.18) !important;
+    box-shadow: 0 2px 10px rgba(180, 83, 9, 0.25) !important;
+  }
+</style>
+
+<!-- Markup Flottante della Lampadina e del Fumetto Blu PRO -->
+<div id="bmProphecyWidget" aria-live="polite">
+  <div id="bmProphecyBubble" class="bm-prophecy-bubble">
+    <div class="bm-pb-header">
+      <span class="bm-pb-kicker">💡 PROFEZIA MESSIANICA <span id="bmPbCounter">#1</span></span>
+      <div style="display:flex; gap:4px;">
+        <button type="button" class="bm-pb-close" onclick="openMessianicCatalogModal()" title="Elenco completo delle 365+ Profezie Messianiche">☰ Tutte</button>
+        <button type="button" class="bm-pb-close" onclick="toggleMessianicBubble(false)" title="Riduci a sola lampadina">−</button>
+      </div>
+    </div>
+    <div class="bm-pb-title">
+      <span id="bmPbRef" onclick="focusCurrentMessianicVerses()" style="cursor:pointer; text-decoration:underline;">Genesi 3:15</span>
+      <span id="bmPbCategory" class="tag-badge" style="font-size:10.5px; margin:0; background:#041a42; color:#84ffff; border-color:#29b6f6;">Origine</span>
+    </div>
+    <div id="bmPbDesc" class="bm-pb-desc">
+      Il "seme" (discendenza) della donna schiaccerà la testa al serpente ed egli gli ferirà il calcagno.
+    </div>
+    <div class="bm-pb-controls">
+      <button type="button" id="bmPbPrevBtn" class="bm-pb-arrow"
+        onpointerdown="onMessianicPrevDown(event)"
+        onpointerup="onMessianicPrevUp()"
+        onpointerleave="onMessianicPrevUp()"
+        onpointercancel="onMessianicPrevUp()"
+        oncontextmenu="event.preventDefault()"
+        onclick="onMessianicPrevClick(event)"
+        title="Tocca: profezia precedente • Tieni premuto: torna alla 1ª profezia letta oggi">◀</button>
+
+      <button type="button" id="bmPbGreekBtn" class="bm-pb-greek-btn" onclick="openGreekFulfillmentAction()" title="Apri adempimento nelle Scritture Greche Cristiane">
+        <span>🏛️</span><span id="bmPbGreekLabel">Greche: Gal 4:4</span>
+      </button>
+
+      <button type="button" id="bmPbNextBtn" class="bm-pb-arrow" onclick="stepMessianicProphecy(1)" title="Vai alla profezia messianica successiva">▶</button>
+    </div>
+    <div class="bm-pb-footer-hint">
+      <span id="bmPbOriginHint">⏱️ Tieni premuto ◀ per la 1ª di oggi</span>
+      <span style="color:#00e5ff; font-weight:800; cursor:pointer;" onclick="focusCurrentMessianicVerses()">🎯 Riquadra</span>
+    </div>
+  </div>
+
+  <!-- Lampadina Vettoriale Animata (Trascinabile col dito) -->
+  <div id="bmBulbOrb" class="bm-bulb-orb" title="Profezia Messianica rilevata! Tocca per aprire/chiudere il fumetto • Trascina col dito per spostare">
+    <div class="bm-bulb-spark"></div>
+    <span id="bmBulbBadge" class="bm-bulb-badge">1</span>
+    <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Raggi di luce esterni -->
+      <path d="M32 4V9M12 12L15.5 15.5M52 12L48.5 15.5M4 30H9M55 30H60" stroke="#FFF59D" stroke-width="3" stroke-linecap="round"/>
+      <!-- Bulbo di cristallo dorato -->
+      <path d="M32 12C21.5 12 14 19.6 14 29C14 35.2 17.6 40.3 22.2 43.4C23.7 44.4 24.5 46.1 24.5 48V50H39.5V48C39.5 46.1 40.3 44.4 41.8 43.4C46.4 40.3 50 35.2 50 29C50 19.6 42.5 12 32 12Z" fill="url(#bulbGoldGrad)" stroke="#FFFFFF" stroke-width="2.2"/>
+      <!-- Filamento incandescente -->
+      <path d="M27 42V33L32 28L37 33V42" stroke="#FFFDE7" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- Ghiera filettata -->
+      <rect x="25" y="50" width="14" height="4" rx="2" fill="#90CAF9" stroke="#041A42" stroke-width="1.2"/>
+      <rect x="26.5" y="54.5" width="11" height="4" rx="2" fill="#64B5F6" stroke="#041A42" stroke-width="1.2"/>
+      <path d="M29 59.5H35" stroke="#FFF59D" stroke-width="2.5" stroke-linecap="round"/>
+      <defs>
+        <linearGradient id="bulbGoldGrad" x1="32" y1="12" x2="32" y2="50" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#FFFDE7"/>
+          <stop offset="45%" stop-color="#FFD54F"/>
+          <stop offset="100%" stop-color="#FF8F00"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+</div>
+
+<script>
+// ============================================================================
+// DATABASE INTEGRATO DELLE PROFEZIE MESSIANICHE (Da Genesi 3:15 a Malachia 4:6)
+// + Auto-Espansione dai moduli offline ("Tutta la Scrittura" e "Perspicacia")
+// ============================================================================
+const CORE_MESSIANIC_PROPHECIES = [
+  // GENESI (A partire rigorosamente da Genesi 3:15)
+  { b: 1, c: 3, v: "15", cat: "Origine", desc: "Il 'seme' (discendenza) della donna schiaccerà la testa al serpente.", nt: ["Galati 4:4", "Ebrei 2:14", "Rivelazione 12:9", "1 Giovanni 3:8"], ntCited: true },
+  { b: 1, c: 9, v: "26-27", cat: "Genealogia", desc: "L'Iddio di Sem sarà benedetto; il Messia verrà attraverso la linea di Sem.", nt: ["Luca 3:36"], ntCited: true },
+  { b: 1, c: 12, v: "3", cat: "Patto Abraamico", desc: "Nel seme di Abraamo tutte le famiglie della terra si benediranno.", nt: ["Atti 3:25", "Galati 3:8", "Galati 3:16"], ntCited: true },
+  { b: 1, c: 14, v: "18-20", cat: "Sacerdozio", desc: "Melchisedec, re di Salem e sacerdote dell'Altissimo, prefigura il Re-Sacerdote eterno.", nt: ["Ebrei 5:6", "Ebrei 6:20", "Ebrei 7:1-3"], ntCited: true },
+  { b: 1, c: 17, v: "19", cat: "Genealogia", desc: "Isacco è designato come il figlio attraverso cui passerà il patto eterno del Seme.", nt: ["Romani 9:7", "Galati 4:28", "Ebrei 11:18"], ntCited: true },
+  { b: 1, c: 18, v: "18", cat: "Patto Abraamico", desc: "Tutte le nazioni della terra saranno benedette per mezzo della discendenza di Abraamo.", nt: ["Galati 3:8", "Atti 3:25"], ntCited: true },
+  { b: 1, c: 21, v: "12", cat: "Genealogia", desc: "Attraverso Isacco sarà chiamato il tuo seme.", nt: ["Romani 9:7", "Ebrei 11:18"], ntCited: true },
+  { b: 1, c: 22, v: "8, 14", cat: "Sacrificio", desc: "Dio stesso provvederà l'agnello per l'olocausto sul monte Moria.", nt: ["Giovanni 1:29", "1 Pietro 1:19-20"], ntCited: true },
+  { b: 1, c: 22, v: "18", cat: "Discendenza", desc: "Mediante il tuo seme tutte le nazioni della terra si benediranno.", nt: ["Galati 3:16", "Atti 3:25-26"], ntCited: true },
+  { b: 1, c: 26, v: "4", cat: "Discendenza", desc: "La promessa del Seme messianico viene confermata a Isacco.", nt: ["Luca 3:34", "Galati 3:16"], ntCited: true },
+  { b: 1, c: 28, v: "12", cat: "Ministero", desc: "La scala di Giacobbe: il mezzo di comunicazione fra il cielo e la terra.", nt: ["Giovanni 1:51"], ntCited: true },
+  { b: 1, c: 28, v: "14", cat: "Genealogia", desc: "Il Seme messianico viene promesso attraverso Giacobbe (Israele).", nt: ["Luca 3:34", "Matteo 1:2"], ntCited: true },
+  { b: 1, c: 49, v: "10", cat: "Regalità", desc: "Lo scettro non si allontanerà da Giuda finché venga Silo, a cui appartiene l'ubbidienza dei popoli.", nt: ["Luca 3:33", "Ebrei 7:14", "Rivelazione 5:5"], ntCited: true },
+
+  // ESODO, LEVITICO, NUMERI, DEUTERONOMIO
+  { b: 2, c: 12, v: "5, 21-27", cat: "Pasqua", desc: "L'agnello pasquale senza difetto il cui sangue preserva dalla morte.", nt: ["1 Corinti 5:7", "Giovanni 1:29", "1 Pietro 1:19"], ntCited: true },
+  { b: 2, c: 12, v: "46", cat: "Crocifissione", desc: "Non gli sarà rotto nessun osso (prescrizione sull'agnello pasquale).", nt: ["Giovanni 19:33-36"], ntCited: true },
+  { b: 2, c: 16, v: "4, 15", cat: "Ministero", desc: "La manna dal cielo prefigura il vero Pane della vita disceso dal cielo.", nt: ["Giovanni 6:31-35", "Giovanni 6:48-51"], ntCited: true },
+  { b: 2, c: 17, v: "6", cat: "Ministero", desc: "La roccia percossa nel deserto da cui sgorga acqua viva.", nt: ["1 Corinti 10:4", "Giovanni 7:37-38"], ntCited: true },
+  { b: 3, c: 16, v: "15-17, 27", cat: "Espiazione", desc: "Il sacrificio del Giorno dell'Espiazione portato nel Santissimo e bruciato fuori dell'accampamento.", nt: ["Ebrei 9:11-14", "Ebrei 13:11-12"], ntCited: true },
+  { b: 4, c: 9, v: "12", cat: "Crocifissione", desc: "Non ne romperanno alcun osso.", nt: ["Giovanni 19:36"], ntCited: true },
+  { b: 4, c: 21, v: "8-9", cat: "Redenzione", desc: "Il serpente di rame innalzato nel deserto per guarire chi lo guarda con fede.", nt: ["Giovanni 3:14-15"], ntCited: true },
+  { b: 4, c: 24, v: "17", cat: "Regalità", desc: "Una stella certamente procederà da Giacobbe e uno scettro sorgerà da Israele.", nt: ["Matteo 2:2", "2 Pietro 1:19", "Rivelazione 22:16"], ntCited: true },
+  { b: 5, c: 18, v: "15, 18-19", cat: "Profeta", desc: "Dio susciterà di mezzo ai fratelli un profeta simile a Mosè; chi non lo ascolterà ne renderà conto.", nt: ["Atti 3:22-23", "Atti 7:37", "Giovanni 6:14"], ntCited: true },
+  { b: 5, c: 21, v: "23", cat: "Espiazione", desc: "Chi è appeso al palo è maledetto da Dio (Cristo porta la maledizione della Legge).", nt: ["Galati 3:13"], ntCited: true },
+
+  // RUTH, SAMUELE, RE, CRONACHE, GIOBBE
+  { b: 8, c: 4, v: "18-22", cat: "Genealogia", desc: "La linea genealogica da Perez a Boaz, Obed, Iesse e Davide.", nt: ["Matteo 1:3-6", "Luca 3:31-33"], ntCited: true },
+  { b: 9, c: 2, v: "10", cat: "Regalità", desc: "Geova darà forza al suo Re ed esalterà il corno del suo Unto (Messia).", nt: ["Luca 1:69"], ntCited: true },
+  { b: 10, c: 7, v: "12-16", cat: "Patto Davidico", desc: "Il trono della discendenza di Davide sarà stabilito fermamente a tempo indefinito.", nt: ["Luca 1:32-33", "Atti 2:29-30", "Ebrei 1:5"], ntCited: true },
+  { b: 13, c: 17, v: "11-14", cat: "Patto Davidico", desc: "Io lo stabilirò nella mia casa e nel mio regno per sempre, e il suo trono sarà fermo in eterno.", nt: ["Luca 1:32-33", "Ebrei 1:5"], ntCited: true },
+  { b: 18, c: 19, v: "25", cat: "Redentore", desc: "Io so bene che il mio Redentore vive, e che dopo verrà e si leverà sulla terra.", nt: ["Giovanni 5:25", "1 Tessalonicesi 4:16"], ntCited: false },
+
+  // SALMI (Ricchissimo ciclo messianico)
+  { b: 19, c: 2, v: "1-2", cat: "Opposizione", desc: "Le nazioni tumultuano e i re della terra si schierano contro Geova e contro il suo Unto.", nt: ["Atti 4:25-27"], ntCited: true },
+  { b: 19, c: 2, v: "7-9", cat: "Figliolanza", desc: "'Tu sei mio figlio; oggi io sono divenuto tuo padre. Chiedimi, e ti darò le nazioni in eredità.'", nt: ["Atti 13:33", "Ebrei 1:5", "Ebrei 5:5", "Rivelazione 2:27"], ntCited: true },
+  { b: 19, c: 8, v: "2", cat: "Ministero", desc: "Dalla bocca dei bambini e dei lattanti hai tratto lode.", nt: ["Matteo 21:16"], ntCited: true },
+  { b: 19, c: 8, v: "4-6", cat: "Esaltazione", desc: "Lo hai fatto di poco inferiore agli angeli, lo hai coronato di gloria e hai posto tutto sotto i suoi piedi.", nt: ["Ebrei 2:6-9", "1 Corinti 15:27"], ntCited: true },
+  { b: 19, c: 16, v: "8-11", cat: "Risurrezione", desc: "Non lascerai la mia anima nello Sceol, né permetterai che il tuo leale veda la fossa (corruzione).", nt: ["Atti 2:25-31", "Atti 13:35-37"], ntCited: true },
+  { b: 19, c: 22, v: "1", cat: "Crocifissione", desc: "'Dio mio, Dio mio, perché mi hai abbandonato?'", nt: ["Matteo 27:46", "Marco 15:34"], ntCited: true },
+  { b: 19, c: 22, v: "7-8", cat: "Crocifissione", desc: "Si fanno beffe di lui, scuotono il capo: 'Si è affidato a Geova, lo salvi lui!'", nt: ["Matteo 27:39-43", "Luca 23:35"], ntCited: true },
+  { b: 19, c: 22, v: "14-15", cat: "Crocifissione", desc: "Il vigore è secco come un coccio e la lingua si attacca al palato per la sete.", nt: ["Giovanni 19:28"], ntCited: true },
+  { b: 19, c: 22, v: "16", cat: "Crocifissione", desc: "Hanno forato (come un leone) le mie mani e i miei piedi.", nt: ["Giovanni 20:25-27", "Luca 24:39-40"], ntCited: true },
+  { b: 19, c: 22, v: "18", cat: "Crocifissione", desc: "Si dividono le mie vesti e tirano a sorte sulla mia tunica.", nt: ["Giovanni 19:23-24", "Matteo 27:35"], ntCited: true },
+  { b: 19, c: 22, v: "22", cat: "Risurrezione", desc: "Dichiarerò il tuo nome ai miei fratelli; in mezzo alla congregazione ti loderò.", nt: ["Ebrei 2:12", "Giovanni 20:17"], ntCited: true },
+  { b: 19, c: 23, v: "1", cat: "Pastore", desc: "Il Pastore eccellente che guida e dà la vita per le sue pecore.", nt: ["Giovanni 10:11", "1 Pietro 2:25"], ntCited: true },
+  { b: 19, c: 31, v: "5", cat: "Crocifissione", desc: "'Nelle tue mani affido il mio spirito.'", nt: ["Luca 23:46"], ntCited: true },
+  { b: 19, c: 34, v: "20", cat: "Crocifissione", desc: "Egli custodisce tutte le sue ossa; non ne è stato rotto neppure uno.", nt: ["Giovanni 19:33, 36"], ntCited: true },
+  { b: 19, c: 35, v: "11", cat: "Processo", desc: "Testimoni violenti e falsi si alzano e mi interrogano su ciò che non so.", nt: ["Matteo 26:59-60", "Marco 14:56-57"], ntCited: true },
+  { b: 19, c: 35, v: "19", cat: "Rifiuto", desc: "Mi hanno odiato senza motivo.", nt: ["Giovanni 15:25"], ntCited: true },
+  { b: 19, c: 40, v: "6-8", cat: "Sacrificio", desc: "'Ecco, io vengo, nel rotolo del libro è scritto di me. Ho provato diletto nel fare la tua volontà.'", nt: ["Ebrei 10:5-10"], ntCited: true },
+  { b: 19, c: 41, v: "9", cat: "Tradimento", desc: "Anche l'uomo che era in pace con me, che mangiava il mio pane, ha alzato contro di me il calcagno.", nt: ["Giovanni 13:18", "Giovanni 13:26"], ntCited: true },
+  { b: 19, c: 45, v: "2", cat: "Ministero", desc: "Sulle tue labbra è stata sparsa la grazia; perciò Dio ti ha benedetto in eterno.", nt: ["Luca 4:22"], ntCited: true },
+  { b: 19, c: 45, v: "6-7", cat: "Regalità", desc: "Il tuo trono è per sempre; hai amato la giustizia e odiato la malvagità, perciò Dio ti ha unto con olio d'esultanza.", nt: ["Ebrei 1:8-9"], ntCited: true },
+  { b: 19, c: 55, v: "12-14", cat: "Tradimento", desc: "Tradito non da un nemico, ma da un compagno intimo e conoscente.", nt: ["Matteo 26:49-50"], ntCited: false },
+  { b: 19, c: 68, v: "18", cat: "Ascensione", desc: "Sei salito in alto, hai condotto prigionieri; hai preso doni sotto forma di uomini.", nt: ["Efesini 4:8"], ntCited: true },
+  { b: 19, c: 69, v: "4", cat: "Rifiuto", desc: "Quelli che mi odiano senza motivo sono più dei capelli della mia testa.", nt: ["Giovanni 15:25"], ntCited: true },
+  { b: 19, c: 69, v: "8", cat: "Famiglia", desc: "Sono divenuto un estraneo ai miei fratelli, e uno straniero ai figli di mia madre.", nt: ["Giovanni 7:5"], ntCited: true },
+  { b: 19, c: 69, v: "9", cat: "Zelo", desc: "Lo zelo per la tua casa mi ha divorato, e gli oltraggi di chi ti oltraggiava sono caduti su di me.", nt: ["Giovanni 2:17", "Romani 15:3"], ntCited: true },
+  { b: 19, c: 69, v: "20-21", cat: "Crocifissione", desc: "Per cibo mi diedero pianta velenosa (fiele), e per la mia sete cercarono di farmi bere aceto.", nt: ["Matteo 27:34", "Matteo 27:48", "Giovanni 19:29"], ntCited: true },
+  { b: 19, c: 69, v: "25", cat: "Traditore", desc: "Il suo accampamento divenga desolato, e nelle sue tende non ci sia chi abiti (applicato a Giuda).", nt: ["Atti 1:20"], ntCited: true },
+  { b: 19, c: 72, v: "1-17", cat: "Regno Messianico", desc: "Il Re giusto libererà il povero, dominerà da mare a mare e nel suo tempo fiorirà la pace.", nt: ["Luca 1:32-33", "Rivelazione 11:15"], ntCited: false },
+  { b: 19, c: 78, v: "2", cat: "Parabole", desc: "Aprirò la mia bocca in un detto proverbiale (parabole); pronuncerò enigmi.", nt: ["Matteo 13:34-35"], ntCited: true },
+  { b: 19, c: 89, v: "3-4, 27, 35-37", cat: "Patto Davidico", desc: "Stabilirò il tuo seme per sempre e lo renderò il primogenito, il più alto dei re della terra.", nt: ["Colossesi 1:15, 18", "Rivelazione 1:5", "Atti 13:22-23"], ntCited: true },
+  { b: 19, c: 91, v: "11-12", cat: "Tentazione", desc: "Egli darà comando ai suoi angeli riguardo a te, di custodirti e portarti sulle mani.", nt: ["Matteo 4:6", "Luca 4:10-11"], ntCited: true },
+  { b: 19, c: 102, v: "25-27", cat: "Preesistenza", desc: "I cieli e la terra passeranno, ma tu rimarrai e i tuoi anni non avranno fine.", nt: ["Ebrei 1:10-12"], ntCited: true },
+  { b: 19, c: 109, v: "8", cat: "Traditore", desc: "'Il suo incarico di sorveglianza lo prenda un altro.'", nt: ["Atti 1:20"], ntCited: true },
+  { b: 19, c: 110, v: "1", cat: "Intronizzazione", desc: "Espressione di Geova al mio Signore: 'Siedi alla mia destra finché io ponga i tuoi nemici a sgabello dei tuoi piedi.'", nt: ["Matteo 22:44", "Atti 2:34-35", "Ebrei 1:13", "1 Corinti 15:25"], ntCited: true },
+  { b: 19, c: 110, v: "4", cat: "Sacerdozio", desc: "Geova ha giurato: 'Tu sei sacerdote a tempo indefinito alla maniera di Melchisedec!'", nt: ["Ebrei 5:6", "Ebrei 6:20", "Ebrei 7:17, 21"], ntCited: true },
+  { b: 19, c: 118, v: "22-23", cat: "Pietra Angolare", desc: "La pietra che gli edificatori hanno rigettato è divenuta la testa dell'angolo.", nt: ["Matteo 21:42", "Marco 12:10-11", "Atti 4:11", "1 Pietro 2:7"], ntCited: true },
+  { b: 19, c: 118, v: "26", cat: "Ingresso Regale", desc: "'Benedetto Colui che viene nel nome di Geova!'", nt: ["Matteo 21:9", "Matteo 23:39", "Giovanni 12:13"], ntCited: true },
+  { b: 19, c: 132, v: "11", cat: "Genealogia", desc: "Geova ha giurato a Davide di porre sul suo trono uno del frutto del suo ventre.", nt: ["Atti 2:30", "Luca 1:32"], ntCited: true },
+
+  // PROVERBI
+  { b: 20, c: 8, v: "22-31", cat: "Sapienza", desc: "La Sapienza personificata generata come principio della via di Dio, artefice al Suo fianco.", nt: ["1 Corinti 1:24, 30", "Colossesi 1:15-17"], ntCited: true },
+  { b: 20, c: 30, v: "4", cat: "Figliolanza", desc: "Chi è salito al cielo e ne è disceso? Qual è il suo nome e il nome di suo figlio?", nt: ["Giovanni 3:13", "Efesini 4:9-10"], ntCited: true },
+
+  // ISAIA
+  { b: 23, c: 6, v: "9-10", cat: "Incredulità", desc: "Udite pure, ma non comprendete; il cuore di questo popolo si è fatto insensibile.", nt: ["Matteo 13:14-15", "Giovanni 12:39-40", "Atti 28:26-27"], ntCited: true },
+  { b: 23, c: 7, v: "14", cat: "Nascita", desc: "Ecco, la fanciulla (vergine) concepirà e partorirà un figlio, e lo chiamerà Emmanuele ('Con noi è Dio').", nt: ["Matteo 1:22-23", "Luca 1:31-35"], ntCited: true },
+  { b: 23, c: 8, v: "14-15", cat: "Pietra d'inciampo", desc: "Diverrà una pietra d'inciampo e una roccia d'offesa per entrambe le case d'Israele.", nt: ["Romani 9:32-33", "1 Pietro 2:8", "Luca 2:34"], ntCited: true },
+  { b: 23, c: 8, v: "18", cat: "Discepoli", desc: "'Ecco, io e i figli che Geova mi ha dato siamo come segni.'", nt: ["Ebrei 2:13"], ntCited: true },
+  { b: 23, c: 9, v: "1-2", cat: "Ministero", desc: "Nella Galilea delle nazioni il popolo che camminava nelle tenebre ha visto una grande luce.", nt: ["Matteo 4:13-16"], ntCited: true },
+  { b: 23, c: 9, v: "6-7", cat: "Regno Eterno", desc: "Ci è nato un fanciullo: Consigliere meraviglioso, Dio potente, Padre eterno, Principe della pace sul trono di Davide.", nt: ["Luca 1:32-33", "Luca 2:11", "Giovanni 14:27"], ntCited: true },
+  { b: 23, c: 11, v: "1-5", cat: "Spirito Santo", desc: "Un germoglio uscirà dal ceppo di Iesse, e su di lui si poserà lo spirito di Geova, di sapienza e intendimento.", nt: ["Luca 3:22, 32", "Atti 13:22-23", "Rivelazione 5:5"], ntCited: true },
+  { b: 23, c: 11, v: "10", cat: "Nazioni", desc: "La radice di Iesse starà come un segnale per i popoli; a lui si rivolgeranno le nazioni.", nt: ["Romani 15:12", "Rivelazione 22:16"], ntCited: true },
+  { b: 23, c: 22, v: "22", cat: "Autorità", desc: "Porrò sulla sua spalla la chiave della casa di Davide; egli aprirà e nessuno chiuderà.", nt: ["Rivelazione 3:7"], ntCited: true },
+  { b: 23, c: 25, v: "8", cat: "Vittoria sulla Morte", desc: "Egli inghiottirà la morte per sempre e asciugherà le lacrime da ogni volto.", nt: ["1 Corinti 15:54", "Rivelazione 21:4"], ntCited: true },
+  { b: 23, c: 28, v: "16", cat: "Fondamento", desc: "Ecco, io pongo in Sion una pietra provata, il prezioso angolo di un fondamento sicuro; chi esercita fede non sarà deluso.", nt: ["Romani 9:33", "Romani 10:11", "1 Pietro 2:6"], ntCited: true },
+  { b: 23, c: 29, v: "13", cat: "Ipocrisia", desc: "Questo popolo si avvicina con la bocca e mi onora con le labbra, ma il suo cuore è lontano.", nt: ["Matteo 15:7-9", "Marco 7:6-7"], ntCited: true },
+  { b: 23, c: 35, v: "5-6", cat: "Miracoli", desc: "Si apriranno gli occhi dei ciechi e gli orecchi dei sordi; lo zoppo salterà come un cervo e la lingua del muto griderà.", nt: ["Matteo 11:4-5", "Luca 7:21-22"], ntCited: true },
+  { b: 23, c: 40, v: "3-5", cat: "Precursore", desc: "La voce di uno che grida nel deserto: 'Preparate la via di Geova, rendete dritti i sentieri!'", nt: ["Matteo 3:1-3", "Marco 1:2-4", "Luca 3:4-6", "Giovanni 1:23"], ntCited: true },
+  { b: 23, c: 40, v: "11", cat: "Pastore", desc: "Come un pastore pascerà il suo proprio gregge; col braccio raccoglierà gli agnelli.", nt: ["Giovanni 10:11", "Ebrei 13:20"], ntCited: true },
+  { b: 23, c: 42, v: "1-4", cat: "Servo Eletto", desc: "Ecco il mio servo, il mio eletto: ho posto in lui il mio spirito; non griderà e non spezzerà la canna rotta.", nt: ["Matteo 12:17-21"], ntCited: true },
+  { b: 23, c: 42, v: "6-7", cat: "Luce delle Nazioni", desc: "Dato come patto del popolo e luce delle nazioni, per aprire gli occhi ciechi e liberare i prigionieri.", nt: ["Luca 2:30-32", "Atti 13:47", "Atti 26:18"], ntCited: true },
+  { b: 23, c: 49, v: "6", cat: "Salvezza Globale", desc: "Ti ho dato come luce delle nazioni, perché la mia salvezza giunga fino all'estremità della terra.", nt: ["Atti 13:47", "Luca 2:32"], ntCited: true },
+  { b: 23, c: 50, v: "6", cat: "Sofferenze", desc: "Ho offerto il mio dorso ai percotitori e le mie guance a quelli che strappavano la barba; non ho nascosto la faccia dagli sputi.", nt: ["Matteo 26:67", "Matteo 27:26, 30", "Marco 14:65"], ntCited: true },
+  { b: 23, c: 52, v: "7", cat: "Buona Notizia", desc: "Come sono belli sui monti i piedi di colui che porta buone notizie, che annuncia la pace!", nt: ["Romani 10:15"], ntCited: true },
+  { b: 23, c: 52, v: "13-15", cat: "Esaltazione", desc: "Il mio Servo agirà con perspicacia, sarà innalzato ed esaltato grandemente, benché il suo aspetto fosse sfigurato.", nt: ["Filippesi 2:9-11", "Romani 15:21"], ntCited: true },
+  { b: 23, c: 53, v: "1", cat: "Incredulità", desc: "'Chi ha riposto fede nella cosa udita da noi? E in quanto al braccio di Geova, a chi è stato rivelato?'", nt: ["Giovanni 12:37-38", "Romani 10:16"], ntCited: true },
+  { b: 23, c: 53, v: "2-3", cat: "Rifiuto", desc: "Disprezzato ed evitato dagli uomini, uomo di dolori ed esperto nella malattia.", nt: ["Marco 9:12", "Giovanni 1:11", "Luca 23:18"], ntCited: true },
+  { b: 23, c: 53, v: "4", cat: "Guarigioni", desc: "Veramente egli stesso portò le nostre malattie e si caricò dei nostri dolori.", nt: ["Matteo 8:16-17"], ntCited: true },
+  { b: 23, c: 53, v: "5-6", cat: "Riscatto", desc: "Fu trafitto per la nostra trasgressione, schiacciato per i nostri errori; per le sue ferite c'è stata guarigione per noi.", nt: ["1 Pietro 2:24-25", "Romani 4:25", "1 Corinti 15:3"], ntCited: true },
+  { b: 23, c: 53, v: "7", cat: "Silenzio al Processo", desc: "Fu oppresso, ma non apriva la bocca; era portato proprio come un'agnello al macello, muto davanti ai tosatori.", nt: ["Atti 8:32-35", "Matteo 27:12-14", "1 Pietro 2:23"], ntCited: true },
+  { b: 23, c: 53, v: "8", cat: "Condanna", desc: "Per restrizione e giudizio fu tolto di mezzo; fu strappato dalla terra dei viventi per la trasgressione del mio popolo.", nt: ["Atti 8:33"], ntCited: true },
+  { b: 23, c: 53, v: "9", cat: "Sepoltura", desc: "Farà il suo luogo di sepoltura con i malvagi, e con la classe del ricco alla sua morte, benché non avesse fatto violenza né inganno.", nt: ["Matteo 27:57-60", "1 Pietro 2:22"], ntCited: true },
+  { b: 23, c: 53, v: "10-11", cat: "Sacrificio", desc: "Se porrà la sua anima come offerta per la colpa, vedrà la sua progenie e il mio servitore giusto porterà molti a una condizione giusta.", nt: ["Romani 5:18-19", "1 Giovanni 2:1-2"], ntCited: true },
+  { b: 23, c: 53, v: "12", cat: "Crocifissione", desc: "Fu annoverato fra i trasgressori; ed egli stesso portò il peccato di molti e intercedette per i trasgressori.", nt: ["Marco 15:27-28", "Luca 22:37", "Luca 23:34"], ntCited: true },
+  { b: 23, c: 55, v: "3-4", cat: "Patto", desc: "Concluderò con voi un patto di durata indefinita riguardo alle amorevoli benignità verso Davide, che sono fedeli.", nt: ["Atti 13:34"], ntCited: true },
+  { b: 23, c: 59, v: "20", cat: "Redentore", desc: "Il Redentore verrà certamente a Sion, e da quelli che in Giacobbe si volgono dalla trasgressione.", nt: ["Romani 11:26-27"], ntCited: true },
+  { b: 23, c: 61, v: "1-2", cat: "Unto / Ministero", desc: "Lo spirito del Sovrano Signore Geova è su di me, poiché Geova mi ha unto per annunciare buone notizie ai mansueti e proclamare l'anno di benevolenza.", nt: ["Luca 4:17-21"], ntCited: true },
+
+  // GEREMIA, LAMENTAZIONI, EZECHIELE, DANIELE
+  { b: 24, c: 23, v: "5-6", cat: "Germoglio Giusto", desc: "Susciterò a Davide un germoglio giusto; un re regnerà e agirà con discrezione, ed eserciterà diritto e giustizia.", nt: ["Luca 1:32-33", "1 Corinti 1:30"], ntCited: true },
+  { b: 24, c: 31, v: "15", cat: "Infanzia", desc: "A Rama si ode un lamento e un pianto amaro: Rachele piange i suoi figli, perché non sono più (strage degli innocenti).", nt: ["Matteo 2:17-18"], ntCited: true },
+  { b: 24, c: 31, v: "31-34", cat: "Nuovo Patto", desc: "Concluderò con la casa d'Israele un nuovo patto, scrivendo la mia legge nel loro cuore e perdonando il loro peccato.", nt: ["Luca 22:20", "Ebrei 8:8-12", "Ebrei 10:16-17"], ntCited: true },
+  { b: 24, c: 33, v: "15-17", cat: "Germoglio", desc: "Farò germogliare per Davide un germoglio di giustizia, che eseguirà diritto e giustizia nel paese.", nt: ["Luca 1:32-33"], ntCited: false },
+  { b: 26, c: 17, v: "22-24", cat: "Regno", desc: "Il tenero ramoscello piantato sull'alto monte d'Israele diverrà un cedro maestoso sotto cui dimoreranno tutti gli uccelli.", nt: ["Matteo 13:31-32"], ntCited: false },
+  { b: 26, c: 21, v: "26-27", cat: "Diritto Legale", desc: "Rovina, rovina, rovina ne farò; non sarà di nessuno finché venga Colui che ha il diritto legale, e a lui lo darò.", nt: ["Luca 1:32", "Rivelazione 19:11-16"], ntCited: false },
+  { b: 26, c: 34, v: "23-24", cat: "Unico Pastore", desc: "Susciterò su di loro un solo pastore, il mio servitore Davide, ed egli le pascerà.", nt: ["Giovanni 10:11, 16"], ntCited: true },
+  { b: 26, c: 37, v: "24-25", cat: "Re Eterno", desc: "Il mio servitore Davide sarà re su di loro, e tutti avranno un solo pastore a tempo indefinito.", nt: ["Giovanni 10:16", "Giovanni 12:34"], ntCited: true },
+  { b: 27, c: 2, v: "44-45", cat: "Pietra del Regno", desc: "La pietra staccata senza mani stritolerà tutti i regni e il Regno istituito dal Dio del cielo non sarà mai ridotto in rovina.", nt: ["Luca 20:17-18", "Rivelazione 11:15"], ntCited: true },
+  { b: 27, c: 7, v: "13-14", cat: "Figlio dell'uomo", desc: "Colle nubi dei cieli veniva qualcuno simile a un figlio d'uomo; gli furono dati dominio, dignità e regno eterno.", nt: ["Matteo 24:30", "Matteo 26:64", "Marco 14:62", "Rivelazione 1:7"], ntCited: true },
+  { b: 27, c: 9, v: "24-27", cat: "70 Settimane", desc: "Dall'uscita della parola per restaurare Gerusalemme fino a Messia il Condottiero ci saranno 69 settimane d'anni; a metà della 70ª settimana farà cessare sacrificio e offerta e sarà stroncato.", nt: ["Luca 3:1-2, 21-23", "Galati 4:4", "Ebrei 10:12-18"], ntCited: true },
+
+  // PROFETI MINORI (DA OSEA A MALACHIA)
+  { b: 28, c: 11, v: "1", cat: "Infanzia", desc: "Quando Israele era fanciullo, allora l'amai, e dall'Egitto chiamai mio figlio.", nt: ["Matteo 2:14-15"], ntCited: true },
+  { b: 28, c: 13, v: "14", cat: "Risurrezione", desc: "'Li redimerò dalla mano dello Sceol; li ricupererò dalla morte. Dove sono, o Morte, i tuoi pungiglioni?'", nt: ["1 Corinti 15:54-55"], ntCited: true },
+  { b: 29, c: 2, v: "28-32", cat: "Pentecoste", desc: "Verserò il mio spirito su ogni sorta di carne; e chiunque invocherà il nome di Geova sarà salvato.", nt: ["Atti 2:16-21", "Romani 10:13"], ntCited: true },
+  { b: 30, c: 9, v: "11-12", cat: "Regno Davidico", desc: "In quel giorno rialzerò la capanna di Davide che è caduta, perché posseggano il rimanente delle nazioni su cui è stato invocato il mio nome.", nt: ["Atti 15:15-18"], ntCited: true },
+  { b: 32, c: 1, v: "17", cat: "3 Giorni nel Sepolcro", desc: "Giona stette nelle parti interiori del pesce tre giorni e tre notti (segno della morte e risurrezione del Messia).", nt: ["Matteo 12:39-40", "Matteo 16:4", "Luca 11:29-30"], ntCited: true },
+  { b: 33, c: 5, v: "2", cat: "Luogo di Nascita", desc: "E tu, o Betleem Efrata, troppo piccola fra le migliaia di Giuda, da te mi uscirà colui che deve divenire dominatore in Israele, la cui origine è dai tempi antichi.", nt: ["Matteo 2:4-6", "Giovanni 7:42", "Luca 2:4"], ntCited: true },
+  { b: 35, c: 2, v: "4", cat: "Fede nel Messia", desc: "In quanto al giusto, continuerà a vivere per la sua fedeltà (fede).", nt: ["Romani 1:17", "Galati 3:11", "Ebrei 10:38"], ntCited: true },
+  { b: 37, c: 2, v: "7", cat: "Desiderabile delle Nazioni", desc: "Scrollo tutte le nazioni, ed entreranno le cose desiderabili di tutte le nazioni, e riempirò questa casa di gloria.", nt: ["Ebrei 12:26", "Luca 2:27-32"], ntCited: true },
+  { b: 38, c: 3, v: "8", cat: "Germoglio", desc: "Ecco, io faccio venire il mio servitore Germoglio!", nt: ["Luca 1:78"], ntCited: false },
+  { b: 38, c: 6, v: "12-13", cat: "Re-Sacerdote", desc: "Ecco l'uomo il cui nome è Germoglio: edificherà il tempio di Geova, sederà e dominerà sul suo trono, e sarà sacerdote sul suo trono.", nt: ["Ebrei 3:1-3", "Ebrei 8:1"], ntCited: true },
+  { b: 38, c: 9, v: "9", cat: "Ingresso a Gerusalemme", desc: "Esulta grandemente, o figlia di Sion! Ecco, il tuo re viene a te; è giusto e salvato, umile e cavalca un asino, un puledro figlio d'asina.", nt: ["Matteo 21:4-5", "Giovanni 12:14-15"], ntCited: true },
+  { b: 38, c: 11, v: "12-13", cat: "30 Sicli d'Argento", desc: "Pesarono come mio salario 30 pezzi d'argento; e li gettai nella casa di Geova al vasaio.", nt: ["Matteo 26:15", "Matteo 27:3-10"], ntCited: true },
+  { b: 38, c: 12, v: "10", cat: "Trafitto", desc: "Guarderanno a Colui che hanno trafitto, e faranno cordoglio per lui come per un figlio unico.", nt: ["Giovanni 19:34, 37", "Rivelazione 1:7"], ntCited: true },
+  { b: 38, c: 13, v: "7", cat: "Discepoli Dispersi", desc: "'Colpisci il pastore, e siano disperse le pecore del gregge.'", nt: ["Matteo 26:31", "Marco 14:27"], ntCited: true },
+  { b: 39, c: 3, v: "1", cat: "Messaggero del Patto", desc: "Ecco, mando il mio messaggero a preparare la via davanti a me; e all'improvviso verrà al Suo tempio il vero Signore e il messaggero del patto.", nt: ["Matteo 11:10", "Marco 1:2", "Luca 7:27"], ntCited: true },
+  { b: 39, c: 4, v: "5-6", cat: "Precursore Elia", desc: "Ecco, io vi mando Elia il profeta prima che venga il grande e tremendo giorno di Geova, per volgere il cuore dei padri ai figli.", nt: ["Matteo 11:14", "Matteo 17:10-13", "Luca 1:17"], ntCited: true }
+];
+
+// Stato del Modulo Profezie Messianiche
+let bmProphecyList = [...CORE_MESSIANIC_PROPHECIES];
+let bmCurrentProphecyIdx = 0;
+let bmBubbleExpanded = true;
+let bmDailyStartProphecy = safeJsonParse("bm_messianic_daily_origin_v1", null);
+let bmPrevLongPressTimer = null;
+let bmPrevLongPressFired = false;
+let bmDynamicCatalogEnriched = false;
+
+// Verifica che una scrittura sia >= Genesi 3:15 e <= Malachia 4:6 (Scritture Ebraico-Aramaiche)
+function isValidMessianicOtCoordinate(bookId, ch, firstVerseNum = 1) {
+  const b = Number(bookId);
+  const c = Number(ch);
+  const v = Number(firstVerseNum) || 1;
+  if (b < 1 || b > 39) return false;
+  if (b === 1 && c < 3) return false;
+  if (b === 1 && c === 3 && v < 15) return false;
+  return true;
+}
+
+function getFirstVerseNumFromSpec(vSpec) {
+  const m = String(vSpec || "1").match(/(\d{1,3})/);
+  return m ? parseInt(m[1], 10) : 1;
+}
+
+// Auto-Arricchimento intelligente fino a 365+ profezie leggendo "Tutta la Scrittura" e "Perspicacia" se presenti nel DB Offline
+async function enrichMessianicPropheciesFromOfflineDB() {
+  if (bmDynamicCatalogEnriched) return bmProphecyList;
+  bmDynamicCatalogEnriched = true;
+
+  const seenKeys = new Set(bmProphecyList.map(p => `${p.b}_${p.c}_${getFirstVerseNumFromSpec(p.v)}`));
+
+  const addDiscoveredProphecy = (bId, chNum, vSpec, descStr, ntArr = [], catStr = "Profezia") => {
+    const firstV = getFirstVerseNumFromSpec(vSpec);
+    if (!isValidMessianicOtCoordinate(bId, chNum, firstV)) return;
+    const key = `${bId}_${chNum}_${firstV}`;
+    if (seenKeys.has(key)) return;
+    seenKeys.add(key);
+    bmProphecyList.push({
+      b: Number(bId),
+      c: Number(chNum),
+      v: String(vSpec || firstV),
+      cat: catStr,
+      desc: descStr || "Profezia messianica e relativo adempimento scritturale.",
+      nt: ntArr,
+      ntCited: ntArr.length > 0
+    });
+  };
+
+  try {
+    // 1. Scansiona Perspicacia (voci "Messia", "Gesù Cristo", "Profezia") se importata
+    if (typeof getInsightData === "function") {
+      const ins = await getInsightData();
+      if (ins && Array.isArray(ins.entries)) {
+        const messianicArticles = ins.entries.filter(e =>
+          /^(?:MESSIA|GES[ÙU]\s+CRISTO|PROFEZIA|SEME|CRISTO|UNTO)\b/i.test(e.title || "")
+        );
+        messianicArticles.forEach(art => {
+          const lines = String(art.body || "").split(/\n+/);
+          lines.forEach(line => {
+            if (line.length < 12 || line.length > 420) return;
+            const refs = typeof bpCitedRefs === "function" ? bpCitedRefs(line) : [];
+            if (refs.length >= 2) {
+              const parsedRefs = refs.map(r => typeof parseRefStringToTarget === "function" ? { raw: r, t: parseRefStringToTarget(r) } : null).filter(x => x && x.t);
+              const otRefs = parsedRefs.filter(x => isValidMessianicOtCoordinate(x.t.bookId, x.t.chapter, getFirstVerseNumFromSpec(x.t.vSpec)));
+              const ntRefs = parsedRefs.filter(x => x.t.bookId >= 40 && x.t.bookId <= 66).map(x => `${x.t.book.name} ${x.t.chapter}${x.t.vSpec ? ":" + x.t.vSpec : ""}`);
+              if (otRefs.length > 0 && ntRefs.length > 0) {
+                const cleanLine = line.replace(/\s+/g, " ").trim().slice(0, 175);
+                otRefs.forEach(ot => {
+                  addDiscoveredProphecy(ot.t.bookId, ot.t.chapter, ot.t.vSpec || "1", cleanLine, ntRefs.slice(0, 4), "Adempimento");
+                });
+              }
+            }
+          });
+        });
+      }
+    }
+
+    // 2. Scansiona "Tutta la Scrittura" (si_I) per i rimandi messianici nei 39 libri Ebraici e negli Studi
+    if (typeof getSiData === "function") {
+      const si = await getSiData();
+      if (si && Array.isArray(si.books)) {
+        si.books.forEach(bObj => {
+          const bNum = Number(bObj.bookNumber);
+          if (bNum < 1 || bNum > 39) return;
+          (bObj.chapters || []).forEach(chObj => {
+            const paras = String(chObj.content || "").split(/\n{2,}/);
+            paras.forEach(p => {
+              if (!/messia|messianic|ademp|cristo|gesù|seme|unto|profetizz/i.test(p)) return;
+              const refs = typeof bpCitedRefs === "function" ? bpCitedRefs(p) : [];
+              const parsedRefs = refs.map(r => typeof parseRefStringToTarget === "function" ? { raw: r, t: parseRefStringToTarget(r) } : null).filter(x => x && x.t);
+              const otRefs = parsedRefs.filter(x => isValidMessianicOtCoordinate(x.t.bookId, x.t.chapter, getFirstVerseNumFromSpec(x.t.vSpec)));
+              const ntRefs = parsedRefs.filter(x => x.t.bookId >= 40 && x.t.bookId <= 66).map(x => `${x.t.book.name} ${x.t.chapter}${x.t.vSpec ? ":" + x.t.vSpec : ""}`);
+              if (otRefs.length > 0) {
+                const snippet = p.replace(/\[[a-z]{1,2}\]/g, "").replace(/\s+/g, " ").trim().slice(0, 170) + "…";
+                otRefs.forEach(ot => {
+                  addDiscoveredProphecy(ot.t.bookId, ot.t.chapter, ot.t.vSpec || "1", snippet, ntRefs.slice(0, 4), "Scritture");
+                });
+              }
+            });
+          });
+        });
+      }
+    }
+  } catch (e) {
+    console.debug(e);
+  }
+
+  // Ordina rigorosamente in ordine biblico da Genesi 3:15 in avanti
+  bmProphecyList.sort((a, b) => {
+    if (a.b !== b.b) return a.b - b.b;
+    if (a.c !== b.c) return a.c - b.c;
+    return getFirstVerseNumFromSpec(a.v) - getFirstVerseNumFromSpec(b.v);
+  });
+
+  return bmProphecyList;
+}
+
+// Registra la PRIMA profezia messianica incontrata nella lettura del giorno (non la prima cronologica!)
+function recordDailyStartingProphecyIfNeeded(prophecyIdx) {
+  const todayStr = new Date().toISOString().slice(0, 10);
+  if (!bmDailyStartProphecy || bmDailyStartProphecy.date !== todayStr || typeof bmDailyStartProphecy.idx !== "number") {
+    const p = bmProphecyList[prophecyIdx];
+    if (!p) return;
+    const book = getBook(p.b);
+    bmDailyStartProphecy = {
+      date: todayStr,
+      idx: prophecyIdx,
+      b: p.b,
+      c: p.c,
+      v: p.v,
+      label: `${book.abbr} ${p.c}:${p.v}`
+    };
+    safeSaveStorage("bm_messianic_daily_origin_v1", JSON.stringify(bmDailyStartProphecy));
+  }
+}
+
+// Trova tutte le profezie presenti nel capitolo attualmente aperto
+function findPropheciesForCurrentChapter(bookId, chapter) {
+  const b = Number(bookId);
+  const c = Number(chapter);
+
+  // Caso A: Capitolo delle Scritture Ebraico-Aramaiche (da Genesi 3:15 in poi)
+  if (b >= 1 && b <= 39) {
+    if (b === 1 && c < 3) return [];
+    const matches = [];
+    bmProphecyList.forEach((p, idx) => {
+      if (p.b === b && p.c === c) {
+        if (b === 1 && c === 3 && getFirstVerseNumFromSpec(p.v) < 15) return;
+        matches.push(idx);
+      }
+    });
+    return matches;
+  }
+
+  // Caso B: Se l'utente salta a un capitolo delle Scritture Greche Cristiane che adempie una profezia,
+  // mantiene attiva la corrispondenza se il capitolo contiene l'adempimento
+  if (b >= 40 && b <= 66) {
+    const curBookName = getBook(b).name.toLowerCase();
+    const prefix = `${curBookName} ${c}:`;
+    const exactCh = `${curBookName} ${c}`;
+    const matches = [];
+    bmProphecyList.forEach((p, idx) => {
+      if ((p.nt || []).some(r => {
+        const low = r.toLowerCase();
+        return low.startsWith(prefix) || low === exactCh;
+      })) {
+        matches.push(idx);
+      }
+    });
+    return matches;
+  }
+  return [];
+}
+
+// Riquadra nel DOM i versetti della profezia messianica attiva
+function highlightMessianicVersesInDOM(prophecyObj, shouldScroll = false) {
+  document.querySelectorAll(".bm-messianic-verse-box").forEach(el => {
+    el.classList.remove("bm-messianic-verse-box");
+  });
+  if (!prophecyObj) return;
+
+  let targetVerses = [];
+  if (state.bookId === prophecyObj.b && state.chapter === prophecyObj.c) {
+    targetVerses = parseVerseSpecToArray(prophecyObj.v);
+  } else if (state.bookId >= 40) {
+    const curBookName = getBook(state.bookId).name.toLowerCase();
+    const prefix = `${curBookName} ${state.chapter}:`;
+    (prophecyObj.nt || []).forEach(ntRef => {
+      if (ntRef.toLowerCase().startsWith(prefix)) {
+        const vPart = ntRef.split(":")[1] || "";
+        targetVerses.push(...parseVerseSpecToArray(vPart));
+      }
+    });
+  }
+
+  if (!targetVerses.length) return;
+  let firstEl = null;
+  targetVerses.forEach(vNum => {
+    const row = document.getElementById(`v_${vNum}`);
+    if (row) {
+      row.classList.add("bm-messianic-verse-box");
+      if (!firstEl) firstEl = row;
+    }
+  });
+  if (shouldScroll && firstEl) {
+    firstEl.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+}
+
+function focusCurrentMessianicVerses() {
+  bmHaptic(16);
+  const p = bmProphecyList[bmCurrentProphecyIdx];
+  if (!p) return;
+  if (state.bookId !== p.b || state.chapter !== p.c) {
+    jumpToMessianicProphecyIndex(bmCurrentProphecyIdx, true);
+  } else {
+    highlightMessianicVersesInDOM(p, true);
+  }
+}
+
+// Aggiorna la UI del fumetto e della lampadina
+function renderMessianicWidgetUI(chapterMatches = []) {
+  const widget = document.getElementById("bmProphecyWidget");
+  if (!widget) return;
+
+  if (currentViewContext.type !== "bible" || chapterMatches.length === 0) {
+    widget.classList.remove("visible");
+    return;
+  }
+
+  const p = bmProphecyList[bmCurrentProphecyIdx];
+  if (!p) {
+    widget.classList.remove("visible");
+    return;
+  }
+
+  recordDailyStartingProphecyIfNeeded(bmCurrentProphecyIdx);
+
+  const book = getBook(p.b);
+  const refStr = `${book.name} ${p.c}:${p.v}`;
+  const badgeEl = document.getElementById("bmBulbBadge");
+  const counterEl = document.getElementById("bmPbCounter");
+  const refEl = document.getElementById("bmPbRef");
+  const catEl = document.getElementById("bmPbCategory");
+  const descEl = document.getElementById("bmPbDesc");
+  const greekBtn = document.getElementById("bmPbGreekBtn");
+  const greekLbl = document.getElementById("bmPbGreekLabel");
+  const originHint = document.getElementById("bmPbOriginHint");
+
+  if (badgeEl) badgeEl.textContent = String(chapterMatches.length);
+  if (counterEl) counterEl.textContent = `#${bmCurrentProphecyIdx + 1}/${bmProphecyList.length}`;
+  if (refEl) refEl.textContent = `📖 ${refStr}`;
+  if (catEl) catEl.textContent = p.cat || "Messia";
+  if (descEl) descEl.textContent = p.desc;
+
+  if (greekBtn && greekLbl) {
+    if (p.nt && p.nt.length > 0) {
+      const firstNt = p.nt[0];
+      const moreCnt = p.nt.length > 1 ? ` (+${p.nt.length - 1})` : "";
+      greekLbl.textContent = `Greche: ${firstNt}${moreCnt}`;
+      greekBtn.style.opacity = "1";
+    } else {
+      greekLbl.textContent = `Greche: Vedi Citate`;
+      greekBtn.style.opacity = "0.92";
+    }
+  }
+
+  if (originHint && bmDailyStartProphecy) {
+    originHint.textContent = `⏱️ Tieni premuto ◀ → 1ª di oggi (${bmDailyStartProphecy.label})`;
+  }
+
+  const bubble = document.getElementById("bmProphecyBubble");
+  if (bubble) {
+    bubble.classList.toggle("minimized", !bmBubbleExpanded);
+  }
+
+  widget.classList.add("visible");
+  applySavedBulbPosition();
+}
+
+function toggleMessianicBubble(forceState) {
+  bmHaptic(14);
+  bmBubbleExpanded = typeof forceState === "boolean" ? forceState : !bmBubbleExpanded;
+  const bubble = document.getElementById("bmProphecyBubble");
+  if (bubble) {
+    bubble.classList.toggle("minimized", !bmBubbleExpanded);
+  }
+}
+
+// Navigazione diretta con frecce Avanti (▶) e Indietro (◀) tra le centinaia di profezie
+function stepMessianicProphecy(delta) {
+  bmChimeHaptic();
+  if (!bmProphecyList.length) return;
+  const nextIdx = (bmCurrentProphecyIdx + delta + bmProphecyList.length) % bmProphecyList.length;
+  jumpToMessianicProphecyIndex(nextIdx, true);
+}
+
+function jumpToMessianicProphecyIndex(targetIdx, expandBubble = true) {
+  const p = bmProphecyList[targetIdx];
+  if (!p) return;
+  bmCurrentProphecyIdx = targetIdx;
+  if (expandBubble) bmBubbleExpanded = true;
+  recordDailyStartingProphecyIfNeeded(targetIdx);
+
+  closeProModal();
+  const myReadModal = document.getElementById("myReadModal");
+  if (myReadModal) myReadModal.style.display = "none";
+
+  if (currentViewContext.type === "bible" && state.bookId === p.b && state.chapter === p.c) {
+    const matches = findPropheciesForCurrentChapter(state.bookId, state.chapter);
+    renderMessianicWidgetUI(matches.length ? matches : [targetIdx]);
+    highlightMessianicVersesInDOM(p, true);
+    scrollToVerseAndHighlight(p.v);
+    return;
+  }
+
+  saveCurrentPositionToHistory(p.b, p.c);
+  state.bookId = p.b;
+  state.chapter = p.c;
+  window.__bmPendingProphecyIdx = targetIdx;
+  loadChapterView().then(() => {
+    setTimeout(() => {
+      highlightMessianicVersesInDOM(p, true);
+      scrollToVerseAndHighlight(p.v);
+    }, 260);
+  });
+}
+
+// Gestione Long-Press (>550ms) sulla freccia Indietro (◀) per tornare alla PRIMA profezia della sessione odierna
+function onMessianicPrevDown(ev) {
+  if (ev && ev.button !== undefined && ev.button !== 0) return;
+  bmPrevLongPressFired = false;
+  clearTimeout(bmPrevLongPressTimer);
+  bmPrevLongPressTimer = setTimeout(() => {
+    bmPrevLongPressFired = true;
+    bmChimeHaptic();
+    returnToDailyOriginProphecy();
+  }, 560);
+}
+
+function onMessianicPrevUp() {
+  clearTimeout(bmPrevLongPressTimer);
+}
+
+function onMessianicPrevClick(ev) {
+  clearTimeout(bmPrevLongPressTimer);
+  if (bmPrevLongPressFired) {
+    if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+    bmPrevLongPressFired = false;
+    return;
+  }
+  stepMessianicProphecy(-1);
+}
+
+function returnToDailyOriginProphecy() {
+  if (!bmDailyStartProphecy) {
+    stepMessianicProphecy(-1);
+    return;
+  }
+  // Cerca l'indice esatto della prima profezia da cui si è partiti oggi
+  let originIdx = bmProphecyList.findIndex(p =>
+    p.b === bmDailyStartProphecy.b &&
+    p.c === bmDailyStartProphecy.c &&
+    String(p.v) === String(bmDailyStartProphecy.v)
+  );
+  if (originIdx === -1) {
+    originIdx = Math.min(bmProphecyList.length - 1, Math.max(0, Number(bmDailyStartProphecy.idx) || 0));
+  }
+  jumpToMessianicProphecyIndex(originIdx, true);
+}
+
+// TASTO SPECIALE DIVERSO DALLE FRECCE: Profezie menzionate nelle Scritture Greche Cristiane
+function openGreekFulfillmentAction() {
+  bmChimeHaptic();
+  const p = bmProphecyList[bmCurrentProphecyIdx];
+  if (!p) return;
+
+  // Se ha una sola citazione diretta nelle Scritture Greche e l'utente vuole raggiungerla subito,
+  // offre sia il salto immediato al versetto greco sia il selettore completo delle profezie citate nel NT
+  const book = getBook(p.b);
+  const otRef = `${book.name} ${p.c}:${p.v}`;
+  const ntList = Array.isArray(p.nt) ? p.nt : [];
+
+  const modal = document.getElementById("myReadModal");
+  const body = document.getElementById("myReadModalBody");
+  if (!modal || !body) {
+    if (ntList.length > 0) jumpToRefString(ntList[0], true);
+    return;
+  }
+
+  const ntButtonsHtml = ntList.length > 0
+    ? ntList.map(r => `
+        <button type="button" class="myread-action-btn btn-color-anim"
+          style="--btn-bg:#ffd54f; --btn-glow:rgba(255,213,79,0.85); background:linear-gradient(135deg, #1565c0, #0d47a1); border-color:#ffd54f; display:flex; justify-content:space-between; align-items:center;"
+          onclick="document.getElementById('myReadModal').style.display='none'; jumpToRefString('${escapeJsStr(r)}', true)">
+          <span>🏛️ Apri ${escapeHtml(r)}</span>
+          <span style="color:#ffd54f; font-size:12px;">Vai al cap. ▶</span>
+        </button>
+      `).join("")
+    : `<div style="font-size:13px; color:#cfe3ff; text-align:center; padding:8px;">Questa profezia ha un adempimento tematico nel Regno Messianico.</div>`;
+
+  body.innerHTML = `
+    <div style="text-align:center; padding:4px 0 12px 0;">
+      <div style="font-size:28px; margin-bottom:4px;">🏛️✨</div>
+      <div style="font-size:15.5px; font-weight:900; color:#ffd54f; margin-bottom:4px;">Adempimento nelle Scritture Greche Cristiane</div>
+      <div style="font-size:13.5px; font-weight:800; color:#00e5ff;">Profezia: ${escapeHtml(otRef)}</div>
+      <div style="font-size:12.5px; color:#e3f2fd; margin-top:4px; line-height:1.45;">${escapeHtml(p.desc)}</div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
+      ${ntButtonsHtml}
+    </div>
+    <hr style="border:none; border-top:1px solid rgba(41,182,246,0.35); margin:10px 0;">
+    <div style="display:flex; gap:8px;">
+      <button type="button" class="myread-action-btn" style="background:#062356; flex:1;" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
+      <button type="button" class="myread-action-btn" style="background:linear-gradient(135deg, #00838f, #00acc1); border-color:#84ffff; flex:1.5;" onclick="document.getElementById('myReadModal').style.display='none'; openMessianicCatalogModal(true);">
+        📜 Tutte le Citate nel NT
+      </button>
+    </div>
+  `;
+  modal.style.display = "flex";
+}
+
+// Catalogo interattivo di tutte le Profezie Messianiche (con filtro "Solo citate nelle Scritture Greche")
+let bmMessianicOnlyNtFilter = false;
+let bmMessianicSearchQ = "";
+
+function openMessianicCatalogModal(onlyNtCited = false) {
+  bmChimeHaptic();
+  bmMessianicOnlyNtFilter = Boolean(onlyNtCited);
+  document.getElementById("proModalTitle").textContent = `💡 Profezie Messianiche (${bmProphecyList.length})`;
+  document.getElementById("proModal").style.display = "flex";
+  renderMessianicCatalogModalBody();
+}
+
+function renderMessianicCatalogModalBody() {
+  const body = document.getElementById("proModalBody");
+  if (!body) return;
+
+  const q = (bmMessianicSearchQ || "").trim().toLowerCase();
+  const filtered = bmProphecyList
+    .map((p, idx) => ({ p, idx }))
+    .filter(({ p }) => {
+      if (bmMessianicOnlyNtFilter && (!p.nt || p.nt.length === 0)) return false;
+      if (!q) return true;
+      const bName = getBook(p.b).name.toLowerCase();
+      const hay = `${bName} ${p.c}:${p.v} ${p.cat} ${p.desc} ${(p.nt || []).join(" ")}`.toLowerCase();
+      return hay.includes(q);
+    });
+
+  const originBanner = bmDailyStartProphecy ? `
+    <div style="display:flex; justify-content:space-between; align-items:center; background:#041a42; border:1px solid #ffd54f; border-radius:9px; padding:7px 11px; margin-bottom:10px; font-size:12.5px;">
+      <span>🕯️ 1ª Profezia letta oggi: <b style="color:#ffd54f;">${escapeHtml(bmDailyStartProphecy.label)}</b></span>
+      <button type="button" class="tag-badge" style="background:#ffd54f; color:#041a42; border-color:#fff; font-weight:900;" onclick="returnToDailyOriginProphecy()">↩ Torna lì</button>
+    </div>
+  ` : "";
+
+  body.innerHTML = `
+    ${originBanner}
+    <div class="search-box" style="margin-bottom:8px;">
+      <input type="search" class="search-input" value="${escapeHtml(bmMessianicSearchQ)}" placeholder="🔍 Cerca passo, tema o citazione greca (es. Betleem, Sal 22, Matteo)..." oninput="bmMessianicSearchQ=this.value; renderMessianicCatalogModalBody();">
+    </div>
+    <div style="display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
+      <button type="button" class="nav-btn" style="flex:1; font-size:12px; ${!bmMessianicOnlyNtFilter ? 'background:#00e5ff;color:#041a42;font-weight:900;' : ''}" onclick="bmMessianicOnlyNtFilter=false; renderMessianicCatalogModalBody();">
+        📜 Tutte da Gen 3:15 (${bmProphecyList.length})
+      </button>
+      <button type="button" class="nav-btn" style="flex:1.2; font-size:12px; ${bmMessianicOnlyNtFilter ? 'background:#ffd54f;color:#041a42;border-color:#fff;font-weight:900;' : 'border-color:#ffd54f;color:#ffd54f;'}" onclick="bmMessianicOnlyNtFilter=true; renderMessianicCatalogModalBody();">
+        🏛️ Citate nelle Scritture Greche (${bmProphecyList.filter(x => x.nt && x.nt.length > 0).length})
+      </button>
+    </div>
+    <div style="max-height:54vh; overflow-y:auto; padding-right:2px;">
+      ${filtered.map(({ p, idx }) => {
+        const bObj = getBook(p.b);
+        const ref = `${bObj.name} ${p.c}:${p.v}`;
+        const ntPills = (p.nt || []).map(ntRef =>
+          `<span class="tag-badge" style="background:rgba(255,213,79,0.18); color:#ffd54f; border-color:#ffd54f;" onclick="event.stopPropagation(); closeProModal(); jumpToRefString('${escapeJsStr(ntRef)}', true)">🏛️ ${escapeHtml(ntRef)}</span>`
+        ).join(" ");
+        return `
+          <div class="result-card" style="margin-bottom:7px; border-left:3px solid ${p.nt && p.nt.length ? '#ffd54f' : '#00e5ff'};" onclick="jumpToMessianicProphecyIndex(${idx}, true)">
+            <div class="result-ref" style="display:flex; justify-content:space-between; align-items:center;">
+              <span>💡 #${idx + 1} • ${escapeHtml(ref)}</span>
+              <span class="tag-badge" style="font-size:10.5px;">${escapeHtml(p.cat || 'Profezia')}</span>
+            </div>
+            <div style="font-size:13px; color:#e3f2fd; line-height:1.42; margin:4px 0 6px 0;">${escapeHtml(p.desc)}</div>
+            ${ntPills ? `<div style="display:flex; flex-wrap:wrap; gap:4px;">${ntPills}</div>` : ""}
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+ }
+
+// ============================================================================
+// DRAG & DROP CON IL DITO SULLA LAMPADINA (Spostabile ovunque sullo schermo)
+// ============================================================================
+function applySavedBulbPosition() {
+  const widget = document.getElementById("bmProphecyWidget");
+  if (!widget) return;
+  const savedPos = safeJsonParse("bm_bulb_pos_v1", null);
+  if (savedPos && typeof savedPos.right === "number" && typeof savedPos.bottom === "number") {
+    const maxR = Math.max(8, window.innerWidth - 64);
+    const maxB = Math.max(74, window.innerHeight - 64);
+    widget.style.right = Math.min(maxR, Math.max(8, savedPos.right)) + "px";
+    widget.style.bottom = Math.min(maxB, Math.max(74, savedPos.bottom)) + "px";
+  }
+}
+
+(function initBulbDragAndTap() {
+  const orb = document.getElementById("bmBulbOrb");
+  const widget = document.getElementById("bmProphecyWidget");
+  if (!orb || !widget) return;
+
+  let dragging = false;
+  let moved = false;
+  let startX = 0, startY = 0;
+  let startRight = 14, startBottom = 84;
+
+  orb.addEventListener("pointerdown", e => {
+    dragging = true;
+    moved = false;
+    orb.setPointerCapture(e.pointerId);
+    startX = e.clientX;
+    startY = e.clientY;
+    const rect = widget.getBoundingClientRect();
+    startRight = window.innerWidth - rect.right;
+    startBottom = window.innerHeight - rect.bottom;
+  });
+
+  orb.addEventListener("pointermove", e => {
+    if (!dragging) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    if (Math.hypot(dx, dy) > 7) moved = true;
+    if (!moved) return;
+
+    const newRight = Math.min(window.innerWidth - 64, Math.max(6, startRight - dx));
+    const newBottom = Math.min(window.innerHeight - 64, Math.max(70, startBottom - dy));
+    widget.style.right = Math.round(newRight) + "px";
+    widget.style.bottom = Math.round(newBottom) + "px";
+  });
+
+  const endDrag = e => {
+    if (!dragging) return;
+    dragging = false;
+    try { orb.releasePointerCapture(e.pointerId); } catch (err) { console.debug(err); }
+    if (moved) {
+      const rect = widget.getBoundingClientRect();
+      safeSaveStorage("bm_bulb_pos_v1", JSON.stringify({
+        right: Math.round(window.innerWidth - rect.right),
+        bottom: Math.round(window.innerHeight - rect.bottom)
+      }));
+    } else {
+      toggleMessianicBubble();
+    }
+  };
+
+  orb.addEventListener("pointerup", endDrag);
+  orb.addEventListener("pointercancel", endDrag);
+})();
+
+// ============================================================================
+// AGGANCIO AUTOMATICO A loadChapterView() E AI CAMBI VISTA DELL'APP
+// ============================================================================
+async function evaluateMessianicBulbForCurrentView() {
+  const widget = document.getElementById("bmProphecyWidget");
+  if (!widget) return;
+  if (!currentViewContext || currentViewContext.type !== "bible") {
+    widget.classList.remove("visible");
+    return;
+  }
+
+  await enrichMessianicPropheciesFromOfflineDB();
+  const matches = findPropheciesForCurrentChapter(state.bookId, state.chapter);
+
+  if (!matches.length) {
+    widget.classList.remove("visible");
+    return;
+  }
+
+  if (typeof window.__bmPendingProphecyIdx === "number" && matches.includes(window.__bmPendingProphecyIdx)) {
+    bmCurrentProphecyIdx = window.__bmPendingProphecyIdx;
+    window.__bmPendingProphecyIdx = null;
+  } else if (!matches.includes(bmCurrentProphecyIdx)) {
+    bmCurrentProphecyIdx = matches[0];
+  }
+
+  renderMessianicWidgetUI(matches);
+  highlightMessianicVersesInDOM(bmProphecyList[bmCurrentProphecyIdx], false);
+}
+
+(function hookMessianicBulbIntoApp() {
+  const origLoadChapterView = window.loadChapterView;
+  if (typeof origLoadChapterView === "function") {
+    window.loadChapterView = async function(...args) {
+      const res = await origLoadChapterView.apply(this, args);
+      evaluateMessianicBulbForCurrentView();
+      return res;
+    };
+  }
+
+  const origSetActiveTab = window.setActiveTab;
+  if (typeof origSetActiveTab === "function") {
+    window.setActiveTab = function(tabId, quickPillId) {
+      origSetActiveTab.apply(this, arguments);
+      if (tabId !== "tabRead") {
+        const w = document.getElementById("bmProphecyWidget");
+        if (w) w.classList.remove("visible");
+      }
+    };
+  }
+})();
 </script>
 </body>
 </html>
