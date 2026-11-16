@@ -10020,7 +10020,7 @@ async function enrichMessianicPropheciesFromOfflineDB() {
           (bObj.chapters || []).forEach((chObj, ci) => {
             const paras = String(chObj.content || "").split(/\n{2,}/);
             paras.forEach(p => {
-              if (!/\b(?:messia\w*|ademp\w*|cristo|gesù|seme|unto|profetizz\w*)\b/i.test(p)) return;
+              if (!/(?:\bgesù|\b(?:messia\w*|ademp\w*|cristo|seme|unto|profetizz\w*)\b)/i.test(p)) return;
               const refs = typeof bpCitedRefs === "function" ? bpCitedRefs(p) : [];
               const parsedRefs = refs.map(r => typeof parseRefStringToTarget === "function" ? { raw: r, t: parseRefStringToTarget(r) } : null).filter(x => x && x.t);
               const otRefs = parsedRefs.filter(x => isValidMessianicOtCoordinate(x.t.bookId, x.t.chapter, getFirstVerseNumFromSpec(x.t.vSpec)));
