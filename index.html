@@ -1471,20 +1471,17 @@ body.oled-mode .pub-ref-badge {
     }
     /* Carta: visualizzatore della singola cartina */
     body.bm-paper-on #mapsViewer { background: #f5efe2; color: #1e1b16; }
-    body.bm-paper-on #mapsViewer .bp-vhead { background: #e8dec8; border-bottom: 1px solid #bda982; }
-    body.bm-paper-on #mapsViewer #bpVTitle { color: #3b2a14; }
-    body.bm-paper-on #mapsViewer #bpVSub { color: #5c5446; }
-    body.bm-paper-on #mapsViewer .bp-vbtn,
-    body.bm-paper-on #mapsViewer .bp-tool-btn { background: #e8dec8; border: 1px solid #bda982; color: #2c2216; }
+    /* Bande alta e bassa della cartina: blu con sfumatura come header e barra in basso dell'app */
+    body.bm-paper-on #mapsViewer .bp-vhead,
+    body.bm-paper-on #mapsViewer .bp-vtools {
+      background: linear-gradient(270deg, var(--primary-dark) 0%, var(--primary-main) 50%, var(--primary-dark) 100%);
+    }
     body.bm-paper-on #mapsViewer .bp-stage {
       background-color: #f5efe2;
       background-image: radial-gradient(rgba(70, 52, 24, 0.06) 1px, transparent 0);
       background-size: 5px 5px;
     }
     body.bm-paper-on #mapsViewer .bp-msg { color: #5c5446; }
-    body.bm-paper-on #mapsViewer .bp-vtools { background: #e8dec8; border-top: 1px solid #bda982; }
-    body.bm-paper-on #mapsViewer .bp-chiplabel { color: #5c5446; }
-    body.bm-paper-on #mapsViewer .bp-chip { background: #8c5818; border: 1px solid #6b4c24; color: #fff8e8; box-shadow: none; }
     body.bm-paper-on #mapsViewer .bp-sheet { background: #f5efe2; color: #1e1b16; border-top: 2px solid #8c5818; }
     body.bm-paper-on #mapsViewer .bp-search { background: #fbf6ea; color: #1e1b16; border: 1px solid #bda982; }
     body.bm-paper-on #mapsViewer .bp-card { background: #ebe3d1; border: 1px solid #cfc3a8; box-shadow: none; }
