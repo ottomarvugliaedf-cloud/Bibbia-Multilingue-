@@ -2714,7 +2714,7 @@ function renderSettingsDrawerContent() {
         <div class="bm-set-row">
           <span>💡 Lampadina Profezie Messianiche</span>
           <label class="bm-switch">
-            <input type="checkbox" ${bmSettings.messianicBulb !== false ? 'checked' : ''} onchange="setBmSettingProp('messianicBulb', this.checked); if(typeof evaluateMessianicBulbForCurrentView==='function') evaluateMessianicBulbForCurrentView();">
+            <input type="checkbox" id="bmToggleMessianicBulbInput" ${bmSettings.messianicBulb !== false ? 'checked' : ''} onchange="setBmSettingProp('messianicBulb', this.checked); if(typeof evaluateMessianicBulbForCurrentView==='function') evaluateMessianicBulbForCurrentView();">
             <span class="bm-slider"></span>
           </label>
         </div>
@@ -9611,6 +9611,7 @@ function toggleBmZenMode() {
     display: flex;
     align-items: center;
     gap: 6px;
+    padding: 0 40px; /* = larghezza freccia 34px + gap 6px: allinea la pillola arancione a quella verde */
   }
   .bm-pb-arrow {
     background: linear-gradient(135deg, #1565c0 0%, #0a367e 100%);
@@ -9630,6 +9631,39 @@ function toggleBmZenMode() {
     transform: scale(0.93);
     background: #00e5ff;
     color: #041a42;
+  }
+  .bm-pb-arrow {
+    flex: 0 0 34px;
+    width: 34px;
+    padding: 7px 0;
+    text-align: center;
+  }
+
+  .bm-pb-ref-btn {
+    flex: 1;
+    min-width: 0;
+    background: linear-gradient(135deg, #69f0ae 0%, #00c853 50%, #00a152 100%);
+    color: #041a42;
+    border: 1.5px solid #ffffff;
+    border-radius: 10px;
+    padding: 7px 9px;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.2px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    box-shadow: 0 0 14px rgba(105, 240, 174, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.75);
+    transition: transform 0.14s ease, box-shadow 0.18s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .bm-pb-ref-btn:active {
+    transform: scale(0.95);
+    box-shadow: 0 0 22px rgba(0, 229, 255, 0.95);
   }
 
   .bm-pb-greek-btn {
@@ -9691,13 +9725,7 @@ function toggleBmZenMode() {
         <button type="button" class="bm-pb-close" onclick="toggleMessianicBubble(false)" title="Riduci a sola lampadina">−</button>
       </div>
     </div>
-    <div class="bm-pb-title">
-      <span id="bmPbRef" onclick="focusCurrentMessianicVerses()" style="cursor:pointer; text-decoration:underline;">Genesi 3:15</span>
-      <span id="bmPbCategory" class="tag-badge" style="font-size:10.5px; margin:0; background:#041a42; color:#84ffff; border-color:#29b6f6;">Origine</span>
-    </div>
-    <!-- Toccando il testo del fumetto si apre subito la Nota Integrale senza tagli -->
-    <div id="bmPbDesc" class="bm-pb-desc" onclick="openGreekFulfillmentAction()" title="Tocca per leggere la nota integrale e i riferimenti"></div>
-    <div class="bm-pb-controls">
+    <div class="bm-pb-title" style="margin-bottom:6px;">
       <button type="button" id="bmPbPrevBtn" class="bm-pb-arrow"
         onpointerdown="onMessianicPrevDown(event)"
         onpointerup="onMessianicPrevUp()"
@@ -9707,11 +9735,17 @@ function toggleBmZenMode() {
         onclick="onMessianicPrevClick(event)"
         title="Tocca: profezia precedente • Tieni premuto: torna alla 1ª profezia letta oggi">◀</button>
 
+      <button type="button" id="bmPbRef" class="bm-pb-ref-btn" onclick="focusCurrentMessianicVerses()" title="Riquadra i versetti della profezia nel capitolo">📖 Genesi 3:15</button>
+
+      <button type="button" id="bmPbNextBtn" class="bm-pb-arrow" onclick="stepMessianicProphecy(1)" title="Vai alla profezia messianica successiva">▶</button>
+    </div>
+    <span id="bmPbCategory" class="tag-badge" style="display:block; width:fit-content; margin:0 auto 6px auto; font-size:10.5px; background:#041a42; color:#84ffff; border-color:#29b6f6;">Origine</span>
+    <!-- Toccando il testo del fumetto si apre subito la Nota Integrale senza tagli -->
+    <div id="bmPbDesc" class="bm-pb-desc" onclick="openGreekFulfillmentAction()" title="Tocca per leggere la nota integrale e i riferimenti"></div>
+    <div class="bm-pb-controls">
       <button type="button" id="bmPbGreekBtn" class="bm-pb-greek-btn" onclick="openGreekFulfillmentAction()" title="Apri nota integrale e adempimento nelle Scritture Greche Cristiane">
         <span>🏛️</span><span id="bmPbGreekLabel">Greche: Gal 4:4</span>
       </button>
-
-      <button type="button" id="bmPbNextBtn" class="bm-pb-arrow" onclick="stepMessianicProphecy(1)" title="Vai alla profezia messianica successiva">▶</button>
     </div>
     <div class="bm-pb-footer-hint">
       <span id="bmPbOriginHint">⏱️ Tieni premuto ◀ per la 1ª di oggi</span>
