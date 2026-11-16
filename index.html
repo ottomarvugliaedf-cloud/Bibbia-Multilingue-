@@ -1584,7 +1584,7 @@ body.oled-mode .pub-ref-badge {
     <div class="color-dot" style="background:#9c27b0;" onclick="applyHighlight('hl-purple')"></div>
     <button class="icon-btn" style="color:var(--text-main);" title="Rimuovi colore" onclick="applyHighlight('')">🚫</button>
     <button class="icon-btn" style="color:var(--primary-light);" title="Passi Paralleli" onclick="openCrossRefsModalForVerse()">🔗</button>
-    <button class="icon-btn" style="color:var(--primary-light);" title="Lessico Strong" onclick="openStrongModalForVerse()">🏛️</button>
+    <button class="icon-btn" style="color:var(--primary-light);" title="Lessico Strong" onclick="openStrongModalForVerse()">🏺</button>
     <button class="icon-btn" style="color:#00e5ff;" title="Raggi X: Confronto Versioni & Analisi" onclick="openVerseXRayModal()">🔬</button>
     <button class="icon-btn" style="color:var(--primary-light);" title="Ascolta versetto" onclick="speakSelectedVerse()">🔊</button>
     <button class="icon-btn" style="color:var(--text-main);" title="Copia versetto" onclick="copySelectedVerse()">📋</button>
@@ -2523,6 +2523,7 @@ let bmSettings = safeJsonParse("bm_user_settings_v1", {
   lineHeight: "1.58",
   textAlign: "left",
   showInlineBadges: true,
+  messianicBulb: true,
   paperMode: false,
   openCard: "aspetto"
 });
@@ -2707,6 +2708,13 @@ function renderSettingsDrawerContent() {
           <span>Badge "🔗Paralleli" nei versetti</span>
           <label class="bm-switch">
             <input type="checkbox" ${bmSettings.showInlineBadges !== false ? 'checked' : ''} onchange="setBmSettingProp('showInlineBadges', this.checked)">
+            <span class="bm-slider"></span>
+          </label>
+        </div>
+        <div class="bm-set-row">
+          <span>💡 Lampadina Profezie Messianiche</span>
+          <label class="bm-switch">
+            <input type="checkbox" ${bmSettings.messianicBulb !== false ? 'checked' : ''} onchange="setBmSettingProp('messianicBulb', this.checked); if(typeof evaluateMessianicBulbForCurrentView==='function') evaluateMessianicBulbForCurrentView();">
             <span class="bm-slider"></span>
           </label>
         </div>
@@ -4029,7 +4037,7 @@ window.openStrongModalForVerse = function(clickedCode) {
   }
   const words = [...new Set(rawVerse.replace(/[^a-zA-ZÀ-ÿ\s]/g, " ").split(/\s+/).filter(w => w.length >= 4))];
   const wordPills = words.map(w => `<span class="tag-badge" style="font-size:13px;padding:5px 10px;" onclick="searchWordInConcordance('${escapeJsStr(w)}')">🔍${escapeHtml(w)}</span>`).join(" ");
-  document.getElementById("proModalTitle").textContent = `🏛️Lessico Strong & Concordanza (${book.name} ${state.chapter}:${vNum})`;
+  document.getElementById("proModalTitle").textContent = `🏺 Lessico Strong & Concordanza (${book.name} ${state.chapter}:${vNum})`;
   document.getElementById("proModalBody").innerHTML = `
     <div style="font-size:13px;color:var(--text-muted);font-style:italic;margin-bottom:10px;border-left:3px solid var(--primary-light);padding-left:8px;">"${escapeHtml(rawVerse)}"</div>
     ${matches.length ? `<div class="section-title"><span>Radici Ebraico/Greche Rilevate</span></div>` + matches.join("") : ""}
@@ -9437,11 +9445,10 @@ function toggleBmZenMode() {
 </script>
 
 <!-- ============================================================================
-     MODULO PRO: ASSISTENTE LAMPADINA ANIMATA DELLE PROFEZIE MESSIANICHE (365+)
-     Da Genesi 3:15 in poi • Drag & Drop • Salto con Riquadro • Long-Press Origine
+     MODULO PRO v2: ASSISTENTE LAMPADINA ANIMATA DELLE PROFEZIE MESSIANICHE (365+)
+     Testo Integrale nel Modale • Switch Impostazioni • Icona Strong 🏺 Dedicata
      ============================================================================ -->
 <style>
-  /* Contenitore flottante trascinabile */
   #bmProphecyWidget {
     position: fixed;
     right: 14px;
@@ -9459,7 +9466,6 @@ function toggleBmZenMode() {
     display: flex;
   }
 
-  /* Lampadina animata in stile XP Assistant / Zaffiro & Oro PRO */
   .bm-bulb-orb {
     pointer-events: auto;
     width: 56px;
@@ -9487,7 +9493,6 @@ function toggleBmZenMode() {
     filter: drop-shadow(0 0 6px rgba(255, 235, 59, 0.95));
     animation: bmBulbFilamentGlow 1.9s ease-in-out infinite alternate;
   }
-  /* Scintille attorno alla lampadina */
   .bm-bulb-spark {
     position: absolute;
     inset: -5px;
@@ -9496,7 +9501,6 @@ function toggleBmZenMode() {
     animation: bmSparkSpin 12s linear infinite;
     pointer-events: none;
   }
-  /* Badge contatore sulla lampadina */
   .bm-bulb-badge {
     position: absolute;
     top: -5px;
@@ -9525,10 +9529,9 @@ function toggleBmZenMode() {
     to { transform: rotate(360deg); }
   }
 
-  /* Fumetto Blu Elegante a lato della lampadina */
   .bm-prophecy-bubble {
     pointer-events: auto;
-    width: min(315px, calc(100vw - 88px));
+    width: min(320px, calc(100vw - 88px));
     background: linear-gradient(160deg, #0a367e 0%, #062356 62%, #041a42 100%);
     color: #ffffff;
     border: 1.5px solid #00e5ff;
@@ -9590,12 +9593,20 @@ function toggleBmZenMode() {
   }
   .bm-pb-desc {
     font-size: 12.5px;
-    line-height: 1.42;
+    line-height: 1.44;
     color: #e3f2fd;
     margin-bottom: 9px;
+    cursor: pointer;
+  }
+  .bm-pb-readmore {
+    display: inline-block;
+    color: #ffd54f;
+    font-weight: 800;
+    font-size: 11.5px;
+    margin-left: 4px;
+    text-decoration: underline;
   }
 
-  /* Barra controlli: Freccia Indietro (con Long-Press), Freccia Avanti e Tasto Speciale NT */
   .bm-pb-controls {
     display: flex;
     align-items: center;
@@ -9621,7 +9632,6 @@ function toggleBmZenMode() {
     color: #041a42;
   }
 
-  /* TASTO SPECIALE DIVERSO DALLE FRECCE: Scritture Greche Cristiane */
   .bm-pb-greek-btn {
     flex: 1;
     background: linear-gradient(135deg, #ffd54f 0%, #ffb300 50%, #ff8f00 100%);
@@ -9657,7 +9667,6 @@ function toggleBmZenMode() {
     align-items: center;
   }
 
-  /* Riquadro Speciale Dorato/Ciano per i versetti della Profezia Messianica nel capitolo */
   .bm-messianic-verse-box {
     outline: 2.5px solid #ffd54f !important;
     box-shadow: 0 0 16px rgba(255, 213, 79, 0.55), inset 0 0 12px rgba(0, 229, 255, 0.22) !important;
@@ -9673,7 +9682,6 @@ function toggleBmZenMode() {
   }
 </style>
 
-<!-- Markup Flottante della Lampadina e del Fumetto Blu PRO -->
 <div id="bmProphecyWidget" aria-live="polite">
   <div id="bmProphecyBubble" class="bm-prophecy-bubble">
     <div class="bm-pb-header">
@@ -9687,9 +9695,8 @@ function toggleBmZenMode() {
       <span id="bmPbRef" onclick="focusCurrentMessianicVerses()" style="cursor:pointer; text-decoration:underline;">Genesi 3:15</span>
       <span id="bmPbCategory" class="tag-badge" style="font-size:10.5px; margin:0; background:#041a42; color:#84ffff; border-color:#29b6f6;">Origine</span>
     </div>
-    <div id="bmPbDesc" class="bm-pb-desc">
-      Il "seme" (discendenza) della donna schiaccerà la testa al serpente ed egli gli ferirà il calcagno.
-    </div>
+    <!-- Toccando il testo del fumetto si apre subito la Nota Integrale senza tagli -->
+    <div id="bmPbDesc" class="bm-pb-desc" onclick="openGreekFulfillmentAction()" title="Tocca per leggere la nota integrale e i riferimenti"></div>
     <div class="bm-pb-controls">
       <button type="button" id="bmPbPrevBtn" class="bm-pb-arrow"
         onpointerdown="onMessianicPrevDown(event)"
@@ -9700,7 +9707,7 @@ function toggleBmZenMode() {
         onclick="onMessianicPrevClick(event)"
         title="Tocca: profezia precedente • Tieni premuto: torna alla 1ª profezia letta oggi">◀</button>
 
-      <button type="button" id="bmPbGreekBtn" class="bm-pb-greek-btn" onclick="openGreekFulfillmentAction()" title="Apri adempimento nelle Scritture Greche Cristiane">
+      <button type="button" id="bmPbGreekBtn" class="bm-pb-greek-btn" onclick="openGreekFulfillmentAction()" title="Apri nota integrale e adempimento nelle Scritture Greche Cristiane">
         <span>🏛️</span><span id="bmPbGreekLabel">Greche: Gal 4:4</span>
       </button>
 
@@ -9712,18 +9719,13 @@ function toggleBmZenMode() {
     </div>
   </div>
 
-  <!-- Lampadina Vettoriale Animata (Trascinabile col dito) -->
   <div id="bmBulbOrb" class="bm-bulb-orb" title="Profezia Messianica rilevata! Tocca per aprire/chiudere il fumetto • Trascina col dito per spostare">
     <div class="bm-bulb-spark"></div>
     <span id="bmBulbBadge" class="bm-bulb-badge">1</span>
     <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- Raggi di luce esterni -->
       <path d="M32 4V9M12 12L15.5 15.5M52 12L48.5 15.5M4 30H9M55 30H60" stroke="#FFF59D" stroke-width="3" stroke-linecap="round"/>
-      <!-- Bulbo di cristallo dorato -->
       <path d="M32 12C21.5 12 14 19.6 14 29C14 35.2 17.6 40.3 22.2 43.4C23.7 44.4 24.5 46.1 24.5 48V50H39.5V48C39.5 46.1 40.3 44.4 41.8 43.4C46.4 40.3 50 35.2 50 29C50 19.6 42.5 12 32 12Z" fill="url(#bulbGoldGrad)" stroke="#FFFFFF" stroke-width="2.2"/>
-      <!-- Filamento incandescente -->
       <path d="M27 42V33L32 28L37 33V42" stroke="#FFFDE7" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-      <!-- Ghiera filettata -->
       <rect x="25" y="50" width="14" height="4" rx="2" fill="#90CAF9" stroke="#041A42" stroke-width="1.2"/>
       <rect x="26.5" y="54.5" width="11" height="4" rx="2" fill="#64B5F6" stroke="#041A42" stroke-width="1.2"/>
       <path d="M29 59.5H35" stroke="#FFF59D" stroke-width="2.5" stroke-linecap="round"/>
@@ -9739,12 +9741,7 @@ function toggleBmZenMode() {
 </div>
 
 <script>
-// ============================================================================
-// DATABASE INTEGRATO DELLE PROFEZIE MESSIANICHE (Da Genesi 3:15 a Malachia 4:6)
-// + Auto-Espansione dai moduli offline ("Tutta la Scrittura" e "Perspicacia")
-// ============================================================================
 const CORE_MESSIANIC_PROPHECIES = [
-  // GENESI (A partire rigorosamente da Genesi 3:15)
   { b: 1, c: 3, v: "15", cat: "Origine", desc: "Il 'seme' (discendenza) della donna schiaccerà la testa al serpente.", nt: ["Galati 4:4", "Ebrei 2:14", "Rivelazione 12:9", "1 Giovanni 3:8"], ntCited: true },
   { b: 1, c: 9, v: "26-27", cat: "Genealogia", desc: "L'Iddio di Sem sarà benedetto; il Messia verrà attraverso la linea di Sem.", nt: ["Luca 3:36"], ntCited: true },
   { b: 1, c: 12, v: "3", cat: "Patto Abraamico", desc: "Nel seme di Abraamo tutte le famiglie della terra si benediranno.", nt: ["Atti 3:25", "Galati 3:8", "Galati 3:16"], ntCited: true },
@@ -9759,7 +9756,6 @@ const CORE_MESSIANIC_PROPHECIES = [
   { b: 1, c: 28, v: "14", cat: "Genealogia", desc: "Il Seme messianico viene promesso attraverso Giacobbe (Israele).", nt: ["Luca 3:34", "Matteo 1:2"], ntCited: true },
   { b: 1, c: 49, v: "10", cat: "Regalità", desc: "Lo scettro non si allontanerà da Giuda finché venga Silo, a cui appartiene l'ubbidienza dei popoli.", nt: ["Luca 3:33", "Ebrei 7:14", "Rivelazione 5:5"], ntCited: true },
 
-  // ESODO, LEVITICO, NUMERI, DEUTERONOMIO
   { b: 2, c: 12, v: "5, 21-27", cat: "Pasqua", desc: "L'agnello pasquale senza difetto il cui sangue preserva dalla morte.", nt: ["1 Corinti 5:7", "Giovanni 1:29", "1 Pietro 1:19"], ntCited: true },
   { b: 2, c: 12, v: "46", cat: "Crocifissione", desc: "Non gli sarà rotto nessun osso (prescrizione sull'agnello pasquale).", nt: ["Giovanni 19:33-36"], ntCited: true },
   { b: 2, c: 16, v: "4, 15", cat: "Ministero", desc: "La manna dal cielo prefigura il vero Pane della vita disceso dal cielo.", nt: ["Giovanni 6:31-35", "Giovanni 6:48-51"], ntCited: true },
@@ -9771,14 +9767,12 @@ const CORE_MESSIANIC_PROPHECIES = [
   { b: 5, c: 18, v: "15, 18-19", cat: "Profeta", desc: "Dio susciterà di mezzo ai fratelli un profeta simile a Mosè; chi non lo ascolterà ne renderà conto.", nt: ["Atti 3:22-23", "Atti 7:37", "Giovanni 6:14"], ntCited: true },
   { b: 5, c: 21, v: "23", cat: "Espiazione", desc: "Chi è appeso al palo è maledetto da Dio (Cristo porta la maledizione della Legge).", nt: ["Galati 3:13"], ntCited: true },
 
-  // RUTH, SAMUELE, RE, CRONACHE, GIOBBE
   { b: 8, c: 4, v: "18-22", cat: "Genealogia", desc: "La linea genealogica da Perez a Boaz, Obed, Iesse e Davide.", nt: ["Matteo 1:3-6", "Luca 3:31-33"], ntCited: true },
   { b: 9, c: 2, v: "10", cat: "Regalità", desc: "Geova darà forza al suo Re ed esalterà il corno del suo Unto (Messia).", nt: ["Luca 1:69"], ntCited: true },
   { b: 10, c: 7, v: "12-16", cat: "Patto Davidico", desc: "Il trono della discendenza di Davide sarà stabilito fermamente a tempo indefinito.", nt: ["Luca 1:32-33", "Atti 2:29-30", "Ebrei 1:5"], ntCited: true },
   { b: 13, c: 17, v: "11-14", cat: "Patto Davidico", desc: "Io lo stabilirò nella mia casa e nel mio regno per sempre, e il suo trono sarà fermo in eterno.", nt: ["Luca 1:32-33", "Ebrei 1:5"], ntCited: true },
   { b: 18, c: 19, v: "25", cat: "Redentore", desc: "Io so bene che il mio Redentore vive, e che dopo verrà e si leverà sulla terra.", nt: ["Giovanni 5:25", "1 Tessalonicesi 4:16"], ntCited: false },
 
-  // SALMI (Ricchissimo ciclo messianico)
   { b: 19, c: 2, v: "1-2", cat: "Opposizione", desc: "Le nazioni tumultuano e i re della terra si schierano contro Geova e contro il suo Unto.", nt: ["Atti 4:25-27"], ntCited: true },
   { b: 19, c: 2, v: "7-9", cat: "Figliolanza", desc: "'Tu sei mio figlio; oggi io sono divenuto tuo padre. Chiedimi, e ti darò le nazioni in eredità.'", nt: ["Atti 13:33", "Ebrei 1:5", "Ebrei 5:5", "Rivelazione 2:27"], ntCited: true },
   { b: 19, c: 8, v: "2", cat: "Ministero", desc: "Dalla bocca dei bambini e dei lattanti hai tratto lode.", nt: ["Matteo 21:16"], ntCited: true },
@@ -9818,11 +9812,9 @@ const CORE_MESSIANIC_PROPHECIES = [
   { b: 19, c: 118, v: "26", cat: "Ingresso Regale", desc: "'Benedetto Colui che viene nel nome di Geova!'", nt: ["Matteo 21:9", "Matteo 23:39", "Giovanni 12:13"], ntCited: true },
   { b: 19, c: 132, v: "11", cat: "Genealogia", desc: "Geova ha giurato a Davide di porre sul suo trono uno del frutto del suo ventre.", nt: ["Atti 2:30", "Luca 1:32"], ntCited: true },
 
-  // PROVERBI
   { b: 20, c: 8, v: "22-31", cat: "Sapienza", desc: "La Sapienza personificata generata come principio della via di Dio, artefice al Suo fianco.", nt: ["1 Corinti 1:24, 30", "Colossesi 1:15-17"], ntCited: true },
   { b: 20, c: 30, v: "4", cat: "Figliolanza", desc: "Chi è salito al cielo e ne è disceso? Qual è il suo nome e il nome di suo figlio?", nt: ["Giovanni 3:13", "Efesini 4:9-10"], ntCited: true },
 
-  // ISAIA
   { b: 23, c: 6, v: "9-10", cat: "Incredulità", desc: "Udite pure, ma non comprendete; il cuore di questo popolo si è fatto insensibile.", nt: ["Matteo 13:14-15", "Giovanni 12:39-40", "Atti 28:26-27"], ntCited: true },
   { b: 23, c: 7, v: "14", cat: "Nascita", desc: "Ecco, la fanciulla (vergine) concepirà e partorirà un figlio, e lo chiamerà Emmanuele ('Con noi è Dio').", nt: ["Matteo 1:22-23", "Luca 1:31-35"], ntCited: true },
   { b: 23, c: 8, v: "14-15", cat: "Pietra d'inciampo", desc: "Diverrà una pietra d'inciampo e una roccia d'offesa per entrambe le case d'Israele.", nt: ["Romani 9:32-33", "1 Pietro 2:8", "Luca 2:34"], ntCited: true },
@@ -9857,7 +9849,6 @@ const CORE_MESSIANIC_PROPHECIES = [
   { b: 23, c: 59, v: "20", cat: "Redentore", desc: "Il Redentore verrà certamente a Sion, e da quelli che in Giacobbe si volgono dalla trasgressione.", nt: ["Romani 11:26-27"], ntCited: true },
   { b: 23, c: 61, v: "1-2", cat: "Unto / Ministero", desc: "Lo spirito del Sovrano Signore Geova è su di me, poiché Geova mi ha unto per annunciare buone notizie ai mansueti e proclamare l'anno di benevolenza.", nt: ["Luca 4:17-21"], ntCited: true },
 
-  // GEREMIA, LAMENTAZIONI, EZECHIELE, DANIELE
   { b: 24, c: 23, v: "5-6", cat: "Germoglio Giusto", desc: "Susciterò a Davide un germoglio giusto; un re regnerà e agirà con discrezione, ed eserciterà diritto e giustizia.", nt: ["Luca 1:32-33", "1 Corinti 1:30"], ntCited: true },
   { b: 24, c: 31, v: "15", cat: "Infanzia", desc: "A Rama si ode un lamento e un pianto amaro: Rachele piange i suoi figli, perché non sono più (strage degli innocenti).", nt: ["Matteo 2:17-18"], ntCited: true },
   { b: 24, c: 31, v: "31-34", cat: "Nuovo Patto", desc: "Concluderò con la casa d'Israele un nuovo patto, scrivendo la mia legge nel loro cuore e perdonando il loro peccato.", nt: ["Luca 22:20", "Ebrei 8:8-12", "Ebrei 10:16-17"], ntCited: true },
@@ -9869,8 +9860,7 @@ const CORE_MESSIANIC_PROPHECIES = [
   { b: 27, c: 2, v: "44-45", cat: "Pietra del Regno", desc: "La pietra staccata senza mani stritolerà tutti i regni e il Regno istituito dal Dio del cielo non sarà mai ridotto in rovina.", nt: ["Luca 20:17-18", "Rivelazione 11:15"], ntCited: true },
   { b: 27, c: 7, v: "13-14", cat: "Figlio dell'uomo", desc: "Colle nubi dei cieli veniva qualcuno simile a un figlio d'uomo; gli furono dati dominio, dignità e regno eterno.", nt: ["Matteo 24:30", "Matteo 26:64", "Marco 14:62", "Rivelazione 1:7"], ntCited: true },
   { b: 27, c: 9, v: "24-27", cat: "70 Settimane", desc: "Dall'uscita della parola per restaurare Gerusalemme fino a Messia il Condottiero ci saranno 69 settimane d'anni; a metà della 70ª settimana farà cessare sacrificio e offerta e sarà stroncato.", nt: ["Luca 3:1-2, 21-23", "Galati 4:4", "Ebrei 10:12-18"], ntCited: true },
-
-  // PROFETI MINORI (DA OSEA A MALACHIA)
+ 
   { b: 28, c: 11, v: "1", cat: "Infanzia", desc: "Quando Israele era fanciullo, allora l'amai, e dall'Egitto chiamai mio figlio.", nt: ["Matteo 2:14-15"], ntCited: true },
   { b: 28, c: 13, v: "14", cat: "Risurrezione", desc: "'Li redimerò dalla mano dello Sceol; li ricupererò dalla morte. Dove sono, o Morte, i tuoi pungiglioni?'", nt: ["1 Corinti 15:54-55"], ntCited: true },
   { b: 29, c: 2, v: "28-32", cat: "Pentecoste", desc: "Verserò il mio spirito su ogni sorta di carne; e chiunque invocherà il nome di Geova sarà salvato.", nt: ["Atti 2:16-21", "Romani 10:13"], ntCited: true },
@@ -9889,7 +9879,6 @@ const CORE_MESSIANIC_PROPHECIES = [
   { b: 39, c: 4, v: "5-6", cat: "Precursore Elia", desc: "Ecco, io vi mando Elia il profeta prima che venga il grande e tremendo giorno di Geova, per volgere il cuore dei padri ai figli.", nt: ["Matteo 11:14", "Matteo 17:10-13", "Luca 1:17"], ntCited: true }
 ];
 
-// Stato del Modulo Profezie Messianiche
 let bmProphecyList = [...CORE_MESSIANIC_PROPHECIES];
 let bmCurrentProphecyIdx = 0;
 let bmBubbleExpanded = true;
@@ -9898,7 +9887,6 @@ let bmPrevLongPressTimer = null;
 let bmPrevLongPressFired = false;
 let bmDynamicCatalogEnriched = false;
 
-// Verifica che una scrittura sia >= Genesi 3:15 e <= Malachia 4:6 (Scritture Ebraico-Aramaiche)
 function isValidMessianicOtCoordinate(bookId, ch, firstVerseNum = 1) {
   const b = Number(bookId);
   const c = Number(ch);
@@ -9914,51 +9902,67 @@ function getFirstVerseNumFromSpec(vSpec) {
   return m ? parseInt(m[1], 10) : 1;
 }
 
-// Auto-Arricchimento intelligente fino a 365+ profezie leggendo "Tutta la Scrittura" e "Perspicacia" se presenti nel DB Offline
+// Auto-Arricchimento che conserva SEMPRE il testo INTEGRALE (fullDesc) oltre all'anteprima breve (desc)
 async function enrichMessianicPropheciesFromOfflineDB() {
   if (bmDynamicCatalogEnriched) return bmProphecyList;
   bmDynamicCatalogEnriched = true;
 
   const seenKeys = new Set(bmProphecyList.map(p => `${p.b}_${p.c}_${getFirstVerseNumFromSpec(p.v)}`));
 
-  const addDiscoveredProphecy = (bId, chNum, vSpec, descStr, ntArr = [], catStr = "Profezia") => {
+  const addDiscoveredProphecy = (bId, chNum, vSpec, fullParagraphText, ntArr = [], catStr = "Profezia", sourceMeta = null) => {
     const firstV = getFirstVerseNumFromSpec(vSpec);
     if (!isValidMessianicOtCoordinate(bId, chNum, firstV)) return;
     const key = `${bId}_${chNum}_${firstV}`;
     if (seenKeys.has(key)) return;
     seenKeys.add(key);
+
+    const cleanFull = String(fullParagraphText || "")
+      .replace(/\[[a-z]{1,2}\]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    const isLong = cleanFull.length > 165;
+    const shortPreview = isLong ? (cleanFull.slice(0, 160).trim() + "…") : cleanFull;
+
     bmProphecyList.push({
       b: Number(bId),
       c: Number(chNum),
       v: String(vSpec || firstV),
       cat: catStr,
-      desc: descStr || "Profezia messianica e relativo adempimento scritturale.",
+      desc: shortPreview || "Profezia messianica e relativo adempimento scritturale.",
+      fullDesc: cleanFull || shortPreview,
+      isTruncated: isLong,
+      sourceMeta: sourceMeta,
       nt: ntArr,
       ntCited: ntArr.length > 0
     });
   };
 
   try {
-    // 1. Scansiona Perspicacia (voci "Messia", "Gesù Cristo", "Profezia") se importata
+    // 1. Perspicacia (voci Messia, Gesù Cristo, Profezia, Seme, Cristo, Unto)
     if (typeof getInsightData === "function") {
       const ins = await getInsightData();
       if (ins && Array.isArray(ins.entries)) {
-        const messianicArticles = ins.entries.filter(e =>
-          /^(?:MESSIA|GES[ÙU]\s+CRISTO|PROFEZIA|SEME|CRISTO|UNTO)\b/i.test(e.title || "")
-        );
-        messianicArticles.forEach(art => {
+        ins.entries.forEach((art, artIdx) => {
+          if (!/^(?:MESSIA|GES[ÙU]\s+CRISTO|PROFEZIA|SEME|CRISTO|UNTO)\b/i.test(art.title || "")) return;
           const lines = String(art.body || "").split(/\n+/);
           lines.forEach(line => {
-            if (line.length < 12 || line.length > 420) return;
+            if (line.length < 15) return;
             const refs = typeof bpCitedRefs === "function" ? bpCitedRefs(line) : [];
             if (refs.length >= 2) {
               const parsedRefs = refs.map(r => typeof parseRefStringToTarget === "function" ? { raw: r, t: parseRefStringToTarget(r) } : null).filter(x => x && x.t);
               const otRefs = parsedRefs.filter(x => isValidMessianicOtCoordinate(x.t.bookId, x.t.chapter, getFirstVerseNumFromSpec(x.t.vSpec)));
               const ntRefs = parsedRefs.filter(x => x.t.bookId >= 40 && x.t.bookId <= 66).map(x => `${x.t.book.name} ${x.t.chapter}${x.t.vSpec ? ":" + x.t.vSpec : ""}`);
               if (otRefs.length > 0 && ntRefs.length > 0) {
-                const cleanLine = line.replace(/\s+/g, " ").trim().slice(0, 175);
                 otRefs.forEach(ot => {
-                  addDiscoveredProphecy(ot.t.bookId, ot.t.chapter, ot.t.vSpec || "1", cleanLine, ntRefs.slice(0, 4), "Adempimento");
+                  addDiscoveredProphecy(
+                    ot.t.bookId,
+                    ot.t.chapter,
+                    ot.t.vSpec || "1",
+                    line,
+                    ntRefs.slice(0, 6),
+                    "Adempimento",
+                    { type: "insight", idx: artIdx, label: `📚 Perspicacia: ${art.title}` }
+                  );
                 });
               }
             }
@@ -9967,14 +9971,14 @@ async function enrichMessianicPropheciesFromOfflineDB() {
       }
     }
 
-    // 2. Scansiona "Tutta la Scrittura" (si_I) per i rimandi messianici nei 39 libri Ebraici e negli Studi
+    // 2. Tutta la Scrittura (si_I) — conserva l'intero paragrafo + coordinate per aprire il capitolo SI
     if (typeof getSiData === "function") {
       const si = await getSiData();
       if (si && Array.isArray(si.books)) {
-        si.books.forEach(bObj => {
+        si.books.forEach((bObj, bi) => {
           const bNum = Number(bObj.bookNumber);
           if (bNum < 1 || bNum > 39) return;
-          (bObj.chapters || []).forEach(chObj => {
+          (bObj.chapters || []).forEach((chObj, ci) => {
             const paras = String(chObj.content || "").split(/\n{2,}/);
             paras.forEach(p => {
               if (!/messia|messianic|ademp|cristo|gesù|seme|unto|profetizz/i.test(p)) return;
@@ -9983,9 +9987,16 @@ async function enrichMessianicPropheciesFromOfflineDB() {
               const otRefs = parsedRefs.filter(x => isValidMessianicOtCoordinate(x.t.bookId, x.t.chapter, getFirstVerseNumFromSpec(x.t.vSpec)));
               const ntRefs = parsedRefs.filter(x => x.t.bookId >= 40 && x.t.bookId <= 66).map(x => `${x.t.book.name} ${x.t.chapter}${x.t.vSpec ? ":" + x.t.vSpec : ""}`);
               if (otRefs.length > 0) {
-                const snippet = p.replace(/\[[a-z]{1,2}\]/g, "").replace(/\s+/g, " ").trim().slice(0, 170) + "…";
                 otRefs.forEach(ot => {
-                  addDiscoveredProphecy(ot.t.bookId, ot.t.chapter, ot.t.vSpec || "1", snippet, ntRefs.slice(0, 4), "Scritture");
+                  addDiscoveredProphecy(
+                    ot.t.bookId,
+                    ot.t.chapter,
+                    ot.t.vSpec || "1",
+                    p,
+                    ntRefs.slice(0, 6),
+                    "Scritture",
+                    { type: "si", bi, ci, label: `📘 Tutta la Scrittura: ${getBook(bNum).name}` }
+                  );
                 });
               }
             });
@@ -9997,7 +10008,6 @@ async function enrichMessianicPropheciesFromOfflineDB() {
     console.debug(e);
   }
 
-  // Ordina rigorosamente in ordine biblico da Genesi 3:15 in avanti
   bmProphecyList.sort((a, b) => {
     if (a.b !== b.b) return a.b - b.b;
     if (a.c !== b.c) return a.c - b.c;
@@ -10007,7 +10017,6 @@ async function enrichMessianicPropheciesFromOfflineDB() {
   return bmProphecyList;
 }
 
-// Registra la PRIMA profezia messianica incontrata nella lettura del giorno (non la prima cronologica!)
 function recordDailyStartingProphecyIfNeeded(prophecyIdx) {
   const todayStr = new Date().toISOString().slice(0, 10);
   if (!bmDailyStartProphecy || bmDailyStartProphecy.date !== todayStr || typeof bmDailyStartProphecy.idx !== "number") {
@@ -10026,12 +10035,10 @@ function recordDailyStartingProphecyIfNeeded(prophecyIdx) {
   }
 }
 
-// Trova tutte le profezie presenti nel capitolo attualmente aperto
 function findPropheciesForCurrentChapter(bookId, chapter) {
   const b = Number(bookId);
   const c = Number(chapter);
 
-  // Caso A: Capitolo delle Scritture Ebraico-Aramaiche (da Genesi 3:15 in poi)
   if (b >= 1 && b <= 39) {
     if (b === 1 && c < 3) return [];
     const matches = [];
@@ -10044,8 +10051,6 @@ function findPropheciesForCurrentChapter(bookId, chapter) {
     return matches;
   }
 
-  // Caso B: Se l'utente salta a un capitolo delle Scritture Greche Cristiane che adempie una profezia,
-  // mantiene attiva la corrispondenza se il capitolo contiene l'adempimento
   if (b >= 40 && b <= 66) {
     const curBookName = getBook(b).name.toLowerCase();
     const prefix = `${curBookName} ${c}:`;
@@ -10064,12 +10069,11 @@ function findPropheciesForCurrentChapter(bookId, chapter) {
   return [];
 }
 
-// Riquadra nel DOM i versetti della profezia messianica attiva
 function highlightMessianicVersesInDOM(prophecyObj, shouldScroll = false) {
   document.querySelectorAll(".bm-messianic-verse-box").forEach(el => {
     el.classList.remove("bm-messianic-verse-box");
   });
-  if (!prophecyObj) return;
+  if (!prophecyObj || (typeof bmSettings !== "undefined" && bmSettings.messianicBulb === false)) return;
 
   let targetVerses = [];
   if (state.bookId === prophecyObj.b && state.chapter === prophecyObj.c) {
@@ -10110,12 +10114,13 @@ function focusCurrentMessianicVerses() {
   }
 }
 
-// Aggiorna la UI del fumetto e della lampadina
 function renderMessianicWidgetUI(chapterMatches = []) {
   const widget = document.getElementById("bmProphecyWidget");
   if (!widget) return;
 
-  if (currentViewContext.type !== "bible" || chapterMatches.length === 0) {
+  if ((typeof bmSettings !== "undefined" && bmSettings.messianicBulb === false) ||
+      currentViewContext.type !== "bible" ||
+      chapterMatches.length === 0) {
     widget.classList.remove("visible");
     return;
   }
@@ -10143,7 +10148,10 @@ function renderMessianicWidgetUI(chapterMatches = []) {
   if (counterEl) counterEl.textContent = `#${bmCurrentProphecyIdx + 1}/${bmProphecyList.length}`;
   if (refEl) refEl.textContent = `📖 ${refStr}`;
   if (catEl) catEl.textContent = p.cat || "Messia";
-  if (descEl) descEl.textContent = p.desc;
+  if (descEl) {
+    const moreBadge = p.isTruncated ? `<span class="bm-pb-readmore">📖 Leggi tutto</span>` : "";
+    descEl.innerHTML = `${escapeHtml(p.desc)}${moreBadge}`;
+  }
 
   if (greekBtn && greekLbl) {
     if (p.nt && p.nt.length > 0) {
@@ -10152,8 +10160,8 @@ function renderMessianicWidgetUI(chapterMatches = []) {
       greekLbl.textContent = `Greche: ${firstNt}${moreCnt}`;
       greekBtn.style.opacity = "1";
     } else {
-      greekLbl.textContent = `Greche: Vedi Citate`;
-      greekBtn.style.opacity = "0.92";
+      greekLbl.textContent = p.isTruncated ? `📖 Nota Integrale & NT` : `Greche: Vedi Citate`;
+      greekBtn.style.opacity = "0.96";
     }
   }
 
@@ -10179,7 +10187,6 @@ function toggleMessianicBubble(forceState) {
   }
 }
 
-// Navigazione diretta con frecce Avanti (▶) e Indietro (◀) tra le centinaia di profezie
 function stepMessianicProphecy(delta) {
   bmChimeHaptic();
   if (!bmProphecyList.length) return;
@@ -10218,7 +10225,6 @@ function jumpToMessianicProphecyIndex(targetIdx, expandBubble = true) {
   });
 }
 
-// Gestione Long-Press (>550ms) sulla freccia Indietro (◀) per tornare alla PRIMA profezia della sessione odierna
 function onMessianicPrevDown(ev) {
   if (ev && ev.button !== undefined && ev.button !== 0) return;
   bmPrevLongPressFired = false;
@@ -10249,7 +10255,6 @@ function returnToDailyOriginProphecy() {
     stepMessianicProphecy(-1);
     return;
   }
-  // Cerca l'indice esatto della prima profezia da cui si è partiti oggi
   let originIdx = bmProphecyList.findIndex(p =>
     p.b === bmDailyStartProphecy.b &&
     p.c === bmDailyStartProphecy.c &&
@@ -10261,17 +10266,30 @@ function returnToDailyOriginProphecy() {
   jumpToMessianicProphecyIndex(originIdx, true);
 }
 
-// TASTO SPECIALE DIVERSO DALLE FRECCE: Profezie menzionate nelle Scritture Greche Cristiane
+// Apre direttamente la fonte originale (Tutta la Scrittura o Perspicacia) da cui proviene la nota
+function openProphecySourceDocument(idx) {
+  const p = bmProphecyList[idx];
+  if (!p || !p.sourceMeta) return;
+  const modal = document.getElementById("myReadModal");
+  if (modal) modal.style.display = "none";
+  closeProModal();
+  if (p.sourceMeta.type === "si" && typeof showSiReader === "function") {
+    showSiReader("b", p.sourceMeta.bi, p.sourceMeta.ci);
+  } else if (p.sourceMeta.type === "insight" && typeof showInsightView === "function") {
+    showInsightView(p.sourceMeta.idx);
+  }
+}
+
+// Finestra Modale con TESTO INTEGRALE (non tagliato!), versetti cliccabili e pulsante alla fonte
 function openGreekFulfillmentAction() {
   bmChimeHaptic();
   const p = bmProphecyList[bmCurrentProphecyIdx];
   if (!p) return;
 
-  // Se ha una sola citazione diretta nelle Scritture Greche e l'utente vuole raggiungerla subito,
-  // offre sia il salto immediato al versetto greco sia il selettore completo delle profezie citate nel NT
   const book = getBook(p.b);
   const otRef = `${book.name} ${p.c}:${p.v}`;
   const ntList = Array.isArray(p.nt) ? p.nt : [];
+  const fullText = p.fullDesc || p.desc || "";
 
   const modal = document.getElementById("myReadModal");
   const body = document.getElementById("myReadModalBody");
@@ -10279,6 +10297,18 @@ function openGreekFulfillmentAction() {
     if (ntList.length > 0) jumpToRefString(ntList[0], true);
     return;
   }
+
+  const formattedFullNote = typeof formatNoteLinks === "function"
+    ? formatNoteLinks(fullText, p.b)
+    : escapeHtml(fullText);
+
+  const sourceBtnHtml = p.sourceMeta ? `
+    <button type="button" class="myread-action-btn btn-color-anim"
+      style="background:#062356; border-color:#00e5ff; color:#84ffff; font-size:12.5px; padding:8px 10px; margin-bottom:10px;"
+      onclick="openProphecySourceDocument(${bmCurrentProphecyIdx})">
+      ${escapeHtml(p.sourceMeta.label)} — Apri capitolo intero ▶
+    </button>
+  ` : "";
 
   const ntButtonsHtml = ntList.length > 0
     ? ntList.map(r => `
@@ -10289,15 +10319,18 @@ function openGreekFulfillmentAction() {
           <span style="color:#ffd54f; font-size:12px;">Vai al cap. ▶</span>
         </button>
       `).join("")
-    : `<div style="font-size:13px; color:#cfe3ff; text-align:center; padding:8px;">Questa profezia ha un adempimento tematico nel Regno Messianico.</div>`;
+    : `<div style="font-size:12.5px; color:#9ec9ff; text-align:center; padding:6px;">Tocca qualsiasi versetto azzurro nella nota qui sopra per aprirlo direttamente.</div>`;
 
   body.innerHTML = `
-    <div style="text-align:center; padding:4px 0 12px 0;">
-      <div style="font-size:28px; margin-bottom:4px;">🏛️✨</div>
-      <div style="font-size:15.5px; font-weight:900; color:#ffd54f; margin-bottom:4px;">Adempimento nelle Scritture Greche Cristiane</div>
+    <div style="text-align:center; padding:2px 0 10px 0;">
+      <div style="font-size:26px; margin-bottom:2px;">🏛️✨</div>
+      <div style="font-size:15px; font-weight:900; color:#ffd54f; margin-bottom:3px;">Adempimento nelle Scritture Greche Cristiane</div>
       <div style="font-size:13.5px; font-weight:800; color:#00e5ff;">Profezia: ${escapeHtml(otRef)}</div>
-      <div style="font-size:12.5px; color:#e3f2fd; margin-top:4px; line-height:1.45;">${escapeHtml(p.desc)}</div>
     </div>
+    <div style="background:#062356; border:1px solid rgba(41,182,246,0.55); border-radius:10px; padding:11px 12px; max-height:38vh; overflow-y:auto; font-size:13.5px; line-height:1.56; color:#ffffff; margin-bottom:10px; text-align:left;">
+      ${formattedFullNote}
+    </div>
+    ${sourceBtnHtml}
     <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
       ${ntButtonsHtml}
     </div>
@@ -10312,7 +10345,6 @@ function openGreekFulfillmentAction() {
   modal.style.display = "flex";
 }
 
-// Catalogo interattivo di tutte le Profezie Messianiche (con filtro "Solo citate nelle Scritture Greche")
 let bmMessianicOnlyNtFilter = false;
 let bmMessianicSearchQ = "";
 
@@ -10335,7 +10367,7 @@ function renderMessianicCatalogModalBody() {
       if (bmMessianicOnlyNtFilter && (!p.nt || p.nt.length === 0)) return false;
       if (!q) return true;
       const bName = getBook(p.b).name.toLowerCase();
-      const hay = `${bName} ${p.c}:${p.v} ${p.cat} ${p.desc} ${(p.nt || []).join(" ")}`.toLowerCase();
+      const hay = `${bName} ${p.c}:${p.v} ${p.cat} ${p.fullDesc || p.desc} ${(p.nt || []).join(" ")}`.toLowerCase();
       return hay.includes(q);
     });
 
@@ -10363,6 +10395,7 @@ function renderMessianicCatalogModalBody() {
       ${filtered.map(({ p, idx }) => {
         const bObj = getBook(p.b);
         const ref = `${bObj.name} ${p.c}:${p.v}`;
+        const fullText = p.fullDesc || p.desc || "";
         const ntPills = (p.nt || []).map(ntRef =>
           `<span class="tag-badge" style="background:rgba(255,213,79,0.18); color:#ffd54f; border-color:#ffd54f;" onclick="event.stopPropagation(); closeProModal(); jumpToRefString('${escapeJsStr(ntRef)}', true)">🏛️ ${escapeHtml(ntRef)}</span>`
         ).join(" ");
@@ -10372,18 +10405,15 @@ function renderMessianicCatalogModalBody() {
               <span>💡 #${idx + 1} • ${escapeHtml(ref)}</span>
               <span class="tag-badge" style="font-size:10.5px;">${escapeHtml(p.cat || 'Profezia')}</span>
             </div>
-            <div style="font-size:13px; color:#e3f2fd; line-height:1.42; margin:4px 0 6px 0;">${escapeHtml(p.desc)}</div>
+            <div style="font-size:13px; color:#e3f2fd; line-height:1.46; margin:4px 0 6px 0;">${escapeHtml(fullText)}</div>
             ${ntPills ? `<div style="display:flex; flex-wrap:wrap; gap:4px;">${ntPills}</div>` : ""}
           </div>
         `;
       }).join("")}
     </div>
   `;
- }
+}
 
-// ============================================================================
-// DRAG & DROP CON IL DITO SULLA LAMPADINA (Spostabile ovunque sullo schermo)
-// ============================================================================
 function applySavedBulbPosition() {
   const widget = document.getElementById("bmProphecyWidget");
   if (!widget) return;
@@ -10449,18 +10479,23 @@ function applySavedBulbPosition() {
   orb.addEventListener("pointercancel", endDrag);
 })();
 
-// ============================================================================
-// AGGANCIO AUTOMATICO A loadChapterView() E AI CAMBI VISTA DELL'APP
-// ============================================================================
 async function evaluateMessianicBulbForCurrentView() {
   const widget = document.getElementById("bmProphecyWidget");
   if (!widget) return;
-  if (!currentViewContext || currentViewContext.type !== "bible") {
+
+  // Se l'utente ha disattivato la lampadina nelle impostazioni, nasconde il widget e pulisce i riquadri
+  if (typeof bmSettings !== "undefined" && bmSettings.messianicBulb === false) {
     widget.classList.remove("visible");
+    document.querySelectorAll(".bm-messianic-verse-box").forEach(el => el.classList.remove("bm-messianic-verse-box"));
     return;
   }
 
-  await enrichMessianicPropheciesFromOfflineDB();
+  if (!currentViewContext || currentViewContext.type !== "bible") {
+    widget.classList.remove("visible");
+    return;
+ }
+
+ await enrichMessianicPropheciesFromOfflineDB();
   const matches = findPropheciesForCurrentChapter(state.bookId, state.chapter);
 
   if (!matches.length) {
@@ -10480,6 +10515,23 @@ async function evaluateMessianicBulbForCurrentView() {
 }
 
 (function hookMessianicBulbIntoApp() {
+  // 1. Sostituisce automaticamente il tempietto del Lessico Strong con l'anfora 🏺 così 🏛️ resta esclusivo per le Scritture Greche
+  const strongBtn = document.querySelector('#verseActionBar button[onclick*="openStrongModalForVerse"]');
+  if (strongBtn) strongBtn.textContent = "🏺";
+
+  const origOpenStrongModal = window.openStrongModalForVerse;
+  if (typeof origOpenStrongModal === "function") {
+    window.openStrongModalForVerse = function(...args) {
+      const res = origOpenStrongModal.apply(this, args);
+      const tEl = document.getElementById("proModalTitle");
+      if (tEl && tEl.textContent) {
+        tEl.textContent = tEl.textContent.replace("🏛️", "🏺 ");
+      }
+      return res;
+    };
+  }
+
+  // 2. Aggancia l'apertura dei capitoli
   const origLoadChapterView = window.loadChapterView;
   if (typeof origLoadChapterView === "function") {
     window.loadChapterView = async function(...args) {
@@ -10489,6 +10541,7 @@ async function evaluateMessianicBulbForCurrentView() {
     };
   }
 
+  // 3. Nasconde la lampadina quando si esce dalla vista Lettura Bibbia
   const origSetActiveTab = window.setActiveTab;
   if (typeof origSetActiveTab === "function") {
     window.setActiveTab = function(tabId, quickPillId) {
@@ -10497,6 +10550,40 @@ async function evaluateMessianicBulbForCurrentView() {
         const w = document.getElementById("bmProphecyWidget");
         if (w) w.classList.remove("visible");
       }
+    };
+  }
+
+  // 4. Inietta automaticamente lo switch "💡 Lampadina Profezie Messianiche" nel cassetto Impostazioni se non già presente
+  const origRenderSettings = window.renderSettingsDrawerContent;
+  if (typeof origRenderSettings === "function") {
+    window.renderSettingsDrawerContent = function(...args) {
+      const res = origRenderSettings.apply(this, args);
+      const body = document.getElementById("bmSettingsDrawerBody");
+      if (body && !body.querySelector("#bmToggleMessianicBulbInput")) {
+        const rows = body.querySelectorAll(".bm-acc-card .bm-set-row");
+        const lastAspettoRow = rows.length ? rows[rows.length - 1] : null;
+        const targetContainer = body.querySelector(".bm-acc-card .bm-acc-content");
+        if (targetContainer) {
+          const rowDiv = document.createElement("div");
+          rowDiv.className = "bm-set-row";
+          rowDiv.innerHTML = `
+            <span>💡 Lampadina Profezie Messianiche</span>
+            <label class="bm-switch">
+              <input type="checkbox" id="bmToggleMessianicBulbInput" ${bmSettings.messianicBulb !== false ? "checked" : ""}>
+              <span class="bm-slider"></span>
+            </label>
+          `;
+          targetContainer.appendChild(rowDiv);
+          const inp = rowDiv.querySelector("#bmToggleMessianicBulbInput");
+          if (inp) {
+            inp.addEventListener("change", function() {
+              setBmSettingProp("messianicBulb", this.checked);
+              evaluateMessianicBulbForCurrentView();
+            });
+          }
+        }
+      }
+      return res;
     };
   }
 })();
