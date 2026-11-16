@@ -1428,6 +1428,48 @@ body.oled-mode .pub-ref-badge {
       background: linear-gradient(90deg, rgba(56, 189, 248, 0.24) 0%, rgba(132, 204, 22, 0.18) 100%) !important;
       box-shadow: 0 2px 10px rgba(2, 132, 199, 0.22) !important;
     }
+    /* Carta: viste di studio (Scrittura del giorno, Perspicacia, Tutta la Scrittura, Note, Salvati, Ricerca) */
+    main.bm-paper-reading .section-title {
+      color: #3b2a14 !important;
+      border-bottom-color: #cbbd9e !important;
+    }
+    main.bm-paper-reading .result-card {
+      background: #ebe3d1 !important;
+      color: #1e1b16 !important;
+      border-color: #cfc3a8 !important;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+    }
+    main.bm-paper-reading .nav-btn,
+    main.bm-paper-reading .search-btn {
+      background: #e8dec8 !important;
+      color: #2c2216 !important;
+      border: 1px solid #bda982 !important;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+    main.bm-paper-reading .search-input,
+    main.bm-paper-reading .modal-textarea,
+    main.bm-paper-reading select,
+    main.bm-paper-reading textarea,
+    main.bm-paper-reading input[type="text"] {
+      background-color: #fbf6ea !important;
+      color: #1e1b16 !important;
+      border-color: #bda982 !important;
+    }
+    main.bm-paper-reading a { color: #8c5818; }
+    main.bm-paper-reading mark { background: rgba(255, 220, 40, 0.55); color: #1e1b16; }
+    /* Pulsanti Oggi / Approfondisci (Scrittura del Giorno): identici di prima nelle modalità normali, marroni su Carta */
+    main .chapter-nav-btns .nav-btn.bm-today-active {
+      background: #00e5ff !important; color: #041a42 !important; border-color: #84ffff !important; font-weight: 900;
+    }
+    main .nav-btn.bm-deepen-btn {
+      border-color: #00e5ff !important; color: #00e5ff !important; font-weight: 800;
+    }
+    main.bm-paper-reading .chapter-nav-btns .nav-btn.bm-today-active {
+      background: #8c5818 !important; color: #fff8e8 !important; border-color: #6b4c24 !important; font-weight: 900;
+    }
+    main.bm-paper-reading .nav-btn.bm-deepen-btn {
+      border-color: #8c5818 !important; color: #6b4c24 !important; font-weight: 800;
+    }
   </style>
 </head>
 <body>
@@ -2466,12 +2508,27 @@ function saveBmSettings() {
 function syncBmPaperMode() {
   const main = document.getElementById("mainContainer");
   if (!main) return;
-  const isBibleReading = typeof currentViewContext !== "undefined" &&
-    currentViewContext &&
-    currentViewContext.type === "bible" &&
-    Boolean(main.querySelector(".verse-row, .parallel-row, .parallel-row-3"));
-  main.classList.toggle("bm-paper-reading", Boolean(bmSettings.paperMode && isBibleReading));
+  const t = (typeof currentViewContext !== "undefined" && currentViewContext) ? currentViewContext.type : "";
+  const isGridView = Boolean(main.querySelector(".books-grid, .chapters-grid"));
+  let isReading = false;
+  if (t === "bible") {
+    isReading = Boolean(main.querySelector(".verse-row, .parallel-row, .parallel-row-3"));
+  } else if (["daily", "insight", "si", "notes", "saved", "search"].includes(t)) {
+    isReading = !isGridView && main.children.length > 0;
+  }
+  main.classList.toggle("bm-paper-reading", Boolean(bmSettings.paperMode && isReading));
 }
+
+// Ricalcola la modalità carta ogni volta che cambia il contenuto della pagina
+(function bmWatchPaperMode() {
+  const main = document.getElementById("mainContainer");
+  if (!main || typeof MutationObserver === "undefined") return;
+  let t = null;
+  new MutationObserver(() => {
+    clearTimeout(t);
+    t = setTimeout(syncBmPaperMode, 30);
+  }).observe(main, { childList: true });
+})();
 
 function applyBmSettingsToDOM() {
   document.documentElement.style.setProperty("--verse-line-height", bmSettings.lineHeight || "1.58");
@@ -5929,7 +5986,7 @@ async function showDailyTextView(dayOffset = 0, fromBack = false) {
       <div class="chapter-nav-btns">
         ${getBackBtnHtml()}
         <button class="nav-btn" onclick="showDailyTextView(${currentDailyOffset - 1}, true)">◀ Ieri</button>
-        <button class="nav-btn" style="${isToday ? 'background:#00e5ff !important; color:#041a42 !important; border-color:#84ffff !important; font-weight:900;' : ''}" onclick="showDailyTextView(0, true)">Oggi</button>
+        <button class="nav-btn ${isToday ? 'bm-today-active' : ''}" onclick="showDailyTextView(0, true)">Oggi</button>
         <button class="nav-btn" onclick="showDailyTextView(${currentDailyOffset + 1}, true)">Domani ▶</button>
         <button class="nav-btn" onclick="openDailyCalendarPickerModal()" title="Scegli data">📅</button>
       </div>
@@ -5944,7 +6001,7 @@ async function showDailyTextView(dayOffset = 0, fromBack = false) {
       <button class="search-btn" style="flex:1; padding:12px;" onclick="loadChapterView()">
         📖 Apri la Bibbia (${escapeHtml(getBook(state.bookId).name)} ${state.chapter})
       </button>
-      <button class="nav-btn" style="padding:12px; border-color:#00e5ff !important; color:#00e5ff !important; font-weight:800;" onclick="openDeepenDailyModal()">
+      <button class="nav-btn bm-deepen-btn" style="padding:12px;" onclick="openDeepenDailyModal()">
         💎 Approfondisci
       </button>
     </div>
