@@ -4183,6 +4183,7 @@ function deleteBookmark(idx) {
   safeSaveStorage("bm_bm", JSON.stringify(state.bookmarks));
   showSavedView(true);
 }
+// (currentViewContext dichiarata più in alto, prima di applyBmSettingsToDOM)
 let bmBackLongPressTimer = null;
 let bmBackLongPressTriggered = false;
 
