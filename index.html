@@ -9614,11 +9614,14 @@ function toggleBmZenMode() {
     padding: 0 40px; /* = larghezza freccia 34px + gap 6px: allinea la pillola arancione a quella verde */
   }
   .bm-pb-arrow {
+    flex: 0 0 34px;
+    width: 34px;
     background: linear-gradient(135deg, #1565c0 0%, #0a367e 100%);
     color: #ffffff;
     border: 1px solid #4fc3f7;
     border-radius: 9px;
-    padding: 7px 11px;
+    padding: 7px 0;
+    text-align: center;
     font-size: 13px;
     font-weight: 900;
     cursor: pointer;
