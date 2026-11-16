@@ -2456,6 +2456,8 @@ let bmSettings = safeJsonParse("bm_user_settings_v1", {
   openCard: "aspetto"
 });
 
+let currentViewContext = { type: "daily", offset: 0 };
+
 function saveBmSettings() {
   safeSaveStorage("bm_user_settings_v1", JSON.stringify(bmSettings));
   applyBmSettingsToDOM();
@@ -4124,7 +4126,6 @@ function deleteBookmark(idx) {
   safeSaveStorage("bm_bm", JSON.stringify(state.bookmarks));
   showSavedView(true);
 }
-let currentViewContext = { type: "daily", offset: 0 };
 let bmBackLongPressTimer = null;
 let bmBackLongPressTriggered = false;
 
