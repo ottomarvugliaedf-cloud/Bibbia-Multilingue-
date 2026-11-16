@@ -1344,6 +1344,90 @@ body.oled-mode .pub-ref-badge {
     .bm-switch input:checked + .bm-slider:before {
       transform: translateX(20px); background-color: #041a42;
     }
+    /* ===== 📜 MODALITÀ CARTA E-READER (Agisce sul foglio di lettura biblica, 1x/2x/3x) ===== */
+    main.bm-paper-reading {
+      --bg-main: #f5efe2;
+      --bg-card: #ebe3d1;
+      --text-main: #1e1b16;
+      --text-muted: #5c5446;
+      --primary-main: #6b4c24;
+      --primary-dark: #3d2b14;
+      --primary-light: #8c5818;
+      --border-color: #cfc3a8;
+      --verse-hover: rgba(107, 76, 36, 0.08);
+      --diff-bg: rgba(217, 155, 0, 0.28);
+      color-scheme: light;
+      color: #1e1b16;
+      background-color: #f5efe2;
+      background-image: radial-gradient(rgba(70, 52, 24, 0.045) 1px, transparent 0);
+      background-size: 5px 5px;
+      font-family: Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+      box-shadow: inset 0 6px 14px rgba(0, 0, 0, 0.14);
+      transition: background-color 0.22s ease, color 0.22s ease;
+    }
+    main.bm-paper-reading .chapter-header {
+      border-bottom: 1.5px solid #cbbd9e;
+    }
+    main.bm-paper-reading .chapter-title {
+      color: #3b2a14;
+      font-family: Georgia, serif;
+    }
+    main.bm-paper-reading .chapter-nav-btns .nav-btn:not(.bm-back-history-btn),
+    main.bm-paper-reading > div > .nav-btn {
+      background: #e8dec8 !important;
+      color: #2c2216 !important;
+      border: 1px solid #bda982 !important;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+    main.bm-paper-reading .verse-row,
+    main.bm-paper-reading .parallel-row,
+    main.bm-paper-reading .parallel-row-3 {
+      color: #1e1b16;
+      border-bottom-color: #d8ccb4;
+    }
+    main.bm-paper-reading .verse-num {
+      color: #8c5818;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    main.bm-paper-reading .tag-badge,
+    main.bm-paper-reading .bm-place-hl {
+      background: rgba(140, 88, 24, 0.10);
+      color: #694110;
+      border-color: #b59469;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    main.bm-paper-reading .pub-ref-badge {
+      background: rgba(123, 31, 162, 0.10);
+      color: #5b167a;
+      border-color: #a774bd;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    /* Evidenziatori pastello calibrati su carta avorio */
+    main.bm-paper-reading .hl-yellow { background-color: rgba(255, 220, 40, 0.48) !important; }
+    main.bm-paper-reading .hl-blue   { background-color: rgba(41, 182, 246, 0.30) !important; }
+    main.bm-paper-reading .hl-green  { background-color: rgba(102, 187, 106, 0.34) !important; }
+    main.bm-paper-reading .hl-pink   { background-color: rgba(236, 64, 122, 0.26) !important; }
+    main.bm-paper-reading .hl-purple { background-color: rgba(171, 71, 188, 0.26) !important; }
+    /* Stati speciali versetto (Cercato, Selezionato, Arancione in coda, Karaoke Audio) su Carta */
+    main.bm-paper-reading .bm-persist-hl {
+      outline: 2px solid #8c5818 !important;
+      background-color: rgba(140, 88, 24, 0.14) !important;
+      box-shadow: 0 2px 10px rgba(140, 88, 24, 0.22) !important;
+    }
+    main.bm-paper-reading .bm-verse-selected {
+      outline: 2px dashed #4d7c0f !important;
+      background-color: rgba(132, 204, 22, 0.22) !important;
+    }
+    main.bm-paper-reading .bm-verse-queued-orange {
+      outline: 2px dashed #d97706 !important;
+      background: rgba(245, 158, 11, 0.22) !important;
+      box-shadow: none !important;
+    }
+    main.bm-paper-reading .bm-tts-active-verse {
+      outline: 2px solid #0284c7 !important;
+      background: linear-gradient(90deg, rgba(56, 189, 248, 0.24) 0%, rgba(132, 204, 22, 0.18) 100%) !important;
+      box-shadow: 0 2px 10px rgba(2, 132, 199, 0.22) !important;
+    }
   </style>
 </head>
 <body>
@@ -2018,6 +2102,7 @@ function onHeaderCenterPillClick() {
 
 function setActiveTab(tabId, quickPillId = null) {
   setHeaderCenterPill("");
+  document.getElementById("mainContainer")?.classList.remove("bm-paper-reading");
   const topMap = {
     tabBooks: "booksTabBtn",
     tabRead: "readTabBtn",
@@ -2063,6 +2148,7 @@ function showBooksView() {
 }
 let pendingGridBookId = 1;
 function showChaptersView(bookId) {
+  document.getElementById("mainContainer")?.classList.remove("bm-paper-reading");
   pendingGridBookId = Number(bookId);
   const book = getBook(pendingGridBookId);
   if (book.ch === 1) { selectChapter(1); return; }
@@ -2264,6 +2350,7 @@ async function loadChapterView() {
         <button class="nav-btn" onclick="nextChapter()">Capitolo Succ.▶</button>
       </div>
     `;
+    syncBmPaperMode();
     main.scrollTop = 0;
   } catch (err) {
     if (reqId !== currentChapterReqId) return;
@@ -2365,6 +2452,7 @@ let bmSettings = safeJsonParse("bm_user_settings_v1", {
   lineHeight: "1.58",
   textAlign: "left",
   showInlineBadges: true,
+  paperMode: false,
   openCard: "aspetto"
 });
 
@@ -2373,10 +2461,21 @@ function saveBmSettings() {
   applyBmSettingsToDOM();
 }
 
+function syncBmPaperMode() {
+  const main = document.getElementById("mainContainer");
+  if (!main) return;
+  const isBibleReading = typeof currentViewContext !== "undefined" &&
+    currentViewContext &&
+    currentViewContext.type === "bible" &&
+    Boolean(main.querySelector(".verse-row, .parallel-row, .parallel-row-3"));
+  main.classList.toggle("bm-paper-reading", Boolean(bmSettings.paperMode && isBibleReading));
+}
+
 function applyBmSettingsToDOM() {
   document.documentElement.style.setProperty("--verse-line-height", bmSettings.lineHeight || "1.58");
   document.documentElement.style.setProperty("--verse-text-align", bmSettings.textAlign || "left");
   document.body.classList.toggle("bm-hide-inline-badges", bmSettings.showInlineBadges === false);
+  syncBmPaperMode();
 }
 applyBmSettingsToDOM();
 
@@ -2522,8 +2621,16 @@ function renderSettingsDrawerContent() {
             <span class="bm-slider"></span>
           </label>
         </div>
+        <div class="bm-set-row">
+          <span>📜 Modalità Carta (stile Kindle)</span>
+          <label class="bm-switch">
+            <input type="checkbox" ${bmSettings.paperMode === true ? 'checked' : ''} onchange="setBmSettingProp('paperMode', this.checked)">
+            <span class="bm-slider"></span>
+          </label>
+        </div>
       </div>
     </div>
+                                                      
 
     <!-- SCHEDA 2: MODULI & +1397 BIBBIE -->
     <div class="bm-acc-card ${openId === 'moduli' ? 'open' : ''}">
