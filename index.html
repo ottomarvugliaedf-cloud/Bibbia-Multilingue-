@@ -34,6 +34,8 @@
       --success: #2e7d32;
       --danger: #ef5350;
       --diff-bg: rgba(255, 213, 79, 0.32);
+      --verse-line-height: 1.58;
+      --verse-text-align: left;
     }
     body.dark-mode {
       color-scheme: dark;
@@ -691,7 +693,6 @@
       transform: translateX(-50%);
       background: var(--bg-card);
       border: 1px solid var(--border-color);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.35);
       border-radius: 30px;
       padding: 8px 14px;
       display: none;
@@ -700,6 +701,10 @@
       z-index: 200;
       max-width: 96vw;
       overflow-x: auto;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.35), 0 10px 28px rgba(0, 0, 0, 0.55), 0 0 14px rgba(41, 182, 246, 0.35) !important;
+      animation: bmActionBarSpring 0.26s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     }
     .color-dot {
       width: 24px;
@@ -802,6 +807,9 @@
       align-items: center;
       z-index: 1000;
       padding: 16px;
+      backdrop-filter: blur(7px);
+      -webkit-backdrop-filter: blur(7px);
+      transition: opacity 0.18s ease;
     }
     .modal-card {
       background-color: #0a367e !important;
@@ -813,7 +821,7 @@
       max-height: 86vh;
       overflow-y: auto;
       padding: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.32), 0 18px 42px rgba(0, 0, 0, 0.72), 0 0 18px rgba(41, 182, 246, 0.28) !important;
     }
     .modal-title { font-size: 16px; font-weight: 800; color: #ffffff !important; margin-bottom: 8px; }
     .modal-textarea {
@@ -1016,7 +1024,6 @@ body.oled-mode .pub-ref-badge {
     .bp-title { font-weight: 800; font-size: 15px; color: #ffffff; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
     .bp-pname { font-weight: 800; font-size: 13.5px; color: #84ffff; margin-top: 6px; }
     .bp-sub { font-size: 11.5px; font-weight: 600; color: #cfe3ff; }
-    .bp-cnt { font-size: 12px; color: #cfe3ff; font-weight: 700; }
     .bp-ref { display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%; text-align: left; margin-top: 7px; padding: 9px 11px; border-radius: 9px; border: 1px solid rgba(79, 195, 247, 0.65); background: linear-gradient(135deg, #0a367e 0%, #1565c0 100%); color: #ffffff; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 3px 8px rgba(0, 0, 0, 0.3); }
     .bp-ref b { color: #00e5ff; white-space: nowrap; background: rgba(4, 26, 66, 0.65); border: 1px solid rgba(0, 229, 255, 0.55); padding: 2px 8px; border-radius: 999px; font-size: 12px; }
     .bp-more { font-size: 12.5px; color: #00e5ff; font-weight: 800; margin: 8px 0 2px; cursor: pointer; }
@@ -1111,30 +1118,12 @@ body.oled-mode .pub-ref-badge {
     .result-card, .bp-card, .rp-row, .book-tile, .chapter-tile, .jw-btn, .myread-action-btn, .nav-btn, .search-btn {
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 3px 8px rgba(0, 0, 0, 0.26);
     }
-    .modal-overlay {
-      backdrop-filter: blur(7px);
-      -webkit-backdrop-filter: blur(7px);
-      transition: opacity 0.18s ease;
-    }
-    .modal-card {
-      box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.32), 0 18px 42px rgba(0, 0, 0, 0.72), 0 0 18px rgba(41, 182, 246, 0.28) !important;
-    }
     @keyframes bmActionBarSpring {
       0% { opacity: 0; transform: translate3d(-50%, 24px, 0) scale(0.92); }
       70% { opacity: 1; transform: translate3d(-50%, -3px, 0) scale(1.02); }
       100% { opacity: 1; transform: translate3d(-50%, 0, 0) scale(1); }
     }
-    .verse-action-bar {
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.35), 0 10px 28px rgba(0, 0, 0, 0.55), 0 0 14px rgba(41, 182, 246, 0.35) !important;
-      animation: bmActionBarSpring 0.26s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-    }
     /* ===== CASSETTO IMPOSTAZIONI LATERALE DESTRO (DRAWER PRO A FISARMONICA) ===== */
-    :root {
-      --verse-line-height: 1.58;
-      --verse-text-align: left;
-    }
     .verse-row, .parallel-row, .parallel-row-3 {
       line-height: var(--verse-line-height) !important;
       text-align: var(--verse-text-align);
@@ -1488,7 +1477,6 @@ body.oled-mode .pub-ref-badge {
     body.bm-paper-on #mapsViewer .bp-title { color: #3b2a14; }
     body.bm-paper-on #mapsViewer .bp-pname { color: #6b4c24; }
     body.bm-paper-on #mapsViewer .bp-sub,
-    body.bm-paper-on #mapsViewer .bp-cnt,
     body.bm-paper-on #mapsViewer .bp-empty,
     body.bm-paper-on #mapsViewer .bp-note { color: #5c5446; }
     body.bm-paper-on #mapsViewer .bp-ref { background: #e8dec8; border: 1px solid #bda982; color: #2c2216; }
@@ -1936,6 +1924,14 @@ function clearChapterCacheOnly() {
     keysToRemove.forEach(k => localStorage.removeItem(k));
   } catch (e) { console.debug(e); }
 }
+function safeGetStorage(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch (e) {
+    console.debug(e);
+    return null;
+  }
+}
 function safeSaveStorage(key, valueStr, isChapterCache = false) {
   try {
     localStorage.setItem(key, valueStr);
@@ -1957,15 +1953,15 @@ const memoryBibleCache = new Map();
 let dbInstancePromise = null;
 
 let state = {
-  bookId: Math.min(66, Math.max(1, Number(localStorage.getItem("bm_last_book")) || 1)),
-  chapter: Math.max(1, Number(localStorage.getItem("bm_last_ch")) || 1),
-  trans1: localStorage.getItem("bm_trans1") || "gb:riveduta",
-  trans2: localStorage.getItem("bm_trans2") || "gb:kjv",
-  trans3: localStorage.getItem("bm_trans3") || "gb:valera",
+  bookId: Math.min(66, Math.max(1, Number(safeGetStorage("bm_last_book")) || 1)),
+  chapter: Math.max(1, Number(safeGetStorage("bm_last_ch")) || 1),
+  trans1: safeGetStorage("bm_trans1") || "gb:riveduta",
+  trans2: safeGetStorage("bm_trans2") || "gb:kjv",
+  trans3: safeGetStorage("bm_trans3") || "gb:valera",
   parallelCount: 1,
   diffMode: false,
-  themeMode: localStorage.getItem("bm_theme") || "light",
-  fontSize: Math.min(30, Math.max(14, Number(localStorage.getItem("bm_font_size")) || 18)),
+  themeMode: safeGetStorage("bm_theme") || "light",
+  fontSize: Math.min(30, Math.max(14, Number(safeGetStorage("bm_font_size")) || 18)),
   selectedVerse: null,
   selectedVerseText: "",
   activeTagFilter: null,
@@ -2198,6 +2194,10 @@ function setActiveTab(tabId, quickPillId = null) {
     const qp = document.getElementById(resolvedQuickPill);
     if (qp) qp.classList.add("highlight");
   }
+  if (tabId !== "tabRead") {
+    const widget = document.getElementById("bmProphecyWidget");
+    if (widget) widget.classList.remove("visible");
+  }
 }
 function getBook(id) {
   return BIBLE_BOOKS.find(b => b.id === Number(id)) || BIBLE_BOOKS[0];
@@ -2205,6 +2205,7 @@ function getBook(id) {
 function showBooksView() {
   saveCurrentPositionToHistory();
   closeActionBar();
+  clearSpeechContext();
   setActiveTab("tabBooks");
   const main = document.getElementById("mainContainer");
   const ot = BIBLE_BOOKS.filter(b => b.sec === "OT");
@@ -2219,6 +2220,7 @@ function showBooksView() {
 }
 let pendingGridBookId = 1;
 function showChaptersView(bookId) {
+  clearSpeechContext();
   document.getElementById("mainContainer")?.classList.remove("bm-paper-reading");
   pendingGridBookId = Number(bookId);
   const book = getBook(pendingGridBookId);
@@ -2274,7 +2276,7 @@ async function fetchChapterData(transId, bookId, chapter) {
     throw new Error("EPUB_NOT_IMPORTED");
   }
   const cacheKey = `bm_ch_${transId}_${bookId}_${chapter}`;
-  const cached = localStorage.getItem(cacheKey);
+  const cached = safeGetStorage(cacheKey);
   if (cached) {
     try {
       const parsed = JSON.parse(cached);
@@ -2329,13 +2331,17 @@ function highlightDiffText(baseStr, targetStr) {
   }).join("");
 }
 async function loadChapterView() {
+  await renderChapterView();
+  if (typeof evaluateMessianicBulbForCurrentView === "function") evaluateMessianicBulbForCurrentView();
+}
+async function renderChapterView() {
   const reqId = ++currentChapterReqId;
   closeActionBar();
   setActiveTab("tabRead");
   currentViewContext = { type: "bible" };
   state.selectedVerse = null;
   state.selectedVerseText = "";
-  window.currentInsightSpeechText = "";
+  clearSpeechContext();
   const book = getBook(state.bookId);
   state.bookId = book.id;
   state.chapter = Math.min(book.ch, Math.max(1, Number(state.chapter) || 1));
@@ -2714,7 +2720,7 @@ function renderSettingsDrawerContent() {
         <div class="bm-set-row">
           <span>💡 Lampadina Profezie Messianiche</span>
           <label class="bm-switch">
-            <input type="checkbox" id="bmToggleMessianicBulbInput" ${bmSettings.messianicBulb !== false ? 'checked' : ''} onchange="setBmSettingProp('messianicBulb', this.checked); if(typeof evaluateMessianicBulbForCurrentView==='function') evaluateMessianicBulbForCurrentView();">
+            <input type="checkbox" id="bmToggleMessianicBulbInput" ${bmSettings.messianicBulb !== false ? 'checked' : ''} onchange="setBmSettingProp('messianicBulb', this.checked); evaluateMessianicBulbForCurrentView();">
             <span class="bm-slider"></span>
           </label>
         </div>
@@ -2989,16 +2995,12 @@ function openVerseNoteDirectly(verseNum) {
 
 function openVerseCrossDirectly(verseNum) {
   selectVerseDataFromDOM(verseNum);
-  if (typeof openCrossRefsModalForVerse === "function") {
-    openCrossRefsModalForVerse();
-  }
+  openCrossRefsModalForVerse();
 }
 
 function openDirectStrongCode(code, verseNum) {
   selectVerseDataFromDOM(verseNum);
-  if (typeof openStrongModalForVerse === "function") {
-    openStrongModalForVerse(code);
-  }
+  openStrongModalForVerse(code);
 }
 
 function applyHighlight(colorClass) {
@@ -3290,7 +3292,7 @@ function formatNoteLinks(txt, defaultBookId = null) {
     out = out
       .replace(/([(\[{«"“])\s+(<span class="(?:tag-badge|pub-ref-badge)")/g, "$1$2")
       .replace(/(<\/span>)\s+([)\]}»"”.,;!?])/g, "$1$2")
-      .replace(/([(\[{«"“]+)?(<span class="(?:tag-badge|pub-ref-badge)"[^>]*>[^<]*<\/span>)([)\]}»"”.,;!?]+)?/g, (m, openP, pill, closeP) => {
+      .replace(/([(\[{«"“]+)?(<span class="(?:tag-badge|pub-ref-badge)"[^>]*>[^<]*<\/span>)([)\]}»"”.,;!?]+)?/g, (_m, openP, pill, closeP) => {
         if (!openP && !closeP) return pill;
         return `<span class="bm-nowrap-pill">${openP || ""}${pill}${closeP || ""}</span>`;
       });
@@ -3302,7 +3304,7 @@ function formatNoteLinks(txt, defaultBookId = null) {
 
 function onPubRefClick(ev, ref) {
   if (ev) { ev.preventDefault(); ev.stopPropagation(); }
-  if (typeof bmHaptic === "function") bmHaptic(10);
+  bmHaptic(10);
 
   // 1. Copia il riferimento negli appunti
   copyPubRefToClipboard(ref);
@@ -3537,6 +3539,7 @@ function filterNotesByTag(tagVal) {
 function showNotesView(fromBack = false) {
   if (!fromBack && currentViewContext.type !== "notes") saveCurrentPositionToHistory();
   closeActionBar();
+  clearSpeechContext();
   setActiveTab("tabNotes");
   currentViewContext = { type: "notes" };
   const main = document.getElementById("mainContainer");
@@ -3608,7 +3611,7 @@ function deleteNoteById(noteId, refFallback) {
 }
 
 function searchWordInConcordance(word) {
-  if (typeof closeProModal === "function") closeProModal();
+  closeProModal();
   closeActionBar();
   showSearchView();
   const selEl = document.getElementById("searchBibleSelect");
@@ -3630,6 +3633,7 @@ function searchWordInConcordance(word) {
 }
 async function showCatalogView() {
   closeActionBar();
+  clearSpeechContext();
   setActiveTab("tabCatalog");
   const main = document.getElementById("mainContainer");
   main.innerHTML = `<div class="loader">Caricamento catalogo globale (oltre 1.350 versioni + edizioni Strong)...</div>`;
@@ -3715,6 +3719,7 @@ async function toggleDownload(id) {
 function showSearchView(fromBack = false) {
   if (!fromBack && currentViewContext.type !== "search") saveCurrentPositionToHistory();
   closeActionBar();
+  clearSpeechContext();
   setActiveTab("tabSearch");
   currentViewContext = { type: "search" };
   const main = document.getElementById("mainContainer");
@@ -4104,6 +4109,7 @@ async function copyFilteredHighlightsDossier(btnEl) {
 async function showSavedView(fromBack = false) {
   if (!fromBack && currentViewContext.type !== "saved") saveCurrentPositionToHistory();
   closeActionBar();
+  clearSpeechContext();
   setActiveTab("tabSaved");
   currentViewContext = { type: "saved" };
   const main = document.getElementById("mainContainer");
@@ -4139,7 +4145,7 @@ async function showSavedView(fromBack = false) {
         const vObj = cObj && cObj.verses ? cObj.verses.find(v => Number(v.verse) === Number(vNum)) : null;
         if (vObj && vObj.text) return stripTagsToPlainText(vObj.text);
       }
-      const rawCache = localStorage.getItem(`bm_ch_${state.trans1}_${bId}_${chNum}`);
+      const rawCache = safeGetStorage(`bm_ch_${state.trans1}_${bId}_${chNum}`);
       if (rawCache) {
         const arr = JSON.parse(rawCache);
         const found = Array.isArray(arr) ? arr.find(v => Number(v.verse) === Number(vNum)) : null;
@@ -4531,7 +4537,7 @@ function parseRefStringToTarget(str) {
       b.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "").startsWith(qBook)
     );
   }
-  if (!found && typeof matchItalianBookNameToId === "function") {
+  if (!found) {
     const matchedId = matchItalianBookNameToId(m[1], false);
     if (matchedId && matchedId > 0) found = getBook(matchedId);
   }
@@ -4616,8 +4622,8 @@ let bmAudioPlaying = false;
 let bmUserStopped = false;
 let bmSessionId = 0;
 let bmWakeLock = null;
-let bmTtsRate = Math.min(1.5, Math.max(0.75, Number(localStorage.getItem("bm_tts_rate")) || 1.0));
-let bmTtsAutoNextPref = localStorage.getItem("bm_tts_autonext") !== "0";
+let bmTtsRate = Math.min(1.5, Math.max(0.75, Number(safeGetStorage("bm_tts_rate")) || 1.0));
+let bmTtsAutoNextPref = safeGetStorage("bm_tts_autonext") !== "0";
 async function requestAudioWakeLock() {
   if ("wakeLock" in navigator && navigator.wakeLock) {
     try {
@@ -4637,6 +4643,11 @@ document.addEventListener("visibilitychange", () => {
     requestAudioWakeLock();
   }
 });
+// Azzera i testi di lettura legati alle viste (Testo del Giorno, Perspicacia, Cartine) quando si cambia schermata
+function clearSpeechContext() {
+  window.currentInsightSpeechText = "";
+  window.currentDailySpeechText = "";
+}
 function getActiveTTSLangCode(fullLocale = false) {
   if ((typeof currentInsightSpeechText === "string" && currentInsightSpeechText.trim()) ||
       (typeof currentDailySpeechText === "string" && currentDailySpeechText.trim())) {
@@ -4669,7 +4680,7 @@ function stripPillsOnlyFromText(rawText) {
   if (!rawText) return "";
   const tmp = document.createElement("div");
   // Trasforma i riferimenti biblici e pubblicazioni in .tag-badge (azzurre) e .pub-ref-badge (viola)
-  tmp.innerHTML = typeof formatNoteLinks === "function" ? formatNoteLinks(String(rawText)) : String(rawText);
+  tmp.innerHTML = formatNoteLinks(String(rawText));
   // Rimuove dal clone SOLO le pillole azzurre, le pillole viola, i numeri versetto e gli apici nota
   tmp.querySelectorAll(".tag-badge, .pub-ref-badge, .verse-num, sup, script, style").forEach(el => el.remove());
   return tmp.textContent || "";
@@ -5229,7 +5240,7 @@ function openBackupModal() {
         📕 Carica Parola del Signore TILC (Seleziona VT e/o NT .epub)
         <input type="file" accept=".epub,application/epub+zip" multiple style="display:none;" onchange="importUniversalEpubFiles(event, 'epub:tilc', 'Parola del Signore (TILC)')">
       </label>
-      <div id="epubImportStatus" style="font-size:13px; font-weight:700; color:var(--primary-light); text-align:center; padding:4px;"></div>
+      <div class="epub-import-status" style="font-size:13px; font-weight:700; color:var(--primary-light); text-align:center; padding:4px;"></div>
     </div>
      <div class="section-title"><span>💾 Backup & Ripristino Dati Studio</span></div>
     <div style="display:flex; flex-direction:column; gap:10px;">
@@ -5356,10 +5367,10 @@ function matchItalianBookNameToId(rawTitle, isStrictFromBody = false) {
 function getActiveEpubStatusEl() {
   const proModal = document.getElementById("proModal");
   if (proModal && proModal.style.display === "flex") {
-    const modalStatus = proModal.querySelector("#epubImportStatus");
+    const modalStatus = proModal.querySelector(".epub-import-status");
     if (modalStatus) return modalStatus;
   }
-  return document.getElementById("epubImportStatus");
+  return document.querySelector(".epub-import-status");
 }
 
 async function importUniversalEpubFiles(event, targetId, labelName) {
@@ -5966,11 +5977,35 @@ function jumpToPickedDailyDate() {
   showDailyTextView(diffDays, true);
 }
 
+// Scheda "carica il file" mostrata quando un modulo offline non è ancora stato importato
+function renderImportCard({ title = "", text, gradient, label, accept, multiple = false, handler, back, maxWidth = 320, padding = 11 }) {
+  return `
+      <div class="result-card" style="cursor:default; text-align:center; padding:22px 14px;">
+        ${title ? `<div style="font-size:16px; font-weight:800; color:var(--primary-light); margin-bottom:10px;">
+          ${title}
+        </div>` : ""}
+        <p style="font-size:14px; color:var(--text-muted); line-height:1.55; margin-bottom:16px;">
+          ${text}
+        </p>
+        <div style="display:flex; flex-direction:column; gap:10px; max-width:${maxWidth}px; margin:0 auto;">
+          <label class="search-btn" style="text-align:center; padding:${padding}px; cursor:pointer; background:${gradient};">
+            ${label}
+            <input type="file" accept="${accept}"${multiple ? " multiple" : ""} style="display:none;" onchange="${handler}(event)">
+          </label>
+          <button class="nav-btn" style="padding:10px;" onclick="loadChapterView()">
+            ${back}
+          </button>
+        </div>
+        <div class="epub-import-status" style="margin-top:12px; font-size:13px; font-weight:700; color:var(--primary-light);"></div>
+      </div>
+    `;
+}
+
 async function showDailyTextView(dayOffset = 0, fromBack = false) {
   if (!fromBack && currentViewContext.type !== "daily") saveCurrentPositionToHistory();
   closeActionBar();
   stopAllAudio();
-  window.currentInsightSpeechText = "";
+  clearSpeechContext();
   currentDailyOffset = dayOffset;
   setActiveTab("", "dailyTabBtn");
   currentViewContext = { type: "daily", offset: dayOffset };
@@ -5988,24 +6023,15 @@ async function showDailyTextView(dayOffset = 0, fromBack = false) {
   if (!savedDaily || !savedDaily.days || !savedDaily.days[dayKey]) {
     main.innerHTML = `
       <div class="section-title"><span>☀️ Scrittura del Giorno (${escapeHtml(dateFormatted)})</span></div>
-      <div class="result-card" style="cursor:default; text-align:center; padding:22px 14px;">
-        <div style="font-size:16px; font-weight:800; color:var(--primary-light); margin-bottom:10px;">
-          Benvenuto in Bibbia Multilingue PRO
-        </div>
-        <p style="font-size:14px; color:var(--text-muted); line-height:1.55; margin-bottom:16px;">
-          Per visualizzare automaticamente ogni giorno la <b>Scrittura del Giorno</b> con il relativo commento, carica una sola volta il tuo file <b>.epub</b> universale:
-        </p>
-        <div style="display:flex; flex-direction:column; gap:10px; max-width:320px; margin:0 auto;">
-          <label class="search-btn" style="text-align:center; padding:11px; cursor:pointer; background:linear-gradient(135deg, #e65100, #f57c00);">
-            ☀️ Carica ora il file .epub
-            <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importDailyTextEpub(event)">
-          </label>
-          <button class="nav-btn" style="padding:10px;" onclick="loadChapterView()">
-            📖 Vai direttamente alla Bibbia
-          </button>
-        </div>
-        <div id="epubImportStatus" style="margin-top:12px; font-size:13px; font-weight:700; color:var(--primary-light);"></div>
-      </div>
+      ${renderImportCard({
+        title: "Benvenuto in Bibbia Multilingue PRO",
+        text: "Per visualizzare automaticamente ogni giorno la <b>Scrittura del Giorno</b> con il relativo commento, carica una sola volta il tuo file <b>.epub</b> universale:",
+        gradient: "linear-gradient(135deg, #e65100, #f57c00)",
+        label: "☀️ Carica ora il file .epub",
+        accept: ".epub,application/epub+zip",
+        handler: "importDailyTextEpub",
+        back: "📖 Vai direttamente alla Bibbia"
+      })}
     `;
     return;
   }
@@ -6242,7 +6268,7 @@ function highlightHtmlSafe(htmlStr, term) {
   if (!term || term.trim().length < 2) return { html: htmlStr, count: 0 };
   const rgx = buildAccentInsensitiveRegex(term);
   let count = 0;
-  const safeHtml = htmlStr.replace(/(<[^>]+>)|([^<]+)/g, (match, tag, textNode) => {
+  const safeHtml = htmlStr.replace(/(<[^>]+>)|([^<]+)/g, (_match, tag, textNode) => {
     if (tag) return tag;
     return textNode.replace(rgx, (m) => {
       count++;
@@ -6286,7 +6312,7 @@ async function showInsightView(selectedIndex = null, fromBack = false) {
   }
   closeActionBar();
   stopAllAudio();
-  window.currentInsightSpeechText = "";
+  clearSpeechContext();
   setActiveTab("", "insightTabBtn");
   currentViewContext = { type: "insight", idx: selectedIndex, title: (selectedIndex !== null && insightMemCache?.entries?.[selectedIndex]) ? insightMemCache.entries[selectedIndex].title : "" };
   document.getElementById("currentRefLabel").textContent = "📚 Perspicacia (it)";
@@ -6295,24 +6321,16 @@ async function showInsightView(selectedIndex = null, fromBack = false) {
   if (!data || !Array.isArray(data.entries) || data.entries.length === 0) {
     main.innerHTML = `
       <div class="section-title"><span>📚 Perspicacia nello studio delle Scritture</span></div>
-      <div class="result-card" style="cursor:default; text-align:center; padding:22px 14px;">
-        <div style="font-size:16px; font-weight:800; color:var(--primary-light); margin-bottom:10px;">
-          Enciclopedia Biblica Offline (it)
-        </div>
-        <p style="font-size:14px; color:var(--text-muted); line-height:1.55; margin-bottom:16px;">
-          Carica l'archivio originale <b>it_I.zip</b> per consultare offline tutte le voci di Perspicacia:
-        </p>
-        <div style="display:flex; flex-direction:column; gap:10px; max-width:320px; margin:0 auto;">
-          <label class="search-btn" style="text-align:center; padding:11px; cursor:pointer; background:linear-gradient(135deg, #2e7d32, #43a047);">
-            📚 Carica ora Perspicacia (ZIP / RTF / EPUB)
-            <input type="file" accept=".zip,.epub,.rtf,application/zip,application/epub+zip" multiple style="display:none;" onchange="importInsightFiles(event)">
-          </label>
-          <button class="nav-btn" style="padding:10px;" onclick="loadChapterView()">
-            📖 Torna alla Bibbia
-          </button>
-        </div>
-        <div id="epubImportStatus" style="margin-top:12px; font-size:13px; font-weight:700; color:var(--primary-light);"></div>
-      </div>
+      ${renderImportCard({
+        title: "Enciclopedia Biblica Offline (it)",
+        text: "Carica l'archivio originale <b>it_I.zip</b> per consultare offline tutte le voci di Perspicacia:",
+        gradient: "linear-gradient(135deg, #2e7d32, #43a047)",
+        label: "📚 Carica ora Perspicacia (ZIP / RTF / EPUB)",
+        accept: ".zip,.epub,.rtf,application/zip,application/epub+zip",
+        multiple: true,
+        handler: "importInsightFiles",
+        back: "📖 Torna alla Bibbia"
+      })}
     `;
     return;
   }
@@ -6576,7 +6594,7 @@ async function showSiView(fromBack = false) {
   }
   closeActionBar();
   stopAllAudio();
-  window.currentInsightSpeechText = "";
+  clearSpeechContext();
   setActiveTab("", "siTabBtn");
   currentViewContext = { type: "si", mode: "index", label: "📘 Tutta la Scrittura" };
   document.getElementById("currentRefLabel").textContent = "📘 Tutta la Scrittura";
@@ -6588,24 +6606,15 @@ async function showSiView(fromBack = false) {
         <span>📘 Tutta la Scrittura è ispirata da Dio e utile</span>
         <span>${getBackBtnHtml()}</span>
       </div>
-      <div class="result-card" style="cursor:default; text-align:center; padding:22px 14px;">
-        <div style="font-size:16px; font-weight:800; color:var(--primary-light); margin-bottom:10px;">
-          “Tutta la Scrittura è ispirata da Dio e utile”
-        </div>
-        <p style="font-size:14px; color:var(--text-muted); line-height:1.55; margin-bottom:16px;">
-          Carica il file <b>tutta_la_scrittura.json</b> per consultare offline tutti i 66 libri, l'introduzione e gli studi:
-        </p>
-        <div style="display:flex; flex-direction:column; gap:10px; max-width:320px; margin:0 auto;">
-          <label class="search-btn" style="text-align:center; padding:11px; cursor:pointer; background:linear-gradient(135deg, #2e7d32, #43a047);">
-            📘 Carica ora Tutta la Scrittura (.json)
-            <input type="file" accept=".json,application/json" style="display:none;" onchange="importSiFile(event)">
-          </label>
-          <button class="nav-btn" style="padding:10px;" onclick="loadChapterView()">
-            📖 Torna alla Bibbia
-          </button>
-        </div>
-        <div id="epubImportStatus" style="margin-top:12px; font-size:13px; font-weight:700; color:var(--primary-light);"></div>
-      </div>
+      ${renderImportCard({
+        title: "“Tutta la Scrittura è ispirata da Dio e utile”",
+        text: "Carica il file <b>tutta_la_scrittura.json</b> per consultare offline tutti i 66 libri, l'introduzione e gli studi:",
+        gradient: "linear-gradient(135deg, #2e7d32, #43a047)",
+        label: "📘 Carica ora Tutta la Scrittura (.json)",
+        accept: ".json,application/json",
+        handler: "importSiFile",
+        back: "📖 Torna alla Bibbia"
+      })}
     `;
     return;
   }
@@ -6661,7 +6670,7 @@ async function showSiBook(bi, fromBack = false) {
   }
   closeActionBar();
   stopAllAudio();
-  window.currentInsightSpeechText = "";
+  clearSpeechContext();
   setActiveTab("", "siTabBtn");
   currentViewContext = { type: "si", mode: "book", i: bi, label: "📘 Tutta la Scrittura" };
   document.getElementById("currentRefLabel").textContent = "📘 Tutta la Scrittura";
@@ -6898,22 +6907,19 @@ async function showMapsView(selectedIdx = null, fromBack = false) {
   const main = document.getElementById("mainContainer");
   const meta = await bpGetMeta();
   if (!meta) {
-    window.currentInsightSpeechText = "";
+    clearSpeechContext();
     main.innerHTML = `
       <div class="section-title"><span>🗺️ Cartine Bibliche — “Vedete il buon paese”</span></div>
-      <div class="result-card" style="cursor:default; text-align:center; padding:22px 14px;">
-        <p style="font-size:14px; color:var(--text-muted); line-height:1.55; margin-bottom:16px;">
-          Carica una sola volta il file <b>vedete_il_buon_paese.json</b>: avrai 23 cartine ad alta risoluzione con zoom, l'elenco di tutti i luoghi e il pulsante <b>📍 Dove?</b> che ti porta alla cartina giusta, con il quadrato evidenziato.
-        </p>
-        <div style="display:flex; flex-direction:column; gap:10px; max-width:340px; margin:0 auto;">
-          <label class="search-btn" style="text-align:center; padding:12px; cursor:pointer; background:linear-gradient(135deg, #00695c, #00897b);">
-            🗺️ Carica vedete_il_buon_paese.json
-            <input type="file" accept=".json,application/json" style="display:none;" onchange="importMapsArchive(event)">
-          </label>
-          <button class="nav-btn" style="padding:10px;" onclick="loadChapterView()">📖 Torna alla Bibbia</button>
-        </div>
-        <div id="epubImportStatus" style="margin-top:12px; font-size:13px; font-weight:700; color:var(--primary-light);"></div>
-      </div>`;
+      ${renderImportCard({
+        text: "Carica una sola volta il file <b>vedete_il_buon_paese.json</b>: avrai 23 cartine ad alta risoluzione con zoom, l'elenco di tutti i luoghi e il pulsante <b>📍 Dove?</b> che ti porta alla cartina giusta, con il quadrato evidenziato.",
+        gradient: "linear-gradient(135deg, #00695c, #00897b)",
+        label: "🗺️ Carica vedete_il_buon_paese.json",
+        accept: ".json,application/json",
+        handler: "importMapsArchive",
+        back: "📖 Torna alla Bibbia",
+        maxWidth: 340,
+        padding: 12
+      })}`;
     return;
   }
   window.currentInsightSpeechText = `Cartine bibliche. ${meta.maps.map(m => m.title).join(". ")}.`;
@@ -7147,6 +7153,7 @@ function bpBindGestures() {
 // ---------- Elenco dei luoghi della cartina (legenda ricercabile) ----------
 function bpToggleSheet() {
   const sh = document.getElementById("bpSheet");
+  if (!sh || !bpV.map) return;
   if (sh.classList.contains("open")) { sh.classList.remove("open"); return; }
   if (!sh.innerHTML) sh.innerHTML = bpSheetHtml(bpV.map);
   sh.classList.add("open");
@@ -7445,11 +7452,11 @@ function exportBackupJson() {
     ttsRate: bmTtsRate,
     ttsAutoNext: bmTtsAutoNextPref,
     personalReading: {
-      book: localStorage.getItem("bm_pers_book") || "",
-      ch: localStorage.getItem("bm_pers_ch") || "",
-      scroll: localStorage.getItem("bm_pers_scroll") || "0"
+      book: safeGetStorage("bm_pers_book") || "",
+      ch: safeGetStorage("bm_pers_ch") || "",
+      scroll: safeGetStorage("bm_pers_scroll") || "0"
     },
-    studyMinutes: Number(localStorage.getItem("bm_study_minutes_v1")) || 0,
+    studyMinutes: Number(safeGetStorage("bm_study_minutes_v1")) || 0,
     highlights: state.highlights,
     bookmarks: state.bookmarks,
     notes: state.notes,
@@ -7547,7 +7554,7 @@ function confirmImportBackupNow() {
       updateMyReadingLabel();
     }
     if (typeof parsed.studyMinutes === "number" && parsed.studyMinutes > 0) {
-      const curMins = Number(localStorage.getItem("bm_study_minutes_v1")) || 0;
+      const curMins = Number(safeGetStorage("bm_study_minutes_v1")) || 0;
       safeSaveStorage("bm_study_minutes_v1", String(Math.max(curMins, parsed.studyMinutes)));
     }
     if (parsed.highlights && typeof parsed.highlights === "object") {
@@ -7902,7 +7909,7 @@ function bpCopyGeoDossier(btnEl) {
 // ---------- 📍 Dove? — Console Geografica Intelligente ----------
 async function openWhereIsItModal() {
   bmChimeHaptic();
-  if (typeof closeActionBar === "function") closeActionBar();
+  closeActionBar();
   const meta = await bpGetMeta();
   if (!meta) {
     bpModalOpen("📍 Atlante & Luoghi Biblici", `
@@ -7916,7 +7923,7 @@ async function openWhereIsItModal() {
           🗺️ Carica vedete_il_buon_paese.json
           <input type="file" accept=".json,application/json" style="display:none;" onchange="importMapsArchive(event)">
         </label>
-        <div id="epubImportStatus" style="margin-top:12px; font-size:13px; font-weight:700; color:var(--primary-light);"></div>
+        <div class="epub-import-status" style="margin-top:12px; font-size:13px; font-weight:700; color:var(--primary-light);"></div>
       </div>`);
     return;
   }
@@ -8237,13 +8244,13 @@ let bmMyReadLongPressTimer = null;
 let bmMyReadLongPressTriggered = false;
 
 function hasSavedPersonalReading() {
-  return Boolean(localStorage.getItem("bm_pers_book") && localStorage.getItem("bm_pers_ch"));
+  return Boolean(safeGetStorage("bm_pers_book") && safeGetStorage("bm_pers_ch"));
 }
 
 function getPersonalReadingState() {
   return {
-    bookId: Number(localStorage.getItem("bm_pers_book")) || 1,
-    chapter: Number(localStorage.getItem("bm_pers_ch")) || 1
+    bookId: Number(safeGetStorage("bm_pers_book")) || 1,
+    chapter: Number(safeGetStorage("bm_pers_ch")) || 1
   };
 }
 
@@ -8378,7 +8385,7 @@ function goToMyPersonalReadingNow() {
   state.chapter = pers.chapter;
   loadChapterView().then(() => {
     const main = document.getElementById("mainContainer");
-    const savedScroll = Number(localStorage.getItem("bm_pers_scroll")) || 0;
+    const savedScroll = Number(safeGetStorage("bm_pers_scroll")) || 0;
     if (main && savedScroll > 0) {
       setTimeout(() => { main.scrollTop = savedScroll; }, 80);
     }
@@ -8397,7 +8404,7 @@ function setAsMyReading() {
 
 function openMyReading() {
   closeActionBar();
-  if (typeof closeMapViewer === "function") closeMapViewer();
+  closeMapViewer();
 
   const curBook = getBook(state.bookId);
   const hasSaved = hasSavedPersonalReading();
@@ -8984,6 +8991,20 @@ function prepareXRayJumpContext() {
   state.selectedVerse = d.verse;
 }
 
+function openConcordanceFromXRay(word) {
+  bmHaptic(14);
+  prepareXRayJumpContext();
+  searchWordInConcordance(word);
+  injectXRayReturnBanner();
+}
+
+function openInsightFromXRay(word) {
+  bmHaptic(14);
+  prepareXRayJumpContext();
+  searchWordInInsight(word);
+  injectXRayReturnBanner();
+}
+
 async function openStrongCodeFromXRay(codeStr, fallbackWord) {
   bmHaptic(14);
   prepareXRayJumpContext();
@@ -9014,20 +9035,6 @@ async function openStrongCodeFromXRay(codeStr, fallbackWord) {
     inp.value = fallbackWord || cleanCode;
   }
   executeSearch(1);
-  injectXRayReturnBanner();
-}
-
-function openConcordanceFromXRay(word) {
-  bmHaptic(14);
-  prepareXRayJumpContext();
-  searchWordInConcordance(word);
-  injectXRayReturnBanner();
-}
-
-function openInsightFromXRay(word) {
-  bmHaptic(14);
-  prepareXRayJumpContext();
-  searchWordInInsight(word);
   injectXRayReturnBanner();
 }
 
@@ -9073,6 +9080,9 @@ function showXRayRootPopup(dictKey) {
   const modal = document.getElementById("myReadModal");
   const body = document.getElementById("myReadModalBody");
   if (!modal || !body) return;
+  // Le voci possono avere più codici (es. "H7225 / G746"): si usa quello del testamento del versetto aperto
+  const codes = String(d.code).toUpperCase().match(/[HG]\d{1,4}/g) || [];
+  const strongCode = codes.find(c => c[0] === (window.__lastXRayData && window.__lastXRayData.bookId >= 40 ? "G" : "H")) || codes[0] || d.code;
   body.innerHTML = `
     <div style="text-align:center; padding:4px 0 12px 0;">
       <div style="font-size:28px; margin-bottom:4px;">🏛️📜</div>
@@ -9085,9 +9095,10 @@ function showXRayRootPopup(dictKey) {
         ${escapeHtml(d.def)}
       </div>
     </div>
-    <div style="display:flex; gap:8px; margin-bottom:8px;">
-      <button type="button" class="myread-action-btn" style="flex:1; background:#1565c0; font-size:12.5px; padding:9px;" onclick="document.getElementById('myReadModal').style.display='none'; openInsightFromXRay('${escapeJsStr(dictKey)}');">📚 Perspicacia</button>
-      <button type="button" class="myread-action-btn" style="flex:1; background:#0d47a1; font-size:12.5px; padding:9px;" onclick="document.getElementById('myReadModal').style.display='none'; openConcordanceFromXRay('${escapeJsStr(dictKey)}');">🔍 Concordanza</button>
+    <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
+      <button type="button" class="myread-action-btn" style="flex:1 1 auto; width:auto; background:#1565c0; font-size:12px; padding:9px 6px; white-space:nowrap;" onclick="document.getElementById('myReadModal').style.display='none'; openInsightFromXRay('${escapeJsStr(dictKey)}');">📚 Perspicacia</button>
+      <button type="button" class="myread-action-btn" style="flex:1 1 auto; width:auto; background:#0d47a1; font-size:12px; padding:9px 6px; white-space:nowrap;" onclick="document.getElementById('myReadModal').style.display='none'; openConcordanceFromXRay('${escapeJsStr(dictKey)}');">🔍 Concordanza</button>
+      <button type="button" class="myread-action-btn" style="flex:1 1 auto; width:auto; background:#b45309; font-size:12px; padding:9px 6px; white-space:nowrap;" onclick="document.getElementById('myReadModal').style.display='none'; openStrongCodeFromXRay('${escapeJsStr(strongCode)}', '${escapeJsStr(dictKey)}');">🏺 Strong</button>
     </div>
     <button type="button" class="myread-action-btn" style="background:#062356;" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
   `;
@@ -9207,7 +9218,7 @@ async function openVerseXRayModal(forcedVerseNum) {
       const vObj = cObj && cObj.verses ? cObj.verses.find(v => Number(v.verse) === Number(vNum)) : null;
       if (vObj && vObj.text) vTxt = stripTagsToPlainText(vObj.text);
     } else {
-      const cachedCh = localStorage.getItem(`bm_ch_${tId}_${state.bookId}_${state.chapter}`);
+      const cachedCh = safeGetStorage(`bm_ch_${tId}_${state.bookId}_${state.chapter}`);
       if (cachedCh) {
         try {
           const arr = JSON.parse(cachedCh);
@@ -9221,9 +9232,7 @@ async function openVerseXRayModal(forcedVerseNum) {
     }
   }
 
-  const sortedVersions = typeof sortXRayBiblesHierarchy === "function"
-    ? sortXRayBiblesHierarchy(rawLoadedList)
-    : rawLoadedList;
+  const sortedVersions = sortXRayBiblesHierarchy(rawLoadedList);
   const baseTextForDiff = (rawLoadedList.find(r => r.id === state.trans1) || sortedVersions[0] || {}).text || rawVerse;
   window.__lastXRayDossier = { ref: refStr, rows: sortedVersions };
 
@@ -9309,7 +9318,7 @@ async function openVerseXRayModal(forcedVerseNum) {
 // Cronometro silenzioso che registra i minuti reali di studio attivo nell'app
 setInterval(() => {
   if (document.visibilityState === "visible") {
-    const mins = (Number(localStorage.getItem("bm_study_minutes_v1")) || 0) + 1;
+    const mins = (Number(safeGetStorage("bm_study_minutes_v1")) || 0) + 1;
     safeSaveStorage("bm_study_minutes_v1", String(mins));
   }
 }, 60000);
@@ -9349,7 +9358,7 @@ function openStudyAnalyticsModal() {
   const totalBm = (state.bookmarks || []).length;
   const totalNotes = (state.notes || []).length;
   const touchedBooks = Array.from(bookStats.values()).filter(s => s.total > 0).length;
-  const studyMins = Number(localStorage.getItem("bm_study_minutes_v1")) || 0;
+  const studyMins = Number(safeGetStorage("bm_study_minutes_v1")) || 0;
   const studyTimeFormatted = studyMins >= 60
     ? `${Math.floor(studyMins / 60)}h ${studyMins % 60}m`
     : `${studyMins} min`;
@@ -9978,71 +9987,69 @@ async function enrichMessianicPropheciesFromOfflineDB() {
 
   try {
     // 1. Perspicacia (voci Messia, Gesù Cristo, Profezia, Seme, Cristo, Unto)
-    if (typeof getInsightData === "function") {
-      const ins = await getInsightData();
-      if (ins && Array.isArray(ins.entries)) {
-        ins.entries.forEach((art, artIdx) => {
-          if (!/^(?:MESSIA|GES[ÙU]\s+CRISTO|PROFEZIA|SEME|CRISTO|UNTO)\b/i.test(art.title || "")) return;
-          const lines = String(art.body || "").split(/\n+/);
-          lines.forEach(line => {
-            if (line.length < 15) return;
-            const refs = typeof bpCitedRefs === "function" ? bpCitedRefs(line) : [];
-            if (refs.length >= 2) {
-              const parsedRefs = refs.map(r => typeof parseRefStringToTarget === "function" ? { raw: r, t: parseRefStringToTarget(r) } : null).filter(x => x && x.t);
-              const otRefs = parsedRefs.filter(x => isValidMessianicOtCoordinate(x.t.bookId, x.t.chapter, getFirstVerseNumFromSpec(x.t.vSpec)));
-              const ntRefs = parsedRefs.filter(x => x.t.bookId >= 40 && x.t.bookId <= 66).map(x => `${x.t.book.name} ${x.t.chapter}${x.t.vSpec ? ":" + x.t.vSpec : ""}`);
-              if (otRefs.length > 0 && otRefs.length <= 4 && ntRefs.length > 0) {
-                otRefs.forEach(ot => {
-                  addDiscoveredProphecy(
-                    ot.t.bookId,
-                    ot.t.chapter,
-                    ot.t.vSpec || "1",
-                    line,
-                    ntRefs.slice(0, 6),
-                    "Adempimento",
-                    { type: "insight", idx: artIdx, label: `📚 Perspicacia: ${art.title}` }
-                  );
-                });
-              }
+    const ins = await getInsightData();
+    if (ins && Array.isArray(ins.entries)) {
+      ins.entries.forEach((art, artIdx) => {
+        if (!/^(?:MESSIA|GES[ÙU]\s+CRISTO|PROFEZIA|SEME|CRISTO|UNTO)\b/i.test(art.title || "")) return;
+        const lines = String(art.body || "").split(/\n+/);
+        lines.forEach(line => {
+          if (line.length < 15) return;
+          const refs = bpCitedRefs(line);
+          if (refs.length >= 2) {
+            const parsedRefs = refs.map(r => ({ raw: r, t: parseRefStringToTarget(r) })).filter(x => x.t);
+            const otRefs = parsedRefs.filter(x => isValidMessianicOtCoordinate(x.t.bookId, x.t.chapter, getFirstVerseNumFromSpec(x.t.vSpec)));
+            const ntRefs = parsedRefs.filter(x => x.t.bookId >= 40 && x.t.bookId <= 66).map(x => `${x.t.book.name} ${x.t.chapter}${x.t.vSpec ? ":" + x.t.vSpec : ""}`);
+            if (otRefs.length > 0 && otRefs.length <= 4 && ntRefs.length > 0) {
+              otRefs.forEach(ot => {
+                addDiscoveredProphecy(
+                  ot.t.bookId,
+                  ot.t.chapter,
+                  ot.t.vSpec || "1",
+                  line,
+                  ntRefs.slice(0, 6),
+                  "Adempimento",
+                  { type: "insight", idx: artIdx, label: `📚 Perspicacia: ${art.title}` }
+                );
+              });
+            }
+          }
+        });
+      });
+    }
+  
+
+    // 2. Tutta la Scrittura (si_I) — conserva l'intero paragrafo + coordinate per aprire il capitolo SI
+    const si = await getSiData();
+    if (si && Array.isArray(si.books)) {
+      si.books.forEach((bObj, bi) => {
+        const bNum = Number(bObj.bookNumber);
+        if (bNum < 1 || bNum > 39) return;
+        (bObj.chapters || []).forEach((chObj, ci) => {
+          const paras = String(chObj.content || "").split(/\n{2,}/);
+          paras.forEach(p => {
+            if (!/(?:\bgesù|\b(?:messia\w*|ademp\w*|cristo|seme|unto|profetizz\w*)\b)/i.test(p)) return;
+            const refs = bpCitedRefs(p);
+            const parsedRefs = refs.map(r => ({ raw: r, t: parseRefStringToTarget(r) })).filter(x => x.t);
+            const otRefs = parsedRefs.filter(x => isValidMessianicOtCoordinate(x.t.bookId, x.t.chapter, getFirstVerseNumFromSpec(x.t.vSpec)));
+            const ntRefs = parsedRefs.filter(x => x.t.bookId >= 40 && x.t.bookId <= 66).map(x => `${x.t.book.name} ${x.t.chapter}${x.t.vSpec ? ":" + x.t.vSpec : ""}`);
+            if (otRefs.length > 0 && otRefs.length <= 4 && ntRefs.length > 0) {
+              otRefs.forEach(ot => {
+                addDiscoveredProphecy(
+                  ot.t.bookId,
+                  ot.t.chapter,
+                  ot.t.vSpec || "1",
+                  p,
+                  ntRefs.slice(0, 6),
+                  "Scritture",
+                  { type: "si", bi, ci, label: `📘 Tutta la Scrittura: ${getBook(bNum).name}` }
+                );
+              });
             }
           });
         });
-      }
+      });
     }
-
-    // 2. Tutta la Scrittura (si_I) — conserva l'intero paragrafo + coordinate per aprire il capitolo SI
-    if (typeof getSiData === "function") {
-      const si = await getSiData();
-      if (si && Array.isArray(si.books)) {
-        si.books.forEach((bObj, bi) => {
-          const bNum = Number(bObj.bookNumber);
-          if (bNum < 1 || bNum > 39) return;
-          (bObj.chapters || []).forEach((chObj, ci) => {
-            const paras = String(chObj.content || "").split(/\n{2,}/);
-            paras.forEach(p => {
-              if (!/(?:\bgesù|\b(?:messia\w*|ademp\w*|cristo|seme|unto|profetizz\w*)\b)/i.test(p)) return;
-              const refs = typeof bpCitedRefs === "function" ? bpCitedRefs(p) : [];
-              const parsedRefs = refs.map(r => typeof parseRefStringToTarget === "function" ? { raw: r, t: parseRefStringToTarget(r) } : null).filter(x => x && x.t);
-              const otRefs = parsedRefs.filter(x => isValidMessianicOtCoordinate(x.t.bookId, x.t.chapter, getFirstVerseNumFromSpec(x.t.vSpec)));
-              const ntRefs = parsedRefs.filter(x => x.t.bookId >= 40 && x.t.bookId <= 66).map(x => `${x.t.book.name} ${x.t.chapter}${x.t.vSpec ? ":" + x.t.vSpec : ""}`);
-              if (otRefs.length > 0 && otRefs.length <= 4 && ntRefs.length > 0) {
-                otRefs.forEach(ot => {
-                  addDiscoveredProphecy(
-                    ot.t.bookId,
-                    ot.t.chapter,
-                    ot.t.vSpec || "1",
-                    p,
-                    ntRefs.slice(0, 6),
-                    "Scritture",
-                    { type: "si", bi, ci, label: `📘 Tutta la Scrittura: ${getBook(bNum).name}` }
-                  );
-                });
-              }
-            });
-          });
-        });
-      }
-    }
+  
   } catch (e) {
     console.debug(e);
   }
@@ -10312,9 +10319,9 @@ function openProphecySourceDocument(idx) {
   const modal = document.getElementById("myReadModal");
   if (modal) modal.style.display = "none";
   closeProModal();
-  if (p.sourceMeta.type === "si" && typeof showSiReader === "function") {
+  if (p.sourceMeta.type === "si") {
     showSiReader("b", p.sourceMeta.bi, p.sourceMeta.ci);
-  } else if (p.sourceMeta.type === "insight" && typeof showInsightView === "function") {
+  } else if (p.sourceMeta.type === "insight") {
     showInsightView(p.sourceMeta.idx);
   }
 }
@@ -10337,9 +10344,7 @@ function openGreekFulfillmentAction() {
     return;
   }
 
-  const formattedFullNote = typeof formatNoteLinks === "function"
-    ? formatNoteLinks(fullText, p.b)
-    : escapeHtml(fullText);
+  const formattedFullNote = formatNoteLinks(fullText, p.b);
 
   const sourceBtnHtml = p.sourceMeta ? `
     <button type="button" class="myread-action-btn btn-color-anim"
@@ -10552,80 +10557,6 @@ async function evaluateMessianicBulbForCurrentView() {
   renderMessianicWidgetUI(matches);
   highlightMessianicVersesInDOM(bmProphecyList[bmCurrentProphecyIdx], false);
 }
-
-(function hookMessianicBulbIntoApp() {
-  // 1. Sostituisce automaticamente il tempietto del Lessico Strong con l'anfora 🏺 così 🏛️ resta esclusivo per le Scritture Greche
-  const strongBtn = document.querySelector('#verseActionBar button[onclick*="openStrongModalForVerse"]');
-  if (strongBtn) strongBtn.textContent = "🏺";
-
-  const origOpenStrongModal = window.openStrongModalForVerse;
-  if (typeof origOpenStrongModal === "function") {
-    window.openStrongModalForVerse = function(...args) {
-      const res = origOpenStrongModal.apply(this, args);
-      const tEl = document.getElementById("proModalTitle");
-      if (tEl && tEl.textContent) {
-        tEl.textContent = tEl.textContent.replace("🏛️", "🏺 ");
-      }
-      return res;
-    };
-  }
-
-  // 2. Aggancia l'apertura dei capitoli
-  const origLoadChapterView = window.loadChapterView;
-  if (typeof origLoadChapterView === "function") {
-    window.loadChapterView = async function(...args) {
-      const res = await origLoadChapterView.apply(this, args);
-      evaluateMessianicBulbForCurrentView();
-      return res;
-    };
-  }
-
-  // 3. Nasconde la lampadina quando si esce dalla vista Lettura Bibbia
-  const origSetActiveTab = window.setActiveTab;
-  if (typeof origSetActiveTab === "function") {
-    window.setActiveTab = function(tabId, quickPillId) {
-      origSetActiveTab.apply(this, arguments);
-      if (tabId !== "tabRead") {
-        const w = document.getElementById("bmProphecyWidget");
-        if (w) w.classList.remove("visible");
-      }
-    };
-  }
-
-  // 4. Inietta automaticamente lo switch "💡 Lampadina Profezie Messianiche" nel cassetto Impostazioni se non già presente
-  const origRenderSettings = window.renderSettingsDrawerContent;
-  if (typeof origRenderSettings === "function") {
-    window.renderSettingsDrawerContent = function(...args) {
-      const res = origRenderSettings.apply(this, args);
-      const body = document.getElementById("bmSettingsDrawerBody");
-      if (body && !body.querySelector("#bmToggleMessianicBulbInput")) {
-        const rows = body.querySelectorAll(".bm-acc-card .bm-set-row");
-        const lastAspettoRow = rows.length ? rows[rows.length - 1] : null;
-        const targetContainer = body.querySelector(".bm-acc-card .bm-acc-content");
-        if (targetContainer) {
-          const rowDiv = document.createElement("div");
-          rowDiv.className = "bm-set-row";
-          rowDiv.innerHTML = `
-            <span>💡 Lampadina Profezie Messianiche</span>
-            <label class="bm-switch">
-              <input type="checkbox" id="bmToggleMessianicBulbInput" ${bmSettings.messianicBulb !== false ? "checked" : ""}>
-              <span class="bm-slider"></span>
-            </label>
-          `;
-          targetContainer.appendChild(rowDiv);
-          const inp = rowDiv.querySelector("#bmToggleMessianicBulbInput");
-          if (inp) {
-            inp.addEventListener("change", function() {
-              setBmSettingProp("messianicBulb", this.checked);
-              evaluateMessianicBulbForCurrentView();
-            });
-          }
-        }
-      }
-      return res;
-    };
-  }
-})();
 </script>
 </body>
 </html>
