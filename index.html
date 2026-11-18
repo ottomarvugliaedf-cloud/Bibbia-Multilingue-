@@ -36,6 +36,7 @@
       --diff-bg: rgba(255, 213, 79, 0.32);
       --verse-line-height: 1.58;
       --verse-text-align: left;
+      --bm-text-hyphens: manual;
     }
     body.dark-mode {
       color-scheme: dark;
@@ -1056,6 +1057,21 @@ body.oled-mode .pub-ref-badge {
       }
     }
 
+    /* Pulsanti rapidi del cassetto Impostazioni (Heatmap Studio / Modalità Focus): stesso aspetto e stessa illuminazione */
+    .bm-drawer-quick-btn {
+      flex: 1;
+      padding: 10px 8px;
+      font-size: 12.5px;
+      background: linear-gradient(135deg, #0d47a1, #1565c0);
+      border-color: #00e5ff;
+    }
+    /* Allineamento (Sinistra/Giustificato) condiviso da Scrittura del Giorno, Perspicacia, Tutta la Scrittura e dai loro richiami */
+    .bm-justify-text {
+      text-align: var(--verse-text-align, left);
+      hyphens: var(--bm-text-hyphens, manual);
+      -webkit-hyphens: var(--bm-text-hyphens, manual);
+      overflow-wrap: break-word;
+    }
     .btn-color-anim {
       transition: transform 0.14s ease, box-shadow 0.14s ease;
     }
@@ -1529,7 +1545,7 @@ body.oled-mode .pub-ref-badge {
   onResizeStabilize();
   setTimeout(lockCenterAndReveal, 1100);
 })();
-  </script>
+</script>
   
   <!-- Header Superiore a 3 Colonne: Lettura Quotidiana | Badge Ovale Libro/Capitolo | Controlli A- A+ ⚡ ⚙️ -->
   <header>
@@ -1948,7 +1964,7 @@ function safeSaveStorage(key, valueStr, isChapterCache = false) {
     }
   }
 }
-    
+
 let dynamicCatalog = [...CORE_BIBLES];
 let catalogLoaded = false;
 const DEFAULT_ACTIVE_IDS = CORE_BIBLES.map(b => b.id);
@@ -2102,7 +2118,7 @@ async function loadFullGlobalCatalog() {
   if (netSuccess) catalogLoaded = true;
   return dynamicCatalog;
 }
-                  
+
 async function populateSelects() {
   const hasExtraBibles = state.downloadedBibles.some(id => !DEFAULT_ACTIVE_IDS.includes(id));
   if (hasExtraBibles && !catalogLoaded) {
@@ -2934,6 +2950,7 @@ function syncBmPaperMode() {
 function applyBmSettingsToDOM() {
   document.documentElement.style.setProperty("--verse-line-height", bmSettings.lineHeight || "1.58");
   document.documentElement.style.setProperty("--verse-text-align", bmSettings.textAlign || "left");
+  document.documentElement.style.setProperty("--bm-text-hyphens", bmSettings.textAlign === "justify" ? "auto" : "manual");
   document.body.classList.toggle("bm-hide-inline-badges", bmSettings.showInlineBadges === false);
   document.body.classList.toggle("bm-paper-on", bmSettings.paperMode === true);
   syncBmPaperMode();
@@ -2976,7 +2993,7 @@ function bmHaptic(ms = 22) {
   }
   bmPlayMechanicalTick(Array.isArray(ms));
 }
-    
+
 function bmChimeHaptic() {
   bmHaptic([24, 45, 32]);
 }
@@ -3025,10 +3042,10 @@ function renderSettingsDrawerContent() {
 
   body.innerHTML = `
     <div style="display:flex; gap:8px; margin-bottom:4px; flex-shrink:0;">
-      <button type="button" class="myread-action-btn btn-color-anim" style="flex:1; padding:10px 8px; font-size:12.5px; background:linear-gradient(135deg, #0d47a1, #1565c0); border-color:#00e5ff;" onclick="openStudyAnalyticsModal()">
+      <button type="button" class="myread-action-btn btn-color-anim bm-drawer-quick-btn" onclick="openStudyAnalyticsModal()">
         📊 Heatmap Studio
       </button>
-      <button type="button" class="myread-action-btn btn-color-anim" style="flex:1; padding:10px 8px; font-size:12.5px; background:#062356; border-color:#29b6f6;" onclick="closeSettingsDrawer(); toggleBmZenMode();">
+      <button type="button" class="myread-action-btn btn-color-anim bm-drawer-quick-btn" onclick="setTimeout(() => { closeSettingsDrawer(); toggleBmZenMode(); }, 220);">
         🧘 ${typeof bmZenModeActive !== 'undefined' && bmZenModeActive ? "Disattiva Focus" : "Modalità Focus"}
       </button>
     </div>
@@ -3082,50 +3099,32 @@ function renderSettingsDrawerContent() {
             <button type="button" class="bm-seg-btn ${bmSettings.textAlign === 'justify' ? 'active' : ''}" onclick="setBmSettingProp('textAlign', 'justify')">Giustificato</button>
           </div>
         </div>
-        <div class="bm-set-row">
-          <span>Badge "🔗Paralleli" nei versetti</span>
-          <label class="bm-switch">
-            <input type="checkbox" ${bmSettings.showInlineBadges !== false ? 'checked' : ''} onchange="setBmSettingProp('showInlineBadges', this.checked)">
-            <span class="bm-slider"></span>
-          </label>
-        </div>
-        <div class="bm-set-row">
-          <span>💡 Lampadina Profezie Messianiche</span>
-          <label class="bm-switch">
-            <input type="checkbox" id="bmToggleMessianicBulbInput" ${bmSettings.messianicBulb !== false ? 'checked' : ''} onchange="setBmSettingProp('messianicBulb', this.checked); evaluateMessianicBulbForCurrentView();">
-            <span class="bm-slider"></span>
-          </label>
-        </div>
-        <div class="bm-set-row">
-          <span>​🪪 Nomi chiave cliccabili (TNM)</span>
-          <label class="bm-switch">
-            <input type="checkbox" ${bmSettings.nameLinks === true ? 'checked' : ''} onchange="setNameLinksSetting(this.checked)">
-            <span class="bm-slider"></span>
-          </label>
-        </div>
       </div>
     </div>
-                                                      
 
-    <!-- SCHEDA 2: MODULI & +1397 BIBBIE -->
-    <div class="bm-acc-card ${openId === 'moduli' ? 'open' : ''}">
-      <button type="button" class="bm-acc-head" onclick="toggleSettingsAccordion('moduli')">
+    <!-- SCHEDA 2: BACKUP, DATI & MEMORIA -->
+    <div class="bm-acc-card ${openId === 'backup' ? 'open' : ''}">
+      <button type="button" class="bm-acc-head" onclick="toggleSettingsAccordion('backup')">
         <div class="bm-acc-head-left">
-          <span class="bm-acc-icon">📚</span>
+          <span class="bm-acc-icon">💾</span>
           <div>
-            <div class="bm-acc-label">Moduli & +1397 Bibbie</div>
-            <div class="bm-acc-sub">Catalogo globale, EPUB, Perspicacia, Cartine</div>
+            <div class="bm-acc-label">Backup & Memoria Studio</div>
+            <div class="bm-acc-sub">Esporta/Importa JSON, Segnalibro e Rientri</div>
           </div>
         </div>
         <span class="bm-acc-chev">▾</span>
       </button>
       <div class="bm-acc-content">
         <div style="display:flex; flex-direction:column; gap:8px; padding-top:6px;">
-          <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,176,255,0.75); background:#1565c0;" onclick="closeSettingsDrawer(); showCatalogView();">
-            ⬇️ Catalogo +1397 Bibbie / Lingue (${state.downloadedBibles.length} attive)
+          <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,176,255,0.75); background:#1565c0;" onclick="closeSettingsDrawer(); exportBackupJson();">
+            📤 Esporta Backup Completo (.json)
           </button>
-          <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#2e7d32; --btn-glow:rgba(76,175,80,0.75); background:#2e7d32;" onclick="closeSettingsDrawer(); openBackupModal();">
-            📗 Importa Moduli Offline (.epub / .zip / .json)
+          <label class="myread-action-btn btn-color-anim" style="--btn-bg:#0288d1; --btn-glow:rgba(2,136,209,0.75); background:#0a367e; text-align:center; display:block;">
+            📥 Importa File di Backup (.json)
+            <input type="file" accept=".json,application/json" style="display:none;" onchange="closeSettingsDrawer(); importBackupJson(event)">
+          </label>
+          <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#5e35b1; --btn-glow:rgba(149,117,205,0.75); background:#062356;" onclick="clearChapterCacheOnly(); showBlueInfoModal('🧹 Cache Capitoli Pulita', 'La cache temporanea dei capitoli online è stata svuotata (le tue Bibbie EPUB e le note sono intatte).');">
+            🧹 Svuota Cache Capitoli Online
           </button>
         </div>
       </div>
@@ -3161,7 +3160,44 @@ function renderSettingsDrawerContent() {
       </div>
     </div>
 
-    <!-- SCHEDA 4: LETTURA VOCALE (TTS) -->
+    <!-- SCHEDA 4: FUNZIONI SPECIALI -->
+    <div class="bm-acc-card ${openId === 'speciali' ? 'open' : ''}">
+      <button type="button" class="bm-acc-head" onclick="toggleSettingsAccordion('speciali')">
+        <div class="bm-acc-head-left">
+          <span class="bm-acc-icon">✨</span>
+          <div>
+            <div class="bm-acc-label">Funzioni Speciali</div>
+            <div class="bm-acc-sub">Badge paralleli, profezie messianiche e nomi citati</div>
+          </div>
+        </div>
+        <span class="bm-acc-chev">▾</span>
+      </button>
+      <div class="bm-acc-content">
+        <div class="bm-set-row">
+          <span>Badge "🔗Paralleli" nei versetti</span>
+          <label class="bm-switch">
+            <input type="checkbox" ${bmSettings.showInlineBadges !== false ? 'checked' : ''} onchange="setBmSettingProp('showInlineBadges', this.checked)">
+            <span class="bm-slider"></span>
+          </label>
+        </div>
+        <div class="bm-set-row">
+          <span>💡 Lampadina Profezie Messianiche</span>
+          <label class="bm-switch">
+            <input type="checkbox" id="bmToggleMessianicBulbInput" ${bmSettings.messianicBulb !== false ? 'checked' : ''} onchange="setBmSettingProp('messianicBulb', this.checked); evaluateMessianicBulbForCurrentView();">
+            <span class="bm-slider"></span>
+          </label>
+        </div>
+        <div class="bm-set-row">
+          <span>🪪 Nomi chiave cliccabili (TNM)</span>
+          <label class="bm-switch">
+            <input type="checkbox" ${bmSettings.nameLinks === true ? 'checked' : ''} onchange="setNameLinksSetting(this.checked)">
+            <span class="bm-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCHEDA 5: LETTURA VOCALE (TTS) -->
     <div class="bm-acc-card ${openId === 'audio' ? 'open' : ''}">
       <button type="button" class="bm-acc-head" onclick="toggleSettingsAccordion('audio')">
         <div class="bm-acc-head-left">
@@ -3190,29 +3226,25 @@ function renderSettingsDrawerContent() {
       </div>
     </div>
 
-    <!-- SCHEDA 5: BACKUP, DATI & MEMORIA -->
-    <div class="bm-acc-card ${openId === 'backup' ? 'open' : ''}">
-      <button type="button" class="bm-acc-head" onclick="toggleSettingsAccordion('backup')">
+    <!-- SCHEDA 6: MODULI & +1397 BIBBIE -->
+    <div class="bm-acc-card ${openId === 'moduli' ? 'open' : ''}">
+      <button type="button" class="bm-acc-head" onclick="toggleSettingsAccordion('moduli')">
         <div class="bm-acc-head-left">
-          <span class="bm-acc-icon">💾</span>
+          <span class="bm-acc-icon">📚</span>
           <div>
-            <div class="bm-acc-label">Backup & Memoria Studio</div>
-            <div class="bm-acc-sub">Esporta/Importa JSON, Segnalibro e Rientri</div>
+            <div class="bm-acc-label">Moduli & +1397 Bibbie</div>
+            <div class="bm-acc-sub">Catalogo globale, EPUB, Perspicacia, Cartine</div>
           </div>
         </div>
         <span class="bm-acc-chev">▾</span>
       </button>
       <div class="bm-acc-content">
         <div style="display:flex; flex-direction:column; gap:8px; padding-top:6px;">
-          <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,176,255,0.75); background:#1565c0;" onclick="closeSettingsDrawer(); exportBackupJson();">
-            📤 Esporta Backup Completo (.json)
+          <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,176,255,0.75); background:#1565c0;" onclick="closeSettingsDrawer(); showCatalogView();">
+            ⬇️ Catalogo +1397 Bibbie / Lingue (${state.downloadedBibles.length} attive)
           </button>
-          <label class="myread-action-btn btn-color-anim" style="--btn-bg:#0288d1; --btn-glow:rgba(2,136,209,0.75); background:#0a367e; text-align:center; display:block;">
-            📥 Importa File di Backup (.json)
-            <input type="file" accept=".json,application/json" style="display:none;" onchange="closeSettingsDrawer(); importBackupJson(event)">
-          </label>
-          <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#5e35b1; --btn-glow:rgba(149,117,205,0.75); background:#062356;" onclick="clearChapterCacheOnly(); showBlueInfoModal('🧹 Cache Capitoli Pulita', 'La cache temporanea dei capitoli online è stata svuotata (le tue Bibbie EPUB e le note sono intatte).');">
-            🧹 Svuota Cache Capitoli Online
+          <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#2e7d32; --btn-glow:rgba(76,175,80,0.75); background:#2e7d32;" onclick="closeSettingsDrawer(); openBackupModal();">
+            📗 Importa Moduli Offline (.epub / .zip / .json)
           </button>
         </div>
       </div>
@@ -3720,7 +3752,7 @@ function copyPubRefToClipboard(txt) {
   }
   return success;
 }
-    
+
 function pubRefParse(ref) {
   const r = String(ref || "").replace(/\s+/g, " ").trim();
   const yearOf = (yy) => (Number(yy) <= 30 ? 2000 + Number(yy) : 1900 + Number(yy));
@@ -3822,7 +3854,7 @@ function pubRefOpenChrome(url) {
   const modal = document.getElementById("myReadModal");
   if (modal) modal.style.display = "none";
 }
-    
+
 async function openLocalPubBridge(code, rawRest, fullRef) {
   bmChimeHaptic();
   const modal = document.getElementById("myReadModal");
@@ -3865,7 +3897,7 @@ async function openLocalPubBridge(code, rawRest, fullRef) {
     showInsightView(null);
   }
 }
-    
+
 function showPubRefModal(fullRef) {
   const modal = document.getElementById("myReadModal");
   const body = document.getElementById("myReadModalBody");
@@ -3910,7 +3942,7 @@ function showPubRefModal(fullRef) {
   `;
   modal.style.display = "flex";
 }
-    
+
 function filterNotesByTag(tagVal) {
   state.activeTagFilter = tagVal || null;
   showNotesView();
@@ -4094,7 +4126,7 @@ async function toggleDownload(id) {
     filterCatalogList();
   }
 }
-  
+
 function showSearchView(fromBack = false) {
   if (!fromBack && currentViewContext.type !== "search") saveCurrentPositionToHistory();
   closeActionBar();
@@ -4136,7 +4168,7 @@ function showSearchView(fromBack = false) {
   `;
 }
 const JW_TOWER_SVG = `<svg viewBox="0 0 1000 1000"><path d="M200 200H334V267H367V200H434V267H467V200H534V267H566V200H633V267H666V200H800V433H767V467H734V800H266V467H233V433H200Z"/></svg>`;
-const CHROME_LOGO_SVG = `<svg viewBox="0 0 48 48" width="20" height="20" style="vertical-align:middle; margin-right:8px; flex-shrink:0;"><path fill="#EA4335" d="M24 24 4.95 13A22 22 0 0 1 43.05 13Z"/><path fill="#FBBC05" d="M24 24l19.05-11A22 22 0 0 1 24 46Z"/><path fill="#34A853" d="M24 24v22A22 22 0 0 1 4.95 13Z"/><circle cx="24" cy="24" r="11" fill="#4285F4"/><circle cx="24" cy="24" r="11" fill="none" stroke="#fff" stroke-width="2.5"/></svg>`;   
+const CHROME_LOGO_SVG = `<svg viewBox="0 0 48 48" width="20" height="20" style="vertical-align:middle; margin-right:8px; flex-shrink:0;"><path fill="#EA4335" d="M24 24 4.95 13A22 22 0 0 1 43.05 13Z"/><path fill="#FBBC05" d="M24 24l19.05-11A22 22 0 0 1 24 46Z"/><path fill="#34A853" d="M24 24v22A22 22 0 0 1 4.95 13Z"/><circle cx="24" cy="24" r="11" fill="#4285F4"/><circle cx="24" cy="24" r="11" fill="none" stroke="#fff" stroke-width="2.5"/></svg>`;
 
 function openJwLibrary(lang, searchInputId = "searchInput", directQuery) {
   const fromInput = searchInputId ? (document.getElementById(searchInputId)?.value || "") : "";
@@ -4185,7 +4217,7 @@ function openJwLibrary(lang, searchInputId = "searchInput", directQuery) {
   `;
   modal.style.display = "flex";
 }
-    
+
 let currentSearchPage = 1;
 const RESULTS_PER_PAGE = 250;
 let cachedSearchMatches = [];
@@ -4282,7 +4314,7 @@ async function executeSearch(page = 1) {
   }
   renderSearchResultsPage();
   }
-    
+
 function renderSearchResultsPage() {
   const resDiv = document.getElementById("searchResults");
   if (!resDiv) return;
@@ -4833,7 +4865,7 @@ function applySavedTheme() {
 function closeProModal() {
   document.getElementById("proModal").style.display = "none";
 }
-    
+
 let bmSearchLongPressTimer = null;
 let bmSearchLongPressTriggered = false;
 
@@ -4893,7 +4925,7 @@ function runQuickJump() {
   closeProModal();
   jumpToRefString(raw, true);
 }
-    
+
 function parseRefStringToTarget(str) {
   const cleanStr = String(str || "").trim().replace(/\s+/g, " ");
   const m = cleanStr.match(/^([1-3]?\s*[a-zA-ZÀ-ÿ]+(?:\s+dei\s+[a-zA-ZÀ-ÿ]+)?)\.?\s*(\d{1,3})(?:[:.,\s]\s*(\d.*))?$/i);
@@ -4928,7 +4960,7 @@ function parseRefStringToTarget(str) {
     vSpec
   };
 }
-    
+
 function jumpToRefString(str, forceDirectJump = false) {
   const target = parseRefStringToTarget(str);
   if (!target) return;
@@ -5016,7 +5048,7 @@ function releaseAudioWakeLock() {
     bmWakeLock = null;
   }
 }
-    
+
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible" && bmAudioPlaying) {
     requestAudioWakeLock();
@@ -5064,7 +5096,7 @@ function stripPillsOnlyFromText(rawText) {
   tmp.querySelectorAll(".tag-badge, .pub-ref-badge, .verse-num, sup, script, style").forEach(el => el.remove());
   return tmp.textContent || "";
     }
-  
+
 function cleanTextForSpeech(rawText) {
   if (!rawText) return "";
   const withoutPills = stripPillsOnlyFromText(rawText);
@@ -5081,7 +5113,7 @@ function cleanTextForSpeech(rawText) {
     .replace(/\s+/g, " ")
     .trim();
   }
-    
+
 function splitTextForAudio(text, maxLen = 165) {
   const cleanFull = cleanTextForSpeech(text);
   if (!cleanFull) return [];
@@ -5114,7 +5146,7 @@ function extractCleanSelectedText() {
     .replace(/\s+/g, " ")
     .trim();
   }
-    
+
 function clearTtsKaraokeHighlight() {
   document.querySelectorAll(".bm-tts-active-verse").forEach(el => {
     el.classList.remove("bm-tts-active-verse");
@@ -5183,7 +5215,7 @@ function stopAllAudio() {
   if ("speechSynthesis" in window) {
     try { window.speechSynthesis.cancel(); } catch (e) { console.debug(e); }
   }
-  
+
   updateMediaSessionMetadata("", "", false);
   const btn = document.getElementById("ttsChapterBtn");
   if (btn) {
@@ -5471,7 +5503,7 @@ function speakSelectedVerse() {
     startUniversalSpeech(state.selectedVerseText, false, false);
   }
 }
-      
+
 function generateVerseCardModal() {
   const book = getBook(state.bookId);
   const nums = selectedVersesMap.size > 0
@@ -5833,7 +5865,7 @@ async function extractJwFormatEpub(zip, allFiles, mergedBooksMap, statusEl, labe
       } catch (e) { console.debug(e); }
     }
   }
-  
+
   for (let bId = 1; bId <= 66; bId++) {
     const prefixNum = String(bId + 4).padStart(2, "0"); // 05..70 per tutte le edizioni bi12 (1984/1987) in qualsiasi lingua
     const jwCode = JW_BOOK_CODES[bId];
@@ -6428,12 +6460,12 @@ async function showDailyTextView(dayOffset = 0, fromBack = false) {
         <button class="nav-btn" onclick="openDailyCalendarPickerModal()" title="Scegli data">📅</button>
       </div>
     </div>
-    <div class="result-card" style="cursor:default; border-left:4px solid var(--primary-light); padding:14px; margin-bottom:12px; font-size:var(--font-size-verse); line-height:1.55;">
+    <div class="result-card bm-justify-text" style="cursor:default; border-left:4px solid var(--primary-light); padding:14px; margin-bottom:12px; font-size:var(--font-size-verse); line-height:1.55;">
       <div style="font-style:italic; font-weight:700; color:var(--primary-light);">
         ${formatNoteLinks(entry.theme)}
       </div>
     </div>
-    <div class="result-card" style="cursor:default; padding:14px; font-size:var(--font-size-verse); line-height:1.62; white-space:pre-wrap;">${formatNoteLinks(entry.comment)}</div>
+    <div class="result-card bm-justify-text" style="cursor:default; padding:14px; font-size:var(--font-size-verse); line-height:1.62; white-space:pre-wrap;">${formatNoteLinks(entry.comment)}</div>
     <div style="display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;">
       <button class="search-btn" style="flex:1; padding:12px;" onclick="loadChapterView()">
         📖 Apri la Bibbia (${escapeHtml(getBook(state.bookId).name)} ${state.chapter})
@@ -6445,7 +6477,7 @@ async function showDailyTextView(dayOffset = 0, fromBack = false) {
   `;
   main.scrollTop = 0;
 }
-    
+
 // ============================================================================
 // MODULO PERSPICACIA NELLO STUDIO DELLE SCRITTURE (it_I ZIP/RTF & EPUB)
 // ============================================================================
@@ -6625,7 +6657,7 @@ async function getInsightData() {
     });
   } catch (e) { console.debug(e); return null; }
 }
-    
+
 function normalizeForSearch(str) {
   return (str || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
@@ -6717,7 +6749,7 @@ async function showInsightView(selectedIndex = null, fromBack = false) {
     const item = data.entries[selectedIndex];
     setHeaderCenterPill(item.title, "insight");
     window.currentInsightSpeechText = `${item.title}. ${item.body}`;
-    
+
     const baseHtml = formatNoteLinks(item.body);
     const { html: highlightedBody, count: hitCount } = highlightHtmlSafe(baseHtml, insightSearchQuery);
     currentHitIdx = 0;
@@ -6742,7 +6774,7 @@ async function showInsightView(selectedIndex = null, fromBack = false) {
         </div>
       </div>
       ${hitNavBar}
-      <div class="result-card" style="cursor:default; padding:15px; font-size:var(--font-size-verse); line-height:1.64; white-space:pre-wrap;">${highlightedBody}</div>
+      <div class="result-card bm-justify-text" style="cursor:default; padding:15px; font-size:var(--font-size-verse); line-height:1.64; white-space:pre-wrap;">${highlightedBody}</div>
       <div style="display:flex; justify-content:space-between; margin-top:14px; gap:8px;">
         <button class="nav-btn" ${selectedIndex <= 0 ? 'disabled style="opacity:0.4"' : ''} onclick="showInsightView(${selectedIndex - 1})">◀ Voce Prec.</button>
         <button class="search-btn" onclick="showInsightView(null)">📚 Torna alla Lista</button>
@@ -6848,12 +6880,12 @@ async function renderInsightFilteredList() {
     return `
       <div class="result-card" onclick="showInsightView(${idx})">
         <div class="result-ref">📘 ${escapeHtml(entry.title)} ${badge}</div>
-        <div style="font-size:13.5px; color:var(--text-muted); line-height:1.45;">${snippetHtml}</div>
+        <div class="bm-justify-text" style="font-size:13.5px; color:var(--text-muted); line-height:1.45;">${snippetHtml}</div>
       </div>
     `;
   }).join("");
 }
-               
+
 // ============================================================================
 // MODULO TUTTA LA SCRITTURA (si_I — JSON offline: 66 libri + introduzione e studi)
 // ============================================================================
@@ -6966,7 +6998,7 @@ async function getSiData() {
     return null;
   }
 }
-    
+
 async function showSiView(fromBack = false) {
   if (!fromBack && currentViewContext.type !== "si") {
     saveCurrentPositionToHistory();
@@ -7010,7 +7042,7 @@ async function showSiView(fromBack = false) {
   const extraCards = extras.map((x, i) => `
     <div class="result-card" onclick="showSiReader('x', ${i}, 0)">
       <div class="result-ref">📘 ${escapeHtml(x.title)} ${siPageBadge(x.chapters[0].printPage)}</div>
-      <div style="font-size:13.5px; color:var(--text-muted); line-height:1.45;">${escapeHtml(siSnippet(x.chapters[0].content))}</div>
+      <div class="bm-justify-text" style="font-size:13.5px; color:var(--text-muted); line-height:1.45;">${escapeHtml(siSnippet(x.chapters[0].content))}</div>
     </div>
   `).join("");
   main.innerHTML = `
@@ -7064,7 +7096,7 @@ async function showSiBook(bi, fromBack = false) {
   const cards = book.chapters.map((c, ci) => `
     <div class="result-card" onclick="showSiReader('b', ${bi}, ${ci})">
       <div class="result-ref">📘 ${escapeHtml(c.title)} ${siPageBadge(c.printPage)}</div>
-      <div style="font-size:13.5px; color:var(--text-muted); line-height:1.45;">${escapeHtml(siSnippet(c.content))}</div>
+      <div class="bm-justify-text" style="font-size:13.5px; color:var(--text-muted); line-height:1.45;">${escapeHtml(siSnippet(c.content))}</div>
     </div>
   `).join("");
   main.innerHTML = `
@@ -7126,7 +7158,7 @@ async function showSiReader(kind, i, ci, fromBack = false) {
   const notes = Array.isArray(ch.footnotes) ? ch.footnotes : [];
   const notesHtml = notes.length ? `
     <div class="section-title"><span>Note</span><span>${notes.length}</span></div>
-    <div class="result-card" style="cursor:default; padding:12px; font-size:13.5px; line-height:1.5; color:var(--text-muted);">
+    <div class="result-card bm-justify-text" style="cursor:default; padding:12px; font-size:13.5px; line-height:1.5; color:var(--text-muted);">
       ${notes.map(n => `
         <div id="si_fn_${escapeHtml(n.label)}" style="margin-bottom:6px;">
           <sup style="color:var(--primary-light); font-weight:800;">[${escapeHtml(n.label)}]</sup> ${formatNoteLinks(n.text, kind === 'b' ? Number(item.bookNumber) : null)}
@@ -7147,7 +7179,7 @@ async function showSiReader(kind, i, ci, fromBack = false) {
       </div>
     </div>
     ${pageInfo}
-    <div class="result-card" style="cursor:default; padding:15px; font-size:var(--font-size-verse); line-height:1.64;">${siRenderParas(ch.content, kind === 'b' ? Number(item.bookNumber) : null)}</div>
+    <div class="result-card bm-justify-text" style="cursor:default; padding:15px; font-size:var(--font-size-verse); line-height:1.64;">${siRenderParas(ch.content, kind === 'b' ? Number(item.bookNumber) : null)}</div>
     ${notesHtml}
     <div style="display:flex; justify-content:space-between; margin-top:14px; gap:8px;">
       ${prevBtn}
@@ -7157,7 +7189,7 @@ async function showSiReader(kind, i, ci, fromBack = false) {
   `;
   main.scrollTop = 0;
 }
-    
+
 // ============================================================================
 // MODULO CARTINE BIBLICHE HD ("Vedete il buon paese" — JSON ufficiale 23 cartine / 670 luoghi)
 // ============================================================================
@@ -7180,7 +7212,7 @@ async function bpDbGet(key) {
     });
   } catch (e) { console.debug(e); return null; }
 }
-    
+
 async function bpDbPut(key, value) {
   const db = await openDB();
   return new Promise((res, rej) => {
@@ -7967,7 +7999,7 @@ function confirmImportBackupNow() {
     showBlueInfoModal("❌ File Non Valido", "Errore nel formato del file di backup (.json).");
   }
 }
-    
+
 // ============================================================================
 // MODULO "📍 DOVE SI TROVA?" PRO (Atlante Intelligente, Salto ai Versetti & Radar)
 // ============================================================================
@@ -8504,7 +8536,7 @@ async function openDeepenDailyModal() {
     comment: rawComment || ""
   };
   bpModalOpen("💎 Approfondisci il Tema del Giorno", `
-    <div style="font-size:13px; color:var(--text-muted); font-style:italic; margin-bottom:12px; border-left:3px solid var(--primary-light); padding-left:8px;">
+    <div class="bm-justify-text" style="font-size:13px; color:var(--text-muted); font-style:italic; margin-bottom:12px; border-left:3px solid var(--primary-light); padding-left:8px;">
       ${escapeHtml(rawTheme || "Scrittura del Giorno")}
     </div>
     ${refsHtml}
@@ -8554,7 +8586,7 @@ function exportDailyDossierNow(btnEl) {
   if (btnEl) btnEl.textContent = "✔ Dossier Copiato negli Appunti!";
 }
 let splashDismissed = false;
-    
+
 function dismissSplashScreen() {
   if (splashDismissed) return;
   const splash = document.getElementById("splashScreen");
@@ -8611,9 +8643,11 @@ updateMyReadingLabel();
 populateSelects()
   .catch(() => {})
   .finally(() => {
-    showDailyTextView(0, true).finally(() => {
-      dismissSplashScreen();
-    });
+    showDailyTextView(0, true)
+      .catch(() => {})
+      .finally(() => {
+        dismissSplashScreen();
+      });
   });
 
 // ============================================================================
@@ -8697,12 +8731,12 @@ function openResetMyReadingModal() {
 }
 
 function confirmResetMyReading() {
-try {
-  localStorage.removeItem("bm_pers_book");
-  localStorage.removeItem("bm_pers_ch");
-  localStorage.removeItem("bm_pers_scroll");
-} catch (e) { console.debug(e); }
-updateMyReadingLabel();
+  try {
+    localStorage.removeItem("bm_pers_book");
+    localStorage.removeItem("bm_pers_ch");
+    localStorage.removeItem("bm_pers_scroll");
+  } catch (e) { console.debug(e); }
+  updateMyReadingLabel();
   const modal = document.getElementById("myReadModal");
   if (modal) modal.style.display = "none";
 }
@@ -8824,7 +8858,7 @@ function openMyReading() {
 
   modal.style.display = "flex";
     }
-    
+
 // ============================================================================
 // INTERCETTORE UNIVERSALE TENDINE BLU PRO (Zero menu bianchi nativi Android)
 // ============================================================================
@@ -8867,7 +8901,7 @@ function openCustomSelectMenu(selectEl) {
       ${isSel ? '<span style="color:#00e5ff; font-weight:900;">✔</span>' : ''}
     </button>`;
   }).join("");
-    
+
   modal.style.display = "flex";
   setTimeout(() => {
     const curBtn = document.getElementById(`bm_opt_${selectEl.selectedIndex}`);
@@ -9130,7 +9164,7 @@ async function executeOmniSearch() {
       html += topIns.map(h => `
         <div class="result-card" onclick="insightSearchQuery='${escapeJsStr(rawQuery)}'; showInsightView(${h.idx})">
           <div class="result-ref">📘 ${escapeHtml(h.entry.title)}</div>
-          <div style="font-size:13px; color:var(--text-muted);">${escapeHtml(h.entry.body.slice(0, 130).replace(/\s+/g, " "))}…</div>
+          <div class="bm-justify-text" style="font-size:13px; color:var(--text-muted);">${escapeHtml(h.entry.body.slice(0, 130).replace(/\s+/g, " "))}…</div>
         </div>
       `).join("");
     } else {
@@ -9176,7 +9210,7 @@ async function executeOmniSearch() {
       html += siHits.slice(0, 5).map(h => `
         <div class="result-card" onclick="showSiReader('${h.kind}', ${h.i}, ${h.ci})">
           <div class="result-ref">📘 ${escapeHtml(h.title)}</div>
-          <div style="font-size:13px; color:var(--text-muted);">${escapeHtml(h.snippet)}</div>
+          <div class="bm-justify-text" style="font-size:13px; color:var(--text-muted);">${escapeHtml(h.snippet)}</div>
         </div>
       `).join("");
     } else {
@@ -9257,7 +9291,7 @@ async function executeOmniSearch() {
     obs.observe(mainEl, { childList: true });
   }
 })();
-    
+
 // ============================================================================
 // 🔬 LENTE ESEGETICA PRO (RAGGI X DEL VERSETTO: Navigazione Versetti + Ritorno Rapido)
 // ============================================================================
@@ -9434,7 +9468,7 @@ async function stepXRayVerse(delta) {
   selectVerseDataFromDOM(targetV);
   await openVerseXRayModal(targetV);
 }
-    
+
 let bmXRayDiffActive = false;
 let bmXRayRootsActive = true;
 
@@ -9689,7 +9723,7 @@ async function openVerseXRayModal(forcedVerseNum) {
     ${placesHtml}
   `;
 }
-                           
+
 // ============================================================================
 // 🏆 SUITE PREMIUM PRO: Timer Studio Automatico, Heatmap 66 Libri & Focus Zen
 // ============================================================================
@@ -10134,7 +10168,7 @@ function toggleBmZenMode() {
     </div>
     <span id="bmPbCategory" class="tag-badge" style="display:block; width:fit-content; margin:0 auto 6px auto; font-size:10.5px; background:#041a42; color:#84ffff; border-color:#29b6f6;">Origine</span>
     <!-- Toccando il testo del fumetto si apre subito la Nota Integrale senza tagli -->
-    <div id="bmPbDesc" class="bm-pb-desc" onclick="openGreekFulfillmentAction()" title="Tocca per leggere la nota integrale e i riferimenti"></div>
+    <div id="bmPbDesc" class="bm-pb-desc bm-justify-text" onclick="openGreekFulfillmentAction()" title="Tocca per leggere la nota integrale e i riferimenti"></div>
     <div class="bm-pb-controls">
       <button type="button" id="bmPbGreekBtn" class="bm-pb-greek-btn" onclick="openGreekFulfillmentAction()" title="Apri nota integrale e adempimento nelle Scritture Greche Cristiane">
         <span>🏛️</span><span id="bmPbGreekLabel">Greche: Gal 4:4</span>
@@ -10287,7 +10321,7 @@ const CORE_MESSIANIC_PROPHECIES = [
   { b: 27, c: 2, v: "44-45", cat: "Pietra del Regno", desc: "La pietra staccata senza mani stritolerà tutti i regni e il Regno istituito dal Dio del cielo non sarà mai ridotto in rovina.", nt: ["Luca 20:17-18", "Rivelazione 11:15"], ntCited: true },
   { b: 27, c: 7, v: "13-14", cat: "Figlio dell'uomo", desc: "Colle nubi dei cieli veniva qualcuno simile a un figlio d'uomo; gli furono dati dominio, dignità e regno eterno.", nt: ["Matteo 24:30", "Matteo 26:64", "Marco 14:62", "Rivelazione 1:7"], ntCited: true },
   { b: 27, c: 9, v: "24-27", cat: "70 Settimane", desc: "Dall'uscita della parola per restaurare Gerusalemme fino a Messia il Condottiero ci saranno 69 settimane d'anni; a metà della 70ª settimana farà cessare sacrificio e offerta e sarà stroncato.", nt: ["Luca 3:1-2, 21-23", "Galati 4:4", "Ebrei 10:12-18"], ntCited: true },
- 
+
   { b: 28, c: 11, v: "1", cat: "Infanzia", desc: "Quando Israele era fanciullo, allora l'amai, e dall'Egitto chiamai mio figlio.", nt: ["Matteo 2:14-15"], ntCited: true },
   { b: 28, c: 13, v: "14", cat: "Risurrezione", desc: "'Li redimerò dalla mano dello Sceol; li ricupererò dalla morte. Dove sono, o Morte, i tuoi pungiglioni?'", nt: ["1 Corinti 15:54-55"], ntCited: true },
   { b: 29, c: 2, v: "28-32", cat: "Pentecoste", desc: "Verserò il mio spirito su ogni sorta di carne; e chiunque invocherà il nome di Geova sarà salvato.", nt: ["Atti 2:16-21", "Romani 10:13"], ntCited: true },
@@ -10395,7 +10429,7 @@ async function enrichMessianicPropheciesFromOfflineDB() {
         });
       });
     }
-  
+
 
     // 2. Tutta la Scrittura (si_I) — conserva l'intero paragrafo + coordinate per aprire il capitolo SI
     const si = await getSiData();
@@ -10428,7 +10462,7 @@ async function enrichMessianicPropheciesFromOfflineDB() {
         });
       });
     }
-  
+
   } catch (e) {
     console.debug(e);
   }
@@ -10750,7 +10784,7 @@ function openGreekFulfillmentAction() {
       <div style="font-size:15px; font-weight:900; color:#ffd54f; margin-bottom:3px;">Adempimento nelle Scritture Greche Cristiane</div>
       <div style="font-size:13.5px; font-weight:800; color:#00e5ff;">Profezia: ${escapeHtml(otRef)}</div>
     </div>
-    <div style="background:#062356; border:1px solid rgba(41,182,246,0.55); border-radius:10px; padding:11px 12px; max-height:38vh; overflow-y:auto; font-size:13.5px; line-height:1.56; color:#ffffff; margin-bottom:10px; text-align:left;">
+    <div class="bm-justify-text" style="background:#062356; border:1px solid rgba(41,182,246,0.55); border-radius:10px; padding:11px 12px; max-height:38vh; overflow-y:auto; font-size:13.5px; line-height:1.56; color:#ffffff; margin-bottom:10px;">
       ${formattedFullNote}
     </div>
     ${sourceBtnHtml}
@@ -10828,7 +10862,7 @@ function renderMessianicCatalogModalBody() {
               <span>💡 #${idx + 1} • ${escapeHtml(ref)}</span>
               <span class="tag-badge" style="font-size:10.5px;">${escapeHtml(p.cat || 'Profezia')}</span>
             </div>
-            <div style="font-size:13px; color:#e3f2fd; line-height:1.46; margin:4px 0 6px 0;">${escapeHtml(fullText)}</div>
+            <div class="bm-justify-text" style="font-size:13px; color:#e3f2fd; line-height:1.46; margin:4px 0 6px 0;">${escapeHtml(fullText)}</div>
             ${ntPills ? `<div style="display:flex; flex-wrap:wrap; gap:4px;">${ntPills}</div>` : ""}
           </div>
         `;
@@ -10916,9 +10950,9 @@ async function evaluateMessianicBulbForCurrentView() {
   if (!currentViewContext || currentViewContext.type !== "bible") {
     widget.classList.remove("visible");
     return;
- }
+  }
 
- await enrichMessianicPropheciesFromOfflineDB();
+  await enrichMessianicPropheciesFromOfflineDB();
   const matches = findPropheciesForCurrentChapter(state.bookId, state.chapter);
 
   if (!matches.length) {
