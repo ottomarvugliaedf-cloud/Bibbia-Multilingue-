@@ -3045,7 +3045,7 @@ function renderSettingsDrawerContent() {
       <button type="button" class="myread-action-btn btn-color-anim bm-drawer-quick-btn" onclick="openStudyAnalyticsModal()">
         📊 Heatmap Studio
       </button>
-      <button type="button" class="myread-action-btn btn-color-anim bm-drawer-quick-btn" onclick="setTimeout(() => { closeSettingsDrawer(); toggleBmZenMode(); }, 220);">
+      <button type="button" class="myread-action-btn btn-color-anim bm-drawer-quick-btn" onclick="this.disabled = true; setTimeout(() => { closeSettingsDrawer(); toggleBmZenMode(); }, 220);">
         🧘 ${typeof bmZenModeActive !== 'undefined' && bmZenModeActive ? "Disattiva Focus" : "Modalità Focus"}
       </button>
     </div>
