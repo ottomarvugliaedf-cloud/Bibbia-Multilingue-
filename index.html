@@ -681,6 +681,12 @@
       margin: 2px;
       cursor: pointer;
     }
+    .bm-name-link {
+      text-decoration: underline dotted;
+      text-decoration-thickness: 1.5px;
+      text-underline-offset: 3px;
+      cursor: pointer;
+    }
     .hl-yellow { background-color: rgba(255, 235, 59, 0.38) !important; }
     .hl-blue   { background-color: rgba(3, 169, 244, 0.32) !important; }
     .hl-green  { background-color: rgba(76, 175, 80, 0.32) !important; }
@@ -2313,21 +2319,386 @@ function stripTagsToPlainText(htmlStr) {
   if (!htmlStr) return "";
   return String(htmlStr).replace(/<[^>]*>?/gm, "").replace(/\s+/g, " ").trim();
 }
-function formatInlineStrongs(rawText, verseNum) {
+function formatInlineStrongs(rawText, verseNum, transId = state.trans1) {
   const safe = escapeHtml(stripTagsToPlainText(rawText));
-  return safe.replace(/\b([HG]\d{1,4})\b/g, function(code) {
+  const withBadges = safe.replace(/\b([HG]\d{1,4})\b/g, function(code) {
     return `<span class="tag-badge" onclick="event.stopPropagation(); openDirectStrongCode('${code}', ${verseNum})">${code}</span>`;
   });
+  return applyNameLinks(withBadges, verseNum, transId);
 }
-function highlightDiffText(baseStr, targetStr) {
+
+// ===== Nomi cliccabili nel testo della TNM italiana (1987 bi12 e 2017 nwt) =====
+const BM_NAME_LINK_BIBLES = new Set(["gb:bi12", "gb:nwt"]);
+
+// ins = titolo della voce in Perspicacia; si = numero (o array di numeri) del libro in Tutta la Scrittura:
+// se presente il tocco propone entrambe le destinazioni; names = forme esatte nel testo TNM 1987 e 2017.
+// Le parole comuni o i popoli (Re, Giudici, Atti, Romani, Ebrei…) si collegano solo quando indicano
+// davvero il libro (es. «libro dei Re», «lettera agli Ebrei», «1 Re»), non a ogni occorrenza.
+const BM_NAME_LINKS = [
+  // Blocco 1: Geova, Gesù (e titoli a lui riferiti), Michele, spirito santo, Satana / Diavolo (e titoli a lui riferiti)
+  { ins: "GEOVA", names: ["Sovrano Signore Geova", "Geova degli eserciti", "Geova"] },
+  { ins: "IAH", names: ["Iah"] },
+  { ins: "ALTISSIMO", names: ["Iddio Altissimo", "Altissimo"] },
+  { ins: "GESÙ CRISTO", names: [
+    "Signore Gesù Cristo", "Signore Gesù", "Gesù Cristo", "Cristo Gesù", "Gesù il Nazareno", "Gesù Nazareno", "Gesù", "Cristo",
+    "Figlio unigenito", "Unigenito", "Parola di Dio", "Re dei re", "Signore dei signori", "Ultimo Adamo", "ultimo Adamo",
+    "Principe di Pace", "Principe di pace", "Principe della pace", "Agente Principale", "Agente principale"
+  ] },
+  { ins: "ALFA E OMEGA", names: ["Alfa e l'Omega", "Alfa e Omega"] },
+  { ins: "MESSIA", names: ["Messia"] },
+  { ins: "FIGLIO DELL’UOMO", names: ["Figlio dell'uomo"] },
+  { ins: "FIGLIO (FIGLI) DI DIO", names: ["Figlio di Dio"] },
+  { ins: "EMMANUELE", names: ["Emmanuele"] },
+  { ins: "AGNELLO", names: ["Agnello di Dio"] },
+  { ins: "SPIRITO SANTO", names: ["spirito santo", "Spirito santo", "Spirito Santo"] },
+  { ins: "MICHELE", names: ["arcangelo Michele", "Michele"] },
+  { ins: "SATANA", names: [
+    "Satana il Diavolo", "Satana", "serpente originale", "Serpente originale",
+    "governante di questo mondo", "governante del mondo", "dio di questo sistema di cose"
+  ] },
+  { ins: "DIAVOLO", names: ["Diavolo"] },
+  { ins: "BEELZEBUB", names: ["Beelzebub", "Belzebù"] },
+  { ins: "BELIAL", names: ["Belial"] },
+  { ins: "ABADDON", names: ["Abaddon"] },
+  { ins: "APOLLION", names: ["Apollion"] },
+
+  // Blocco 2: scrittori biblici e nomi dei 66 libri (portano sia a Perspicacia che a Tutta la Scrittura)
+  { ins: "GENESI", si: 1, names: ["libro della Genesi", "Libro della Genesi", "Genesi"] },
+  { ins: "ESODO, LIBRO DI", si: 2, names: ["libro dell'Esodo", "Libro dell'Esodo", "Esodo"] },
+  { ins: "LEVITICO", si: 3, names: ["libro del Levitico", "Libro del Levitico", "Levitico"] },
+  { ins: "NUMERI, LIBRO DI", si: 4, names: ["libro dei Numeri", "Libro dei Numeri"] },
+  { ins: "DEUTERONOMIO", si: 5, names: ["libro del Deuteronomio", "Libro del Deuteronomio", "Deuteronomio"] },
+  { ins: "GIOSUÈ", si: 6, names: ["Giosuè"] },
+  { ins: "GIUDICI, LIBRO DEI", si: 7, names: ["libro dei Giudici", "Libro dei Giudici", "libro di Giudici", "Libro di Giudici"] },
+  { ins: "RUT", si: 8, names: ["Rut"] },
+  { ins: "SAMUELE", si: 9, names: ["1 Samuele"] },
+  { ins: "SAMUELE", si: 10, names: ["2 Samuele"] },
+  { ins: "SAMUELE", si: [9, 10], names: ["Samuele"] },
+  { ins: "RE, LIBRI DEI", si: 11, names: ["1 Re", "Primo Re", "Primo libro dei Re"] },
+  { ins: "RE, LIBRI DEI", si: 12, names: ["2 Re", "Secondo Re", "Secondo libro dei Re"] },
+  { ins: "RE, LIBRI DEI", si: [11, 12], names: ["libri dei Re", "Libri dei Re", "libro dei Re", "Libro dei Re", "Primo e Secondo Re", "1 e 2 Re"] },
+  { ins: "CRONACHE, I LIBRI DELLE", si: 13, names: ["1 Cronache"] },
+  { ins: "CRONACHE, I LIBRI DELLE", si: 14, names: ["2 Cronache"] },
+  { ins: "CRONACHE, I LIBRI DELLE", si: [13, 14], names: ["libri delle Cronache", "Libri delle Cronache", "libro delle Cronache", "Libro delle Cronache", "Cronache"] },
+  { ins: "ESDRA", si: 15, names: ["Esdra"] },
+  { ins: "NEEMIA", si: 16, names: ["Neemia"] },
+  { ins: "ESTER", si: 17, names: ["Ester"] },
+  { ins: "GIOBBE", si: 18, names: ["Giobbe"] },
+  { ins: "SALMI, LIBRO DEI", si: 19, names: ["libro dei Salmi", "Libro dei Salmi", "Salmi"] },
+  { ins: "PROVERBI, LIBRO DI", si: 20, names: ["libro dei Proverbi", "Libro dei Proverbi", "Proverbi"] },
+  { ins: "ECCLESIASTE", si: 21, names: ["Ecclesiaste"] },
+  { ins: "CANTICO DEI CANTICI", si: 22, names: ["Cantico dei Cantici"] },
+  { ins: "ISAIA", si: 23, names: ["Isaia"] },
+  { ins: "GEREMIA", si: 24, names: ["Geremia"] },
+  { ins: "LAMENTAZIONI, LIBRO DI", si: 25, names: ["libro delle Lamentazioni", "Lamentazioni"] },
+  { ins: "EZECHIELE", si: 26, names: ["Ezechiele"] },
+  { ins: "DANIELE", si: 27, names: ["Daniele"] },
+  { ins: "OSEA", si: 28, names: ["Osea"] },
+  { ins: "GIOELE", si: 29, names: ["Gioele"] },
+  { ins: "AMOS", si: 30, names: ["Amos"] },
+  { ins: "ABDIA", si: 31, names: ["Abdia"] },
+  { ins: "GIONA", si: 32, names: ["Giona"] },
+  { ins: "MICHEA", si: 33, names: ["Michea"] },
+  { ins: "NAUM", si: 34, names: ["Naum"] },
+  { ins: "ABACUC", si: 35, names: ["Abacuc"] },
+  { ins: "SOFONIA", si: 36, names: ["Sofonia"] },
+  { ins: "AGGEO", si: 37, names: ["Aggeo"] },
+  { ins: "ZACCARIA", si: 38, names: ["Zaccaria"] },
+  { ins: "MALACHIA", si: 39, names: ["Malachia"] },
+  { ins: "MATTEO", si: 40, names: ["Matteo"] },
+  { ins: "MARCO", si: 41, names: ["Giovanni, chiamato Marco", "Giovanni chiamato Marco", "Giovanni Marco", "Marco"] },
+  { ins: "LUCA", si: 42, names: ["Luca"] },
+  { ins: "GIOVANNI", names: ["Giovanni il Battezzatore", "Giovanni Battista"] },
+  { ins: "GIOVANNI, LETTERE DI", si: 62, names: ["1 Giovanni"] },
+  { ins: "GIOVANNI, LETTERE DI", si: 63, names: ["2 Giovanni"] },
+  { ins: "GIOVANNI, LETTERE DI", si: 64, names: ["3 Giovanni"] },
+  { ins: "GIOVANNI, LETTERE DI", si: [62, 63, 64], names: ["lettere di Giovanni", "Lettere di Giovanni"] },
+  { ins: "GIOVANNI", si: [43, 62, 63, 64, 66], names: ["Giovanni"] },
+  { ins: "ATTI DEGLI APOSTOLI", si: 44, names: ["Atti degli Apostoli", "libro degli Atti", "Libro degli Atti"] },
+  { ins: "ROMANI, LETTERA AI", si: 45, names: ["lettera ai Romani", "Lettera ai Romani"] },
+  { ins: "CORINTI, LETTERE AI", si: 46, names: ["1 Corinti"] },
+  { ins: "CORINTI, LETTERE AI", si: 47, names: ["2 Corinti"] },
+  { ins: "CORINTI, LETTERE AI", si: [46, 47], names: ["lettera ai Corinti", "Lettera ai Corinti", "lettere ai Corinti", "Lettere ai Corinti"] },
+  { ins: "GALATI, LETTERA AI", si: 48, names: ["lettera ai Galati", "Lettera ai Galati"] },
+  { ins: "EFESINI, LETTERA AGLI", si: 49, names: ["lettera agli Efesini", "Lettera agli Efesini"] },
+  { ins: "FILIPPESI, LETTERA AI", si: 50, names: ["lettera ai Filippesi", "Lettera ai Filippesi"] },
+  { ins: "COLOSSESI, LETTERA AI", si: 51, names: ["lettera ai Colossesi", "Lettera ai Colossesi"] },
+  { ins: "TESSALONICESI, LETTERE AI", si: 52, names: ["1 Tessalonicesi"] },
+  { ins: "TESSALONICESI, LETTERE AI", si: 53, names: ["2 Tessalonicesi"] },
+  { ins: "TESSALONICESI, LETTERE AI", si: [52, 53], names: ["lettera ai Tessalonicesi", "Lettera ai Tessalonicesi", "lettere ai Tessalonicesi", "Lettere ai Tessalonicesi"] },
+  { ins: "TIMOTEO", si: 54, names: ["1 Timoteo"] },
+  { ins: "TIMOTEO", si: 55, names: ["2 Timoteo"] },
+  { ins: "TIMOTEO", si: [54, 55], names: ["Timoteo"] },
+  { ins: "TITO", si: 56, names: ["Tito"] },
+  { ins: "FILEMONE", si: 57, names: ["Filemone"] },
+  { ins: "EBREI, LETTERA AGLI", si: 58, names: ["lettera agli Ebrei", "Lettera agli Ebrei"] },
+  { ins: "GIACOMO, LETTERA DI", si: 59, names: ["lettera di Giacomo", "Lettera di Giacomo"] },
+  { ins: "GIACOMO", names: ["Giacomo figlio di Alfeo", "Giacomo di Alfeo"] },
+  { ins: "GIACOMO", si: 59, names: ["Giacomo"] },
+  { ins: "PIETRO, LETTERE DI", si: 60, names: ["1 Pietro"] },
+  { ins: "PIETRO, LETTERE DI", si: 61, names: ["2 Pietro"] },
+  { ins: "PIETRO", si: [60, 61], names: ["Simon Pietro", "Pietro", "Cefa"] },
+  { ins: "GIUDA, LETTERA DI", si: 65, names: ["lettera di Giuda", "Lettera di Giuda"] },
+  { ins: "GIUDA", si: 65, names: ["Giuda"] },
+  { ins: "RIVELAZIONE", si: 66, names: ["libro di Rivelazione", "Libro di Rivelazione", "Rivelazione a Giovanni", "Apocalisse"] },
+  { ins: "PAOLO", names: ["Saulo di Tarso", "Paolo", "Saulo"] },
+
+  // Blocco 3: tutti i re di Israele e di Giuda (grafie TNM 1987 e 2017: Io- e Ieo-)
+  { ins: "SAUL", names: ["Saul"] },
+  { ins: "IS-BOSET", names: ["Is-Boset"] },
+  { ins: "DAVIDE", names: ["Davide"] },
+  { ins: "SALOMONE", names: ["Salomone"] },
+  { ins: "GEROBOAMO", names: ["Geroboamo"] },
+  { ins: "NADAB", names: ["Nadab"] },
+  { ins: "BAASA", names: ["Baasa"] },
+  { ins: "ELA", names: ["Ela"] },
+  { ins: "ZIMRI", names: ["Zimri"] },
+  { ins: "TIBNI", names: ["Tibni"] },
+  { ins: "OMRI", names: ["Omri"] },
+  { ins: "ACAB", names: ["Acab"] },
+  { ins: "ACAZIA", names: ["Acazia"] },
+  { ins: "IORAM", names: ["Ieoram", "Ioram"] },
+  { ins: "IEU", names: ["Ieu"] },
+  { ins: "IOACAZ", names: ["Ieoacaz", "Ioacaz"] },
+  { ins: "IOAS", names: ["Ieoas", "Ioas"] },
+  { ins: "SALLUM", names: ["Sallum"] },
+  { ins: "MENAEM", names: ["Menaem"] },
+  { ins: "PECACHIA", names: ["Pecachia"] },
+  { ins: "PECA", names: ["Peca"] },
+  { ins: "ROBOAMO", names: ["Roboamo"] },
+  { ins: "ABIAM", names: ["Abiam"] },
+  { ins: "ABIA", names: ["Abia"] },
+  { ins: "ASA", names: ["Asa"] },
+  { ins: "GIOSAFAT", names: ["Giosafat"] },
+  { ins: "ATALIA", names: ["Atalia"] },
+  { ins: "AMAZIA", names: ["Amazia"] },
+  { ins: "UZZIA", names: ["Uzzia"] },
+  { ins: "IOTAM", names: ["Iotam"] },
+  { ins: "ACAZ", names: ["Acaz"] },
+  { ins: "EZECHIA", names: ["Ezechia"] },
+  { ins: "MANASSE", names: ["Manasse"] },
+  { ins: "AMON", names: ["Amon"] },
+  { ins: "GIOSIA", names: ["Giosia"] },
+  { ins: "IOIACHIM", names: ["Ieoiachim", "Ioiachim"] },
+  { ins: "IOIACHIN", names: ["Ieoiachin", "Ioiachin"] },
+  { ins: "IECONIA", names: ["Ieconia", "Iechonia"] },
+  { ins: "CONIA", names: ["Conia"] },
+  { ins: "SEDECHIA", names: ["Sedechia"] },
+
+  // Blocco 4: apostoli e personaggi di Ebrei capitolo 11
+  { ins: "SIMONE", names: ["Simone il Cananeo", "Simone lo Zelota", "Simone"] },
+  { ins: "ANDREA", names: ["Andrea"] },
+  { ins: "FILIPPO", names: ["Filippo"] },
+  { ins: "BARTOLOMEO", names: ["Bartolomeo"] },
+  { ins: "NATANAELE", names: ["Natanaele"] },
+  { ins: "TOMMASO", names: ["Tommaso"] },
+  { ins: "TADDEO", names: ["Taddeo", "Lebbeo"] },
+  { ins: "GIUDA ISCARIOTA", names: ["Giuda Iscariota"] },
+  { ins: "MATTIA", names: ["Mattia"] },
+  { ins: "BARNABA", names: ["Barnaba"] },
+  { ins: "LEVI", names: ["Levi"] },
+  { ins: "ABELE", names: ["Abele"] },
+  { ins: "ENOC", names: ["Enoc"] },
+  { ins: "NOÈ", names: ["Noè"] },
+  { ins: "ABRAAMO", names: ["Abraamo"] },
+  { ins: "ABRAMO", names: ["Abramo"] },
+  { ins: "SARA", names: ["Sara"] },
+  { ins: "SARAI", names: ["Sarai"] },
+  { ins: "ISACCO", names: ["Isacco"] },
+  { ins: "GIACOBBE", names: ["Giacobbe"] },
+  { ins: "ESAÙ", names: ["Esaù"] },
+  { ins: "GIUSEPPE", names: ["Giuseppe"] },
+  { ins: "AMRAM", names: ["Amram"] },
+  { ins: "IOCHEBED", names: ["Iochebed"] },
+  { ins: "MOSÈ", names: ["Mosè"] },
+  { ins: "RAAB", names: ["Raab"] },
+  { ins: "GEDEONE", names: ["Gedeone"] },
+  { ins: "BARAC", names: ["Barac"] },
+  { ins: "SANSONE", names: ["Sansone"] },
+  { ins: "IEFTE", names: ["Iefte"] },
+
+  // Blocco 5: nomi di importanza capitale
+  { ins: "ADAMO", names: ["Adamo"] },
+  { ins: "EVA", names: ["Eva"] },
+  { ins: "CAINO", names: ["Caino"] },
+  { ins: "SET", names: ["Set"] },
+  { ins: "SEM", names: ["Sem"] },
+  { ins: "CAM", names: ["Cam"] },
+  { ins: "IAFET", names: ["Iafet"] },
+  { ins: "LOT", names: ["Lot"] },
+  { ins: "ISMAELE", names: ["Ismaele"] },
+  { ins: "AGAR", names: ["Agar"] },
+  { ins: "RACHELE", names: ["Rachele"] },
+  { ins: "LEA", names: ["Lea"] },
+  { ins: "LABANO", names: ["Labano"] },
+  { ins: "MELCHISEDEC", names: ["Melchisedec"] },
+  { ins: "AARONNE", names: ["Aaronne"] },
+  { ins: "MIRIAM", names: ["Miriam"] },
+  { ins: "DEBORA", names: ["Debora"] },
+  { ins: "ANNA", names: ["Anna"] },
+  { ins: "ELIA", names: ["Elia"] },
+  { ins: "ELISEO", names: ["Eliseo"] },
+  { ins: "ELISABETTA", names: ["Elisabetta"] },
+  { ins: "STEFANO", names: ["Stefano"] },
+  { ins: "CORNELIO", names: ["Cornelio"] },
+  { ins: "LAZZARO", names: ["Lazzaro"] },
+  { ins: "MARTA", names: ["Marta"] },
+  { ins: "MARIA", names: ["Maria"] },
+  { ins: "ERODE", names: ["Erode"] },
+  { ins: "PILATO", names: ["Ponzio Pilato", "Pilato"] },
+  { ins: "RUBEN", names: ["Ruben"] },
+  { ins: "SIMEONE", names: ["Simeone"] },
+  { ins: "DAN", names: ["Dan"] },
+  { ins: "NEFTALI", names: ["Neftali"] },
+  { ins: "GAD", names: ["Gad"] },
+  { ins: "ASER", names: ["Aser"] },
+  { ins: "ISSACAR", names: ["Issacar"] },
+  { ins: "ZABULON", names: ["Zabulon"] },
+  { ins: "BENIAMINO", names: ["Beniamino"] },
+  { ins: "EFRAIM", names: ["Efraim"] },
+  { ins: "BABILONIA LA GRANDE", names: ["Babilonia la Grande"] },
+  { ins: "BABILONIA", names: ["Babilonia"] },
+  { ins: "GERUSALEMME", names: ["Gerusalemme"] },
+  { ins: "NUOVA GERUSALEMME", names: ["Nuova Gerusalemme"] },
+  { ins: "SODOMA", names: ["Sodoma"] },
+  { ins: "GOMORRA", names: ["Gomorra"] },
+  { ins: "SION", names: ["Sion"] },
+  { ins: "EDEN", names: ["Eden"] },
+  { ins: "BETLEEM", names: ["Betleem"] },
+  { ins: "NAZARET", names: ["Nazaret"] },
+  { ins: "ARMAGHEDON", names: ["Armaghedon"] }
+];
+let bmNameLinkMatcher = null;
+
+// Costruisce una sola volta l'espressione regolare: forme più lunghe per prime (es. «Gesù Cristo» prima di «Gesù»),
+// apostrofo dritto e tipografico, confini di parola Unicode (nessun nome dentro un'altra parola)
+function getNameLinkMatcher() {
+  if (bmNameLinkMatcher) return bmNameLinkMatcher;
+  const lookup = new Map();
+  BM_NAME_LINKS.forEach((link, idx) => {
+    link.names.forEach(n => {
+      lookup.set(escapeHtml(n), idx);
+      lookup.set(escapeHtml(n.replace(/'/g, "\u2019")), idx);
+    });
+  });
+  const alternatives = [...lookup.keys()]
+    .sort((a, b) => b.length - a.length)
+    .map(k => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/ /g, "[ \\u00A0]"))
+    .join("|");
+  bmNameLinkMatcher = { rgx: new RegExp(`(?<![\\p{L}\\p{N}_])(?:${alternatives})(?![\\p{L}\\p{N}_])`, "gu"), lookup };
+  return bmNameLinkMatcher;
+}
+
+// Avvolge i nomi della lista solo nel testo, mai dentro i tag HTML già presenti (badge Strong)
+function linkBiblicalNames(html, verseNum) {
+  const { rgx, lookup } = getNameLinkMatcher();
+  return html.split(/(<[^>]*>)/).map(part => {
+    if (part.startsWith("<")) return part;
+    return part.replace(rgx, m => {
+      const idx = lookup.get(m.replace(/\u00A0/g, " "));
+      return idx === undefined ? m : `<span class="bm-name-link" onclick="event.stopPropagation(); openNameLink(${idx}, ${verseNum}, this.textContent)">${m}</span>`;
+    });
+  }).join("");
+}
+
+// Applica i nomi cliccabili solo se l'opzione è attiva e la traduzione di quella colonna è una TNM italiana
+function applyNameLinks(html, verseNum, transId) {
+  return bmSettings.nameLinks === true && BM_NAME_LINK_BIBLES.has(transId) ? linkBiblicalNames(html, verseNum) : html;
+}
+
+// Il feedback tattile è già dato dal listener globale pointerdown (.bm-name-link incluso)
+function openNameLink(idx, verseNum, clickedSurface = "") {
+  const link = BM_NAME_LINKS[idx];
+  if (!link) return;
+  if (link.si === undefined) openNameLinkTarget(idx, "ins", verseNum);
+  else showNameLinkChooser(idx, verseNum, clickedSurface);
+}
+
+// Cerca in Perspicacia l'Esponente Principale (titolo esatto o numerato, come nell'elenco risultati).
+// Una sola voce → idx per aprirla direttamente; più omonimi (es. SAUL, I e SAUL, II) o nessuna → idx null, elenco filtrato
+async function resolveInsightTarget(key) {
+  try {
+    const data = await getInsightData();
+    if (!data || !Array.isArray(data.entries)) return { idx: null, query: key };
+    const norm = t => normalizeForSearch(t).replace(/\s+/g, " ").trim();
+    const k = norm(key).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const principalRgx = new RegExp(`^${k}(?:\\s*[,\\(\\s]\\s*(?:[ivx]+|\\d+)\\)?)?$`, "i");
+    const hits = [];
+    data.entries.forEach((e, i) => { if (principalRgx.test(norm(e.title))) hits.push(i); });
+    return hits.length === 1 ? { idx: hits[0], query: "" } : { idx: null, query: hits.length ? key : key.split(",")[0].trim() };
+  } catch (e) { return { idx: null, query: key.split(",")[0].trim() }; }
+}
+
+// Il versetto toccato diventa il punto di ritorno: showInsightView / showSiBook / showSiView lo salvano
+// nella cronologia prima di chiudere la barra azioni, così ⬅️ Indietro riporta al versetto esatto
+async function openNameLinkTarget(idx, kind, verseNum, bookNum) {
+  const link = BM_NAME_LINKS[idx];
+  if (!link) return;
+  if (kind === "si") {
+    const data = await getSiData();
+    const bi = data && Array.isArray(data.books) ? data.books.findIndex(b => Number(b.bookNumber) === Number(bookNum)) : -1;
+    state.selectedVerse = verseNum;
+    await (bi < 0 ? showSiView() : showSiBook(bi));
+    return;
+  }
+  const target = await resolveInsightTarget(link.ins);
+  insightActiveLetter = "TUTTE";
+  insightSearchQuery = target.query;
+  state.selectedVerse = verseNum;
+  await showInsightView(target.idx);
+}
+
+function showNameLinkChooser(idx, verseNum, displayTitle) {
+  const link = BM_NAME_LINKS[idx];
+  const modal = document.getElementById("myReadModal");
+  const body = document.getElementById("myReadModalBody");
+  if (!link || !modal || !body) return;
+  const btnStyle = "flex:1 1 auto; width:auto; font-size:12.5px; padding:9px 6px; white-space:nowrap;";
+  const closeJs = "document.getElementById('myReadModal').style.display='none';";
+  const siNums = [].concat(link.si);
+  const chooserBtns = `<button type="button" class="myread-action-btn" style="${btnStyle} background:#1565c0;" onclick="${closeJs} openNameLinkTarget(${idx}, 'ins', ${verseNum});">📚 Perspicacia</button>` +
+    siNums.map(n => {
+      const bk = BIBLE_BOOKS.find(x => x.id === n);
+      const lbl = siNums.length > 1 && bk ? `📘 ${escapeHtml(bk.name)}` : "📘 Tutta la Scrittura";
+      return `<button type="button" class="myread-action-btn" style="${btnStyle} background:#0d47a1;" onclick="${closeJs} openNameLinkTarget(${idx}, 'si', ${verseNum}, ${n});">${lbl}</button>`;
+    }).join("");
+  body.innerHTML = `
+    <div style="text-align:center; padding:4px 0 12px 0;">
+      <div style="font-size:17px; font-weight:900; color:#ffd54f; letter-spacing:0.4px;">${escapeHtml(displayTitle || link.names[0])}</div>
+      <div style="font-size:13px; color:#e3f2fd; margin-top:6px;">Dove vuoi approfondire?</div>
+    </div>
+    <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;">${chooserBtns}</div>
+    <button type="button" class="myread-action-btn" style="background:#062356;" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
+  `;
+  modal.style.display = "flex";
+}
+
+async function setNameLinksSetting(on) {
+  setBmSettingProp("nameLinks", on);
+  if (currentViewContext.type !== "bible") return;
+  const main = document.getElementById("mainContainer");
+  const top = main ? main.scrollTop : 0;
+  await loadChapterView();
+  if (main) main.scrollTop = top;
+}
+
+// Evidenzia le parole diverse dal testo base; i nomi cliccabili vengono inseriti prima e il marcatore
+// delle differenze scorre il testo già collegato, così un nome su più parole (es. «Giovanni il Battezzatore») resta intero
+function highlightDiffText(baseStr, targetStr, verseNum = 1, targetTransId = state.trans2) {
   const plainTarget = stripTagsToPlainText(targetStr);
-  if (!state.diffMode || !baseStr || !plainTarget) return escapeHtml(plainTarget);
-  const plainBase = stripTagsToPlainText(baseStr);
-  const cleanBase = new Set(plainBase.toLowerCase().replace(/[.,;:!?"'«»()]/g, "").split(/\s+/));
-  return plainTarget.split(/(\s+)/).map(tok => {
-    const w = tok.toLowerCase().replace(/[.,;:!?"'«»()]/g, "");
-    if (w.length > 2 && !cleanBase.has(w)) return `<span class="diff-word">${escapeHtml(tok)}</span>`;
-    return escapeHtml(tok);
+  const linked = applyNameLinks(escapeHtml(plainTarget), verseNum, targetTransId);
+  if (!state.diffMode || !baseStr || !plainTarget) return linked;
+  const clean = s => s.toLowerCase().replace(/[.,;:!?"'«»()]/g, "");
+  const cleanBase = new Set(clean(stripTagsToPlainText(baseStr)).split(/\s+/));
+  const isDiff = plainTarget.split(/\s+/).map(w => { const c = clean(w); return c.length > 2 && !cleanBase.has(c); });
+  let wordIdx = -1, inWord = false;
+  return linked.split(/(<[^>]*>)/).map(part => {
+    if (part.startsWith("<")) return part;
+    return part.replace(/\s+|\S+/g, run => {
+      if (/^\s/.test(run)) { inWord = false; return run; }
+      if (!inWord) { wordIdx++; inWord = true; }
+      return isDiff[wordIdx] ? `<span class="diff-word">${run}</span>` : run;
+    });
   }).join("");
 }
 async function loadChapterView() {
@@ -2386,7 +2757,7 @@ async function renderChapterView() {
         const key = `${state.bookId}_${state.chapter}_${v.verse}`;
         const hlClass = state.highlights[key] || "";
         const cleanText = escapeHtml(stripTagsToPlainText(v.text));
-        const text2 = highlightDiffText(v.text, map2[v.verse] || "—");
+        const text2 = highlightDiffText(v.text, map2[v.verse] || "—", v.verse, state.trans2);
         return `
           <div class="parallel-row ${hlClass}" id="v_${v.verse}" data-text="${cleanText}" onclick="onVerseClick(${v.verse}, this.getAttribute('data-text'))">
             <div class="parallel-col"><span class="verse-num">${v.verse}</span>${formatInlineStrongs(v.text, v.verse)}</div>
@@ -2401,8 +2772,8 @@ async function renderChapterView() {
         const key = `${state.bookId}_${state.chapter}_${v.verse}`;
         const hlClass = state.highlights[key] || "";
         const cleanText = escapeHtml(stripTagsToPlainText(v.text));
-        const text2 = highlightDiffText(v.text, map2[v.verse] || "—");
-        const text3 = highlightDiffText(v.text, map3[v.verse] || "—");
+        const text2 = highlightDiffText(v.text, map2[v.verse] || "—", v.verse, state.trans2);
+        const text3 = highlightDiffText(v.text, map3[v.verse] || "—", v.verse, state.trans3);
         return `
           <div class="parallel-row-3 ${hlClass}" id="v_${v.verse}" data-text="${cleanText}" onclick="onVerseClick(${v.verse}, this.getAttribute('data-text'))">
             <div class="parallel-col"><span class="verse-num">${v.verse}</span>${formatInlineStrongs(v.text, v.verse)}</div>
@@ -2530,6 +2901,7 @@ let bmSettings = safeJsonParse("bm_user_settings_v1", {
   textAlign: "left",
   showInlineBadges: true,
   messianicBulb: true,
+  nameLinks: false,
   paperMode: false,
   openCard: "aspetto"
 });
@@ -2610,7 +2982,7 @@ function bmChimeHaptic() {
 }
 
 document.addEventListener("pointerdown", function(e) {
-  const btn = e.target && e.target.closest ? e.target.closest("button, .pub-ref-badge, .tag-badge, .bm-place-hl, .color-dot") : null;
+  const btn = e.target && e.target.closest ? e.target.closest("button, .pub-ref-badge, .tag-badge, .bm-place-hl, .bm-name-link, .color-dot") : null;
   if (btn) bmHaptic(20);
 }, { passive: true });
 
@@ -2721,6 +3093,13 @@ function renderSettingsDrawerContent() {
           <span>💡 Lampadina Profezie Messianiche</span>
           <label class="bm-switch">
             <input type="checkbox" id="bmToggleMessianicBulbInput" ${bmSettings.messianicBulb !== false ? 'checked' : ''} onchange="setBmSettingProp('messianicBulb', this.checked); evaluateMessianicBulbForCurrentView();">
+            <span class="bm-slider"></span>
+          </label>
+        </div>
+        <div class="bm-set-row">
+          <span>🔗 Nomi chiave cliccabili (TNM)</span>
+          <label class="bm-switch">
+            <input type="checkbox" ${bmSettings.nameLinks === true ? 'checked' : ''} onchange="setNameLinksSetting(this.checked)">
             <span class="bm-slider"></span>
           </label>
         </div>
@@ -7847,7 +8226,7 @@ function bpHighlightDom() {
   const walker = document.createTreeWalker(main, NodeFilter.SHOW_TEXT, {
     acceptNode(node) {
       const p = node.parentElement;
-      if (!p || p.closest("button, select, input, textarea, script, style, .tag-badge, .pub-ref-badge, .chapter-header, .section-title, .verse-num, .bm-place-hl")) return NodeFilter.FILTER_REJECT;
+      if (!p || p.closest("button, select, input, textarea, script, style, .tag-badge, .pub-ref-badge, .chapter-header, .section-title, .verse-num, .bm-place-hl, .bm-name-link")) return NodeFilter.FILTER_REJECT;
       return /\p{Lu}/u.test(node.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
     }
   });
