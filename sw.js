@@ -1,5 +1,5 @@
 // Service Worker — Bibbia Multilingue PRO (v13 Offline Shell)
-const BM_SW_VERSION = "bm-pro-shell-v13-1";
+const BM_SW_VERSION = "bm-pro-shell-v13-3";
 const BM_APP_SHELL = [
   "./",
   "./index.html",
@@ -23,7 +23,7 @@ self.addEventListener("install", (event) => {
       try {
         const opaque = await fetch(new Request(BM_JSZIP_CDN, { mode: "no-cors" }));
         if (opaque) await cache.put(BM_JSZIP_CDN, opaque);
-      } catch (_e2) {}
+      } catch (_e2) { console.debug(_e2); }
     }
     self.skipWaiting();
   })());

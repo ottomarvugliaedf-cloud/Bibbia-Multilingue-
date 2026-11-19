@@ -708,6 +708,130 @@
       border-color: #b45309;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
+    /* Sommari Ufficiali di Capitolo (66 libri / 1.189 capitoli TNM) */
+    .bm-outline-box {
+      background: linear-gradient(180deg, rgba(10, 54, 126, 0.85) 0%, rgba(6, 35, 86, 0.92) 100%);
+      border: 1px solid rgba(41, 182, 246, 0.55);
+      border-radius: 10px;
+      margin: 0 0 12px 0;
+      overflow: hidden;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 3px 10px rgba(0, 0, 0, 0.25);
+    }
+    .bm-outline-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 11px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      font-size: 13px;
+      font-weight: 800;
+      color: #84ffff;
+    }
+    .bm-outline-head-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+    .bm-outline-head-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .bm-outline-book-btn {
+      background: rgba(4, 26, 66, 0.72);
+      color: #cfe3ff;
+      border: 1px solid rgba(79, 195, 247, 0.55);
+      border-radius: 999px;
+      padding: 2px 9px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .bm-outline-chev {
+      display: inline-block;
+      font-size: 12px;
+      color: #4fc3f7;
+      transition: transform 0.2s ease;
+    }
+    .bm-outline-box.open .bm-outline-chev {
+      transform: rotate(180deg);
+    }
+    .bm-outline-body {
+      display: none;
+      border-top: 1px solid rgba(41, 182, 246, 0.32);
+      padding: 8px 11px 10px 11px;
+      background: rgba(4, 26, 66, 0.42);
+    }
+    .bm-outline-box.open .bm-outline-body {
+      display: block;
+    }
+    .bm-outline-sec {
+      font-size: 11.5px;
+      font-weight: 900;
+      letter-spacing: 0.45px;
+      color: #ffd54f;
+      text-transform: uppercase;
+      margin: 6px 0 4px 0;
+    }
+    .bm-outline-sec:first-child { margin-top: 0; }
+    .bm-outline-item {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 4px 6px;
+      border-radius: 6px;
+      font-size: 13px;
+      line-height: 1.42;
+      color: #e3f2fd;
+      cursor: pointer;
+    }
+    .bm-outline-item:active { background: rgba(0, 229, 255, 0.18); }
+    .bm-outline-lvl-1 { font-weight: 700; padding-left: 4px; }
+    .bm-outline-lvl-2 { font-weight: 500; padding-left: 16px; color: #cfe3ff; }
+    .bm-outline-lvl-3 { font-weight: 500; padding-left: 28px; color: #b6d6ff; font-size: 12.5px; }
+    .bm-outline-v {
+      flex-shrink: 0;
+      font-size: 11px;
+      font-weight: 800;
+      color: #00e5ff;
+      background: rgba(0, 229, 255, 0.12);
+      border: 1px solid rgba(0, 229, 255, 0.42);
+      border-radius: 999px;
+      padding: 1px 7px;
+      white-space: nowrap;
+    }
+    main.bm-paper-reading .bm-outline-box {
+      background: #ebe3d1;
+      border-color: #c5b493;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    main.bm-paper-reading .bm-outline-head { color: #5c3a10; }
+    main.bm-paper-reading .bm-outline-chev { color: #8c5818; }
+    main.bm-paper-reading .bm-outline-book-btn {
+      background: #f5efe2;
+      color: #5c3a10;
+      border-color: #b59469;
+    }
+    main.bm-paper-reading .bm-outline-body {
+      background: #f3ecdc;
+      border-top-color: #d4c6aa;
+    }
+    main.bm-paper-reading .bm-outline-sec { color: #7c2d12; }
+    main.bm-paper-reading .bm-outline-item { color: #2b2114; }
+    main.bm-paper-reading .bm-outline-lvl-2,
+    main.bm-paper-reading .bm-outline-lvl-3 { color: #4a3c28; }
+    main.bm-paper-reading .bm-outline-v {
+      background: rgba(140, 88, 24, 0.12);
+      color: #6b4110;
+      border-color: #b59469;
+    }
     .hl-yellow { background-color: rgba(255, 235, 59, 0.38) !important; }
     .hl-blue   { background-color: rgba(3, 169, 244, 0.32) !important; }
     .hl-green  { background-color: rgba(76, 175, 80, 0.32) !important; }
@@ -2009,6 +2133,70 @@ body.oled-mode .pub-ref-badge {
       <span class="tab-icon">📝</span><span>Appunti Studio</span>
     </button>
   </nav>
+
+<!-- ============================================================================
+     MODULO PRO v2: ASSISTENTE LAMPADINA ANIMATA DELLE PROFEZIE MESSIANICHE (365+)
+     Testo Integrale nel Modale • Switch Impostazioni • Icona Strong 🏺 Dedicata
+     ============================================================================ -->
+
+<div id="bmProphecyWidget" aria-live="polite">
+  <div id="bmProphecyBubble" class="bm-prophecy-bubble">
+    <div class="bm-pb-header">
+      <span class="bm-pb-kicker">💡 PROFEZIA MESSIANICA <span id="bmPbCounter">#1</span></span>
+      <div style="display:flex; gap:4px;">
+        <button type="button" class="bm-pb-close" onclick="openMessianicCatalogModal()" title="Elenco completo delle 365+ Profezie Messianiche">☰ Tutte</button>
+        <button type="button" class="bm-pb-close" onclick="toggleMessianicBubble(false)" title="Riduci a sola lampadina">−</button>
+      </div>
+    </div>
+    <div class="bm-pb-title" style="margin-bottom:6px;">
+      <button type="button" id="bmPbPrevBtn" class="bm-pb-arrow"
+        onpointerdown="onMessianicPrevDown(event)"
+        onpointerup="onMessianicPrevUp()"
+        onpointerleave="onMessianicPrevUp()"
+        onpointercancel="onMessianicPrevUp()"
+        oncontextmenu="event.preventDefault()"
+        onclick="onMessianicPrevClick(event)"
+        title="Tocca: profezia precedente • Tieni premuto: torna alla 1ª profezia letta oggi">◀</button>
+
+      <button type="button" id="bmPbRef" class="bm-pb-ref-btn" onclick="focusCurrentMessianicVerses()" title="Riquadra i versetti della profezia nel capitolo">📖 Genesi 3:15</button>
+
+      <button type="button" class="bm-pb-arrow" onclick="stepMessianicProphecy(1)" title="Vai alla profezia messianica successiva">▶</button>
+    </div>
+    <span id="bmPbCategory" class="tag-badge" style="display:block; width:fit-content; margin:0 auto 6px auto; font-size:10.5px; background:#041a42; color:#84ffff; border-color:#29b6f6;">Origine</span>
+    <!-- Toccando il testo del fumetto si apre subito la Nota Integrale senza tagli -->
+    <div id="bmPbDesc" class="bm-pb-desc bm-justify-text" onclick="openGreekFulfillmentAction()" title="Tocca per leggere la nota integrale e i riferimenti"></div>
+    <div class="bm-pb-controls">
+      <button type="button" id="bmPbGreekBtn" class="bm-pb-greek-btn" onclick="openGreekFulfillmentAction()" title="Apri nota integrale e adempimento nelle Scritture Greche Cristiane">
+        <span>🏛️</span><span id="bmPbGreekLabel">Greche: Gal 4:4</span>
+      </button>
+    </div>
+    <div class="bm-pb-footer-hint">
+      <span id="bmPbOriginHint">⏱️ Tieni premuto ◀ per la 1ª di oggi</span>
+      <span style="color:#00e5ff; font-weight:800; cursor:pointer;" onclick="focusCurrentMessianicVerses()">🎯 Riquadra</span>
+    </div>
+  </div>
+
+  <div id="bmBulbOrb" class="bm-bulb-orb" title="Profezia Messianica rilevata! Tocca per aprire/chiudere il fumetto • Trascina col dito per spostare">
+    <div class="bm-bulb-spark"></div>
+    <span id="bmBulbBadge" class="bm-bulb-badge">1</span>
+    <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M32 4V9M12 12L15.5 15.5M52 12L48.5 15.5M4 30H9M55 30H60" stroke="#FFF59D" stroke-width="3" stroke-linecap="round"/>
+      <path d="M32 12C21.5 12 14 19.6 14 29C14 35.2 17.6 40.3 22.2 43.4C23.7 44.4 24.5 46.1 24.5 48V50H39.5V48C39.5 46.1 40.3 44.4 41.8 43.4C46.4 40.3 50 35.2 50 29C50 19.6 42.5 12 32 12Z" fill="url(#bulbGoldGrad)" stroke="#FFFFFF" stroke-width="2.2"/>
+      <path d="M27 42V33L32 28L37 33V42" stroke="#FFFDE7" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="25" y="50" width="14" height="4" rx="2" fill="#90CAF9" stroke="#041A42" stroke-width="1.2"/>
+      <rect x="26.5" y="54.5" width="11" height="4" rx="2" fill="#64B5F6" stroke="#041A42" stroke-width="1.2"/>
+      <path d="M29 59.5H35" stroke="#FFF59D" stroke-width="2.5" stroke-linecap="round"/>
+      <defs>
+        <linearGradient id="bulbGoldGrad" x1="32" y1="12" x2="32" y2="50" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#FFFDE7"/>
+          <stop offset="45%" stop-color="#FFD54F"/>
+          <stop offset="100%" stop-color="#FF8F00"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+</div>
+
   <script>
 const BIBLE_BOOKS = [
   { id: 1,  name: "Genesi", abbr: "Gen", ch: 50, sec: "OT", cat: 1 },
@@ -4220,9 +4408,18 @@ async function fetchChapterData(transId, bookId, chapter) {
   }
   return verses;
 }
+const BM_NWT_COMPANION_MAP = {
+  "gb:bi12": "gb:nwt",
+  "gb:bi12_e": "gb:nwt_e",
+  "gb:bi12_s": "gb:nwt_s"
+};
+function resolveNwtDataSourceId(transId) {
+  return BM_NWT_COMPANION_MAP[transId] || transId;
+}
 async function fetchChapterFootnotes(transId, bookId, chapter) {
+  const sourceId = resolveNwtDataSourceId(transId);
   try {
-    const fullOffline = await getOfflineBible(transId);
+    const fullOffline = await getOfflineBible(sourceId);
     if (fullOffline && fullOffline.books) {
       const bObj = fullOffline.books.find(b => Number(b.nr) === Number(bookId));
       const cObj = bObj && bObj.chapters ? bObj.chapters.find(c => Number(c.chapter) === Number(chapter)) : null;
@@ -4230,6 +4427,114 @@ async function fetchChapterFootnotes(transId, bookId, chapter) {
     }
   } catch (e) { console.debug(e); }
   return {};
+}
+async function fetchChapterOutline(transId, bookId, chapter) {
+  const sourceId = resolveNwtDataSourceId(transId);
+  try {
+    const fullOffline = await getOfflineBible(sourceId);
+    if (fullOffline && fullOffline.books) {
+      const bObj = fullOffline.books.find(b => Number(b.nr) === Number(bookId));
+      const cObj = bObj && bObj.chapters ? bObj.chapters.find(c => Number(c.chapter) === Number(chapter)) : null;
+      if (cObj && Array.isArray(cObj.outline) && cObj.outline.length > 0) return cObj.outline;
+    }
+  } catch (e) { console.debug(e); }
+  return [];
+}
+async function fetchBookOutlines(transId, bookId) {
+  const sourceId = resolveNwtDataSourceId(transId);
+  try {
+    const fullOffline = await getOfflineBible(sourceId);
+    if (fullOffline && fullOffline.books) {
+      const bObj = fullOffline.books.find(b => Number(b.nr) === Number(bookId));
+      if (bObj && Array.isArray(bObj.chapters)) {
+        return bObj.chapters
+          .filter(c => Array.isArray(c.outline) && c.outline.length > 0)
+          .map(c => ({ chapter: Number(c.chapter), outline: c.outline }))
+          .sort((a, b) => a.chapter - b.chapter);
+      }
+    }
+  } catch (e) { console.debug(e); }
+  return [];
+}
+function toggleChapterOutlineBox() {
+  bmHaptic(12);
+  const box = document.getElementById("bmChapterOutlineBox");
+  if (box) box.classList.toggle("open");
+}
+function jumpToOutlineVerse(vSpec) {
+  bmHaptic(14);
+  if (vSpec) scrollToVerseAndHighlight(vSpec);
+}
+function renderChapterOutlineHtml(outlineItems, bookName, chapterNum) {
+  if (!Array.isArray(outlineItems) || !outlineItems.length) return "";
+  const pointCount = outlineItems.filter(it => it.lvl > 0).length || outlineItems.length;
+  const rowsHtml = outlineItems.map(it => {
+    if (it.lvl === 0) {
+      return `<div class="bm-outline-sec">${escapeHtml(it.text)}</div>`;
+    }
+    const lvlCls = `bm-outline-lvl-${Math.min(3, Math.max(1, Number(it.lvl) || 1))}`;
+    const vSpec = String(it.verses || "").trim();
+    const clickAttr = vSpec ? ` onclick="jumpToOutlineVerse('${escapeJsStr(vSpec)}')"` : "";
+    const badge = vSpec ? `<span class="bm-outline-v">${escapeHtml(vSpec)}</span>` : "";
+    return `<div class="bm-outline-item ${lvlCls}"${clickAttr}><span>${it.lvl >= 2 ? "• " : ""}${escapeHtml(it.text)}</span>${badge}</div>`;
+  }).join("");
+  return `
+    <div id="bmChapterOutlineBox" class="bm-outline-box">
+      <div class="bm-outline-head" onclick="toggleChapterOutlineBox()">
+        <div class="bm-outline-head-left">
+          <span>📑</span>
+          <span>Sommario ${escapeHtml(bookName)} ${chapterNum} <span style="opacity:0.78; font-weight:600;">(${pointCount})</span></span>
+        </div>
+        <div class="bm-outline-head-actions">
+          <button type="button" class="bm-outline-book-btn" onclick="event.stopPropagation(); openBookOutlineModal();" title="Apri il sommario completo di tutto il libro">📖 Libro</button>
+          <span class="bm-outline-chev">▾</span>
+        </div>
+      </div>
+      <div class="bm-outline-body">${rowsHtml}</div>
+    </div>`;
+}
+async function openBookOutlineModal() {
+  bmHaptic(14);
+  const book = getBook(state.bookId);
+  const chapters = await fetchBookOutlines(state.trans1, state.bookId);
+  const modal = document.getElementById("myReadModal");
+  const body = document.getElementById("myReadModalBody");
+  if (!modal || !body) return;
+  if (!chapters.length) {
+    showBlueInfoModal("📑 Sommario del Libro", `Nessun sommario trovato in memoria per <b>${escapeHtml(book.name)}</b>. Importa <b>nwt_I.epub</b> una sola volta da ⚙️ ➔ Moduli.`);
+    return;
+  }
+  const chaptersHtml = chapters.map(chObj => {
+    const isCurr = chObj.chapter === state.chapter;
+    const itemsHtml = chObj.outline.map(it => {
+      if (it.lvl === 0) {
+        return `<div style="font-size:11px; font-weight:900; color:#ffd54f; text-transform:uppercase; margin:5px 0 3px 0;">${escapeHtml(it.text)}</div>`;
+      }
+      const pad = it.lvl === 1 ? 4 : (it.lvl === 2 ? 15 : 25);
+      const vSpec = String(it.verses || "").trim();
+      const vPill = vSpec ? `<span class="bm-outline-v">${escapeHtml(vSpec)}</span>` : "";
+      return `<div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px; padding:3px 4px 3px ${pad}px; font-size:13px; line-height:1.4; cursor:pointer; color:${it.lvl === 1 ? '#ffffff' : '#cfe3ff'}; font-weight:${it.lvl === 1 ? '700' : '500'};" onclick="document.getElementById('myReadModal').style.display='none'; openRef(${state.bookId}, ${chObj.chapter}, '${escapeJsStr(vSpec)}');"><span>${it.lvl >= 2 ? '• ' : ''}${escapeHtml(it.text)}</span>${vPill}</div>`;
+    }).join("");
+    return `
+      <div style="background:#062356; border:1px solid ${isCurr ? '#00e5ff' : 'rgba(41,182,246,0.4)'}; border-radius:9px; padding:8px 10px; margin-bottom:8px;">
+        <div style="font-size:13.5px; font-weight:900; color:${isCurr ? '#00e5ff' : '#84ffff'}; margin-bottom:4px; cursor:pointer;" onclick="document.getElementById('myReadModal').style.display='none'; openRef(${state.bookId}, ${chObj.chapter});">
+          📖 ${escapeHtml(book.name)} ${chObj.chapter}${isCurr ? ' (attuale)' : ''}
+        </div>
+        ${itemsHtml}
+      </div>`;
+  }).join("");
+  body.innerHTML = `
+    <div style="text-align:center; padding:2px 0 10px 0;">
+      <div style="font-size:22px; margin-bottom:2px;">📑</div>
+      <div style="font-size:15.5px; font-weight:900; color:#ffd54f;">Sommario Ufficiale: ${escapeHtml(book.name)}</div>
+      <div style="font-size:12px; color:#9ec9ff;">${chapters.length} ${chapters.length === 1 ? 'capitolo' : 'capitoli'} • Tocca un punto per saltare al passo</div>
+    </div>
+    <div style="max-height:54vh; overflow-y:auto; margin-bottom:10px; padding-right:2px;">
+      ${chaptersHtml}
+    </div>
+    <button type="button" class="myread-action-btn" style="background:#062356;" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
+  `;
+  modal.style.display = "flex";
 }
 async function openVerseFootnotesModal(verseNum) {
   bmHaptic(14);
@@ -4252,6 +4557,7 @@ async function openVerseFootnotesModal(verseNum) {
       <div style="font-size:24px; margin-bottom:2px;">📌</div>
       <div style="font-size:15.5px; font-weight:900; color:#ffd54f;">Note in Calce Ufficiali</div>
       <div style="font-size:13px; color:#00e5ff; font-weight:800;">${escapeHtml(refStr)}</div>
+      ${BM_NWT_COMPANION_MAP[state.trans1] ? '<div style="font-size:11.5px; color:#9ec9ff; margin-top:3px;">Archivio note in calce TNM (collegate all’edizione 1987)</div>' : ''}
     </div>
     <div class="bm-justify-text" style="max-height:50vh; overflow-y:auto; margin-bottom:10px;">
       ${notesHtml}
@@ -4771,7 +5077,7 @@ function highlightDiffText(baseStr, targetStr, verseNum = 1, targetTransId = sta
 }
 async function loadChapterView() {
   await renderChapterView();
-  if (typeof evaluateMessianicBulbForCurrentView === "function") evaluateMessianicBulbForCurrentView();
+  evaluateMessianicBulbForCurrentView();
 }
 async function renderChapterView() {
   const reqId = ++currentChapterReqId;
@@ -4794,6 +5100,7 @@ async function renderChapterView() {
     const data1 = await fetchChapterData(state.trans1, state.bookId, state.chapter);
     if (reqId !== currentChapterReqId) return;
     const footnotes1 = await fetchChapterFootnotes(state.trans1, state.bookId, state.chapter);
+    const outline1 = (bmSettings.showOutlines !== false) ? await fetchChapterOutline(state.trans1, state.bookId, state.chapter) : [];
     let data2 = [], data3 = [];
     if (state.parallelCount >= 2) {
       try { data2 = await fetchChapterData(state.trans2, state.bookId, state.chapter); } catch(e) { data2 = []; }
@@ -4857,6 +5164,7 @@ async function renderChapterView() {
       }).join("");
     }
     const backBtnHtml = getBackBtnHtml();
+    const outlineHtml = renderChapterOutlineHtml(outline1, book.name, state.chapter);
     main.innerHTML = `
       <div class="chapter-header">
         <div class="chapter-title" onclick="showChaptersView(${state.bookId})" style="cursor:pointer;">${escapeHtml(book.name)} ${state.chapter}▾</div>
@@ -4866,6 +5174,7 @@ async function renderChapterView() {
           <button class="nav-btn" onclick="nextChapter()">Succ▶</button>
         </div>
       </div>
+      ${outlineHtml}
       <div>${versesHtml}</div>
       <div style="display:flex; justify-content:space-between; margin-top:20px; padding-top:12px; border-top:1px solid var(--border-color);">
         <button class="nav-btn" onclick="prevChapter()">◀Capitolo Prec.</button>
@@ -4983,6 +5292,7 @@ let bmSettings = safeJsonParse("bm_user_settings_v1", {
   textAlign: "left",
   showInlineBadges: true,
   showFootnotes: true,
+  showOutlines: true,
   messianicBulb: true,
   nameLinks: false,
   paperMode: false,
@@ -4999,7 +5309,7 @@ function saveBmSettings() {
 function syncBmPaperMode() {
   const main = document.getElementById("mainContainer");
   if (!main) return;
-  const t = (typeof currentViewContext !== "undefined" && currentViewContext) ? currentViewContext.type : "";
+  const t = currentViewContext ? currentViewContext.type : "";
   const isGridView = Boolean(main.querySelector(".books-grid, .chapters-grid"));
   const isReading = !window.bmPaperBlocked &&
     ["bible", "daily", "insight", "si", "notes", "saved", "search"].includes(t) &&
@@ -5123,7 +5433,7 @@ function renderSettingsDrawerContent() {
         📊 Heatmap Studio
       </button>
       <button type="button" class="myread-action-btn bm-drawer-quick-btn" onclick="runDrawerQuickAction(this, toggleBmZenMode)">
-        🧘 ${typeof bmZenModeActive !== 'undefined' && bmZenModeActive ? "Disattiva Focus" : "Modalità Focus"}
+        🧘 ${bmZenModeActive ? "Disattiva Focus" : "Modalità Focus"}
       </button>
     </div>
     <!-- SCHEDA 1: ASPETTO & TIPOGRAFIA -->
@@ -5271,6 +5581,13 @@ function renderSettingsDrawerContent() {
           <span>📌 Note in calce ufficiali (TNM)</span>
           <label class="bm-switch">
             <input type="checkbox" ${bmSettings.showFootnotes !== false ? 'checked' : ''} onchange="setBmSettingProp('showFootnotes', this.checked); if (currentViewContext.type === 'bible') loadChapterView();">
+            <span class="bm-slider"></span>
+          </label>
+        </div>
+        <div class="bm-set-row">
+          <span>📑 Sommari ufficiali di capitolo (TNM)</span>
+          <label class="bm-switch">
+            <input type="checkbox" ${bmSettings.showOutlines !== false ? 'checked' : ''} onchange="setBmSettingProp('showOutlines', this.checked); if (currentViewContext.type === 'bible') loadChapterView();">
             <span class="bm-slider"></span>
           </label>
         </div>
@@ -6123,7 +6440,7 @@ function searchWordInConcordance(word) {
   if (inp) {
     inp.value = word;
     Promise.resolve(executeSearch(1)).finally(() => {
-      if (typeof bmXRayReturnState !== "undefined" && bmXRayReturnState) {
+      if (bmXRayReturnState) {
         injectXRayReturnBanner();
       }
     });
@@ -6475,7 +6792,7 @@ function buildUniversalRefsForVerse(bookId, chapter, verseNum, rawText) {
   const add = (r) => {
     if (r && r !== selfRef && !list.includes(r)) list.push(r);
   };
-  if (typeof PRO_CROSS_REFS !== "undefined" && PRO_CROSS_REFS[key]) {
+  if (PRO_CROSS_REFS[key]) {
     PRO_CROSS_REFS[key].forEach(add);
   }
   const low = (rawText || "").toLowerCase();
@@ -6601,7 +6918,7 @@ function filterStrongModalQuickSearch(queryStr) {
   `).join("");
 }
 
-window.openStrongModalForVerse = function(clickedCode) {
+function openStrongModalForVerse(clickedCode) {
   const book = getBook(state.bookId);
   const vNum = state.selectedVerse || 1;
   const rawVerse = state.selectedVerseText || "";
@@ -6649,9 +6966,9 @@ window.openStrongModalForVerse = function(clickedCode) {
   `;
   closeActionBar();
   document.getElementById("proModal").style.display = "flex";
-};
+}
 
-window.openCrossRefsModalForVerse = async function() {
+async function openCrossRefsModalForVerse() {
   const book = getBook(state.bookId);
   const vNum = state.selectedVerse || 1;
   const rawVerse = state.selectedVerseText || "";
@@ -6687,7 +7004,7 @@ window.openCrossRefsModalForVerse = async function() {
   `;
   closeActionBar();
   document.getElementById("proModal").style.display = "flex";
-};
+}
 let savedColorFilter = "ALL";
 
 function filterSavedByColor(colorCode) {
@@ -6897,7 +7214,7 @@ function saveCurrentPositionToHistory(targetBookId = null, targetCh = null) {
   const main = document.getElementById("mainContainer");
   const scrollPos = main ? main.scrollTop : 0;
   const mapV = document.getElementById("mapsViewer");
-  if (mapV && mapV.style.display === "flex" && typeof bpV !== "undefined" && bpV.map) {
+  if (mapV && mapV.style.display === "flex" && bpV.map) {
     navHistory.push({
       type: "map_viewer",
       mapId: bpV.map.id,
@@ -7135,7 +7452,7 @@ function parseRefStringToTarget(str) {
   const ch = parseInt(m[2] || "1", 10);
   const vSpec = (m[3] || "").trim();
   let found = null;
-  if (typeof SI_ABBR_MAP !== "undefined" && SI_ABBR_MAP[qBook]) {
+  if (SI_ABBR_MAP[qBook]) {
     found = getBook(SI_ABBR_MAP[qBook]);
   }
   if (!found) {
@@ -8152,6 +8469,141 @@ async function extractJwFormatEpub(zip, allFiles, mergedBooksMap, statusEl, labe
       mergedBooksMap.set(bId, { nr: bId, name: bookMeta.name, chapters: chaptersArr });
     }
   }
+
+  // Estrazione automatica di tutti i 66 Sommari ufficiali di capitolo (NWT 2013/2017/2019 in qualsiasi lingua)
+  const prefixToBookId = {};
+  for (let bId = 1; bId <= 66; bId++) {
+    if (navBookPrefixMap[bId]) prefixToBookId[navBookPrefixMap[bId]] = bId;
+    const defaultNwtPrefix = String(1001061104 + bId);
+    if (!prefixToBookId[defaultNwtPrefix]) prefixToBookId[defaultNwtPrefix] = bId;
+  }
+
+  let candidateOutlineFiles = [];
+  const tocXhtmlPath = allFiles.find(f => f.split("/").pop().toLowerCase() === "toc.xhtml");
+  if (tocXhtmlPath) {
+    try {
+      const tocStr = await zip.files[tocXhtmlPath].async("string");
+      const dirPrefix = tocXhtmlPath.includes("/") ? tocXhtmlPath.slice(0, tocXhtmlPath.lastIndexOf("/") + 1) : "";
+      const seen = new Set();
+      for (const m of tocStr.matchAll(/href=["']([^"'#]+?\.xhtml)["']/gi)) {
+        const rel = m[1].split("/").pop();
+        if (/^bible(?:book|chapter|verse)nav/i.test(rel) || rel.includes("-split") || rel.includes("-extracted")) continue;
+        const fullPath = zip.files[dirPrefix + rel] ? (dirPrefix + rel) : allFiles.find(f => f.endsWith("/" + rel) || f === rel);
+        if (fullPath && !seen.has(fullPath)) {
+          seen.add(fullPath);
+          candidateOutlineFiles.push(fullPath);
+        }
+      }
+    } catch (e) { console.debug(e); }
+  }
+  if (candidateOutlineFiles.length === 0) {
+    candidateOutlineFiles = allFiles.filter(f => {
+      const base = f.split("/").pop();
+      return base.endsWith(".xhtml") && !base.includes("-split") && !base.includes("-extracted") && !/^bible/i.test(base) && !/^BIBLE_/.test(base);
+    });
+  }
+
+  let outlinesExtractedCount = 0;
+  for (const oPath of candidateOutlineFiles) {
+    const raw = await zip.files[oPath].async("string");
+    if (!raw.includes('class="outline"') && !raw.includes("docClass-115")) continue;
+    const parsedOutline = parseJwEpubOutlineXhtml(raw, prefixToBookId);
+    if (!parsedOutline || !parsedOutline.bookId) continue;
+    const bookObj = mergedBooksMap.get(parsedOutline.bookId);
+    if (!bookObj || !Array.isArray(bookObj.chapters)) continue;
+    let attachedAny = false;
+    Object.keys(parsedOutline.chapters).forEach(chKey => {
+      const chNum = Number(chKey);
+      const items = parsedOutline.chapters[chKey];
+      const chObj = bookObj.chapters.find(c => Number(c.chapter) === chNum);
+      if (chObj && Array.isArray(items) && items.length > 0) {
+        chObj.outline = items;
+        attachedAny = true;
+      }
+    });
+    if (attachedAny) {
+      outlinesExtractedCount++;
+      if (outlinesExtractedCount % 10 === 0 || outlinesExtractedCount === 66) {
+        statusEl.innerHTML = `📑 Estrazione sommari ufficiali: ${outlinesExtractedCount}/66...`;
+      }
+    }
+  }
+}
+
+function parseJwEpubOutlineXhtml(xhtml, prefixToBookId) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xhtml, "text/html");
+  const rootUl = doc.querySelector("ul.outline");
+  if (!rootUl) return null;
+
+  const cleanText = (el) => (el ? el.textContent : "").replace(/[\u2009\u00A0\s]+/g, " ").trim();
+
+  let bookId = null;
+  const links = rootUl.querySelectorAll("a[href]");
+  for (const a of links) {
+    const href = (a.getAttribute("href") || "").split("#")[0].split("/").pop().replace(/\.x?html$/i, "");
+    const prefix = href.replace(/-split\d+$/i, "");
+    if (prefixToBookId[prefix]) {
+      bookId = prefixToBookId[prefix];
+      break;
+    }
+  }
+  if (!bookId) return null;
+
+  const parseItemsUnder = (ulEl, lvl, outList) => {
+    Array.from(ulEl.children).forEach(li => {
+      if (li.tagName.toLowerCase() !== "li") return;
+      const p = Array.from(li.children).find(el => el.tagName.toLowerCase() === "p");
+      if (p) {
+        const vParts = [];
+        p.querySelectorAll("a").forEach(a => {
+          const t = cleanText(a);
+          if (/\d/.test(t)) vParts.push(t);
+        });
+        const versesStr = vParts.join(", ");
+        const raw = cleanText(p);
+        const label = raw.replace(/\s*\([^)]*\d[^)]*\)\s*$/, "").trim() || raw;
+        if (label) outList.push({ lvl, text: label, verses: versesStr });
+      }
+      Array.from(li.children).forEach(sub => {
+        if (sub.tagName.toLowerCase() === "ul") parseItemsUnder(sub, lvl + 1, outList);
+      });
+    });
+  };
+
+  const chapters = {};
+  const chapterLis = rootUl.querySelectorAll("li.chapterNo");
+  if (chapterLis.length > 0) {
+    chapterLis.forEach(li => {
+      const p = Array.from(li.children).find(el => el.tagName.toLowerCase() === "p");
+      if (!p) return;
+      const m = cleanText(p).match(/(\d{1,3})/);
+      if (!m) return;
+      const chNum = parseInt(m[1], 10);
+      const items = [];
+      // Intestazione di sezione superiore (es. Proverbi 10-31, Cantico dei Cantici 1-8)
+      const parentLi = li.parentElement ? li.parentElement.closest("li") : null;
+      if (parentLi && rootUl.contains(parentLi)) {
+        const parentP = Array.from(parentLi.children).find(el => el.tagName.toLowerCase() === "p");
+        const secTxt = cleanText(parentP);
+        if (secTxt) items.push({ lvl: 0, text: secTxt, verses: "" });
+      }
+      Array.from(li.children).forEach(sub => {
+        if (sub.tagName.toLowerCase() === "ul") parseItemsUnder(sub, 1, items);
+      });
+      if (items.length > 0) {
+        // Unisce eventuali scene multiple nello stesso capitolo (es. Cantico dei Cantici cap. 3 e 8)
+        chapters[chNum] = chapters[chNum] ? chapters[chNum].concat(items) : items;
+      }
+    });
+  } else {
+    // Libri composti da 1 solo capitolo (Abdia, Filemone, 2 Giovanni, 3 Giovanni, Giuda)
+    const items = [];
+    parseItemsUnder(rootUl, 1, items);
+    if (items.length > 0) chapters[1] = items;
+  }
+
+  return { bookId, chapters };
 }
 
 function extractJwFootnotesFromDoc(doc) {
@@ -8895,7 +9347,7 @@ async function importInsightFiles(event) {
     const payload = { updated: Date.now(), count: entries.length, entries };
     insightMemCache = payload;
     bmInsightVerseCache.clear();
-    if (typeof bmDynamicCatalogEnriched !== "undefined") bmDynamicCatalogEnriched = false;
+    bmDynamicCatalogEnriched = false;
     statusEl.innerHTML = `💾 Salvataggio di ${entries.length} voci nel database offline...`;
     await idbPut("bm:insight_it", payload);
     statusEl.innerHTML = `✔ Perspicacia salvata offline (${entries.length} voci pronte)!`;
@@ -9225,7 +9677,7 @@ async function importSiFile(event) {
       extras: Array.isArray(parsed.extras) ? parsed.extras : []
     };
     siMemCache = payload;
-    if (typeof bmDynamicCatalogEnriched !== "undefined") bmDynamicCatalogEnriched = false;
+    bmDynamicCatalogEnriched = false;
     setStatus(`💾 Salvataggio di ${books.length} libri nel database offline...`);
     await idbPut("bm:si_it", payload);
     setStatus(`✔ Tutta la Scrittura salvata offline (${books.length} libri pronti)!`);
@@ -10216,7 +10668,7 @@ function confirmImportBackupNow() {
     if (parsed.trans3) { state.trans3 = parsed.trans3; safeSaveStorage("bm_trans3", state.trans3); }
     if (parsed.bulbPosition && typeof parsed.bulbPosition === "object") {
       safeSaveStorage("bm_bulb_pos_v1", JSON.stringify(parsed.bulbPosition));
-      if (typeof applySavedBulbPosition === "function") applySavedBulbPosition();
+      applySavedBulbPosition();
     }
     if (parsed.readingPlan && typeof parsed.readingPlan === "object") {
       rpState = parsed.readingPlan;
@@ -10331,7 +10783,7 @@ function bpGetViewText() {
   const main = document.getElementById("mainContainer");
   const out = { full: "", selected: "", scope: "", selLabel: "", rows: [] };
   if (!main) return out;
-  const type = (typeof currentViewContext !== "undefined" && currentViewContext) ? currentViewContext.type : "";
+  const type = currentViewContext ? currentViewContext.type : "";
   const rows = [...main.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3")];
   if (rows.length) {
     out.rows = rows;
@@ -10902,7 +11354,7 @@ async function checkBmPwaUpdates() {
     const reg = window.__bmSwReg || await navigator.serviceWorker.getRegistration();
     let statusLine = "Service Worker non ancora attivo.";
     if (reg && reg.active) {
-      try { await reg.update(); } catch (_e) {}
+      try { await reg.update(); } catch (e) { console.debug(e); }
       const info = await new Promise(resolve => {
         const ch = new MessageChannel();
         const t = setTimeout(() => resolve(null), 1500);
@@ -10924,21 +11376,6 @@ async function checkBmPwaUpdates() {
   }
 }
 
-document.documentElement.style.setProperty("--font-size-verse", state.fontSize + "px");
-applySavedTheme();
-updateReadingPlanHeaderBtn();
-updateMyReadingLabel();
-try { loadExternalExegeticalModules(); } catch (e) { console.debug(e); }
-try { initBmServiceWorker(); } catch (e) { console.debug(e); }
-populateSelects()
-  .catch(() => {})
-  .finally(() => {
-    showDailyTextView(0, true)
-      .catch(() => {})
-      .finally(() => {
-        dismissSplashScreen();
-      });
-  });
 
 // ============================================================================
 // MODULO "🕯️ MIA LETTURA" INDIPENDENTE (Scelta Capitolo, Conferma, Vai e Reset Long-Press)
@@ -11306,7 +11743,7 @@ document.addEventListener("keydown", function(e) {
 // ============================================================================
 document.getElementById("mainContainer")?.addEventListener("pointerdown", function(ev) {
   if (document.querySelector(".bm-persist-hl")) {
-    if (ev.target && ev.target.closest(".chapter-header, .nav-btn, .search-btn")) return;
+    if (ev.target && ev.target.closest(".chapter-header, .bm-outline-box, .nav-btn, .search-btn")) return;
     clearPersistentVerseHighlight();
   }
 }, { passive: true });
@@ -12195,72 +12632,9 @@ function toggleBmZenMode() {
     zenExitBtn.style.display = "none";
   }
 }
-</script>
-
-<!-- ============================================================================
-     MODULO PRO v2: ASSISTENTE LAMPADINA ANIMATA DELLE PROFEZIE MESSIANICHE (365+)
-     Testo Integrale nel Modale • Switch Impostazioni • Icona Strong 🏺 Dedicata
-     ============================================================================ -->
-
-<div id="bmProphecyWidget" aria-live="polite">
-  <div id="bmProphecyBubble" class="bm-prophecy-bubble">
-    <div class="bm-pb-header">
-      <span class="bm-pb-kicker">💡 PROFEZIA MESSIANICA <span id="bmPbCounter">#1</span></span>
-      <div style="display:flex; gap:4px;">
-        <button type="button" class="bm-pb-close" onclick="openMessianicCatalogModal()" title="Elenco completo delle 365+ Profezie Messianiche">☰ Tutte</button>
-        <button type="button" class="bm-pb-close" onclick="toggleMessianicBubble(false)" title="Riduci a sola lampadina">−</button>
-      </div>
-    </div>
-    <div class="bm-pb-title" style="margin-bottom:6px;">
-      <button type="button" id="bmPbPrevBtn" class="bm-pb-arrow"
-        onpointerdown="onMessianicPrevDown(event)"
-        onpointerup="onMessianicPrevUp()"
-        onpointerleave="onMessianicPrevUp()"
-        onpointercancel="onMessianicPrevUp()"
-        oncontextmenu="event.preventDefault()"
-        onclick="onMessianicPrevClick(event)"
-        title="Tocca: profezia precedente • Tieni premuto: torna alla 1ª profezia letta oggi">◀</button>
-
-      <button type="button" id="bmPbRef" class="bm-pb-ref-btn" onclick="focusCurrentMessianicVerses()" title="Riquadra i versetti della profezia nel capitolo">📖 Genesi 3:15</button>
-
-      <button type="button" class="bm-pb-arrow" onclick="stepMessianicProphecy(1)" title="Vai alla profezia messianica successiva">▶</button>
-    </div>
-    <span id="bmPbCategory" class="tag-badge" style="display:block; width:fit-content; margin:0 auto 6px auto; font-size:10.5px; background:#041a42; color:#84ffff; border-color:#29b6f6;">Origine</span>
-    <!-- Toccando il testo del fumetto si apre subito la Nota Integrale senza tagli -->
-    <div id="bmPbDesc" class="bm-pb-desc bm-justify-text" onclick="openGreekFulfillmentAction()" title="Tocca per leggere la nota integrale e i riferimenti"></div>
-    <div class="bm-pb-controls">
-      <button type="button" id="bmPbGreekBtn" class="bm-pb-greek-btn" onclick="openGreekFulfillmentAction()" title="Apri nota integrale e adempimento nelle Scritture Greche Cristiane">
-        <span>🏛️</span><span id="bmPbGreekLabel">Greche: Gal 4:4</span>
-      </button>
-    </div>
-    <div class="bm-pb-footer-hint">
-      <span id="bmPbOriginHint">⏱️ Tieni premuto ◀ per la 1ª di oggi</span>
-      <span style="color:#00e5ff; font-weight:800; cursor:pointer;" onclick="focusCurrentMessianicVerses()">🎯 Riquadra</span>
-    </div>
-  </div>
-
-  <div id="bmBulbOrb" class="bm-bulb-orb" title="Profezia Messianica rilevata! Tocca per aprire/chiudere il fumetto • Trascina col dito per spostare">
-    <div class="bm-bulb-spark"></div>
-    <span id="bmBulbBadge" class="bm-bulb-badge">1</span>
-    <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M32 4V9M12 12L15.5 15.5M52 12L48.5 15.5M4 30H9M55 30H60" stroke="#FFF59D" stroke-width="3" stroke-linecap="round"/>
-      <path d="M32 12C21.5 12 14 19.6 14 29C14 35.2 17.6 40.3 22.2 43.4C23.7 44.4 24.5 46.1 24.5 48V50H39.5V48C39.5 46.1 40.3 44.4 41.8 43.4C46.4 40.3 50 35.2 50 29C50 19.6 42.5 12 32 12Z" fill="url(#bulbGoldGrad)" stroke="#FFFFFF" stroke-width="2.2"/>
-      <path d="M27 42V33L32 28L37 33V42" stroke="#FFFDE7" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-      <rect x="25" y="50" width="14" height="4" rx="2" fill="#90CAF9" stroke="#041A42" stroke-width="1.2"/>
-      <rect x="26.5" y="54.5" width="11" height="4" rx="2" fill="#64B5F6" stroke="#041A42" stroke-width="1.2"/>
-      <path d="M29 59.5H35" stroke="#FFF59D" stroke-width="2.5" stroke-linecap="round"/>
-      <defs>
-        <linearGradient id="bulbGoldGrad" x1="32" y1="12" x2="32" y2="50" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stop-color="#FFFDE7"/>
-          <stop offset="45%" stop-color="#FFD54F"/>
-          <stop offset="100%" stop-color="#FF8F00"/>
-        </linearGradient>
-      </defs>
-    </svg>
-  </div>
-</div>
-
-<script>
+// ============================================================================
+// MODULO PRO v2: ASSISTENTE LAMPADINA PROFEZIE MESSIANICHE (365+)
+// ============================================================================
 const CORE_MESSIANIC_PROPHECIES = [
   { b: 1, c: 3, v: "15", cat: "Origine", desc: "Il 'seme' (discendenza) della donna schiaccerà la testa al serpente.", nt: ["Galati 4:4", "Ebrei 2:14", "Rivelazione 12:9", "1 Giovanni 3:8"], ntCited: true },
   { b: 1, c: 9, v: "26-27", cat: "Genealogia", desc: "L'Iddio di Sem sarà benedetto; il Messia verrà attraverso la linea di Sem.", nt: ["Luca 3:36"], ntCited: true },
@@ -12591,7 +12965,7 @@ function highlightMessianicVersesInDOM(prophecyObj, shouldScroll = false) {
   document.querySelectorAll(".bm-messianic-verse-box").forEach(el => {
     el.classList.remove("bm-messianic-verse-box");
   });
-  if (!prophecyObj || (typeof bmSettings !== "undefined" && bmSettings.messianicBulb === false)) return;
+  if (!prophecyObj || bmSettings.messianicBulb === false) return;
 
   let targetVerses = [];
   if (state.bookId === prophecyObj.b && state.chapter === prophecyObj.c) {
@@ -12636,7 +13010,7 @@ function renderMessianicWidgetUI(chapterMatches = []) {
   const widget = document.getElementById("bmProphecyWidget");
   if (!widget) return;
 
-  if ((typeof bmSettings !== "undefined" && bmSettings.messianicBulb === false) ||
+  if (bmSettings.messianicBulb === false ||
       currentViewContext.type !== "bible" ||
       chapterMatches.length === 0) {
     widget.classList.remove("visible");
@@ -13018,7 +13392,7 @@ async function evaluateMessianicBulbForCurrentView() {
   if (!widget) return;
 
   // Se l'utente ha disattivato la lampadina nelle impostazioni, nasconde il widget e pulisce i riquadri
-  if (typeof bmSettings !== "undefined" && bmSettings.messianicBulb === false) {
+  if (bmSettings.messianicBulb === false) {
     widget.classList.remove("visible");
     document.querySelectorAll(".bm-messianic-verse-box").forEach(el => el.classList.remove("bm-messianic-verse-box"));
     return;
@@ -13047,6 +13421,24 @@ async function evaluateMessianicBulbForCurrentView() {
   renderMessianicWidgetUI(matches);
   highlightMessianicVersesInDOM(bmProphecyList[bmCurrentProphecyIdx], false);
 }
+// ============================================================================
+// AVVIO APPLICAZIONE (BOOT UNIFICATO — TUTTI I MODULI CARICATI)
+// ============================================================================
+document.documentElement.style.setProperty("--font-size-verse", state.fontSize + "px");
+applySavedTheme();
+updateReadingPlanHeaderBtn();
+updateMyReadingLabel();
+try { loadExternalExegeticalModules(); } catch (e) { console.debug(e); }
+try { initBmServiceWorker(); } catch (e) { console.debug(e); }
+populateSelects()
+  .catch(() => {})
+  .finally(() => {
+    showDailyTextView(0, true)
+      .catch(() => {})
+      .finally(() => {
+        dismissSplashScreen();
+      });
+  });
 </script>
 </body>
 </html>
