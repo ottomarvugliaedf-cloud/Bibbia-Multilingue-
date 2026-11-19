@@ -1,15 +1,28 @@
 {
-  "name": "Bibbia Multilingue BM",
-  "short_name": "BM Bibbia",
-  "description": "Applicazione biblica multilingue avanzata con 110+ traduzioni, modalità parallela, appunti di studio e funzionamento offline completo.",
-  "start_url": "./index.html",
+  "name": "Bibbia Multilingue PRO",
+  "short_name": "BM PRO",
+  "description": "Studio biblico multilingue 100% offline con Perspicacia, Tutta la Scrittura, Cartine HD, Lessico Strong, Note in Calce TNM e Profezie Messianiche.",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#0d47a1",
-  "theme_color": "#0d47a1",
-  "orientation": "portrait",
+  "orientation": "any",
+  "background_color": "#062356",
+  "theme_color": "#072a60",
+  "lang": "it",
+  "categories": [
+    "books",
+    "education",
+    "reference"
+  ],
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3004/3004458.png",
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

@@ -9,9 +9,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Bibbia Multilingue PRO</title>
-  <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3004/3004458.png">
-  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3004/3004458.png">
-  <link rel="manifest" href='data:application/manifest+json,{"name":"Bibbia Multilingue PRO","short_name":"BM PRO","start_url":".","display":"standalone","background_color":"%23072a60","theme_color":"%230d47a1","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3004/3004458.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}'>
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+  <link rel="apple-touch-icon" href="./icon-512.png">
+  <link rel="manifest" href="./manifest.json">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <style>
     /* MODALITÀ CHIARA SOLARE: Scala di Blu "Mia Lettura" (Zero Bianco Accecante) */
@@ -688,6 +688,25 @@
       text-decoration-thickness: 1.5px;
       text-underline-offset: 3px;
       cursor: pointer;
+    }
+    .bm-footnote-badge {
+      display: inline-block;
+      background: rgba(255, 213, 79, 0.16);
+      color: #ffd54f;
+      border: 1px solid rgba(255, 213, 79, 0.72);
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 800;
+      margin: 0 2px;
+      cursor: pointer;
+      vertical-align: baseline;
+    }
+    main.bm-paper-reading .bm-footnote-badge {
+      background: rgba(180, 83, 9, 0.12);
+      color: #7c2d12;
+      border-color: #b45309;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
     .hl-yellow { background-color: rgba(255, 235, 59, 0.38) !important; }
     .hl-blue   { background-color: rgba(3, 169, 244, 0.32) !important; }
@@ -1533,6 +1552,13 @@ body.oled-mode .pub-ref-badge {
   #bmProphecyWidget.visible {
     display: flex;
   }
+  #bmProphecyWidget.flipped-left {
+    flex-direction: row-reverse;
+  }
+  #bmProphecyWidget.flipped-left .bm-prophecy-bubble {
+    border-radius: 16px 16px 16px 4px;
+    transform-origin: bottom left;
+  }
 
   .bm-bulb-orb {
     pointer-events: auto;
@@ -1921,6 +1947,7 @@ body.oled-mode .pub-ref-badge {
         <div id="bmSelectModalTitle" class="modal-title" style="color:#ffffff; font-size:16px; margin:0;">Seleziona un'opzione</div>
         <button class="nav-btn" style="background:#062356; color:#fff; border:1px solid #29b6f6; padding:3px 9px;" onclick="closeBmSelectModal()">✕</button>
       </div>
+      <input type="search" id="bmSelectSearchInput" class="search-input" style="width:100%; margin-bottom:8px; display:none;" placeholder="🔍 Filtra rapidamente..." oninput="filterCustomSelectOptions(this.value)" autocomplete="off">
       <div id="bmSelectModalList" class="bm-select-list"></div>
     </div>
   </div>
@@ -2126,65 +2153,1634 @@ const LOCAL_EPUB_IDS = [
   "gb:nwt_tpo",
   "epub:nr", "epub:cei", "epub:tilc"
 ];
-const PRO_STRONG_DICT = {
-  "principio": { code: "H7225 / G746", orig: "רֵאשִׁית (reshith) / ἀρχή (archē)", def: "Inizio, origine, primizia, fondamento temporale o d'autorità." },
-  "beginning": { code: "H7225 / G746", orig: "רֵאשִׁית (reshith) / ἀρχή (archē)", def: "Origin, firstfruits, commencement, chief cornerstone." },
-  "dio": { code: "H430 / G2316", orig: "אֱלֹהִים (Elohim) / θεός (Theos)", def: "L'Essere Supremo, Creatore onnipotente e Giudice universale." },
-  "iddio": { code: "H430", orig: "אֱלֹהִים (Elohim)", def: "Plurale di maestà ebraico che esprime la pienezza della potenza e maestà divina." },
-  "god": { code: "H430 / G2316", orig: "אֱלֹהִים (Elohim) / θεός (Theos)", def: "Supreme Deity, Creator and Ruler of the universe." },
-  "geova": { code: "H3068", orig: "יְהוָה (YHWH)", def: "Il Nome personale di Dio (Tetragramma sacro): 'Egli fa divenire'." },
-  "signore": { code: "H3068 / G2962", orig: "יְהוָה (YHWH) / κύριος (Kyrios)", def: "Il Nome dell'Alleanza nell'AT; Sovrano e Maestro legittimo nel NT." },
-  "eterno": { code: "H3068", orig: "יְהוָה (YHWH)", def: "Colui che è e che fa divenire, l'Iddio vivente e fedele alle promesse." },
-  "lord": { code: "H3068 / G2962", orig: "יְהוָה (YHWH) / κύριος (Kyrios)", def: "Self-Existent Eternal One (YHWH) / Supreme Master (Kyrios)." },
-  "creò": { code: "H1254", orig: "בָּרָא (bara')", def: "Creare dal nulla o plasmare qualcosa di radicalmente nuovo." },
-  "cieli": { code: "H8064 / G3772", orig: "שָׁמַיִם (shamayim) / οὐρανός (ouranos)", def: "La volta celeste, il firmamento cosmico e la dimora spirituale di Dio." },
-  "terra": { code: "H776 / G1093", orig: "אֶרֶץ ('erets) / γῆ (gē)", def: "Terra ferma, suolo, regione abitata, mondo creato per l'uomo." },
-  "luce": { code: "H216 / G5457", orig: "אוֹר ('owr) / φῶς (phōs)", def: "Luce fisica e splendore; metafora della verità, santità e salvezza divina." },
-  "tenebre": { code: "H2822 / G4655", orig: "חֹשֶׁךְ (choshek) / σκοτία (skotia)", def: "Oscurità profonda; simbolo di caos, ignoranza spirituale o allontanamento da Dio." },
-  "parola": { code: "G3056 / H1697", orig: "λόγος (Logos) / דָּבָר (dabar)", def: "Parola espressa, pensiero divino rivelato, messaggio creativo, il Verbo." },
-  "spirito": { code: "H7307 / G4151", orig: "רוּחַ (ruach) / πνεῦμα (pneuma)", def: "Soffio, vento, alito vitale, forza attiva invisibile e presenza dello Spirito di Dio." },
-  "vita": { code: "G2222 / H2416", orig: "ζωή (zōē) / חַי (chay)", def: "Vita in senso assoluto, pienezza di vitalità fisica, spirituale ed eterna." },
-  "fede": { code: "G4102 / H530", orig: "πίστις (pistis) / אֱמוּנָה ('emunah)", def: "Certezza, solida fiducia, fedeltà costante e convinzione radicata nelle promesse divine." },
-  "amore": { code: "G26 / H160", orig: "ἀγάπη (agapē) / אַהֲבָה ('ahavah)", def: "Amore incondizionato, sacrificale e altruistico guidato dalla natura stessa di Dio." },
-  "grazia": { code: "G5485 / H2580", orig: "χάρις (charis) / חֵן (chen)", def: "Favore immeritato, immeritata benignità, benevolenza sovrana e dono gratuito di Dio." },
-  "pace": { code: "H7965 / G1515", orig: "שָׁלוֹם (shalom) / εἰρήνη (eirēnē)", def: "Benessere completo, integrità, armonia, riconciliazione con Dio e assenza di conflitto." },
-  "pastore": { code: "H7462 / G4166", orig: "רָעָה (ra'ah) / ποιμήν (poimēn)", def: "Colui che pasce, guida, protegge e dà la vita per il proprio gregge." },
-  "anima": { code: "H5315 / G5590", orig: "נֶפֶשׁ (nephesh) / ψυχή (psychē)", def: "Essere vivente, persona intera, respiro vitale, la vita stessa." },
-  "cuore": { code: "H3820 / G2588", orig: "לֵב (lev) / καρδία (kardia)", def: "Centro della vita interiore, dell'intelletto, delle motivazioni e delle decisioni morali." },
-  "peccato": { code: "H2403 / G266", orig: "חַטָּאת (chatta'th) / ἁμαρτία (hamartia)", def: "Letteralmente 'mancare il bersaglio': trasgressione della legge e della perfezione divina." },
-  "salvezza": { code: "H3444 / G4991", orig: "יְשׁוּעָה (yeshu'ah) / σωτηρία (sōtēria)", def: "Liberazione, riscatto, guarigione e preservazione eterna operata da Dio." },
-  "regno": { code: "H4438 / G932", orig: "מַלְכוּת (malkuth) / βασιλεία (basileia)", def: "Sovranità regale, dominio effettivo e governo celeste di Dio." },
-  "verità": { code: "H571 / G225", orig: "אֱמֶת ('emeth) / ἀλήθεια (alētheia)", def: "Stabilità, fedeltà incrollabile, realtà non nascosta e conforme alla natura divina." },
-  "legge": { code: "H8451 / G3551", orig: "תּוֹרָה (Torah) / νόμος (nomos)", def: "Istruzione, insegnamento paterno, direzione e precetto rivelato." },
-  "gloria": { code: "H3519 / G1391", orig: "כָּבוֹד (kavod) / δόξα (doxa)", def: "Peso, onore, splendore visibile della presenza e della maestà di Dio." },
-  "santo": { code: "H6918 / G40", orig: "קָדוֹשׁ (qadosh) / ἅγιος (hagios)", def: "Separato dal profano, puro, consacrato esclusivamente a Dio." },
-  "cristo": { code: "G5547 / H4899", orig: "Χριστός (Christos) / מָשִׁיחַ (Mashiach)", def: "L'Unto, il Messia consacrato da Dio come Re, Sommo Sacerdote e Redentore." },
-  "gesù": { code: "G2424 / H3091", orig: "Ἰησοῦς (Iēsous) / יְהוֹשֻׁעַ (Yehoshua')", def: "Significa 'Geova è salvezza': il Salvatore promesso." }
+let PRO_STRONG_DICT = {
+  "principio": {
+    "code": "H7225 / G746",
+    "orig": "רֵאשִׁית (reshith) / ἀρχή (archē)",
+    "def": "Inizio, origine, primizia, fondamento temporale o d'autorità."
+  },
+  "beginning": {
+    "code": "H7225 / G746",
+    "orig": "רֵאשִׁית (reshith) / ἀρχή (archē)",
+    "def": "Origin, firstfruits, commencement, chief cornerstone."
+  },
+  "dio": {
+    "code": "H430 / G2316",
+    "orig": "אֱלֹהִים (Elohim) / θεός (Theos)",
+    "def": "L'Essere Supremo, Creatore onnipotente e Giudice universale."
+  },
+  "iddio": {
+    "code": "H430",
+    "orig": "אֱלֹהִים (Elohim)",
+    "def": "Plurale di maestà ebraico che esprime la pienezza della potenza e maestà divina."
+  },
+  "god": {
+    "code": "H430 / G2316",
+    "orig": "אֱלֹהִים (Elohim) / θεός (Theos)",
+    "def": "Supreme Deity, Creator and Ruler of the universe."
+  },
+  "geova": {
+    "code": "H3068",
+    "orig": "יְהוָה (YHWH)",
+    "def": "Il Nome personale di Dio (Tetragramma sacro): 'Egli fa divenire'."
+  },
+  "jehovah": {
+    "code": "H3068",
+    "orig": "יְהוָה (YHWH)",
+    "def": "The personal Name of God (Tetragrammaton): 'He Causes to Become'."
+  },
+  "signore": {
+    "code": "H3068 / H136 / G2962",
+    "orig": "יְהוָה (YHWH) / אֲדֹנָי (Adonai) / κύριος (Kyrios)",
+    "def": "Sovrano, Padrone legittimo; nell'AT traduce spesso Adonai o sostituisce il Tetragramma."
+  },
+  "sovrano": {
+    "code": "H136 / G1203",
+    "orig": "אֲדֹנָי (Adonai) / δεσπότης (despotēs)",
+    "def": "Signore supremo che detiene autorità assoluta e dominio universale."
+  },
+  "eterno": {
+    "code": "H5769 / G166",
+    "orig": "עוֹלָם ('olam) / αἰώνιος (aiōnios)",
+    "def": "Tempo indefinito, perpetuo, senza fine né principio quando riferito a Dio."
+  },
+  "lord": {
+    "code": "H3068 / G2962",
+    "orig": "יְהוָה (YHWH) / κύριος (Kyrios)",
+    "def": "Self-Existent Eternal One (YHWH) / Supreme Master (Kyrios)."
+  },
+  "onnipotente": {
+    "code": "H7706 / G3841",
+    "orig": "שַׁדַּי (Shaddai) / παντοκράτωρ (pantokratōr)",
+    "def": "Colui che ha ogni potere e sostiene l'intero universo."
+  },
+  "altissimo": {
+    "code": "H5945 / G5310",
+    "orig": "עֶלְיוֹן ('Elyon) / ὕψιστος (hypsistos)",
+    "def": "Il Supremo, al di sopra di ogni autorità in cielo e sulla terra."
+  },
+  "creatore": {
+    "code": "H1254 / G2939",
+    "orig": "בּוֹרֵא (Bore') / κτίστης (ktistēs)",
+    "def": "Colui che porta all'esistenza, fondatore e artefice di tutto il creato."
+  },
+  "padre": {
+    "code": "H1 / G3962",
+    "orig": "אָב ('ab) / πατήρ (patēr)",
+    "def": "Genitore, capostipite, Datore di vita e guida amorevole."
+  },
+  "roccia": {
+    "code": "H6697 / G4073",
+    "orig": "צוּר (tsur) / πέτρα (petra)",
+    "def": "Rupe massiccia, rifugio incrollabile; simbolo di stabilità e salvezza divina."
+  },
+  "rifugio": {
+    "code": "H4268 / H4869",
+    "orig": "מַחְסֶה (machseh) / מִשְׂגָּב (misgab)",
+    "def": "Riparo sicuro, fortezza elevata in cui ripararsi nel pericolo."
+  },
+  "creò": {
+    "code": "H1254",
+    "orig": "בָּרָא (bara')",
+    "def": "Creare dal nulla o plasmare qualcosa di radicalmente nuovo (usato solo per Dio)."
+  },
+  "creazione": {
+    "code": "G2937",
+    "orig": "κτίσις (ktisis)",
+    "def": "L'atto creativo di Dio e l'insieme di tutte le creature."
+  },
+  "cieli": {
+    "code": "H8064 / G3772",
+    "orig": "שָׁמַיִם (shamayim) / οὐρανός (ouranos)",
+    "def": "La volta celeste, il firmamento cosmico e la dimora spirituale di Dio."
+  },
+  "cielo": {
+    "code": "H8064 / G3772",
+    "orig": "שָׁמַיִם (shamayim) / οὐρανός (ouranos)",
+    "def": "Atmosfera, spazio stellato o reame spirituale invisibile."
+  },
+  "terra": {
+    "code": "H776 / G1093",
+    "orig": "אֶרֶץ ('erets) / γῆ (gē)",
+    "def": "Terra ferma, suolo, regione abitata, pianeta creato per l'umanità."
+  },
+  "mondo": {
+    "code": "G2889 / G165",
+    "orig": "κόσμος (kosmos) / αἰών (aiōn)",
+    "def": "Ordine, genere umano, oppure sistema di cose estraniato da Dio."
+  },
+  "luce": {
+    "code": "H216 / G5457",
+    "orig": "אוֹר ('owr) / φῶς (phōs)",
+    "def": "Luce fisica e splendore; metafora della verità, santità e salvezza divina."
+  },
+  "tenebre": {
+    "code": "H2822 / G4655",
+    "orig": "חֹשֶׁךְ (choshek) / σκοτία (skotia)",
+    "def": "Oscurità profonda; simbolo di caos, ignoranza spirituale o allontanamento da Dio."
+  },
+  "acque": {
+    "code": "H4325 / G5204",
+    "orig": "מַיִם (mayim) / ὕδωρ (hydōr)",
+    "def": "Acqua vitale; spesso simbolo di purificazione, verità rinfrescante o popoli."
+  },
+  "acqua": {
+    "code": "H4325 / G5204",
+    "orig": "מַיִם (mayim) / ὕδωρ (hydōr)",
+    "def": "Fonte di vita fisica e spirituale ('acqua viva')."
+  },
+  "fuoco": {
+    "code": "H784 / G4442",
+    "orig": "אֵשׁ ('esh) / πῦρ (pyr)",
+    "def": "Fiamma purificatrice, zelo ardente o simbolo di giudizio e distruzione definitiva."
+  },
+  "polvere": {
+    "code": "H6083 / G5522",
+    "orig": "עָפָר ('aphar) / χοῦς (chous)",
+    "def": "Terra asciutta da cui fu formato l'uomo; simbolo di mortalità e umiltà."
+  },
+  "gesù": {
+    "code": "G2424 / H3091",
+    "orig": "Ἰησοῦς (Iēsous) / יְהוֹשֻׁעַ (Yehoshua')",
+    "def": "Significa 'Geova è salvezza': il Salvatore promesso."
+  },
+  "cristo": {
+    "code": "G5547 / H4899",
+    "orig": "Χριστός (Christos) / מָשִׁיחַ (Mashiach)",
+    "def": "L'Unto, il Messia consacrato da Dio come Re, Sommo Sacerdote e Redentore."
+  },
+  "messia": {
+    "code": "H4899 / G3323",
+    "orig": "מָשִׁיחַ (Mashiach) / Μεσσίας (Messias)",
+    "def": "L'Unto promesso da Dio fin da Genesi 3:15."
+  },
+  "figlio": {
+    "code": "H1121 / G5207",
+    "orig": "בֵּן (ben) / υἱός (huios)",
+    "def": "Discendente, erede; 'Figlio di Dio' indica relazione diretta e somiglianza morale."
+  },
+  "primogenito": {
+    "code": "H1060 / G4416",
+    "orig": "בְּכוֹר (bekor) / πρωτότοκος (prōtotokos)",
+    "def": "Il primo nato, detentore di preminenza, eredità e autorità."
+  },
+  "unigenito": {
+    "code": "G3439",
+    "orig": "μονογενής (monogenēs)",
+    "def": "Unico nel suo genere, solo generato direttamente dal Padre."
+  },
+  "agnello": {
+    "code": "H3532 / G286",
+    "orig": "כֶּבֶשׂ (kebes) / ἀμνός (amnos)",
+    "def": "Vittima sacrificale pura; titolo messianico di Gesù che toglie il peccato del mondo."
+  },
+  "mediatore": {
+    "code": "G3316",
+    "orig": "μεσίτης (mesitēs)",
+    "def": "Intermediario legale tra due parti per ratificare un patto (Mosè nell'AT, Gesù nel NT)."
+  },
+  "maestro": {
+    "code": "G1320 / G4461",
+    "orig": "διδάσκαλος (didaskalos) / ῥαββί (rhabbi)",
+    "def": "Istruttore autorevole della legge e della volontà di Dio."
+  },
+  "pastore": {
+    "code": "H7462 / G4166",
+    "orig": "רָעָה (ra'ah) / ποιμήν (poimēn)",
+    "def": "Colui che pasce, guida, protegge e dà la vita per il proprio gregge."
+  },
+  "pietra": {
+    "code": "H68 / G3037",
+    "orig": "אֶבֶן ('eben) / λίθος (lithos)",
+    "def": "Pietra angolare di fondamento ('pietra angolare di valore')."
+  },
+  "seme": {
+    "code": "H2233 / G4690",
+    "orig": "זֶרַע (zera') / σπέρμα (sperma)",
+    "def": "Discendenza, progenie promessa; in senso profetico il Messia."
+  },
+  "discendenza": {
+    "code": "H2233 / G4690",
+    "orig": "זֶרַע (zera') / σπέρμα (sperma)",
+    "def": "Progenie promessa secondo il patto di Genesi 3:15 e 22:18."
+  },
+  "presenza": {
+    "code": "G3952 / H6440",
+    "orig": "παρουσία (parousia) / פָּנִים (panim)",
+    "def": "Presenza reale e continuativa (non un semplice arrivo istantaneo), usata per il ritorno regale di Cristo."
+  },
+  "parola": {
+    "code": "G3056 / H1697",
+    "orig": "λόγος (Logos) / דָּבָר (dabar)",
+    "def": "Parola espressa, pensiero divino rivelato, messaggio creativo, il Verbo."
+  },
+  "spirito": {
+    "code": "H7307 / G4151",
+    "orig": "רוּחַ (ruach) / πνεῦμα (pneuma)",
+    "def": "Soffio, vento, alito vitale, forza attiva invisibile di Dio o creatura spirituale."
+  },
+  "anima": {
+    "code": "H5315 / G5590",
+    "orig": "נֶפֶשׁ (nephesh) / ψυχή (psychē)",
+    "def": "Essere vivente, persona intera, respiro vitale, la vita stessa."
+  },
+  "vita": {
+    "code": "G2222 / H2416",
+    "orig": "ζωή (zōē) / חַי (chay)",
+    "def": "Vita in senso assoluto, pienezza di vitalità fisica, spirituale ed eterna."
+  },
+  "cuore": {
+    "code": "H3820 / G2588",
+    "orig": "לֵב (lev) / καρδία (kardia)",
+    "def": "Centro della vita interiore, dell'intelletto, dei desideri e delle motivazioni morali."
+  },
+  "mente": {
+    "code": "G3563 / G1271",
+    "orig": "νοῦς (nous) / διάνοια (dianoia)",
+    "def": "Facoltà intellettuale, discernimento, orientamento del pensiero."
+  },
+  "carne": {
+    "code": "H1320 / G4561",
+    "orig": "בָּשָׂר (basar) / σάρξ (sarx)",
+    "def": "Corpo fisico, fragilità umana o inclinazione imperfetta opposta allo spirito."
+  },
+  "sangue": {
+    "code": "H1818 / G129",
+    "orig": "דָּם (dam) / αἷμα (haima)",
+    "def": "Sede simbolica della vita sacra; mezzo di espiazione nel sacrificio di Cristo."
+  },
+  "morte": {
+    "code": "H4194 / G2288",
+    "orig": "מָוֶת (maveth) / θάνατος (thanatos)",
+    "def": "Cessazione della vita; conseguenza del peccato destinata a essere eliminata."
+  },
+  "tomba": {
+    "code": "H7585 / G86",
+    "orig": "שְׁאוֹל (She'ol) / ᾅδης (Hadēs)",
+    "def": "La comune tomba del genere umano, stato di inattività nella morte (Sceol / Ades)."
+  },
+  "sceol": {
+    "code": "H7585",
+    "orig": "שְׁאוֹל (She'ol)",
+    "def": "La tomba comune dell'umanità nell'AT, equivalente al greco Ades (G86)."
+  },
+  "ades": {
+    "code": "G86",
+    "orig": "ᾅδης (Hadēs)",
+    "def": "La tomba comune del genere umano nel NT, equivalente all'ebraico Sceol (H7585)."
+  },
+  "geenna": {
+    "code": "G1067 / H1516",
+    "orig": "γέεννα (Geenna) / גֵּיא הִנֹּם (Ge Hinnom)",
+    "def": "Valle di Innom fuori Gerusalemme; simbolo di distruzione eterna senza risurrezione."
+  },
+  "risurrezione": {
+    "code": "G386",
+    "orig": "ἀνάστασις (anastasis)",
+    "def": "Letteralmente 'rialzarsi in piedi': ritorno alla vita dei morti operato da Dio."
+  },
+  "paradiso": {
+    "code": "G3857 / H6508",
+    "orig": "παράδεισος (paradeisos) / פַּרְדֵּס (pardes)",
+    "def": "Giardino, parco rigoglioso; la dimora restaurata di pace promessa ai giusti."
+  },
+  "peccato": {
+    "code": "H2403 / G266",
+    "orig": "חַטָּאת (chatta'th) / ἁμαρτία (hamartia)",
+    "def": "Letteralmente 'mancare il bersaglio': trasgressione della norma perfetta di Dio."
+  },
+  "trasgressione": {
+    "code": "H6588 / G3847",
+    "orig": "פֶּשַׁע (pesha') / παράβασις (parabasis)",
+    "def": "Oltrepassare deliberatamente un limite fissato dalla legge divina."
+  },
+  "iniquità": {
+    "code": "H5771 / G458",
+    "orig": "עָוֺן ('avon) / ἀνομία (anomia)",
+    "def": "Deviazione morale, perversità, disprezzo della legge di Dio."
+  },
+  "salvezza": {
+    "code": "H3444 / G4991",
+    "orig": "יְשׁוּעָה (yeshu'ah) / σωτηρία (sōtēria)",
+    "def": "Liberazione, riscatto, guarigione e preservazione eterna operata da Dio."
+  },
+  "riscatto": {
+    "code": "H3724 / G3083 / G487",
+    "orig": "כֹּפֶר (kopher) / λύτρον (lytron) / ἀντίλυτρον (antilytron)",
+    "def": "Prezzo esatto e corrispondente pagato per liberare dalla schiavitù del peccato e della morte."
+  },
+  "espiazione": {
+    "code": "H3722 / G2434",
+    "orig": "כָּפַר (kaphar) / ἱλασμός (hilasmos)",
+    "def": "Copertura del peccato, riconciliazione e ripristino del favore divino."
+  },
+  "perdono": {
+    "code": "H5545 / G859",
+    "orig": "סָלַח (salach) / ἄφεσις (aphesis)",
+    "def": "Lasciar andare, condonare completamente un debito morale o una colpa."
+  },
+  "pentimento": {
+    "code": "G3341 / H5162",
+    "orig": "μετάνοια (metanoia) / נָחַם (nacham)",
+    "def": "Profondo cambiamento di mente, di atteggiamento e di condotta davanti a Dio."
+  },
+  "conversione": {
+    "code": "G1995 / H7725",
+    "orig": "ἐπιστροφή (epistrophē) / שׁוּב (shub)",
+    "def": "Voltarsi indietro, tornare attivamente sulla via della rettitudine."
+  },
+  "patto": {
+    "code": "H1285 / G1242",
+    "orig": "בְּרִית (berith) / διαθήκη (diathēkē)",
+    "def": "Accordo solenne e vincolante stabilito da Dio (patto abraamico, della Legge, nuovo patto)."
+  },
+  "alleanza": {
+    "code": "H1285 / G1242",
+    "orig": "בְּרִית (berith) / διαθήκη (diathēkē)",
+    "def": "Contratto sacro, impegno solenne garantito dalla fedeltà di Dio."
+  },
+  "promessa": {
+    "code": "G1860",
+    "orig": "ἐπαγγελία (epangelia)",
+    "def": "Annuncio solenne e garanzia certa di benedizioni future da parte di Dio."
+  },
+  "eredità": {
+    "code": "H5159 / G2817",
+    "orig": "נַחֲלָה (nachalah) / κληρονομία (klēronomia)",
+    "def": "Possesso assegnato stabilmente per diritto di filiazione o patto divino."
+  },
+  "battesimo": {
+    "code": "G908",
+    "orig": "βάπτισμα (baptisma)",
+    "def": "Immersione completa in acqua come simbolo pubblico di dedicazione a Dio."
+  },
+  "sacrificio": {
+    "code": "H2077 / G2378",
+    "orig": "זֶבַח (zebach) / θυσία (thysia)",
+    "def": "Offerta consacrata sull'altare; nel NT anche lode e servizio resi a Dio."
+  },
+  "altare": {
+    "code": "H4196 / G2379",
+    "orig": "מִזְבֵּחַ (mizbeach) / θυσιαστήριον (thysiastērion)",
+    "def": "Struttura dedicata all'offerta di sacrifici e simbolo della volontà di Dio."
+  },
+  "fede": {
+    "code": "G4102 / H530",
+    "orig": "πίστις (pistis) / אֱמוּנָה ('emunah)",
+    "def": "Certezza, solida fiducia, fedeltà costante e convinzione radicata nelle promesse divine."
+  },
+  "faith": {
+    "code": "G4102 / H530",
+    "orig": "πίστις (pistis) / אֱמוּנָה ('emunah)",
+    "def": "Assured expectation, firm trust, and steadfast faithfulness."
+  },
+  "amore": {
+    "code": "G26 / H160",
+    "orig": "ἀγάπη (agapē) / אַהֲבָה ('ahavah)",
+    "def": "Amore incondizionato, guidato da princìpi e altruistico, espressione della natura di Dio."
+  },
+  "love": {
+    "code": "G26 / H160",
+    "orig": "ἀγάπη (agapē) / אַהֲבָה ('ahavah)",
+    "def": "Principled, self-sacrificing love rooted in God's own nature."
+  },
+  "grazia": {
+    "code": "G5485 / H2580",
+    "orig": "χάρις (charis) / חֵן (chen)",
+    "def": "Favore immeritato, immeritata benignità, benevolenza sovrana e dono gratuito di Dio."
+  },
+  "benignità": {
+    "code": "H2617 / G5544",
+    "orig": "חֶסֶד (chesed) / χρηστότης (chrēstotēs)",
+    "def": "Amore leale, bontà attiva e tenera sollecitudine verso il prossimo."
+  },
+  "leale": {
+    "code": "H2617 / G3741",
+    "orig": "חֶסֶד (chesed) / ὅσιος (hosios)",
+    "def": "Devozione fedele, amore che non viene mai meno nonostante le prove."
+  },
+  "misericordia": {
+    "code": "H7356 / G1656",
+    "orig": "רַחֲמִים (rachamim) / ἔλεος (eleos)",
+    "def": "Compassione viscerale che spinge ad agire per alleviare la sofferenza altrui."
+  },
+  "compassione": {
+    "code": "H7355 / G4697",
+    "orig": "רָחַם (racham) / σπλαγχνίζομαι (splanchnizomai)",
+    "def": "Profonda commozione interiore e tenerezza verso chi è nel bisogno."
+  },
+  "pace": {
+    "code": "H7965 / G1515",
+    "orig": "שָׁלוֹם (shalom) / εἰρήνη (eirēnē)",
+    "def": "Benessere completo, integrità, armonia, riconciliazione con Dio e assenza di conflitto."
+  },
+  "gioia": {
+    "code": "H8057 / G5479",
+    "orig": "שִׂמְחָה (simchah) / χαρά (chara)",
+    "def": "Profonda letizia interiore che nasce dal favore di Dio e resiste alle prove."
+  },
+  "speranza": {
+    "code": "H8615 / G1680",
+    "orig": "תִּקְוָה (tiqvah) / ἐλπίς (elpis)",
+    "def": "Attesa fiduciosa e fondata del bene promesso da Dio, ancora per l'anima."
+  },
+  "pazienza": {
+    "code": "G3115 / H750",
+    "orig": "μακροθυμία (makrothymia) / אֶרֶךְ אַפַּיִם ('erek 'appayim)",
+    "def": "Longanimità, 'lentezza all'ira', capacità di sopportare a lungo senza cedere."
+  },
+  "perseveranza": {
+    "code": "G5281",
+    "orig": "ὑπομονή (hypomonē)",
+    "def": "Rimanere saldi sotto il peso della prova con incrollabile costanza."
+  },
+  "sopportazione": {
+    "code": "G5281",
+    "orig": "ὑπομονή (hypomonē)",
+    "def": "Fermezza coraggiosa e resistenza attiva di fronte alle avversità."
+  },
+  "umiltà": {
+    "code": "H6038 / G5012",
+    "orig": "עֲנָוָה ('anavah) / ταπεινοφροσύνη (tapeinophrosynē)",
+    "def": "Modestia di mente, assenza di orgoglio, consapevolezza dei propri limiti davanti a Dio."
+  },
+  "mitezza": {
+    "code": "H6035 / G4240",
+    "orig": "עָנָו ('anav) / πραΰτης (praütēs)",
+    "def": "Forza controllata, dolcezza d'animo e disposizione docile alla guida divina."
+  },
+  "bontà": {
+    "code": "H2896 / G19",
+    "orig": "טוֹב (tov) / ἀγαθωσύνη (agathōsynē)",
+    "def": "Eccellenza morale attiva, generosità che produce benefici concreti."
+  },
+  "padronanza": {
+    "code": "G1466",
+    "orig": "ἐγκράτεια (enkrateia)",
+    "def": "Autocontrollo, dominio sui propri pensieri, parole e impulsi."
+  },
+  "giustizia": {
+    "code": "H6664 / G1343",
+    "orig": "צֶדֶק (tsedeq) / δικαιοσύνη (dikaiosynē)",
+    "def": "Conformità retta alle norme morali e legali stabilite da Dio."
+  },
+  "giusto": {
+    "code": "H6662 / G1342",
+    "orig": "צַדִּיק (tsaddiq) / δίκαιος (dikaios)",
+    "def": "Retto, integro, approvato da Dio per fede e condotta."
+  },
+  "sapienza": {
+    "code": "H2451 / G4678",
+    "orig": "חָכְמָה (chokmah) / σοφία (sophia)",
+    "def": "Capacità pratica di applicare la conoscenza in armonia con la volontà di Dio."
+  },
+  "saggezza": {
+    "code": "H2451 / G4678",
+    "orig": "חָכְמָה (chokmah) / σοφία (sophia)",
+    "def": "Discernimento profondo e applicazione retta della verità nella vita."
+  },
+  "conoscenza": {
+    "code": "H1847 / G1108 / G1922",
+    "orig": "דַּעַת (da'ath) / γνῶσις (gnōsis) / ἐπίγνωσις (epignōsis)",
+    "def": "Familiarità diretta, comprensione accurata e personale di Dio."
+  },
+  "intendimento": {
+    "code": "H998 / G4907",
+    "orig": "בִּינָה (binah) / σύνεσις (synesis)",
+    "def": "Capacità di cogliere le connessioni tra i fatti e discernere il senso profondo."
+  },
+  "verità": {
+    "code": "H571 / G225",
+    "orig": "אֱמֶת ('emeth) / ἀλήθεια (alētheia)",
+    "def": "Stabilità, fedeltà incrollabile, realtà non nascosta e conforme alla natura divina."
+  },
+  "fedeltà": {
+    "code": "H530 / G4103",
+    "orig": "אֱמוּנָה ('emunah) / πιστός (pistos)",
+    "def": "Fermezza affidabile, costanza leale nel mantenere la parola data."
+  },
+  "integrità": {
+    "code": "H8538",
+    "orig": "תֻּמָּה (tummah)",
+    "def": "Completezza morale, devozione indivisa e irreprensibile verso Dio."
+  },
+  "coraggio": {
+    "code": "H553 / G2292",
+    "orig": "אָמֵץ ('amets) / θαρρέω (tharreō)",
+    "def": "Fermezza d'animo e fiducia impavida sostenuta dalla presenza di Dio."
+  },
+  "timore": {
+    "code": "H3374 / G5401",
+    "orig": "יִרְאָה (yir'ah) / φόβος (phobos)",
+    "def": "Profondo rispetto reverenziale verso Dio e sano timore di dispiacergli."
+  },
+  "zelo": {
+    "code": "H7068 / G2205",
+    "orig": "קִנְאָה (qin'ah) / ζῆλος (zēlos)",
+    "def": "Ardore intenso, entusiasmo devoto per la pura adorazione."
+  },
+  "regno": {
+    "code": "H4438 / G932",
+    "orig": "מַלְכוּת (malkuth) / βασιλεία (basileia)",
+    "def": "Sovranità regale, dominio effettivo e governo celeste di Dio."
+  },
+  "trono": {
+    "code": "H3678 / G2362",
+    "orig": "כִּסֵּא (kisse') / θρόνος (thronos)",
+    "def": "Seggio di sovranità, autorità regale e potere giudiziario."
+  },
+  "legge": {
+    "code": "H8451 / G3551",
+    "orig": "תּוֹרָה (Torah) / νόμος (nomos)",
+    "def": "Istruzione, insegnamento paterno, direzione e precetto rivelato."
+  },
+  "comandamento": {
+    "code": "H4687 / G1785",
+    "orig": "מִצְוָה (mitsvah) / ἐντολή (entolē)",
+    "def": "Ordine autorevole, disposizione vincolante impartita da Dio."
+  },
+  "scritture": {
+    "code": "G1124",
+    "orig": "γραφή (graphē)",
+    "def": "Gli scritti sacri ispirati da Dio."
+  },
+  "ispirata": {
+    "code": "G2315",
+    "orig": "θεόπνευστος (theopneustos)",
+    "def": "Letteralmente 'soffiata da Dio': guidata direttamente dallo spirito santo."
+  },
+  "gloria": {
+    "code": "H3519 / G1391",
+    "orig": "כָּבוֹד (kavod) / δόξα (doxa)",
+    "def": "Peso, onore, splendore visibile della presenza e della maestà di Dio."
+  },
+  "santo": {
+    "code": "H6918 / G40",
+    "orig": "קָדוֹשׁ (qadosh) / ἅγιος (hagios)",
+    "def": "Separato dal profano, puro, consacrato esclusivamente a Dio."
+  },
+  "santità": {
+    "code": "H6944 / G42",
+    "orig": "קֹדֶשׁ (qodesh) / ἁγιωσύνη (hagiōsynē)",
+    "def": "Purezza religiosa assoluta e piena consacrazione al servizio divino."
+  },
+  "puro": {
+    "code": "H2889 / G2513",
+    "orig": "טָהוֹר (tahor) / καθαρός (katharos)",
+    "def": "Mondo, privo di contaminazione cerimoniale, morale o spirituale."
+  },
+  "adorazione": {
+    "code": "H7812 / G4352",
+    "orig": "שָׁחָה (shachah) / προσκυνέω (proskyneō)",
+    "def": "Inchinarsi in omaggio reverente e devozione esclusiva a Dio."
+  },
+  "servizio": {
+    "code": "H5656 / G2999 / G1248",
+    "orig": "עֲבֹדָה ('abodah) / λατρεία (latreia) / διακονία (diakonia)",
+    "def": "Sacro servizio reso a Dio e ministero amorevole verso gli altri."
+  },
+  "preghiera": {
+    "code": "H8605 / G4335",
+    "orig": "תְּפִלָּה (tephillah) / προσευχή (proseuchē)",
+    "def": "Comunicazione reverente, lode, ringraziamento e supplica rivolta a Dio."
+  },
+  "lode": {
+    "code": "H8416 / H1984 / G136",
+    "orig": "תְּהִלָּה (tehillah) / הָלַל (halal) / αἶνος (ainos)",
+    "def": "Esaltazione gioiosa delle opere e qualità di Dio (radice di 'Alleluia')."
+  },
+  "benedizione": {
+    "code": "H1293 / G2129",
+    "orig": "בְּרָכָה (berakah) / εὐλογία (eulogia)",
+    "def": "Favore attivo di Dio che conferisce prosperità spirituale e vita."
+  },
+  "tempio": {
+    "code": "H1964 / G3485 / G2411",
+    "orig": "הֵיכָל (hekal) / ναός (naos) / ἱερόν (hieron)",
+    "def": "Santuario dimora della presenza di Dio; nel NT anche disposizione spirituale di adorazione."
+  },
+  "tabernacolo": {
+    "code": "H4908 / G4633",
+    "orig": "מִשְׁכָּן (mishkan) / σκηνή (skēnē)",
+    "def": "Dimora portatile sacra di Israele nel deserto, modello delle realtà celesti."
+  },
+  "sacerdote": {
+    "code": "H3548 / G2409",
+    "orig": "כֹּהֵן (kohen) / ἱερεύς (hiereus)",
+    "def": "Ministro autorizzato a rappresentare il popolo davanti a Dio e offrire sacrifici."
+  },
+  "congregazione": {
+    "code": "H6951 / G1577",
+    "orig": "קָהָל (qahal) / ἐκκλησία (ekklēsia)",
+    "def": "Assemblea convocata dei servitori di Dio (Israele nell'AT, comunità cristiana nel NT)."
+  },
+  "chiesa": {
+    "code": "G1577",
+    "orig": "ἐκκλησία (ekklēsia)",
+    "def": "Assemblea dei chiamati, congregazione di adoratori riuniti."
+  },
+  "discepolo": {
+    "code": "G3101",
+    "orig": "μαθητής (mathētēs)",
+    "def": "Allievo che apprende e mette in pratica gli insegnamenti del Maestro."
+  },
+  "apostolo": {
+    "code": "G652",
+    "orig": "ἀπόστολος (apostolos)",
+    "def": "Letteralmente 'inviato': messaggero incaricato con autorità da Cristo."
+  },
+  "profeta": {
+    "code": "H5030 / G4396",
+    "orig": "נָבִיא (nabi') / προφήτης (prophētēs)",
+    "def": "Portavoce ispirato che proclama i messaggi, i giudizi e i propositi di Dio."
+  },
+  "profezia": {
+    "code": "H5016 / G4394",
+    "orig": "נְבוּאָה (nebu'ah) / προφητεία (prophēteia)",
+    "def": "Messaggio ispirato da Dio, rivelazione della volontà divina o predizione futura."
+  },
+  "testimone": {
+    "code": "H5707 / G3144",
+    "orig": "עֵד ('ed) / μάρτυς (martys)",
+    "def": "Chi attesta con certezza fatti, verità e qualità di Dio."
+  },
+  "evangelo": {
+    "code": "G2098",
+    "orig": "εὐαγγέλιον (euangelion)",
+    "def": "Buona notizia del Regno di Dio e della salvezza mediante Cristo."
+  },
+  "vangelo": {
+    "code": "G2098",
+    "orig": "εὐαγγέλιον (euangelion)",
+    "def": "Buona notizia proclamata da Gesù e dai suoi discepoli."
+  },
+  "anziano": {
+    "code": "H2205 / G4245",
+    "orig": "זָקֵן (zaqen) / πρεσβύτερος (presbyteros)",
+    "def": "Uomo maturo spiritualmente incaricato di pascere e sorvegliare la congregazione."
+  },
+  "sorvegliante": {
+    "code": "G1985",
+    "orig": "ἐπίσκοπος (episkopos)",
+    "def": "Custode protettivo che veglia con cura sul benessere spirituale del gregge."
+  },
+  "fratello": {
+    "code": "H251 / G80",
+    "orig": "אָח ('ach) / ἀδελφός (adelphos)",
+    "def": "Parente di sangue o compagno di fede unito nella stessa famiglia spirituale."
+  },
+  "prossimo": {
+    "code": "H7453 / G4139",
+    "orig": "רֵעַ (rea') / πλησίον (plēsion)",
+    "def": "Compagno, vicino, chiunque si incontri e abbia bisogno di amore concreto."
+  },
+  "angelo": {
+    "code": "H4397 / G32",
+    "orig": "מַלְאָךְ (mal'ak) / ἄγγελος (angelos)",
+    "def": "Letteralmente 'messaggero': potente creatura spirituale al servizio di Dio."
+  },
+  "arcangelo": {
+    "code": "G743",
+    "orig": "ἀρχάγγελος (archangelos)",
+    "def": "Capo degli angeli (nella Bibbia sempre al singolare, riferito a Michele)."
+  },
+  "cherubino": {
+    "code": "H3742 / G5502",
+    "orig": "כְּרוּב (kerub) / χερουβίν (cheroubin)",
+    "def": "Creatura angelica di alto rango associata alla maestà e santità di Dio."
+  },
+  "satana": {
+    "code": "H7854 / G4567",
+    "orig": "שָׂטָן (Satan) / Σατανᾶς (Satanas)",
+    "def": "Letteralmente 'oppositore, resistente': il principale avversario di Dio."
+  },
+  "diavolo": {
+    "code": "G1228",
+    "orig": "διάβολος (diabolos)",
+    "def": "Letteralmente 'calunniatore': colui che diffama Dio e i suoi servitori."
+  },
+  "demonio": {
+    "code": "G1140",
+    "orig": "δαιμόνιον (daimonion)",
+    "def": "Angelo ribelle e malvagio ostile a Dio e all'umanità."
+  },
+  "giudizio": {
+    "code": "H4941 / G2920",
+    "orig": "מִשְׁפָּט (mishpat) / κρίσις (krisis)",
+    "def": "Decisione giuridica retta, esame e sentenza espressa dal Giudice supremo."
+  },
+  "giorno": {
+    "code": "H3117 / G2250",
+    "orig": "יוֹם (yom) / ἡμέρα (hēmera)",
+    "def": "Periodo di luce, 24 ore, oppure un'intera epoca caratterizzata da un evento ('giorno di Geova')."
+  },
+  "tribolazione": {
+    "code": "H6869 / G2347",
+    "orig": "צָרָה (tsarah) / θλῖψις (thlipsis)",
+    "def": "Pressione intensa, angustia, afflizione profonda."
+  },
+  "armaghedon": {
+    "code": "G717",
+    "orig": "Ἁρμαγεδών (Harmagedōn)",
+    "def": "Dall'ebraico Har-Meggiddon ('Monte di Meghiddo'): la guerra finale di Dio contro la malvagità."
+  },
+  "rivelazione": {
+    "code": "G602",
+    "orig": "ἀποκάλυψις (apokalypsis)",
+    "def": "Scoprimento, togliere il velo per rendere manifeste realtà divine nascoste."
+  },
+  "segno": {
+    "code": "H226 / G4592",
+    "orig": "אוֹת ('oth) / σημεῖον (sēmeion)",
+    "def": "Contrassegno identificativo, evento miracoloso o indizio profetico."
+  },
+  "mistero": {
+    "code": "G3466",
+    "orig": "μυστήριον (mystērion)",
+    "def": "Sacro segreto divino rimasto celato finché Dio non decide di rivelarlo."
+  },
+  "segreto": {
+    "code": "H5475 / G3466",
+    "orig": "סוֹד (sod) / μυστήριον (mystērion)",
+    "def": "Intimità confidenziale con Dio oppure proposito divino rivelato a tempo debito."
+  },
+  "tentazione": {
+    "code": "G3986 / H4531",
+    "orig": "πειρασμός (peirasmos) / מַסָּה (massah)",
+    "def": "Prova che saggia la fedeltà oppure adescamento al male."
+  },
+  "prova": {
+    "code": "G1383 / G3986",
+    "orig": "δοκίμιον (dokimion) / πειρασμός (peirasmos)",
+    "def": "Affinamento della qualità provata della fede come l'oro nel crogiolo."
+  },
+  "palo": {
+    "code": "G4716 / G3586",
+    "orig": "σταυρός (stauros) / ξύλον (xylon)",
+    "def": "Palo verticale di esecuzione o legno (usato per il supplizio di Cristo)."
+  },
+  "croce": {
+    "code": "G4716",
+    "orig": "σταυρός (stauros)",
+    "def": "In greco classico palo verticale diritto; nella traduzione tradizionale reso 'croce'."
+  },
+  "corona": {
+    "code": "H5850 / G4735 / G1238",
+    "orig": "עֲטָרָה ('atarah) / στέφανος (stephanos) / διάδημα (diadēma)",
+    "def": "Sertò di vittoria (stephanos) o diadema di autorità regale (diadēma)."
+  },
+  "vittoria": {
+    "code": "H5331 / G3534",
+    "orig": "נֵצַח (netsach) / νῖκος (nikos)",
+    "def": "Trionfo definitivo sul peccato, sul mondo e sulla morte."
+  },
+  "pane": {
+    "code": "H3899 / G740",
+    "orig": "לֶחֶם (lechem) / ἄρτος (artos)",
+    "def": "Alimento essenziale; simbolo del sostentamento spirituale ('pane della vita')."
+  },
+  "vino": {
+    "code": "H3196 / G3631",
+    "orig": "יַיִן (yayin) / οἶνος (oinos)",
+    "def": "Frutto della vite; simbolo di gioia, banchetto e sangue del nuovo patto."
+  },
+  "olio": {
+    "code": "H8081 / G1637",
+    "orig": "שֶׁמֶן (shemen) / ἔλαιον (elaion)",
+    "def": "Olio d'oliva per illuminazione, cura e unzione consacratrice."
+  },
+  "sale": {
+    "code": "H4417 / G217",
+    "orig": "מֶלַח (melach) / ἅλας (halas)",
+    "def": "Conservante e condimento; simbolo di durata ('patto di sale') e linguaggio gradevole."
+  },
+  "strada": {
+    "code": "H1870 / G3598",
+    "orig": "דֶּרֶךְ (derek) / ὁδός (hodos)",
+    "def": "Via, percorso di vita e condotta morale davanti a Dio."
+  },
+  "via": {
+    "code": "H1870 / G3598",
+    "orig": "דֶּרֶךְ (derek) / ὁδός (hodos)",
+    "def": "Sentiero fisico o corso di vita; Gesù si definì 'la via, la verità e la vita'."
+  },
+  "porta": {
+    "code": "H8179 / G2374",
+    "orig": "שַׁעַר (sha'ar) / θύρα (thyra)",
+    "def": "Ingresso, accesso o luogo di giudizio pubblico nell'antico Israele."
+  },
+  "spada": {
+    "code": "H2719 / G3162",
+    "orig": "חֶרֶב (chereb) / μάχαιρα (machaira)",
+    "def": "Arma da taglio; metafora della penetrante Parola di Dio (Efesini 6:17)."
+  },
+  "scudo": {
+    "code": "H4043 / G2375",
+    "orig": "מָגֵן (magen) / θυρεός (thyreos)",
+    "def": "Grande scudo difensivo; simbolo della protezione divina e della fede."
+  },
+  "sabbath": {
+    "code": "H7676 / G4521",
+    "orig": "שַׁבָּת (shabbath) / σάββατον (sabbaton)",
+    "def": "Cessazione, riposo sacro dedicato all'adorazione di Dio."
+  },
+  "sabato": {
+    "code": "H7676 / G4521",
+    "orig": "שַׁבָּת (shabbath) / σάββατον (sabbaton)",
+    "def": "Giorno di riposo dal lavoro ordinario; ombra del riposo promesso da Dio."
+  },
+  "pasqua": {
+    "code": "H6453 / G3957",
+    "orig": "פֶּסַח (Pesach) / πάσχα (Pascha)",
+    "def": "Commemorazione della liberazione dall'Egitto; figura del sacrificio di Cristo."
+  },
+  "matrimonio": {
+    "code": "G1062",
+    "orig": "γάμος (gamos)",
+    "def": "Unione sacra istituita da Dio tra uomo e donna; simbolo dell'unione di Cristo con la congregazione."
+  },
+  "famiglia": {
+    "code": "H4940 / G3965",
+    "orig": "מִשְׁפָּחָה (mishpachah) / πατριά (patria)",
+    "def": "Casata, stirpe che deve il proprio nome al Padre celeste."
+  },
+  "lavoro": {
+    "code": "H4639 / G2041",
+    "orig": "מַעֲשֶׂה (ma'aseh) / ἔργον (ergon)",
+    "def": "Opera, attività produttiva, frutto visibile della fede."
+  },
+  "opere": {
+    "code": "H4639 / G2041",
+    "orig": "מַעֲשֶׂה (ma'aseh) / ἔργον (ergon)",
+    "def": "Azioni concrete che dimostrano viva la fede."
+  },
+  "riposo": {
+    "code": "H4496 / G2663",
+    "orig": "מְנוּחָה (menuchah) / κατάπαυσις (katapausis)",
+    "def": "Quiete, ristoro profondo e armonia col proposito di Dio."
+  },
+  "guarigione": {
+    "code": "H7495 / G2392",
+    "orig": "רָפָא (rapha') / ἴασις (iasis)",
+    "def": "Ripristino della salute fisica, emotiva e spirituale."
+  },
+  "forza": {
+    "code": "H3581 / G1411 / G2479",
+    "orig": "כֹּחַ (koach) / δύναμις (dynamis) / ἰσχύς (ischys)",
+    "def": "Potenza dinamica, vigore e capacità di compiere la volontà divina."
+  },
+  "potenza": {
+    "code": "H1369 / G1411",
+    "orig": "גְּבוּרָה (geburah) / δύναμις (dynamis)",
+    "def": "Forza operante, energia potente (da cui deriva 'dinamico')."
+  },
+  "autorità": {
+    "code": "G1849",
+    "orig": "ἐξουσία (exousia)",
+    "def": "Diritto legittimo di governare, decidere e agire."
+  },
+  "libertà": {
+    "code": "H1865 / G1657",
+    "orig": "דְּרוֹר (deror) / ἐλευθερία (eleutheria)",
+    "def": "Emancipazione dalla schiavitù del peccato, dell'errore e della paura."
+  },
+  "schiavo": {
+    "code": "H5650 / G1401",
+    "orig": "עֶבֶד ('ebed) / δοῦλος (doulos)",
+    "def": "Servitore legato da totale fedeltà al proprio padrone."
+  },
+  "ricompensa": {
+    "code": "H7939 / G3408",
+    "orig": "שָׂכָר (sakar) / μισθός (misthos)",
+    "def": "Salario, premio generoso concesso da Dio a chi lo cerca premurosamente."
+  },
+  "tesoro": {
+    "code": "H214 / G2344",
+    "orig": "אוֹצָר ('otsar) / θησαυρός (thēsauros)",
+    "def": "Deposito di beni preziosi; metafora delle ricchezze spirituali imperiture."
+  },
+  "amen": {
+    "code": "H543 / G281",
+    "orig": "אָמֵן ('amen) / ἀμήν (amēn)",
+    "def": "Significa 'così sia', 'veramente', 'è certo' (dalla radice di fedeltà e verità)."
+  },
+  "alleluia": {
+    "code": "H1984 / G239",
+    "orig": "הַלְלוּ־יָהּ (Halelu-Yah) / ἁλληλουϊά (hallēlouia)",
+    "def": "Invito gioioso: 'Lodate Iah!' (forma abbreviata di Geova)."
+  },
+  "osanna": {
+    "code": "H3467 / G5614",
+    "orig": "הוֹשִׁיעָה נָּא (Hoshi'ah-na') / ὡσαννά (hōsanna)",
+    "def": "Preghiera e acclamazione: 'Salva, ti preghiamo!'."
+  }
 };
-const PRO_CROSS_REFS = {
-  "1_1_1": ["Giovanni 1:1", "Ebrei 11:3", "Salmi 33:6", "Isaia 45:18", "Rivelazione 4:11"],
-  "1_1_2": ["Salmi 104:30", "Geremia 4:23"],
-  "1_1_3": ["2 Corinti 4:6", "Salmi 33:9", "Giovanni 1:5"],
-  "1_1_26": ["Genesi 9:6", "Salmi 8:5", "Colossesi 3:10", "Giacomo 3:9"],
-  "19_1_1": ["Proverbi 4:14", "Geremia 17:7", "Giosuè 1:8"],
-  "19_23_1": ["Giovanni 10:11", "Isaia 40:11", "Ezechiele 34:11", "1 Pietro 2:25"],
-  "19_83_18": ["Esodo 6:3", "Isaia 42:8", "Salmi 100:3"],
-  "19_119_105": ["Proverbi 6:23", "2 Pietro 1:19", "Giovanni 8:12"],
-  "20_3_5": ["Salmi 37:5", "Geremia 17:7", "Filippesi 4:6"],
-  "23_53_5": ["1 Pietro 2:24", "Romani 4:25", "Matteo 8:17"],
-  "24_29_11": ["Salmi 37:11", "Isaia 55:8", "1 Pietro 5:7"],
-  "40_5_3": ["Luca 6:20", "Isaia 57:15", "Giacomo 2:5"],
-  "40_6_9": ["Luca 11:2", "Salmi 83:18", "Ezechiele 36:23"],
-  "40_24_14": ["Marco 13:10", "Atti 1:8", "Rivelazione 14:6"],
-  "43_1_1": ["Genesi 1:1", "1 Giovanni 1:1", "Rivelazione 19:13"],
-  "43_3_16": ["Romani 5:8", "1 Giovanni 4:9", "Efesini 2:4"],
-  "43_14_6": ["Atti 4:12", "1 Timoteo 2:5", "Ebrei 10:19"],
-  "43_17_3": ["1 Giovanni 5:20", "Geremia 9:23", "Filippesi 3:8"],
-  "45_8_28": ["Genesi 50:20", "Efesini 1:11", "1 Pietro 1:5"],
-  "55_3_16": ["2 Pietro 1:21", "Romani 15:4", "Salmi 19:7"],
-  "58_11_1": ["Romani 8:24", "2 Corinti 4:18", "2 Corinti 5:7"],
-  "66_21_4": ["Isaia 25:8", "Isaia 35:10", "Rivelazione 7:17"]
+let PRO_CROSS_REFS = {
+  "1_1_1": [
+    "Giovanni 1:1",
+    "Ebrei 11:3",
+    "Salmi 33:6",
+    "Isaia 45:18",
+    "Rivelazione 4:11",
+    "Colossesi 1:16"
+  ],
+  "1_1_2": [
+    "Salmi 104:30",
+    "Geremia 4:23",
+    "Giobbe 26:7"
+  ],
+  "1_1_3": [
+    "2 Corinti 4:6",
+    "Salmi 33:9",
+    "Giovanni 1:5"
+  ],
+  "1_1_26": [
+    "Genesi 9:6",
+    "Salmi 8:5",
+    "Colossesi 3:10",
+    "Efesini 4:24",
+    "Giacomo 3:9"
+  ],
+  "1_2_7": [
+    "Genesi 3:19",
+    "1 Corinti 15:45",
+    "Ecclesiaste 12:7",
+    "Salmi 103:14"
+  ],
+  "1_2_17": [
+    "Romani 5:12",
+    "Romani 6:23",
+    "Giacomo 1:15"
+  ],
+  "1_3_15": [
+    "Romani 16:20",
+    "Galati 3:16",
+    "Galati 4:4",
+    "Rivelazione 12:9",
+    "Rivelazione 20:10",
+    "1 Giovanni 3:8"
+  ],
+  "1_12_3": [
+    "Genesi 22:18",
+    "Atti 3:25",
+    "Galati 3:8",
+    "Galati 3:16"
+  ],
+  "1_22_18": [
+    "Genesi 12:3",
+    "Atti 3:25",
+    "Galati 3:16",
+    "Ebrei 6:13"
+  ],
+  "1_49_10": [
+    "Ezechiele 21:27",
+    "Luca 1:32",
+    "Ebrei 7:14",
+    "Rivelazione 5:5"
+  ],
+  "2_3_14": [
+    "Esodo 6:3",
+    "Salmi 83:18",
+    "Isaia 42:8",
+    "Rivelazione 1:8"
+  ],
+  "2_3_15": [
+    "Salmi 135:13",
+    "Osea 12:5",
+    "Malachia 3:6"
+  ],
+  "2_6_3": [
+    "Salmi 83:18",
+    "Isaia 42:8",
+    "Genesi 17:1"
+  ],
+  "2_20_3": [
+    "Deuteronomio 6:4",
+    "Matteo 4:10",
+    "1 Corinti 8:6"
+  ],
+  "2_34_6": [
+    "Salmi 86:15",
+    "Salmi 103:8",
+    "Gioele 2:13",
+    "Giacomo 5:11"
+  ],
+  "3_17_11": [
+    "Genesi 9:4",
+    "Ebrei 9:22",
+    "Atti 15:29"
+  ],
+  "4_23_19": [
+    "1 Samuele 15:29",
+    "Tito 1:2",
+    "Ebrei 6:18"
+  ],
+  "5_6_4": [
+    "Marco 12:29",
+    "1 Corinti 8:6",
+    "Efesini 4:6"
+  ],
+  "5_6_5": [
+    "Matteo 22:37",
+    "Marco 12:30",
+    "Luca 10:27",
+    "1 Giovanni 5:3"
+  ],
+  "5_18_15": [
+    "Atti 3:22",
+    "Atti 7:37",
+    "Giovanni 6:14"
+  ],
+  "5_32_4": [
+    "Salmi 18:30",
+    "Giobbe 34:10",
+    "Rivelazione 15:3"
+  ],
+  "6_1_8": [
+    "Salmi 1:2",
+    "Salmi 119:97",
+    "1 Timoteo 4:15"
+  ],
+  "6_24_15": [
+    "1 Re 18:21",
+    "Matteo 6:24",
+    "Deuteronomio 30:19"
+  ],
+  "9_15_22": [
+    "Osea 6:6",
+    "Michea 6:8",
+    "Marco 12:33"
+  ],
+  "9_16_7": [
+    "1 Cronache 28:9",
+    "Geremia 17:10",
+    "Atti 1:24"
+  ],
+  "10_7_12": [
+    "Luca 1:32",
+    "Atti 2:30",
+    "Romani 1:3"
+  ],
+  "14_16_9": [
+    "Proverbi 15:3",
+    "Salmi 34:15",
+    "1 Pietro 3:12"
+  ],
+  "18_26_7": [
+    "Isaia 40:22",
+    "Salmi 104:5",
+    "Giobbe 38:4"
+  ],
+  "19_1_1": [
+    "Proverbi 4:14",
+    "Geremia 17:7",
+    "Giosuè 1:8"
+  ],
+  "19_2_7": [
+    "Atti 13:33",
+    "Ebrei 1:5",
+    "Ebrei 5:5",
+    "Matteo 3:17"
+  ],
+  "19_19_1": [
+    "Romani 1:20",
+    "Salmi 8:3",
+    "Isaia 40:26"
+  ],
+  "19_22_1": [
+    "Matteo 27:46",
+    "Marco 15:34"
+  ],
+  "19_22_18": [
+    "Matteo 27:35",
+    "Giovanni 19:24",
+    "Luca 23:34"
+  ],
+  "19_23_1": [
+    "Giovanni 10:11",
+    "Isaia 40:11",
+    "Ezechiele 34:11",
+    "1 Pietro 2:25"
+  ],
+  "19_37_11": [
+    "Matteo 5:5",
+    "Salmi 37:29",
+    "Isaia 60:21"
+  ],
+  "19_37_29": [
+    "Proverbi 2:21",
+    "Isaia 45:18",
+    "Rivelazione 21:3"
+  ],
+  "19_55_22": [
+    "1 Pietro 5:7",
+    "Filippesi 4:6",
+    "Matteo 6:25"
+  ],
+  "19_83_18": [
+    "Esodo 6:3",
+    "Isaia 42:8",
+    "Salmi 100:3",
+    "Geremia 16:21"
+  ],
+  "19_90_2": [
+    "Isaia 40:28",
+    "1 Timoteo 1:17",
+    "Rivelazione 10:6"
+  ],
+  "19_110_1": [
+    "Matteo 22:44",
+    "Atti 2:34",
+    "1 Corinti 15:25",
+    "Ebrei 1:13",
+    "Ebrei 10:12"
+  ],
+  "19_118_22": [
+    "Matteo 21:42",
+    "Atti 4:11",
+    "Efesini 2:20",
+    "1 Pietro 2:7"
+  ],
+  "19_119_105": [
+    "Proverbi 6:23",
+    "2 Pietro 1:19",
+    "Giovanni 8:12"
+  ],
+  "20_3_5": [
+    "Salmi 37:5",
+    "Geremia 17:7",
+    "Filippesi 4:6",
+    "Proverbi 16:3"
+  ],
+  "20_27_11": [
+    "Giobbe 2:4",
+    "Proverbi 23:15",
+    "Efesini 6:11"
+  ],
+  "21_9_5": [
+    "Salmi 146:4",
+    "Ecclesiaste 9:10",
+    "Genesi 3:19",
+    "Giovanni 11:11"
+  ],
+  "21_12_13": [
+    "Deuteronomio 10:12",
+    "Michea 6:8",
+    "1 Giovanni 5:3"
+  ],
+  "23_7_14": [
+    "Matteo 1:23",
+    "Luca 1:31",
+    "Isaia 9:6"
+  ],
+  "23_9_6": [
+    "Luca 1:32",
+    "Luca 2:11",
+    "Giovanni 3:16",
+    "Efesini 2:14"
+  ],
+  "23_25_8": [
+    "Rivelazione 21:4",
+    "1 Corinti 15:54",
+    "Osea 13:14"
+  ],
+  "23_40_22": [
+    "Giobbe 26:7",
+    "Salmi 104:2",
+    "Isaia 42:5"
+  ],
+  "23_41_10": [
+    "Isaia 41:13",
+    "Deuteronomio 31:6",
+    "Romani 8:31",
+    "Ebrei 13:6"
+  ],
+  "23_42_8": [
+    "Salmi 83:18",
+    "Esodo 3:15",
+    "Isaia 48:11"
+  ],
+  "23_45_18": [
+    "Genesi 1:28",
+    "Salmi 115:16",
+    "Ecclesiaste 1:4"
+  ],
+  "23_48_17": [
+    "Salmi 32:8",
+    "Proverbi 3:5",
+    "2 Timoteo 3:16"
+  ],
+  "23_53_5": [
+    "1 Pietro 2:24",
+    "Romani 4:25",
+    "Matteo 8:17",
+    "Ebrei 9:28"
+  ],
+  "23_55_11": [
+    "Numeri 23:19",
+    "Giosuè 21:45",
+    "Isaia 46:10"
+  ],
+  "24_10_23": [
+    "Proverbi 16:9",
+    "Proverbi 20:24",
+    "Geremia 17:9"
+  ],
+  "24_29_11": [
+    "Salmi 37:11",
+    "Isaia 55:8",
+    "1 Pietro 5:7",
+    "Romani 8:28"
+  ],
+  "27_2_44": [
+    "Daniele 7:14",
+    "Matteo 6:10",
+    "Rivelazione 11:15",
+    "Salmi 145:13"
+  ],
+  "27_7_13": [
+    "Matteo 24:30",
+    "Matteo 26:64",
+    "Rivelazione 1:7"
+  ],
+  "27_9_25": [
+    "Luca 3:1",
+    "Galati 4:4",
+    "Daniele 9:24"
+  ],
+  "29_2_32": [
+    "Atti 2:21",
+    "Romani 10:13",
+    "Salmi 145:18"
+  ],
+  "33_5_2": [
+    "Matteo 2:6",
+    "Giovanni 7:42",
+    "Luca 2:4"
+  ],
+  "38_9_9": [
+    "Matteo 21:5",
+    "Giovanni 12:15",
+    "Marco 11:7"
+  ],
+  "39_3_6": [
+    "Giacomo 1:17",
+    "Numeri 23:19",
+    "Ebrei 13:8"
+  ],
+  "40_5_3": [
+    "Luca 6:20",
+    "Isaia 57:15",
+    "Giacomo 2:5"
+  ],
+  "40_5_5": [
+    "Salmi 37:11",
+    "Salmi 37:29",
+    "Rivelazione 21:3"
+  ],
+  "40_6_9": [
+    "Luca 11:2",
+    "Salmi 83:18",
+    "Ezechiele 36:23",
+    "Giovanni 17:6"
+  ],
+  "40_6_10": [
+    "Daniele 2:44",
+    "Salmi 37:29",
+    "Rivelazione 11:15"
+  ],
+  "40_6_33": [
+    "Luca 12:31",
+    "Salmi 37:25",
+    "Proverbi 3:9"
+  ],
+  "40_7_12": [
+    "Luca 6:31",
+    "Romani 13:8",
+    "Galati 5:14"
+  ],
+  "40_11_28": [
+    "Salmi 55:22",
+    "Geremia 31:25",
+    "1 Pietro 5:7"
+  ],
+  "40_22_37": [
+    "Deuteronomio 6:5",
+    "Marco 12:30",
+    "1 Giovanni 5:3"
+  ],
+  "40_24_14": [
+    "Marco 13:10",
+    "Atti 1:8",
+    "Rivelazione 14:6",
+    "Matteo 28:19"
+  ],
+  "40_28_19": [
+    "Marco 16:15",
+    "Atti 1:8",
+    "Matteo 24:14"
+  ],
+  "42_23_43": [
+    "2 Corinti 12:4",
+    "Rivelazione 2:7",
+    "Salmi 37:29"
+  ],
+  "43_1_1": [
+    "Genesi 1:1",
+    "1 Giovanni 1:1",
+    "Rivelazione 19:13",
+    "Colossesi 1:15"
+  ],
+  "43_3_16": [
+    "Romani 5:8",
+    "1 Giovanni 4:9",
+    "Efesini 2:4",
+    "Giovanni 17:3"
+  ],
+  "43_5_28": [
+    "Atti 24:15",
+    "Giovanni 11:25",
+    "Daniele 12:2",
+    "Rivelazione 20:13"
+  ],
+  "43_13_34": [
+    "Giovanni 15:12",
+    "1 Giovanni 3:11",
+    "1 Giovanni 4:7",
+    "1 Pietro 4:8"
+  ],
+  "43_14_6": [
+    "Atti 4:12",
+    "1 Timoteo 2:5",
+    "Ebrei 10:19",
+    "Giovanni 10:9"
+  ],
+  "43_17_3": [
+    "1 Giovanni 5:20",
+    "Geremia 9:23",
+    "Filippesi 3:8",
+    "Giovanni 3:16"
+  ],
+  "43_17_17": [
+    "Salmi 119:160",
+    "2 Timoteo 3:16",
+    "Efesini 5:26"
+  ],
+  "44_17_11": [
+    "Giovanni 5:39",
+    "2 Timoteo 3:15",
+    "1 Tessalonicesi 5:21"
+  ],
+  "44_24_15": [
+    "Giovanni 5:28",
+    "Daniele 12:2",
+    "Rivelazione 20:12"
+  ],
+  "45_1_20": [
+    "Salmi 19:1",
+    "Giobbe 12:7",
+    "Atti 14:17",
+    "Ebrei 3:4"
+  ],
+  "45_5_12": [
+    "Genesi 3:6",
+    "1 Corinti 15:21",
+    "Romani 6:23",
+    "Salmi 51:5"
+  ],
+  "45_6_23": [
+    "Romani 5:21",
+    "Giovanni 3:16",
+    "Giacomo 1:15"
+  ],
+  "45_8_28": [
+    "Genesi 50:20",
+    "Efesini 1:11",
+    "1 Pietro 1:5",
+    "Geremia 29:11"
+  ],
+  "45_12_2": [
+    "Efesini 4:23",
+    "Colossesi 3:10",
+    "1 Giovanni 2:15"
+  ],
+  "45_15_4": [
+    "1 Corinti 10:11",
+    "2 Timoteo 3:16",
+    "Salmi 119:105"
+  ],
+  "46_13_4": [
+    "Colossesi 3:14",
+    "1 Pietro 4:8",
+    "Galati 5:22"
+  ],
+  "46_15_26": [
+    "Rivelazione 21:4",
+    "Isaia 25:8",
+    "2 Timoteo 1:10"
+  ],
+  "48_5_22": [
+    "Efesini 5:9",
+    "Colossesi 3:12",
+    "2 Pietro 1:5"
+  ],
+  "49_6_11": [
+    "1 Tessalonicesi 5:8",
+    "2 Corinti 10:4",
+    "1 Pietro 5:8"
+  ],
+  "50_4_6": [
+    "1 Pietro 5:7",
+    "Matteo 6:25",
+    "Salmi 55:22",
+    "Proverbi 3:5"
+  ],
+  "51_1_15": [
+    "Giovanni 1:1",
+    "Ebrei 1:3",
+    "Rivelazione 3:14",
+    "Proverbi 8:22"
+  ],
+  "54_2_5": [
+    "Giovanni 14:6",
+    "Atti 4:12",
+    "Ebrei 8:6",
+    "Ebrei 9:15"
+  ],
+  "55_3_1": [
+    "Matteo 24:3",
+    "2 Pietro 3:3",
+    "Giuda 18"
+  ],
+  "55_3_16": [
+    "2 Pietro 1:21",
+    "Romani 15:4",
+    "Salmi 19:7",
+    "Ebrei 4:12"
+  ],
+  "58_4_12": [
+    "Isaia 55:11",
+    "Efesini 6:17",
+    "2 Timoteo 3:16"
+  ],
+  "58_10_24": [
+    "Ebrei 10:25",
+    "1 Tessalonicesi 5:11",
+    "Proverbi 27:17"
+  ],
+  "58_11_1": [
+    "Romani 8:24",
+    "2 Corinti 4:18",
+    "2 Corinti 5:7",
+    "Ebrei 11:6"
+  ],
+  "59_1_5": [
+    "Proverbi 2:6",
+    "Matteo 7:7",
+    "Giacomo 3:17"
+  ],
+  "59_1_13": [
+    "Giobbe 34:10",
+    "1 Corinti 10:13",
+    "Deuteronomio 32:4"
+  ],
+  "59_4_8": [
+    "2 Cronache 15:2",
+    "Zaccaria 1:3",
+    "Salmi 145:18"
+  ],
+  "60_5_7": [
+    "Salmi 55:22",
+    "Filippesi 4:6",
+    "Matteo 6:25"
+  ],
+  "61_3_9": [
+    "Ezechiele 33:11",
+    "1 Timoteo 2:4",
+    "Abacuc 2:3"
+  ],
+  "62_4_8": [
+    "1 Giovanni 4:16",
+    "Giovanni 3:16",
+    "Esodo 34:6"
+  ],
+  "62_5_3": [
+    "Giovanni 14:15",
+    "Deuteronomio 10:12",
+    "Matteo 11:30"
+  ],
+  "62_5_19": [
+    "Giovanni 12:31",
+    "2 Corinti 4:4",
+    "Efesini 2:2",
+    "Rivelazione 12:9"
+  ],
+  "66_4_11": [
+    "Genesi 1:1",
+    "Salmi 104:24",
+    "Isaia 45:18",
+    "Colossesi 1:16"
+  ],
+  "66_11_15": [
+    "Daniele 2:44",
+    "Daniele 7:14",
+    "Matteo 6:10"
+  ],
+  "66_12_9": [
+    "Genesi 3:15",
+    "Giovanni 12:31",
+    "Rivelazione 20:2"
+  ],
+  "66_21_3": [
+    "Ezechiele 37:27",
+    "Levitico 26:11",
+    "2 Corinti 6:16"
+  ],
+  "66_21_4": [
+    "Isaia 25:8",
+    "Isaia 35:10",
+    "Rivelazione 7:17",
+    "1 Corinti 15:26"
+  ]
 };
+let bmStrongNormMap = null;
+function rebuildStrongNormMap() {
+  bmStrongNormMap = new Map();
+  Object.keys(PRO_STRONG_DICT).forEach(k => {
+    const norm = k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    if (!bmStrongNormMap.has(norm)) bmStrongNormMap.set(norm, k);
+  });
+}
+function getStrongDictKey(word) {
+  if (!word) return null;
+  if (!bmStrongNormMap) rebuildStrongNormMap();
+  const low = String(word).toLowerCase();
+  if (PRO_STRONG_DICT[low]) return low;
+  const norm = low.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return bmStrongNormMap.get(norm) || null;
+}
+async function loadExternalExegeticalModules() {
+  try {
+    const extStrong = await idbGet("bm:strong_ext");
+    if (extStrong && typeof extStrong === "object") {
+      Object.assign(PRO_STRONG_DICT, extStrong);
+      rebuildStrongNormMap();
+    }
+    const extXrefs = await idbGet("bm:xrefs_ext");
+    if (extXrefs && typeof extXrefs === "object") {
+      Object.keys(extXrefs).forEach(k => {
+        if (!Array.isArray(extXrefs[k])) return;
+        const base = Array.isArray(PRO_CROSS_REFS[k]) ? PRO_CROSS_REFS[k] : [];
+        PRO_CROSS_REFS[k] = [...new Set([...extXrefs[k], ...base])];
+      });
+    }
+  } catch (e) { console.debug(e); }
+}
+async function importStrongExtJson(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  const statusEl = getActiveEpubStatusEl();
+  try {
+    if (statusEl) statusEl.innerHTML = `⏳ Caricamento Lessico Strong esteso <b>${escapeHtml(file.name)}</b>...`;
+    const parsed = JSON.parse(await file.text());
+    const mapObj = (parsed && typeof parsed === "object" && !Array.isArray(parsed)) ? (parsed.entries || parsed) : null;
+    if (!mapObj || typeof mapObj !== "object" || Object.keys(mapObj).length === 0) {
+      throw new Error("Formato JSON non valido. Atteso oggetto { termine: { code, orig, def } }.");
+    }
+    await idbPut("bm:strong_ext", mapObj);
+    Object.assign(PRO_STRONG_DICT, mapObj);
+    rebuildStrongNormMap();
+    if (statusEl) statusEl.innerHTML = `✔ Lessico Strong esteso salvato (${Object.keys(mapObj).length} voci aggiunte)!`;
+  } catch (err) {
+    if (statusEl) statusEl.innerHTML = `❌ Errore Strong JSON: ${escapeHtml(err.message)}`;
+  } finally {
+    event.target.value = "";
+  }
+}
+async function importXrefsExtJson(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  const statusEl = getActiveEpubStatusEl();
+  try {
+    if (statusEl) statusEl.innerHTML = `⏳ Caricamento Riferimenti Incrociati <b>${escapeHtml(file.name)}</b>...`;
+    const parsed = JSON.parse(await file.text());
+    const mapObj = (parsed && typeof parsed === "object" && !Array.isArray(parsed)) ? (parsed.refs || parsed) : null;
+    if (!mapObj || typeof mapObj !== "object" || Object.keys(mapObj).length === 0) {
+      throw new Error("Formato JSON non valido. Atteso oggetto { \"bookId_ch_v\": [\"Libro c:v\", ...] }.");
+    }
+    await idbPut("bm:xrefs_ext", mapObj);
+    Object.keys(mapObj).forEach(k => {
+      if (!Array.isArray(mapObj[k])) return;
+      const base = Array.isArray(PRO_CROSS_REFS[k]) ? PRO_CROSS_REFS[k] : [];
+      PRO_CROSS_REFS[k] = [...new Set([...mapObj[k], ...base])];
+    });
+    if (statusEl) statusEl.innerHTML = `✔ Riferimenti Incrociati salvati (${Object.keys(mapObj).length} versetti)!`;
+  } catch (err) {
+    if (statusEl) statusEl.innerHTML = `❌ Errore Riferimenti JSON: ${escapeHtml(err.message)}`;
+  } finally {
+    event.target.value = "";
+  }
+}
 function escapeHtml(str) {
   if (str === null || str === undefined) return "";
   return String(str)
@@ -2623,6 +4219,46 @@ async function fetchChapterData(transId, bookId, chapter) {
     safeSaveStorage(cacheKey, JSON.stringify(verses), true);
   }
   return verses;
+}
+async function fetchChapterFootnotes(transId, bookId, chapter) {
+  try {
+    const fullOffline = await getOfflineBible(transId);
+    if (fullOffline && fullOffline.books) {
+      const bObj = fullOffline.books.find(b => Number(b.nr) === Number(bookId));
+      const cObj = bObj && bObj.chapters ? bObj.chapters.find(c => Number(c.chapter) === Number(chapter)) : null;
+      if (cObj && cObj.footnotes && typeof cObj.footnotes === "object") return cObj.footnotes;
+    }
+  } catch (e) { console.debug(e); }
+  return {};
+}
+async function openVerseFootnotesModal(verseNum) {
+  bmHaptic(14);
+  const vNum = Number(verseNum) || 1;
+  const book = getBook(state.bookId);
+  const fnMap = await fetchChapterFootnotes(state.trans1, state.bookId, state.chapter);
+  const notesArr = fnMap[String(vNum)] || fnMap[vNum] || [];
+  if (!notesArr.length) return;
+  const modal = document.getElementById("myReadModal");
+  const body = document.getElementById("myReadModalBody");
+  if (!modal || !body) return;
+  const refStr = `${book.name} ${state.chapter}:${vNum}`;
+  const notesHtml = notesArr.map((txt, i) => `
+    <div style="background:#062356; border:1px solid rgba(255,213,79,0.45); border-left:3.5px solid #ffd54f; border-radius:8px; padding:9px 11px; margin-bottom:8px; font-size:14px; line-height:1.52; color:#ffffff;">
+      <span style="color:#ffd54f; font-weight:900; margin-right:5px;">*${notesArr.length > 1 ? (i + 1) : ""}</span>${formatNoteLinks(txt, state.bookId)}
+    </div>
+  `).join("");
+  body.innerHTML = `
+    <div style="text-align:center; padding:2px 0 10px 0;">
+      <div style="font-size:24px; margin-bottom:2px;">📌</div>
+      <div style="font-size:15.5px; font-weight:900; color:#ffd54f;">Note in Calce Ufficiali</div>
+      <div style="font-size:13px; color:#00e5ff; font-weight:800;">${escapeHtml(refStr)}</div>
+    </div>
+    <div class="bm-justify-text" style="max-height:50vh; overflow-y:auto; margin-bottom:10px;">
+      ${notesHtml}
+    </div>
+    <button type="button" class="myread-action-btn" style="background:#062356;" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
+  `;
+  modal.style.display = "flex";
 }
 function stripTagsToPlainText(htmlStr) {
   if (!htmlStr) return "";
@@ -3157,6 +4793,7 @@ async function renderChapterView() {
   try {
     const data1 = await fetchChapterData(state.trans1, state.bookId, state.chapter);
     if (reqId !== currentChapterReqId) return;
+    const footnotes1 = await fetchChapterFootnotes(state.trans1, state.bookId, state.chapter);
     let data2 = [], data3 = [];
     if (state.parallelCount >= 2) {
       try { data2 = await fetchChapterData(state.trans2, state.bookId, state.chapter); } catch(e) { data2 = []; }
@@ -3174,7 +4811,12 @@ async function renderChapterView() {
         const hasNote = state.notes.some(n => n.ref === refStr);
         const cleanText = escapeHtml(stripTagsToPlainText(v.text));
         const formattedText = formatInlineStrongs(v.text, v.verse);
+        const vFootnotes = (bmSettings.showFootnotes !== false) ? (footnotes1[String(v.verse)] || footnotes1[v.verse] || []) : [];
+        const fnBadge = vFootnotes.length
+          ? ` <span class="bm-footnote-badge" title="Apri ${vFootnotes.length} note in calce ufficiali" onclick="event.stopPropagation(); openVerseFootnotesModal(${v.verse})">📌${vFootnotes.length > 1 ? vFootnotes.length : ""}</span>`
+          : "";
         const badges =
+          fnBadge +
           (hasNote ? ` <span class="tag-badge" title="Apri il tuo Appunto" onclick="event.stopPropagation(); openVerseNoteDirectly(${v.verse})">📝Nota</span>` : "") +
           ` <span class="tag-badge" title="Apri Passi Paralleli e Concordanza" onclick="event.stopPropagation(); openVerseCrossDirectly(${v.verse})">🔗Paralleli</span>`;
         return `
@@ -3258,7 +4900,15 @@ function openBibleTabFromMenu() {
   if (currentViewContext.type !== "bible") {
     saveCurrentPositionToHistory(state.bookId, state.chapter);
   }
-  loadChapterView();
+  const savedRef = safeGetStorage("bm_last_scroll_ref");
+  const savedScroll = Number(safeGetStorage("bm_last_scroll")) || 0;
+  const curRefKey = `${state.bookId}_${state.chapter}`;
+  loadChapterView().then(() => {
+    if (savedRef === curRefKey && savedScroll > 30) {
+      const main = document.getElementById("mainContainer");
+      if (main) main.scrollTop = savedScroll;
+    }
+  });
 }
 function prevChapter() {
   let targetB = state.bookId, targetC = state.chapter;
@@ -3332,6 +4982,7 @@ let bmSettings = safeJsonParse("bm_user_settings_v1", {
   lineHeight: "1.58",
   textAlign: "left",
   showInlineBadges: true,
+  showFootnotes: true,
   messianicBulb: true,
   nameLinks: false,
   paperMode: false,
@@ -3552,6 +5203,9 @@ function renderSettingsDrawerContent() {
           <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#5e35b1; --btn-glow:rgba(149,117,205,0.75); background:#062356;" onclick="clearChapterCacheOnly(); showBlueInfoModal('🧹 Cache Capitoli Pulita', 'La cache temporanea dei capitoli online è stata svuotata (le tue Bibbie EPUB e le note sono intatte).');">
             🧹 Svuota Cache Capitoli Online
           </button>
+          <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00897b; --btn-glow:rgba(0,229,255,0.75); background:#004d40;" onclick="checkBmPwaUpdates()">
+            🔄 Stato Offline PWA & Aggiornamenti
+          </button>
         </div>
       </div>
     </div>
@@ -3610,6 +5264,13 @@ function renderSettingsDrawerContent() {
           <span>💡 Lampadina Profezie Messianiche</span>
           <label class="bm-switch">
             <input type="checkbox" ${bmSettings.messianicBulb !== false ? 'checked' : ''} onchange="setBmSettingProp('messianicBulb', this.checked); evaluateMessianicBulbForCurrentView();">
+            <span class="bm-slider"></span>
+          </label>
+        </div>
+        <div class="bm-set-row">
+          <span>📌 Note in calce ufficiali (TNM)</span>
+          <label class="bm-switch">
+            <input type="checkbox" ${bmSettings.showFootnotes !== false ? 'checked' : ''} onchange="setBmSettingProp('showFootnotes', this.checked); if (currentViewContext.type === 'bible') loadChapterView();">
             <span class="bm-slider"></span>
           </label>
         </div>
@@ -4420,7 +6081,7 @@ function showNotesView(fromBack = false) {
       const safeRefJs = escapeJsStr(n.ref || "");
       const noteId = n.id;
       return `
-      <div class="result-card" onclick="openRef(${Number(n.bookId) || 1}, ${Number(n.chapter) || 1})">
+      <div class="result-card" onclick="openRef(${Number(n.bookId) || 1}, ${Number(n.chapter) || 1}, ${Number(n.verse) || 0})">
         <div class="result-ref" style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;">
           <span>📝 ${escapeHtml(n.ref)} <small style="color:var(--text-muted);font-weight:normal;">(${escapeHtml(n.date || '')})</small></span>
           <div style="display:flex;gap:10px;align-items:center;">
@@ -4669,7 +6330,8 @@ async function executeSearch(page = 1) {
   if (isNewSearch) {
     resDiv.innerHTML = `<div class="loader">Ricerca nella Concordanza di "<b>${escapeHtml(rawQuery)}</b>" in corso...</div>`;
     const normalizeForPhrase = (str) => String(str || "").toLowerCase()
-      .replace(/[^\p{L}\p{M}\p{N}\s]/gu, " ")
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^\p{L}\p{N}\s]/gu, " ")
       .replace(/\s+/g, " ")
       .trim();
     const queryNorm = normalizeForPhrase(rawQuery);
@@ -4677,17 +6339,17 @@ async function executeSearch(page = 1) {
     const buildMatcher = (qRaw) => {
       if (/\s+not\s+/i.test(qRaw)) {
         const parts = qRaw.split(/\s+not\s+/i);
-        const inc = (parts[0] || "").trim().toLowerCase();
-        const exc = parts.slice(1).map(p => p.trim().toLowerCase()).filter(Boolean);
-        return (txt) => { const low = txt.toLowerCase(); return (!inc || low.includes(inc)) && exc.every(e => !low.includes(e)); };
+        const inc = normalizeForPhrase(parts[0] || "");
+        const exc = parts.slice(1).map(p => normalizeForPhrase(p)).filter(Boolean);
+        return (txt) => { const low = normalizeForPhrase(txt); return (!inc || low.includes(inc)) && exc.every(e => !low.includes(e)); };
       }
       if (/\s+and\s+/i.test(qRaw)) {
-        const all = qRaw.split(/\s+and\s+/i).map(p => p.trim().toLowerCase()).filter(Boolean);
-        return (txt) => { const low = txt.toLowerCase(); return all.every(p => low.includes(p)); };
+        const all = qRaw.split(/\s+and\s+/i).map(p => normalizeForPhrase(p)).filter(Boolean);
+        return (txt) => { const low = normalizeForPhrase(txt); return all.every(p => low.includes(p)); };
       }
       if (/\s+or\s+/i.test(qRaw)) {
-        const any = qRaw.split(/\s+or\s+/i).map(p => p.trim().toLowerCase()).filter(Boolean);
-        return (txt) => { const low = txt.toLowerCase(); return any.some(p => low.includes(p)); };
+        const any = qRaw.split(/\s+or\s+/i).map(p => normalizeForPhrase(p)).filter(Boolean);
+        return (txt) => { const low = normalizeForPhrase(txt); return any.some(p => low.includes(p)); };
       }
       if (!queryWords.length) return () => false;
       if (mode === "exact_phrase") return (txt) => normalizeForPhrase(txt).includes(queryNorm);
@@ -4760,11 +6422,14 @@ function renderSearchResultsPage() {
 
   const highlightSearchMatches = (plainText) => {
     let safeTxt = escapeHtml(plainText);
+    const stopOps = new Set(["and", "or", "not"]);
     queryWords.forEach(w => {
-      if (w.length < 2) return;
-      const escW = w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      const rgx = new RegExp("(" + escW + ")", "gi");
-      safeTxt = safeTxt.replace(rgx, '<span class="diff-word" style="font-weight:700;">$1</span>');
+      if (w.length < 2 || stopOps.has(w)) return;
+      const rgx = buildAccentInsensitiveRegex(w);
+      safeTxt = safeTxt.replace(/(<[^>]+>)|([^<]+)/g, (_m, tag, txtNode) => {
+        if (tag) return tag;
+        return txtNode.replace(rgx, '<span class="diff-word" style="font-weight:700;">$1</span>');
+      });
     });
     return safeTxt;
   };
@@ -4847,22 +6512,115 @@ function buildUniversalRefsForVerse(bookId, chapter, verseNum, rawText) {
   return list.slice(0, 8);
 }
 
+const bmInsightVerseCache = new Map();
+function buildBookInsightCitationPattern(bookId) {
+  const b = getBook(bookId);
+  const alts = new Set([b.name, b.abbr]);
+  if (bookId === 19) { alts.add("Salmo"); alts.add("Salmi"); }
+  if (bookId === 22) { alts.add("Cantico"); alts.add("Cantico dei Cantici"); }
+  if (bookId === 66) { alts.add("Rivelazione"); alts.add("Apocalisse"); }
+  Object.keys(SI_ABBR_MAP).forEach(k => {
+    if (SI_ABBR_MAP[k] === Number(bookId) && k.length >= 2) {
+      alts.add(k.replace(/^([1-3])/, "$1\s*"));
+    }
+  });
+  return [...alts]
+    .sort((a, c) => c.length - a.length)
+    .map(a => a.includes("\s*") ? a : normalizeForSearch(a).replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s+"))
+    .join("|");
+}
+async function findInsightRefsForVerse(bookId, chapter, verseNum, maxHits = 14) {
+  const cacheKey = `${bookId}_${chapter}_${verseNum}`;
+  if (bmInsightVerseCache.has(cacheKey)) return bmInsightVerseCache.get(cacheKey);
+  const ins = await getInsightData();
+  if (!ins || !Array.isArray(ins.entries) || ins.entries.length === 0) return [];
+  const bookPat = buildBookInsightCitationPattern(Number(bookId));
+  const ch = Number(chapter), v = Number(verseNum);
+  const singleChapterBooks = new Set([31, 57, 63, 64, 65]);
+  const chVerseRgx = singleChapterBooks.has(Number(bookId))
+    ? new RegExp(`(?:^|[^\p{L}\p{N}])(?:${bookPat})\.?\s+(?:1:)?(\d{1,3}(?:\s*[–-]\s*\d{1,3})?(?:\s*,\s*\d{1,3}(?:\s*[–-]\s*\d{1,3})?)*)`, "giu")
+    : new RegExp(`(?:^|[^\p{L}\p{N}])(?:${bookPat})\.?\s+${ch}:(\d{1,3}(?:\s*[–-]\s*\d{1,3})?(?:\s*,\s*\d{1,3}(?:\s*[–-]\s*\d{1,3})?)*)`, "giu");
+  const matches = [];
+  for (let i = 0; i < ins.entries.length; i++) {
+    const e = ins.entries[i];
+    const normBody = normalizeForSearch(e.body);
+    chVerseRgx.lastIndex = 0;
+    let m;
+    let matchedSpec = "";
+    while ((m = chVerseRgx.exec(normBody)) !== null) {
+      const vList = parseVerseSpecToArray(m[1]);
+      if (vList.includes(v)) {
+        matchedSpec = `${ch}:${v}`;
+        break;
+      }
+    }
+    if (matchedSpec) {
+      matches.push({ idx: i, title: e.title, query: `${ch}:${v}` });
+      if (matches.length >= maxHits) break;
+    }
+  }
+  bmInsightVerseCache.set(cacheKey, matches);
+  return matches;
+}
+function openInsightArticleForVerse(idx, queryStr) {
+  closeProModal();
+  const myReadModal = document.getElementById("myReadModal");
+  if (myReadModal) myReadModal.style.display = "none";
+  insightActiveLetter = "TUTTE";
+  insightSearchQuery = queryStr || "";
+  showInsightView(idx);
+}
+function filterStrongModalQuickSearch(queryStr) {
+  const box = document.getElementById("bmStrongSearchResults");
+  if (!box) return;
+  const q = normalizeForSearch((queryStr || "").trim());
+  if (q.length < 2) {
+    box.innerHTML = "";
+    return;
+  }
+  const hits = [];
+  Object.keys(PRO_STRONG_DICT).forEach(k => {
+    const d = PRO_STRONG_DICT[k];
+    const hay = normalizeForSearch(`${k} ${d.code} ${d.orig} ${d.def}`);
+    if (hay.includes(q)) hits.push({ k, d, exact: normalizeForSearch(k) === q || normalizeForSearch(d.code).includes(q) });
+  });
+  hits.sort((a, b) => (b.exact - a.exact) || a.k.localeCompare(b.k, "it"));
+  if (!hits.length) {
+    box.innerHTML = `<div style="font-size:12.5px; color:#9ec9ff; padding:6px 2px;">Nessuna radice trovata nel lessico per "<b>${escapeHtml(queryStr)}</b>".</div>`;
+    return;
+  }
+  box.innerHTML = hits.slice(0, 12).map(({ k, d }) => `
+    <div class="result-card" style="cursor:default; margin-bottom:6px; padding:9px;">
+      <div class="result-ref" style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;">
+        <span>${escapeHtml(k.toUpperCase())} — <span class="tag-badge">${escapeHtml(d.code)}</span></span>
+        <span class="tag-badge" onclick="searchWordInConcordance('${escapeJsStr(k)}')">🔍 Concordanza</span>
+      </div>
+      <div style="font-weight:700; margin:3px 0;">${escapeHtml(d.orig)}</div>
+      <div style="font-size:13px; line-height:1.45;">${escapeHtml(d.def)}</div>
+    </div>
+  `).join("");
+}
+
 window.openStrongModalForVerse = function(clickedCode) {
   const book = getBook(state.bookId);
   const vNum = state.selectedVerse || 1;
   const rawVerse = state.selectedVerseText || "";
+  const normVerse = normalizeForSearch(rawVerse);
   const matches = [];
+  const seenKeys = new Set();
   Object.keys(PRO_STRONG_DICT).forEach(k => {
     const d = PRO_STRONG_DICT[k];
-    const escapedKey = k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const wordRegex = new RegExp(`(?:^|[^a-zA-ZÀ-ÿ])${escapedKey}(?:$|[^a-zA-ZÀ-ÿ])`, "i");
+    const normK = normalizeForSearch(k);
+    const escapedKey = normK.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const wordRegex = new RegExp(`(?:^|[^a-z])${escapedKey}(?:$|[^a-z])`, "i");
     const codeMatched = clickedCode && d.code.toUpperCase().includes(clickedCode.toUpperCase());
-    if (codeMatched || wordRegex.test(rawVerse)) {
+    if ((codeMatched || wordRegex.test(normVerse)) && !seenKeys.has(normK)) {
+      seenKeys.add(normK);
       matches.push(`
         <div class="result-card" style="cursor:default; ${codeMatched ? 'border:2px solid var(--primary-light);' : ''}">
-          <div class="result-ref" style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="result-ref" style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;">
             <span>${escapeHtml(k.toUpperCase())} — <span class="tag-badge">${escapeHtml(d.code)}</span></span>
-            <span class="tag-badge" onclick="searchWordInConcordance('${escapeJsStr(k)}')">🔍Cerca nella Concordanza</span>
+            <span class="tag-badge" onclick="searchWordInConcordance('${escapeJsStr(k)}')">🔍 Concordanza</span>
           </div>
           <div style="font-weight:700; margin:4px 0;">${escapeHtml(d.orig)}</div>
           <div style="font-size:13.5px; line-height:1.45;">${escapeHtml(d.def)}</div>
@@ -4879,10 +6637,12 @@ window.openStrongModalForVerse = function(clickedCode) {
   }
   const words = [...new Set(rawVerse.replace(/[^a-zA-ZÀ-ÿ\s]/g, " ").split(/\s+/).filter(w => w.length >= 4))];
   const wordPills = words.map(w => `<span class="tag-badge" style="font-size:13px;padding:5px 10px;" onclick="searchWordInConcordance('${escapeJsStr(w)}')">🔍${escapeHtml(w)}</span>`).join(" ");
-  document.getElementById("proModalTitle").textContent = `🏺 Lessico Strong & Concordanza (${book.name} ${state.chapter}:${vNum})`;
+  document.getElementById("proModalTitle").textContent = `🏺 Lessico Strong (${Object.keys(PRO_STRONG_DICT).length} radici) — ${book.name} ${state.chapter}:${vNum}`;
   document.getElementById("proModalBody").innerHTML = `
     <div style="font-size:13px;color:var(--text-muted);font-style:italic;margin-bottom:10px;border-left:3px solid var(--primary-light);padding-left:8px;">"${escapeHtml(rawVerse)}"</div>
-    ${matches.length ? `<div class="section-title"><span>Radici Ebraico/Greche Rilevate</span></div>` + matches.join("") : ""}
+    <input type="search" id="bmStrongQuickSearch" class="search-input" style="width:100%; margin-bottom:8px;" placeholder="🔍 Cerca qualsiasi codice (es. H3068, G26) o radice..." oninput="filterStrongModalQuickSearch(this.value)">
+    <div id="bmStrongSearchResults"></div>
+    ${matches.length ? `<div class="section-title"><span>Radici Ebraico/Greche Rilevate (${matches.length})</span></div>` + matches.join("") : ""}
     <div class="section-title"><span>Concordanza Immediata Parole del Versetto</span></div>
     <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:8px;">Tocca qualsiasi parola di questo versetto per trovare tutti i passi paralleli in cui ricorre nella Bibbia:</div>
     <div style="display:flex;flex-wrap:wrap;gap:6px;">${wordPills}</div>
@@ -4891,19 +6651,34 @@ window.openStrongModalForVerse = function(clickedCode) {
   document.getElementById("proModal").style.display = "flex";
 };
 
-window.openCrossRefsModalForVerse = function() {
+window.openCrossRefsModalForVerse = async function() {
   const book = getBook(state.bookId);
   const vNum = state.selectedVerse || 1;
   const rawVerse = state.selectedVerseText || "";
   const refs = buildUniversalRefsForVerse(state.bookId, state.chapter, vNum, rawVerse);
   const words = [...new Set(rawVerse.replace(/[^a-zA-ZÀ-ÿ\s]/g, " ").split(/\s+/).filter(w => w.length >= 4))];
-  document.getElementById("proModalTitle").textContent = `🔗Passi Paralleli & Riferimenti (${book.name} ${state.chapter}:${vNum})`;
+  const fnMap = await fetchChapterFootnotes(state.trans1, state.bookId, state.chapter);
+  const vFootnotes = fnMap[String(vNum)] || fnMap[vNum] || [];
+  const fnHtml = vFootnotes.length ? `
+    <div class="section-title"><span>📌 Note in Calce Ufficiali (${vFootnotes.length})</span></div>
+    <div style="margin-bottom:12px;">
+      ${vFootnotes.map((t, i) => `<div style="background:#062356; border-left:3px solid #ffd54f; border-radius:7px; padding:7px 10px; margin-bottom:6px; font-size:13.5px; line-height:1.5;"><b style="color:#ffd54f;">*${vFootnotes.length > 1 ? i + 1 : ""}</b> ${formatNoteLinks(t, state.bookId)}</div>`).join("")}
+    </div>` : "";
+  const insRefs = await findInsightRefsForVerse(state.bookId, state.chapter, vNum, 12);
+  const insHtml = insRefs.length ? `
+    <div class="section-title"><span>📚 Citato in Perspicacia (${insRefs.length} voci)</span></div>
+    <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px;">
+      ${insRefs.map(it => `<span class="tag-badge" style="background:rgba(46,125,50,0.28); color:#a5d6a7; border-color:#66bb6a; font-size:12.5px; padding:5px 10px;" onclick="openInsightArticleForVerse(${it.idx}, '${escapeJsStr(it.query)}')">📘 ${escapeHtml(it.title)}</span>`).join("")}
+    </div>` : "";
+  document.getElementById("proModalTitle").textContent = `🔗 Passi Paralleli & Riferimenti (${book.name} ${state.chapter}:${vNum})`;
   document.getElementById("proModalBody").innerHTML = `
     <div style="font-size:13px;color:var(--text-muted);font-style:italic;margin-bottom:10px;border-left:3px solid var(--primary-light);padding-left:8px;">"${escapeHtml(rawVerse)}"</div>
+    ${fnHtml}
     <div class="section-title"><span>Passi Paralleli Consigliati (Tocca per aprire)</span></div>
     <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
       ${refs.map(r => `<span class="tag-badge" style="font-size:14px; padding:7px 12px;" onclick="jumpToRefString('${escapeJsStr(r)}')">📖${escapeHtml(r)}</span>`).join("")}
     </div>
+    ${insHtml}
     <div class="section-title"><span>Concordanza Parallela per Parola Chiave</span></div>
     <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:8px;">Tocca una parola del versetto per cercare tutti i versetti paralleli nella traduzione attiva:</div>
     <div style="display:flex;flex-wrap:wrap;gap:6px;">
@@ -5601,7 +7376,7 @@ function updateMediaSessionMetadata(titleStr, subtitleStr, isPlaying) {
         title: titleStr || "Bibbia Multilingue PRO",
         artist: subtitleStr || "Lettura Vocale Integrata",
         album: "Bibbia Multilingue PRO",
-        artwork: [{ src: "https://cdn-icons-png.flaticon.com/512/3004/3004458.png", sizes: "512x512", type: "image/png" }]
+        artwork: [{ src: "./icon-512.png", sizes: "512x512", type: "image/png" }]
       });
     }
     navigator.mediaSession.playbackState = isPlaying ? "playing" : "none";
@@ -6001,9 +7776,11 @@ function downloadCanvasCard() {
         return;
       }
       const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
+      const objUrl = URL.createObjectURL(blob);
+      a.href = objUrl;
       a.download = file.name;
       a.click();
+      setTimeout(() => URL.revokeObjectURL(objUrl), 15000);
     }, "image/png");
   } else {
     const a = document.createElement("a");
@@ -6080,6 +7857,14 @@ function openBackupModal() {
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#00838f;">
         📕 Carica Parola del Signore TILC (Seleziona VT e/o NT .epub)
         <input type="file" accept=".epub,application/epub+zip" multiple style="display:none;" onchange="importUniversalEpubFiles(event, 'epub:tilc', 'Parola del Signore (TILC)')">
+      </label>
+      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:linear-gradient(135deg, #6a1b9a, #8e24aa);">
+        🏺 Carica Modulo Lessico Strong Esteso (.json opzionale)
+        <input type="file" accept=".json,application/json" style="display:none;" onchange="importStrongExtJson(event)">
+      </label>
+      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:linear-gradient(135deg, #4527a0, #5e35b1);">
+        🔗 Carica Modulo Riferimenti Incrociati Estesi (.json opzionale)
+        <input type="file" accept=".json,application/json" style="display:none;" onchange="importXrefsExtJson(event)">
       </label>
       <div class="epub-import-status" style="font-size:13px; font-weight:700; color:var(--primary-light); text-align:center; padding:4px;"></div>
     </div>
@@ -6281,16 +8066,33 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
 async function extractJwFormatEpub(zip, allFiles, mergedBooksMap, statusEl, labelName) {
   const JW_BOOK_CODES = ["", "GE", "EX", "LE", "NU", "DE", "JOS", "JG", "RU", "1SA", "2SA", "1KI", "2KI", "1CH", "2CH", "EZR", "NE", "ES", "JOB", "PS", "PR", "EC", "CA", "ISA", "JER", "LA", "EZE", "DA", "HOS", "JOE", "AM", "OB", "JON", "MIC", "NAH", "HAB", "ZEP", "HAG", "ZEC", "MAL", "MT", "MR", "LU", "JOH", "AC", "RO", "1CO", "2CO", "GA", "EPH", "PHP", "COL", "1TH", "2TH", "1TI", "2TI", "TIT", "PHM", "HEB", "JAS", "1PE", "2PE", "1JO", "2JO", "3JO", "JUD", "RE"];
 
-  // Mappa universale automatica per tutte le edizioni NWT moderne (IT, EN, ES, PT) tramite biblechapternav1..66.xhtml
+  // Mappa universale automatica per TUTTE le edizioni NWT (IT, EN, ES, PT, ecc.) inclusi i 5 libri da 1 capitolo
   const navBookPrefixMap = {};
+  const bookNavFile = allFiles.find(f => f.split("/").pop().toLowerCase() === "biblebooknav.xhtml");
+  if (bookNavFile) {
+    try {
+      const bnHtml = await zip.files[bookNavFile].async("string");
+      const hrefs = [...bnHtml.matchAll(/href=["']([^"']+?\.xhtml)["']/gi)].map(m => m[1].split("/").pop());
+      for (let i = 0; i < Math.min(66, hrefs.length); i++) {
+        const bId = i + 1;
+        const h = hrefs[i];
+        if (!/^biblechapternav/i.test(h) && !/^biblebooknav/i.test(h)) {
+          navBookPrefixMap[bId] = h.replace(/\.xhtml$/i, "").replace(/-split\d+$/i, "");
+        }
+      }
+    } catch (e) { console.debug(e); }
+  }
   for (let bId = 1; bId <= 66; bId++) {
+    if (navBookPrefixMap[bId]) continue;
     const navFile = allFiles.find(f => f.split("/").pop().toLowerCase() === `biblechapternav${bId}.xhtml`);
     if (navFile) {
       try {
         const navHtml = await zip.files[navFile].async("string");
-        const m = navHtml.match(/href=["']([^"']+?)\.xhtml["']/i);
-        if (m && m[1]) {
-          navBookPrefixMap[bId] = m[1].split("/").pop().replace(/-split\d+$/i, "");
+        const allHrefs = [...navHtml.matchAll(/href=["']([^"']+?)\.xhtml["']/gi)]
+          .map(m => m[1].split("/").pop())
+          .filter(h => !/^bible(?:book|chapter)nav/i.test(h));
+        if (allHrefs.length > 0) {
+          navBookPrefixMap[bId] = allHrefs[0].replace(/-split\d+$/i, "");
         }
       } catch (e) { console.debug(e); }
     }
@@ -6336,9 +8138,13 @@ async function extractJwFormatEpub(zip, allFiles, mergedBooksMap, statusEl, labe
       const splitMatch = base.match(/-split(\d+)\.x?html$/i);
       if (splitMatch) chNum = parseInt(splitMatch[1], 10);
       const rawXhtml = await zip.files[fPath].async("string");
-      const versesArr = parseJwEpubChapterXhtml(rawXhtml);
-      if (versesArr.length > 0) {
-        chaptersArr.push({ chapter: chNum, verses: versesArr });
+      const parsedCh = parseJwEpubChapterXhtml(rawXhtml);
+      if (parsedCh.verses.length > 0) {
+        const chObj = { chapter: chNum, verses: parsedCh.verses };
+        if (parsedCh.footnotes && Object.keys(parsedCh.footnotes).length > 0) {
+          chObj.footnotes = parsedCh.footnotes;
+        }
+        chaptersArr.push(chObj);
       }
     }
     if (chaptersArr.length > 0) {
@@ -6348,14 +8154,35 @@ async function extractJwFormatEpub(zip, allFiles, mergedBooksMap, statusEl, labe
   }
 }
 
+function extractJwFootnotesFromDoc(doc) {
+  const fnMap = {};
+  const fnPs = doc.querySelectorAll('.groupFootnote p, aside[epub\\:type="footnote"] p');
+  fnPs.forEach(p => {
+    const refEl = p.querySelector(".footnoteref");
+    const refTxt = (refEl ? refEl.textContent : p.textContent.slice(0, 32)) || "";
+    const m = refTxt.match(/:(\d{1,3})\b/) || refTxt.match(/\b(\d{1,3})\s*$/);
+    if (!m) return;
+    const vNum = String(parseInt(m[1], 10));
+    const clone = p.cloneNode(true);
+    clone.querySelectorAll('a[href*="footnotesource"], .footnoteref').forEach(a => a.remove());
+    const cleanBody = (clone.textContent || "").replace(/^\s*\^?\s*/, "").replace(/\s+/g, " ").trim();
+    if (!cleanBody) return;
+    if (!fnMap[vNum]) fnMap[vNum] = [];
+    if (!fnMap[vNum].includes(cleanBody)) fnMap[vNum].push(cleanBody);
+  });
+  return fnMap;
+}
+
 function parseJwEpubChapterXhtml(xhtml) {
   const parser = new DOMParser();
   const doc = parser.parseFromString(xhtml, "text/html");
+  // Estrae PRIMA le note in calce ufficiali (es. 9.987 note in nwt_I.epub) prima di pulire il corpo dei versetti
+  const footnotes = extractJwFootnotesFromDoc(doc);
   // Rimuove note a piè di pagina, riferimenti marginali, intestazioni e link di rimando
   doc.querySelectorAll(".footnote, .footnotes, .groupFootnote, .marginal, a.b, a.fn, rt, sup.xrefLink, .du-color--textSubdued").forEach(el => el.remove());
 
   const body = doc.body || doc.documentElement;
-  if (!body) return [];
+  if (!body) return { verses: [], footnotes };
 
   // Metodo 1: Span con id="chapterX_verseY" o id="vX_Y" (usato in nwt_I.epub e bi12_I.epub)
   const verseSpans = body.querySelectorAll('span[id*="verse"], span[id^="v"], a[id*="verse"]');
@@ -6392,7 +8219,7 @@ function parseJwEpubChapterXhtml(xhtml) {
       const result = Array.from(versesMap.entries())
         .map(([verse, text]) => ({ verse, text }))
         .sort((a, b) => a.verse - b.verse);
-      if (result.length > 0) return result;
+      if (result.length > 0) return { verses: result, footnotes };
     }
   }
 
@@ -6424,7 +8251,7 @@ function parseJwEpubChapterXhtml(xhtml) {
       fbVerses.push({ verse: vNum, text: cleanTxt });
     }
   }
-  return fbVerses;
+  return { verses: fbVerses, footnotes };
 }
   async function extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, labelName) {
   const tocFile = allFiles.find(f => f.endsWith("toc.ncx"));
@@ -7062,6 +8889,8 @@ async function importInsightFiles(event) {
     entries.sort((a, b) => a.title.localeCompare(b.title, "it"));
     const payload = { updated: Date.now(), count: entries.length, entries };
     insightMemCache = payload;
+    bmInsightVerseCache.clear();
+    if (typeof bmDynamicCatalogEnriched !== "undefined") bmDynamicCatalogEnriched = false;
     statusEl.innerHTML = `💾 Salvataggio di ${entries.length} voci nel database offline...`;
     await idbPut("bm:insight_it", payload);
     statusEl.innerHTML = `✔ Perspicacia salvata offline (${entries.length} voci pronte)!`;
@@ -7391,6 +9220,7 @@ async function importSiFile(event) {
       extras: Array.isArray(parsed.extras) ? parsed.extras : []
     };
     siMemCache = payload;
+    if (typeof bmDynamicCatalogEnriched !== "undefined") bmDynamicCatalogEnriched = false;
     setStatus(`💾 Salvataggio di ${books.length} libri nel database offline...`);
     await idbPut("bm:si_it", payload);
     setStatus(`✔ Tutta la Scrittura salvata offline (${books.length} libri pronti)!`);
@@ -8238,7 +10068,7 @@ function scrollRpToToday(smooth = false) {
 function exportBackupJson() {
   const data = {
     app: "BibbiaMultilingue_PRO",
-    version: "PRO_v12",
+    version: "PRO_v13",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
@@ -8257,6 +10087,7 @@ function exportBackupJson() {
       scroll: safeGetStorage("bm_pers_scroll") || "0"
     },
     studyMinutes: Number(safeGetStorage("bm_study_minutes_v1")) || 0,
+    bulbPosition: safeJsonParse("bm_bulb_pos_v1", null),
     highlights: state.highlights,
     bookmarks: state.bookmarks,
     notes: state.notes,
@@ -8275,9 +10106,11 @@ function exportBackupJson() {
     } catch (e) { console.debug(e); }
   }
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
+  const objUrl = URL.createObjectURL(blob);
+  a.href = objUrl;
   a.download = fileName;
   a.click();
+  setTimeout(() => URL.revokeObjectURL(objUrl), 15000);
 }
 let pendingBackupRawText = null;
 
@@ -8376,6 +10209,10 @@ function confirmImportBackupNow() {
     if (parsed.trans1) { state.trans1 = parsed.trans1; safeSaveStorage("bm_trans1", state.trans1); }
     if (parsed.trans2) { state.trans2 = parsed.trans2; safeSaveStorage("bm_trans2", state.trans2); }
     if (parsed.trans3) { state.trans3 = parsed.trans3; safeSaveStorage("bm_trans3", state.trans3); }
+    if (parsed.bulbPosition && typeof parsed.bulbPosition === "object") {
+      safeSaveStorage("bm_bulb_pos_v1", JSON.stringify(parsed.bulbPosition));
+      if (typeof applySavedBulbPosition === "function") applySavedBulbPosition();
+    }
     if (parsed.readingPlan && typeof parsed.readingPlan === "object") {
       rpState = parsed.readingPlan;
       safeSaveStorage("bm_reading_plan_v1", JSON.stringify(rpState));
@@ -9000,6 +10837,7 @@ document.getElementById("mainContainer")?.addEventListener("scroll", function() 
   lastScrollSaveTimer = setTimeout(() => {
     if (currentViewContext.type === "bible") {
       safeSaveStorage("bm_last_scroll", String(Math.round(el.scrollTop)));
+      safeSaveStorage("bm_last_scroll_ref", `${state.bookId}_${state.chapter}`);
     }
   }, 300);
 }, { passive: true });
@@ -9029,6 +10867,8 @@ document.documentElement.style.setProperty("--font-size-verse", state.fontSize +
 applySavedTheme();
 updateReadingPlanHeaderBtn();
 updateMyReadingLabel();
+loadExternalExegeticalModules();
+initBmServiceWorker();
 populateSelects()
   .catch(() => {})
   .finally(() => {
@@ -9276,16 +11116,24 @@ function openCustomSelectMenu(selectEl) {
     searchBibleSelect: "🔍 Versione in cui Cercare",
     searchMode: "🔍 Modalità di Ricerca",
     searchScope: "🔍 Ambito dei Libri",
-    catLangFilter: "🌍 Filtra per Lingua"
+    catLangFilter: "🌍 Filtra per Lingua",
+    dailyPickMonth: "📅 Scegli Mese",
+    dailyPickDay: "📅 Scegli Giorno"
   };
   if (titleEl) {
     titleEl.textContent = titleMap[selectEl.id] || "🔹 Seleziona dal menù";
   }
 
   const opts = Array.from(selectEl.options);
+  const searchInp = document.getElementById("bmSelectSearchInput");
+  if (searchInp) {
+    searchInp.value = "";
+    searchInp.style.display = opts.length > 12 ? "block" : "none";
+  }
   listEl.innerHTML = opts.map((opt, idx) => {
     const isSel = idx === selectEl.selectedIndex;
-    return `<button type="button" class="bm-select-opt ${isSel ? 'selected' : ''}" id="bm_opt_${idx}" onclick="pickCustomSelectOption(${idx})">
+    const normTxt = escapeHtml(normalizeForSearch(opt.text));
+    return `<button type="button" class="bm-select-opt ${isSel ? 'selected' : ''}" id="bm_opt_${idx}" data-search="${normTxt}" onclick="pickCustomSelectOption(${idx})">
       <span>${escapeHtml(opt.text)}</span>
       ${isSel ? '<span style="color:#00e5ff; font-weight:900;">✔</span>' : ''}
     </button>`;
@@ -9296,6 +11144,14 @@ function openCustomSelectMenu(selectEl) {
     const curBtn = document.getElementById(`bm_opt_${selectEl.selectedIndex}`);
     if (curBtn) curBtn.scrollIntoView({ block: "center" });
   }, 40);
+}
+
+function filterCustomSelectOptions(q) {
+  const norm = normalizeForSearch((q || "").trim());
+  document.querySelectorAll("#bmSelectModalList .bm-select-opt").forEach(btn => {
+    const hay = btn.getAttribute("data-search") || "";
+    btn.style.display = (!norm || hay.includes(norm)) ? "flex" : "none";
+  });
 }
 
 function pickCustomSelectOption(idx) {
@@ -9924,13 +11780,13 @@ function decorateXRayInterlinearRoots(htmlText) {
   const seenInVerse = new Set();
   return htmlText.replace(/(<[^>]+>)|([A-Za-zÀ-ÖØ-öø-ÿ]{3,})/g, (match, tag, word) => {
     if (tag) return tag;
-    const low = word.toLowerCase();
-    const d = PRO_STRONG_DICT[low];
-    if (!d || seenInVerse.has(low)) return match;
-    seenInVerse.add(low);
+    const dictKey = getStrongDictKey(word);
+    if (!dictKey || seenInVerse.has(dictKey)) return match;
+    const d = PRO_STRONG_DICT[dictKey];
+    seenInVerse.add(dictKey);
     const shortRoot = d.orig.split("/")[0].replace(/\([^)]*\)/g, "").trim();
     const shortCode = d.code.split("/")[0].trim();
-    return `${word} <span onclick="event.stopPropagation(); showXRayRootPopup('${escapeJsStr(low)}')" title="${escapeHtml(d.orig)} — ${escapeHtml(d.def)}" style="display:inline-flex; align-items:center; gap:3px; background:linear-gradient(135deg, rgba(255,213,79,0.22), rgba(0,229,255,0.18)); color:#ffd54f; border:1px solid rgba(255,213,79,0.75); border-radius:6px; padding:0 5px; font-size:11px; font-weight:800; cursor:pointer; vertical-align:baseline;">${escapeHtml(shortRoot)}·${escapeHtml(shortCode)}</span>`;
+    return `${word} <span onclick="event.stopPropagation(); showXRayRootPopup('${escapeJsStr(dictKey)}')" title="${escapeHtml(d.orig)} — ${escapeHtml(d.def)}" style="display:inline-flex; align-items:center; gap:3px; background:linear-gradient(135deg, rgba(255,213,79,0.22), rgba(0,229,255,0.18)); color:#ffd54f; border:1px solid rgba(255,213,79,0.75); border-radius:6px; padding:0 5px; font-size:11px; font-weight:800; cursor:pointer; vertical-align:baseline;">${escapeHtml(shortRoot)}·${escapeHtml(shortCode)}</span>`;
   });
 }
 
@@ -10064,6 +11920,19 @@ async function openVerseXRayModal(forcedVerseNum) {
   const words = [...new Set(baseTextForDiff.replace(/[^a-zA-ZÀ-ÿ\s]/g, " ").split(/\s+/).filter(w => w.length >= 4 && !stopSet.has(w.toLowerCase())))].slice(0, 10);
 
   const refs = buildUniversalRefsForVerse(state.bookId, state.chapter, vNum, baseTextForDiff);
+  const xrayFnMap = await fetchChapterFootnotes(state.trans1, state.bookId, state.chapter);
+  const xrayFns = xrayFnMap[String(vNum)] || xrayFnMap[vNum] || [];
+  const xrayFnHtml = xrayFns.length ? `
+    <div class="section-title"><span>📌 Note in Calce Ufficiali (${xrayFns.length})</span></div>
+    <div style="margin-bottom:12px;">
+      ${xrayFns.map((t, i) => `<div style="background:#062356; border-left:3px solid #ffd54f; border-radius:7px; padding:7px 10px; margin-bottom:6px; font-size:13px; line-height:1.5;"><b style="color:#ffd54f;">*${xrayFns.length > 1 ? i + 1 : ""}</b> ${formatNoteLinks(t, state.bookId)}</div>`).join("")}
+    </div>` : "";
+  const xrayInsRefs = await findInsightRefsForVerse(state.bookId, state.chapter, vNum, 10);
+  const xrayInsHtml = xrayInsRefs.length ? `
+    <div class="section-title"><span>📚 Citato in Perspicacia (${xrayInsRefs.length} voci)</span></div>
+    <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
+      ${xrayInsRefs.map(it => `<span class="tag-badge" style="background:rgba(46,125,50,0.28); color:#a5d6a7; border-color:#66bb6a; font-size:12px; padding:5px 9px;" onclick="prepareXRayJumpContext(); openInsightArticleForVerse(${it.idx}, '${escapeJsStr(it.query)}')">📘 ${escapeHtml(it.title)}</span>`).join("")}
+    </div>` : "";
 
   let placesHtml = "";
   const mapMeta = await bpGetMeta();
@@ -10116,11 +11985,12 @@ async function openVerseXRayModal(forcedVerseNum) {
       `).join("")}
     </div>
 
+    ${xrayFnHtml}
     <div class="section-title"><span>🔗 Passi Paralleli Chiave</span></div>
     <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
       ${refs.map(r => `<span class="tag-badge" style="padding:6px 10px; font-size:13px;" onclick="closeProModal(); jumpToRefString('${escapeJsStr(r)}')">📖 ${escapeHtml(r)}</span>`).join("")}
     </div>
-
+    ${xrayInsHtml}
     ${placesHtml}
   `;
 }
@@ -10937,78 +12807,98 @@ function openMessianicCatalogModal(onlyNtCited = false) {
   bmChimeHaptic();
   bmMessianicOnlyNtFilter = Boolean(onlyNtCited);
   document.getElementById("proModalTitle").textContent = `💡 Profezie Messianiche (${bmProphecyList.length})`;
-  document.getElementById("proModal").style.display = "flex";
-  renderMessianicCatalogModalBody();
-}
-
-function renderMessianicCatalogModalBody() {
   const body = document.getElementById("proModalBody");
   if (!body) return;
-
-  const q = (bmMessianicSearchQ || "").trim().toLowerCase();
-  const filtered = bmProphecyList
-    .map((p, idx) => ({ p, idx }))
-    .filter(({ p }) => {
-      if (bmMessianicOnlyNtFilter && (!p.nt || p.nt.length === 0)) return false;
-      if (!q) return true;
-      const bName = getBook(p.b).name.toLowerCase();
-      const hay = `${bName} ${p.c}:${p.v} ${p.cat} ${p.fullDesc || p.desc} ${(p.nt || []).join(" ")}`.toLowerCase();
-      return hay.includes(q);
-    });
-
   const originBanner = bmDailyStartProphecy ? `
     <div style="display:flex; justify-content:space-between; align-items:center; background:#041a42; border:1px solid #ffd54f; border-radius:9px; padding:7px 11px; margin-bottom:10px; font-size:12.5px;">
       <span>🕯️ 1ª Profezia letta oggi: <b style="color:#ffd54f;">${escapeHtml(bmDailyStartProphecy.label)}</b></span>
       <button type="button" class="tag-badge" style="background:#ffd54f; color:#041a42; border-color:#fff; font-weight:900;" onclick="returnToDailyOriginProphecy()">↩ Torna lì</button>
     </div>
   ` : "";
-
   body.innerHTML = `
     ${originBanner}
     <div class="search-box" style="margin-bottom:8px;">
-      <input type="search" class="search-input" value="${escapeHtml(bmMessianicSearchQ)}" placeholder="🔍 Cerca passo, tema o citazione greca (es. Betleem, Sal 22, Matteo)..." oninput="bmMessianicSearchQ=this.value; renderMessianicCatalogModalBody();">
+      <input type="search" id="bmMessianicSearchInput" class="search-input" value="${escapeHtml(bmMessianicSearchQ)}" placeholder="🔍 Cerca passo, tema o citazione greca (es. Betleem, Sal 22, Matteo)..." oninput="bmMessianicSearchQ=this.value; renderMessianicCatalogModalBody();" autocomplete="off">
     </div>
-    <div style="display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
-      <button type="button" class="nav-btn" style="flex:1; font-size:12px; ${!bmMessianicOnlyNtFilter ? 'background:#00e5ff;color:#041a42;font-weight:900;' : ''}" onclick="bmMessianicOnlyNtFilter=false; renderMessianicCatalogModalBody();">
-        📜 Tutte da Gen 3:15 (${bmProphecyList.length})
-      </button>
-      <button type="button" class="nav-btn" style="flex:1.2; font-size:12px; ${bmMessianicOnlyNtFilter ? 'background:#ffd54f;color:#041a42;border-color:#fff;font-weight:900;' : 'border-color:#ffd54f;color:#ffd54f;'}" onclick="bmMessianicOnlyNtFilter=true; renderMessianicCatalogModalBody();">
-        🏛️ Citate nelle Scritture Greche (${bmProphecyList.filter(x => x.nt && x.nt.length > 0).length})
-      </button>
-    </div>
-    <div style="max-height:54vh; overflow-y:auto; padding-right:2px;">
-      ${filtered.map(({ p, idx }) => {
-        const bObj = getBook(p.b);
-        const ref = `${bObj.name} ${p.c}:${p.v}`;
-        const fullText = p.fullDesc || p.desc || "";
-        const ntPills = (p.nt || []).map(ntRef =>
-          `<span class="tag-badge" style="background:rgba(255,213,79,0.18); color:#ffd54f; border-color:#ffd54f;" onclick="event.stopPropagation(); closeProModal(); jumpToRefString('${escapeJsStr(ntRef)}', true)">🏛️ ${escapeHtml(ntRef)}</span>`
-        ).join(" ");
-        return `
-          <div class="result-card" style="margin-bottom:7px; border-left:3px solid ${p.nt && p.nt.length ? '#ffd54f' : '#00e5ff'};" onclick="jumpToMessianicProphecyIndex(${idx}, true)">
-            <div class="result-ref" style="display:flex; justify-content:space-between; align-items:center;">
-              <span>💡 #${idx + 1} • ${escapeHtml(ref)}</span>
-              <span class="tag-badge" style="font-size:10.5px;">${escapeHtml(p.cat || 'Profezia')}</span>
-            </div>
-            <div class="bm-justify-text" style="font-size:13px; color:#e3f2fd; line-height:1.46; margin:4px 0 6px 0;">${escapeHtml(fullText)}</div>
-            ${ntPills ? `<div style="display:flex; flex-wrap:wrap; gap:4px;">${ntPills}</div>` : ""}
-          </div>
-        `;
-      }).join("")}
-    </div>
+    <div id="bmMessianicFilterBar" style="display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;"></div>
+    <div id="bmMessianicCatalogList" style="max-height:54vh; overflow-y:auto; padding-right:2px;"></div>
   `;
+  document.getElementById("proModal").style.display = "flex";
+  renderMessianicCatalogModalBody();
+}
+
+function renderMessianicCatalogModalBody() {
+  const filterBar = document.getElementById("bmMessianicFilterBar");
+  const listEl = document.getElementById("bmMessianicCatalogList");
+  if (!filterBar || !listEl) return;
+
+  const q = normalizeForSearch((bmMessianicSearchQ || "").trim());
+  const filtered = bmProphecyList
+    .map((p, idx) => ({ p, idx }))
+    .filter(({ p }) => {
+      if (bmMessianicOnlyNtFilter && (!p.nt || p.nt.length === 0)) return false;
+      if (!q) return true;
+      const bName = getBook(p.b).name;
+      const hay = normalizeForSearch(`${bName} ${p.c}:${p.v} ${p.cat} ${p.fullDesc || p.desc} ${(p.nt || []).join(" ")}`);
+      return hay.includes(q);
+    });
+
+  filterBar.innerHTML = `
+    <button type="button" class="nav-btn" style="flex:1; font-size:12px; ${!bmMessianicOnlyNtFilter ? 'background:#00e5ff;color:#041a42;font-weight:900;' : ''}" onclick="bmMessianicOnlyNtFilter=false; renderMessianicCatalogModalBody();">
+      📜 Tutte da Gen 3:15 (${bmProphecyList.length})
+    </button>
+    <button type="button" class="nav-btn" style="flex:1.2; font-size:12px; ${bmMessianicOnlyNtFilter ? 'background:#ffd54f;color:#041a42;border-color:#fff;font-weight:900;' : 'border-color:#ffd54f;color:#ffd54f;'}" onclick="bmMessianicOnlyNtFilter=true; renderMessianicCatalogModalBody();">
+      🏛️ Citate nelle Scritture Greche (${bmProphecyList.filter(x => x.nt && x.nt.length > 0).length})
+    </button>
+  `;
+
+  listEl.innerHTML = filtered.length ? filtered.map(({ p, idx }) => {
+    const bObj = getBook(p.b);
+    const ref = `${bObj.name} ${p.c}:${p.v}`;
+    const fullText = p.fullDesc || p.desc || "";
+    const ntPills = (p.nt || []).map(ntRef =>
+      `<span class="tag-badge" style="background:rgba(255,213,79,0.18); color:#ffd54f; border-color:#ffd54f;" onclick="event.stopPropagation(); closeProModal(); jumpToRefString('${escapeJsStr(ntRef)}', true)">🏛️ ${escapeHtml(ntRef)}</span>`
+    ).join(" ");
+    return `
+      <div class="result-card" style="margin-bottom:7px; border-left:3px solid ${p.nt && p.nt.length ? '#ffd54f' : '#00e5ff'};" onclick="jumpToMessianicProphecyIndex(${idx}, true)">
+        <div class="result-ref" style="display:flex; justify-content:space-between; align-items:center;">
+          <span>💡 #${idx + 1} • ${escapeHtml(ref)}</span>
+          <span class="tag-badge" style="font-size:10.5px;">${escapeHtml(p.cat || 'Profezia')}</span>
+        </div>
+        <div class="bm-justify-text" style="font-size:13px; color:#e3f2fd; line-height:1.46; margin:4px 0 6px 0;">${escapeHtml(fullText)}</div>
+        ${ntPills ? `<div style="display:flex; flex-wrap:wrap; gap:4px;">${ntPills}</div>` : ""}
+      </div>
+    `;
+  }).join("") : `<div class="loader">Nessuna profezia trovata per "<b>${escapeHtml(bmMessianicSearchQ)}</b>".</div>`;
+}
+
+function placeBulbAtOrbCoords(orbLeftPx, bottomPx) {
+  const widget = document.getElementById("bmProphecyWidget");
+  if (!widget) return;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const clampedLeft = Math.min(vw - 64, Math.max(8, orbLeftPx));
+  const clampedBottom = Math.min(vh - 64, Math.max(74, bottomPx));
+  const orbCenterX = clampedLeft + 28;
+  const flipLeft = orbCenterX < (vw / 2);
+  widget.classList.toggle("flipped-left", flipLeft);
+  widget.style.bottom = Math.round(clampedBottom) + "px";
+  if (flipLeft) {
+    widget.style.left = Math.round(clampedLeft) + "px";
+    widget.style.right = "auto";
+  } else {
+    widget.style.right = Math.round(Math.max(8, vw - (clampedLeft + 56))) + "px";
+    widget.style.left = "auto";
+  }
 }
 
 function applySavedBulbPosition() {
-  const widget = document.getElementById("bmProphecyWidget");
-  if (!widget) return;
   const savedPos = safeJsonParse("bm_bulb_pos_v1", null);
-  if (savedPos && typeof savedPos.right === "number" && typeof savedPos.bottom === "number") {
-    const maxR = Math.max(8, window.innerWidth - 64);
-    const maxB = Math.max(74, window.innerHeight - 64);
-    widget.style.right = Math.min(maxR, Math.max(8, savedPos.right)) + "px";
-    widget.style.bottom = Math.min(maxB, Math.max(74, savedPos.bottom)) + "px";
-  }
+  if (!savedPos || typeof savedPos.bottom !== "number") return;
+  const orbLeft = (typeof savedPos.orbLeft === "number")
+    ? savedPos.orbLeft
+    : (typeof savedPos.right === "number" ? (window.innerWidth - savedPos.right - 56) : (window.innerWidth - 70));
+  placeBulbAtOrbCoords(orbLeft, savedPos.bottom);
 }
 
 (function initBulbDragAndTap() {
@@ -11019,7 +12909,7 @@ function applySavedBulbPosition() {
   let dragging = false;
   let moved = false;
   let startX = 0, startY = 0;
-  let startRight = 14, startBottom = 84;
+  let startOrbLeft = 0, startBottom = 84;
 
   orb.addEventListener("pointerdown", e => {
     dragging = true;
@@ -11027,9 +12917,9 @@ function applySavedBulbPosition() {
     orb.setPointerCapture(e.pointerId);
     startX = e.clientX;
     startY = e.clientY;
-    const rect = widget.getBoundingClientRect();
-    startRight = window.innerWidth - rect.right;
-    startBottom = window.innerHeight - rect.bottom;
+    const orbRect = orb.getBoundingClientRect();
+    startOrbLeft = orbRect.left;
+    startBottom = window.innerHeight - orbRect.bottom;
   });
 
   orb.addEventListener("pointermove", e => {
@@ -11038,11 +12928,7 @@ function applySavedBulbPosition() {
     const dy = e.clientY - startY;
     if (Math.hypot(dx, dy) > 7) moved = true;
     if (!moved) return;
-
-    const newRight = Math.min(window.innerWidth - 64, Math.max(6, startRight - dx));
-    const newBottom = Math.min(window.innerHeight - 64, Math.max(70, startBottom - dy));
-    widget.style.right = Math.round(newRight) + "px";
-    widget.style.bottom = Math.round(newBottom) + "px";
+    placeBulbAtOrbCoords(startOrbLeft + dx, startBottom - dy);
   });
 
   const endDrag = e => {
@@ -11050,10 +12936,11 @@ function applySavedBulbPosition() {
     dragging = false;
     try { orb.releasePointerCapture(e.pointerId); } catch (err) { console.debug(err); }
     if (moved) {
-      const rect = widget.getBoundingClientRect();
+      const orbRect = orb.getBoundingClientRect();
       safeSaveStorage("bm_bulb_pos_v1", JSON.stringify({
-        right: Math.round(window.innerWidth - rect.right),
-        bottom: Math.round(window.innerHeight - rect.bottom)
+        orbLeft: Math.round(orbRect.left),
+        right: Math.round(window.innerWidth - orbRect.right),
+        bottom: Math.round(window.innerHeight - orbRect.bottom)
       }));
     } else {
       toggleMessianicBubble();
@@ -11062,6 +12949,7 @@ function applySavedBulbPosition() {
 
   orb.addEventListener("pointerup", endDrag);
   orb.addEventListener("pointercancel", endDrag);
+  window.addEventListener("resize", applySavedBulbPosition);
 })();
 
 async function evaluateMessianicBulbForCurrentView() {
@@ -11097,6 +12985,62 @@ async function evaluateMessianicBulbForCurrentView() {
 
   renderMessianicWidgetUI(matches);
   highlightMessianicVersesInDOM(bmProphecyList[bmCurrentProphecyIdx], false);
+}
+
+// ============================================================================
+// MODULO PWA 100% OFFLINE (Service Worker Registration & Verifica Aggiornamenti)
+// ============================================================================
+window.__bmSwReg = null;
+function initBmServiceWorker() {
+  if (!("serviceWorker" in navigator) || !/^https?:$/i.test(window.location.protocol)) return;
+  navigator.serviceWorker.register("./sw.js").then(reg => {
+    window.__bmSwReg = reg;
+    reg.addEventListener("updatefound", () => {
+      const nw = reg.installing;
+      if (!nw) return;
+      nw.addEventListener("statechange", () => {
+        if (nw.state === "installed" && navigator.serviceWorker.controller) {
+          showBlueInfoModal(
+            "🚀 Aggiornamento Pronto",
+            `È disponibile una nuova versione di <b>Bibbia Multilingue PRO</b>.<br><br><button type="button" class="myread-action-btn" onclick="window.location.reload()">🔄 Ricarica Ora</button>`
+          );
+        }
+      });
+    });
+  }).catch(e => console.debug("SW register skipped:", e));
+}
+
+async function checkBmPwaUpdates() {
+  bmChimeHaptic();
+  closeSettingsDrawer();
+  if (!("serviceWorker" in navigator) || !/^https?:$/i.test(window.location.protocol)) {
+    showBlueInfoModal("📦 Modalità Locale", "L'app è aperta in locale senza server HTTPS: il Service Worker offline si attiva automaticamente quando pubblicata su GitHub Pages.");
+    return;
+  }
+  try {
+    const reg = window.__bmSwReg || await navigator.serviceWorker.getRegistration();
+    let statusLine = "Service Worker non ancora attivo.";
+    if (reg && reg.active) {
+      try { await reg.update(); } catch (_e) {}
+      const info = await new Promise(resolve => {
+        const ch = new MessageChannel();
+        const t = setTimeout(() => resolve(null), 1500);
+        ch.port1.onmessage = ev => { clearTimeout(t); resolve(ev.data); };
+        reg.active.postMessage({ type: "GET_CACHE_STATUS" }, [ch.port2]);
+      });
+      if (info) {
+        statusLine = `✔ <b>App Shell 100% Offline Attiva</b><br>• Versione cache: <code>${escapeHtml(info.version)}</code><br>• Risorse in cache: <b>${info.cachedCount}</b><br>• Motore EPUB/ZIP offline (JSZip): <b>${info.hasJszip ? "Pronto anche in aereo ✔" : "In caricamento"}</b>`;
+      } else {
+        statusLine = "✔ Service Worker attivo e sincronizzato.";
+      }
+    }
+    showBlueInfoModal(
+      "📡 Stato PWA Offline & Aggiornamenti",
+      `${statusLine}<br><br><button type="button" class="myread-action-btn" onclick="window.location.reload()">🔄 Ricarica App</button>`
+    );
+  } catch (err) {
+    showBlueInfoModal("⚠️ Verifica PWA", escapeHtml(err.message || "Impossibile contattare il Service Worker."));
+  }
 }
 </script>
 </body>
