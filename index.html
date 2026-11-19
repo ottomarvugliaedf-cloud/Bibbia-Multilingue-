@@ -2643,6 +2643,8 @@ const BM_NAME_LINK_BIBLES = new Set(["gb:bi12", "gb:nwt"]);
 // se presente il tocco propone entrambe le destinazioni; names = forme esatte nel testo TNM 1987 e 2017.
 // Le parole comuni o i popoli (Re, Giudici, Atti, Romani, Ebrei…) si collegano solo quando indicano
 // davvero il libro (es. «libro dei Re», «lettera agli Ebrei», «1 Re»), non a ogni occorrenza.
+// books (facoltativo) = numeri dei libri in cui il nome indica davvero quel personaggio: altrove non diventa
+// cliccabile (es. «Felice» solo in Atti, mai nei Salmi; «Eli, Eli» di Matteo 27:46 non è il sacerdote Eli).
 const BM_NAME_LINKS = [
   // Blocco 1: Geova, Gesù (e titoli a lui riferiti), Michele, spirito santo, Satana / Diavolo (e titoli a lui riferiti)
   { ins: "GEOVA", names: ["Sovrano Signore Geova", "Geova degli eserciti", "Geova"] },
@@ -2691,17 +2693,18 @@ const BM_NAME_LINKS = [
   { ins: "CRONACHE, I LIBRI DELLE", si: [13, 14], names: ["libri delle Cronache", "Libri delle Cronache", "libro delle Cronache", "Libro delle Cronache", "Cronache"] },
   { ins: "ESDRA", si: 15, names: ["Esdra"] },
   { ins: "NEEMIA", si: 16, names: ["Neemia"] },
-  { ins: "ESTER", si: 17, names: ["Ester"] },
+  { ins: "ESTER", si: 17, names: ["Ester", "Adassa"] },
   { ins: "GIOBBE", si: 18, names: ["Giobbe"] },
   { ins: "SALMI, LIBRO DEI", si: 19, names: ["libro dei Salmi", "Libro dei Salmi", "Salmi"] },
   { ins: "PROVERBI, LIBRO DI", si: 20, names: ["libro dei Proverbi", "Libro dei Proverbi", "Proverbi"] },
   { ins: "ECCLESIASTE", si: 21, names: ["Ecclesiaste"] },
-  { ins: "CANTICO DEI CANTICI", si: 22, names: ["Cantico dei Cantici"] },
+  { ins: "CANTICO DEI CANTICI, IL", si: 22, names: ["Cantico dei Cantici"] },
   { ins: "ISAIA", si: 23, names: ["Isaia"] },
   { ins: "GEREMIA", si: 24, names: ["Geremia"] },
   { ins: "LAMENTAZIONI, LIBRO DI", si: 25, names: ["libro delle Lamentazioni", "Lamentazioni"] },
   { ins: "EZECHIELE", si: 26, names: ["Ezechiele"] },
   { ins: "DANIELE", si: 27, names: ["Daniele"] },
+  { ins: "BALTASSAR", si: 27, names: ["Baltassar", "Beltessazzar"] },
   { ins: "OSEA", si: 28, names: ["Osea"] },
   { ins: "GIOELE", si: 29, names: ["Gioele"] },
   { ins: "AMOS", si: 30, names: ["Amos"] },
@@ -2816,7 +2819,7 @@ const BM_NAME_LINKS = [
   { ins: "ISACCO", names: ["Isacco"] },
   { ins: "GIACOBBE", names: ["Giacobbe"] },
   { ins: "ESAÙ", names: ["Esaù"] },
-  { ins: "GIUSEPPE", names: ["Giuseppe"] },
+  { ins: "GIUSEPPE", names: ["Giuseppe", "Giuseppe di Arimatea"] },
   { ins: "AMRAM", names: ["Amram"] },
   { ins: "IOCHEBED", names: ["Iochebed"] },
   { ins: "MOSÈ", names: ["Mosè"] },
@@ -2852,7 +2855,7 @@ const BM_NAME_LINKS = [
   { ins: "CORNELIO", names: ["Cornelio"] },
   { ins: "LAZZARO", names: ["Lazzaro"] },
   { ins: "MARTA", names: ["Marta"] },
-  { ins: "MARIA", names: ["Maria"] },
+  { ins: "MARIA", names: ["Maria", "Maria Maddalena"] },
   { ins: "ERODE", names: ["Erode"] },
   { ins: "PILATO", names: ["Ponzio Pilato", "Pilato"] },
   { ins: "RUBEN", names: ["Ruben"] },
@@ -2875,7 +2878,114 @@ const BM_NAME_LINKS = [
   { ins: "EDEN", names: ["Eden"] },
   { ins: "BETLEEM", names: ["Betleem"] },
   { ins: "NAZARET", names: ["Nazaret"] },
-  { ins: "ARMAGHEDON", names: ["Armaghedon"] }
+  { ins: "ARMAGHEDON", names: ["Armaghedon"] },
+
+  // Blocco 6: ulteriori personaggi biblici e loro designazioni (Patriarchi, Esodo, Giudici, Monarchia, Esilio, Scritture Greche)
+  // --- Genesi, Patriarchi, Esodo e Giudici ---
+  { ins: "ABIMELEC", names: ["Abimelec"] },
+  { ins: "ACAN", names: ["Acan"] },
+  { ins: "BALAAM", names: ["Balaam"] },
+  { ins: "BOAZ", names: ["Boaz"] },
+  { ins: "CALEB", names: ["Caleb"] },
+  { ins: "CANAAN", names: ["Canaan"] },
+  { ins: "CORA", names: ["Cora"] },
+  { ins: "DALILA", names: ["Dalila"] },
+  { ins: "DINA", names: ["Dina"] },
+  { ins: "EDOM", names: ["Edom"] },
+  { ins: "ELCANA", names: ["Elcana"] },
+  { ins: "ELEAZARO", names: ["Eleazaro"] },
+  { ins: "ELI", books: [9, 11], names: ["Eli"] },
+  { ins: "EUD", names: ["Eud"] },
+  { ins: "FINEAS", names: ["Fineas"] },
+  { ins: "IAEL", names: ["Iael"] },
+  { ins: "IETRO", books: [2], names: ["Ietro", "Reuel"] },
+  { ins: "LAMEC", names: ["Lamec"] },
+  { ins: "METUSELA", names: ["Metusela"] },
+  { ins: "NAOMI", names: ["Naomi"] },
+  { ins: "NIMROD", names: ["Nimrod"] },
+  { ins: "OTNIEL", names: ["Otniel"] },
+  { ins: "POTIFAR", names: ["Potifar"] },
+  { ins: "REBECCA", names: ["Rebecca"] },
+  { ins: "SISERA", names: ["Sisera"] },
+  { ins: "TAMAR", names: ["Tamar"] },
+  { ins: "TERA", names: ["Tera"] },
+  { ins: "ZIPPORA", names: ["Zippora"] },
+
+  // --- Monarchia unita, divisa e Profeti ---
+  { ins: "ABIGAIL", names: ["Abigail"] },
+  { ins: "ABNER", names: ["Abner"] },
+  { ins: "ABSALOM", names: ["Absalom"] },
+  { ins: "ADONIA", names: ["Adonia"] },
+  { ins: "AHITOFEL", names: ["Ahitofel"] },
+  { ins: "BARUC", names: ["Baruc"] },
+  { ins: "BETSABEA", names: ["Betsabea"] },
+  { ins: "EBED-MELEC", names: ["Ebed-Melec"] },
+  { ins: "GHEAZI", names: ["Gheazi"] },
+  { ins: "GHEDALIA", names: ["Ghedalia"] },
+  { ins: "GIOAB", names: ["Gioab"] },
+  { ins: "GIONATAN", names: ["Gionatan"] },
+  { ins: "GOLIA", names: ["Golia"] },
+  { ins: "IEOIADA", names: ["Ieoiada"] },
+  { ins: "IESSE", names: ["Iesse"] },
+  { ins: "IZEBEL", names: ["Izebel"] },
+  { ins: "MEFIBOSET", names: ["Mefiboset"] },
+  { ins: "MICAL", names: ["Mical"] },
+  { ins: "NAAMAN", names: ["Naaman"] },
+  { ins: "NABAL", names: ["Nabal"] },
+  { ins: "NABOT", names: ["Nabot"] },
+  { ins: "NATAN", names: ["Natan"] },
+  { ins: "ULDA", names: ["Ulda"] },
+  { ins: "URIA", names: ["Uria"] },
+  { ins: "ZADOC", names: ["Zadoc"] },
+
+  // --- Esilio, Imperi e Ritorno ---
+  { ins: "ABEDNEGO", names: ["Abednego"] },
+  { ins: "AMAN", names: ["Aman"] },
+  { ins: "ARTASERSE", names: ["Artaserse"] },
+  { ins: "ASSUERO", names: ["Assuero"] },
+  { ins: "BALDASSARRE", names: ["Baldassarre"] },
+  { ins: "CIRO", names: ["Ciro"] },
+  { ins: "DARIO", names: ["Dario"] },
+  { ins: "GOG", books: [26, 66], names: ["Gog di Magog", "Gog"] },
+  { ins: "MARDOCHEO", names: ["Mardocheo"] },
+  { ins: "MESAC", names: ["Mesac"] },
+  { ins: "NABUCODONOSOR", names: ["Nabucodonosor", "Nabucodorosor"] },
+  { ins: "RABSACHE", names: ["Rabsache"] },
+  { ins: "SADRAC", names: ["Sadrac"] },
+  { ins: "SENNACHERIB", names: ["Sennacherib"] },
+  { ins: "VASTI", names: ["Vasti"] },
+  { ins: "ZOROBABELE", names: ["Zorobabele"] },
+
+  // --- Scritture Greche Cristiane ---
+  { ins: "AGRIPPA", names: ["Agrippa"] },
+  { ins: "ANANIA", names: ["Anania"] },
+  { ins: "ANTICRISTO", names: ["anticristo", "Anticristo"] },
+  { ins: "APOLLO", names: ["Apollo"] },
+  { ins: "AQUILA, I", books: [44, 45, 46, 55], names: ["Aquila"] },
+  { ins: "AUGUSTO", names: ["Cesare Augusto", "Augusto"] },
+  { ins: "BARABBA", names: ["Barabba"] },
+  { ins: "CAIAFA", names: ["Caiafa"] },
+  { ins: "DEMA", names: ["Dema"] },
+  { ins: "DIOTREFE", names: ["Diotrefe"] },
+  { ins: "EPAFRA", names: ["Epafra"] },
+  { ins: "EPAFRODITO", names: ["Epafrodito"] },
+  { ins: "EUTICO", names: ["Eutico"] },
+  { ins: "FEBE", names: ["Febe"] },
+  { ins: "FELICE", books: [44], names: ["Felice"] },
+  { ins: "FESTO", names: ["Porcio Festo", "Festo"] },
+  { ins: "GABRIELE", names: ["Gabriele"] },
+  { ins: "GAIO", names: ["Gaio"] },
+  { ins: "GAMALIELE", names: ["Gamaliele"] },
+  { ins: "GAZZELLA, I", names: ["Tabita"] },
+  { ins: "LIDIA", names: ["Lidia"] },
+  { ins: "NICODEMO", names: ["Nicodemo"] },
+  { ins: "ONESIMO", names: ["Onesimo"] },
+  { ins: "PRISCA", names: ["Priscilla", "Prisca"] },
+  { ins: "SAFFIRA", names: ["Saffira"] },
+  { ins: "SALOME", names: ["Salome"] },
+  { ins: "SILA, SILVANO", names: ["Sila", "Silvano"] },
+  { ins: "TIBERIO", names: ["Tiberio Cesare", "Tiberio"] },
+  { ins: "ZACCHEO", names: ["Zaccheo"] }
 ];
 let bmNameLinkMatcher = null;
 
@@ -2905,7 +3015,10 @@ function linkBiblicalNames(html, verseNum) {
     if (part.startsWith("<")) return part;
     return part.replace(rgx, m => {
       const idx = lookup.get(m.replace(/\u00A0/g, " "));
-      return idx === undefined ? m : `<span class="bm-name-link" onclick="event.stopPropagation(); openNameLink(${idx}, ${verseNum}, this.textContent)">${m}</span>`;
+      if (idx === undefined) return m;
+      const books = BM_NAME_LINKS[idx].books;
+      if (books && !books.includes(Number(state.bookId))) return m;
+      return `<span class="bm-name-link" onclick="event.stopPropagation(); openNameLink(${idx}, ${verseNum}, this.textContent)">${m}</span>`;
     });
   }).join("");
 }
