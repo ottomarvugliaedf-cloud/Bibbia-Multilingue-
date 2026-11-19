@@ -465,7 +465,8 @@
 
     /* TUTTI GLI ALTRI TASTI DELLA BARRA SUPERIORE (Perspicacia, Tutta la Scrittura, Cartine, Giorno, Catalogo, Diff):
        Transizione radiale e attestazione finale su Azzurro Fosforescente (#00e5ff) */
-    .quick-pill:not(#booksTabBtn):not(#readTabBtn).highlight {
+    .quick-pill:not(#booksTabBtn):not(#readTabBtn).highlight,
+    .bm-drawer-quick-btn.bm-lit {
       animation: bmRadialToCyanGlow 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
       background-color: #00e5ff !important;
       color: #041a42 !important;
@@ -1064,9 +1065,11 @@ body.oled-mode .pub-ref-badge {
       font-size: 12.5px;
       background: linear-gradient(135deg, #0d47a1, #1565c0);
       border-color: #00e5ff;
+      transition: transform 0.14s ease, box-shadow 0.14s ease;
     }
     /* Allineamento (Sinistra/Giustificato) condiviso da Scrittura del Giorno, Perspicacia, Tutta la Scrittura e dai loro richiami */
-    .bm-justify-text {
+    .bm-justify-text,
+    .bp-note {
       text-align: var(--verse-text-align, left);
       hyphens: var(--bm-text-hyphens, manual);
       -webkit-hyphens: var(--bm-text-hyphens, manual);
@@ -3015,6 +3018,16 @@ function closeSettingsDrawer() {
   if (dr) dr.classList.remove("open");
 }
 
+// Pulsanti rapidi del cassetto (Heatmap Studio, Modalità Focus): si illuminano, poi chiudono il cassetto ed eseguono l'azione (un solo avvio anche con tocchi ripetuti)
+function runDrawerQuickAction(btn, action) {
+  if (!btn || btn.classList.contains("bm-lit")) return;
+  btn.classList.add("bm-lit");
+  setTimeout(() => {
+    closeSettingsDrawer();
+    action();
+  }, 220);
+}
+
 function toggleSettingsAccordion(cardId) {
   bmSettings.openCard = (bmSettings.openCard === cardId) ? "" : cardId;
   saveBmSettings();
@@ -3042,10 +3055,10 @@ function renderSettingsDrawerContent() {
 
   body.innerHTML = `
     <div style="display:flex; gap:8px; margin-bottom:4px; flex-shrink:0;">
-      <button type="button" class="myread-action-btn btn-color-anim bm-drawer-quick-btn" onclick="openStudyAnalyticsModal()">
+      <button type="button" class="myread-action-btn bm-drawer-quick-btn" onclick="runDrawerQuickAction(this, openStudyAnalyticsModal)">
         📊 Heatmap Studio
       </button>
-      <button type="button" class="myread-action-btn btn-color-anim bm-drawer-quick-btn" onclick="this.disabled = true; setTimeout(() => { closeSettingsDrawer(); toggleBmZenMode(); }, 220);">
+      <button type="button" class="myread-action-btn bm-drawer-quick-btn" onclick="runDrawerQuickAction(this, toggleBmZenMode)">
         🧘 ${typeof bmZenModeActive !== 'undefined' && bmZenModeActive ? "Disattiva Focus" : "Modalità Focus"}
       </button>
     </div>
@@ -9504,7 +9517,7 @@ function showXRayRootPopup(dictKey) {
       <div style="font-size:16px; font-weight:800; color:#ffffff; background:#062356; border:1px solid #29b6f6; border-radius:8px; padding:8px; margin:8px 0;">
         ${escapeHtml(d.orig)}
       </div>
-      <div style="font-size:13.5px; color:#e3f2fd; line-height:1.5; text-align:left; padding:4px 2px;">
+      <div class="bm-justify-text" style="font-size:13.5px; color:#e3f2fd; line-height:1.5; padding:4px 2px;">
         ${escapeHtml(d.def)}
       </div>
     </div>
@@ -9739,7 +9752,6 @@ setInterval(() => {
 // 📊 Mappa Termica (Heatmap) e Statistiche Avanzate dei 66 Libri
 function openStudyAnalyticsModal() {
   bmChimeHaptic();
-  closeSettingsDrawer();
   closeActionBar();
 
   const bookStats = new Map();
