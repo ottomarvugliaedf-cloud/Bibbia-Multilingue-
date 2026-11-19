@@ -1152,6 +1152,9 @@ body.oled-mode .pub-ref-badge {
     .verse-row, .parallel-row, .parallel-row-3 {
       line-height: var(--verse-line-height) !important;
       text-align: var(--verse-text-align);
+      hyphens: var(--bm-text-hyphens, manual);
+      -webkit-hyphens: var(--bm-text-hyphens, manual);
+      overflow-wrap: break-word;
     }
     .bm-hide-inline-badges .verse-row .tag-badge {
       display: none !important;
@@ -6935,7 +6938,7 @@ async function importInsightFiles(event) {
     const payload = { updated: Date.now(), count: entries.length, entries };
     insightMemCache = payload;
     statusEl.innerHTML = `💾 Salvataggio di ${entries.length} voci nel database offline...`;
-    await saveOfflineBible("bm:insight_it", payload);
+    await idbPut("bm:insight_it", payload);
     statusEl.innerHTML = `✔ Perspicacia salvata offline (${entries.length} voci pronte)!`;
     setTimeout(() => {
       closeProModal();
@@ -7264,7 +7267,7 @@ async function importSiFile(event) {
     };
     siMemCache = payload;
     setStatus(`💾 Salvataggio di ${books.length} libri nel database offline...`);
-    await saveOfflineBible("bm:si_it", payload);
+    await idbPut("bm:si_it", payload);
     setStatus(`✔ Tutta la Scrittura salvata offline (${books.length} libri pronti)!`);
     setTimeout(() => {
       closeProModal();
@@ -8266,7 +8269,7 @@ function confirmImportBackupNow() {
 // ============================================================================
 const BP_WORD = /[\p{L}\p{M}]+(?:[-ʽ][\p{L}\p{M}]+)*/gu;
 const BP_PREP = new Set(["a","ad","da","di","in","presso","verso","fino","città","monte","paese","terra","valle","regione","deserto","nel","nella","dal","dalla","del","della","al","alla","sul","sulla","tra","fra"]);
-const bpUi = { sel: [], all: [], scope: "", selLabel: "", byKey: new Map(), mapScore: new Map(), mapBest: 0, bestMapId: "", hlActive: true };
+const bpUi = { sel: [], all: [], scope: "", selLabel: "", mapScore: new Map(), mapBest: 0, bestMapId: "", hlActive: true };
 
 // Calcola la cartina più pertinente per il capitolo/testo aperto in base alla densità dei luoghi citati
 function bpComputeMapScore(results) {
@@ -9243,6 +9246,18 @@ document.addEventListener("keydown", function(e) {
     openCustomSelectMenu(sel);
   }
 }, true);
+
+// Tasto Esc (tablet con tastiera / desktop): chiude sempre il livello più alto aperto
+document.addEventListener("keydown", function(e) {
+  if (e.key !== "Escape") return;
+  if (document.getElementById("bmSettingsDrawer")?.classList.contains("open")) { closeSettingsDrawer(); return; }
+  if (document.getElementById("bmSelectModal")?.style.display === "flex") { closeBmSelectModal(); return; }
+  if (document.getElementById("mapsViewer")?.style.display === "flex") { closeMapViewer(); return; }
+  if (document.getElementById("myReadModal")?.style.display === "flex") { document.getElementById("myReadModal").style.display = "none"; return; }
+  if (document.getElementById("proModal")?.style.display === "flex") { closeProModal(); return; }
+  if (document.getElementById("noteModal")?.style.display === "flex") { closeNoteModal(); return; }
+  if (document.getElementById("verseActionBar")?.style.display === "flex") { closeActionBar(); }
+});
 
 // ============================================================================
 // 1. RIMOZIONE RIQUADRO PERMANENTE VERSETTO AL TOCCO SUL CAPITOLO
