@@ -1184,7 +1184,7 @@ body.oled-mode .pub-ref-badge {
     .bp-it.click { cursor: pointer; }
     .bp-it.click:active { background: #1565c0; }
     .bp-g { min-width: 46px; font-weight: 900; color: #00e5ff; }
-    /* Filamento Scrollbar Zaffiro 2.5px su tutteiste e modali */
+    /* Filamento Scrollbar Zaffiro 2.5px su tutte le liste e modali */
     ::-webkit-scrollbar { width: 3px; height: 3px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: rgba(41, 182, 246, 0.55); border-radius: 999px; }
@@ -4033,6 +4033,16 @@ const DEFAULT_ACTIVE_IDS = CORE_BIBLES.map(b => b.id);
 let navHistory = [];
 let isPersonalReadingMode = true;
 let currentChapterReqId = 0;
+let currentXRayReqId = 0;
+let bpLoadReqId = 0;
+let bmPaperBlocked = false;
+let currentInsightSpeechText = "";
+let currentDailySpeechText = "";
+let bmSwReg = null;
+let lastXRayData = null;
+let lastXRayDossier = null;
+let lastDailyDossier = null;
+let bmPendingProphecyIdx = null;
 const memoryBibleCache = new Map();
 let dbInstancePromise = null;
 
@@ -4268,7 +4278,7 @@ function onHeaderCenterPillClick() {
 
 function setActiveTab(tabId, quickPillId = null) {
   setHeaderCenterPill("");
-  window.bmPaperBlocked = (tabId === "tabBooks" || tabId === "tabCatalog" || quickPillId === "mapsTabBtn");
+  bmPaperBlocked = (tabId === "tabBooks" || tabId === "tabCatalog" || quickPillId === "mapsTabBtn");
   const topMap = {
     tabBooks: "booksTabBtn",
     tabRead: "readTabBtn",
@@ -5077,7 +5087,7 @@ function highlightDiffText(baseStr, targetStr, verseNum = 1, targetTransId = sta
 }
 async function loadChapterView() {
   await renderChapterView();
-  evaluateMessianicBulbForCurrentView();
+  await evaluateMessianicBulbForCurrentView();
 }
 async function renderChapterView() {
   const reqId = ++currentChapterReqId;
@@ -5311,18 +5321,11 @@ function syncBmPaperMode() {
   if (!main) return;
   const t = currentViewContext ? currentViewContext.type : "";
   const isGridView = Boolean(main.querySelector(".books-grid, .chapters-grid"));
-  const isReading = !window.bmPaperBlocked &&
+  const isReading = !bmPaperBlocked &&
     ["bible", "daily", "insight", "si", "notes", "saved", "search"].includes(t) &&
     !isGridView && main.children.length > 0;
   main.classList.toggle("bm-paper-reading", Boolean(bmSettings.paperMode && isReading));
 }
-
-// Ricalcola la modalità carta appena cambia il contenuto (prima che lo schermo venga ridisegnato: niente sfarfallio)
-(function bmWatchPaperMode() {
-  const main = document.getElementById("mainContainer");
-  if (!main || typeof MutationObserver === "undefined") return;
-  new MutationObserver(syncBmPaperMode).observe(main, { childList: true });
-})();
 
 function applyBmSettingsToDOM() {
   document.documentElement.style.setProperty("--verse-line-height", bmSettings.lineHeight || "1.58");
@@ -5617,13 +5620,13 @@ function renderSettingsDrawerContent() {
         <div class="bm-set-row">
           <span>Velocità Voce</span>
           <div class="bm-seg-group">
-            ${rates.map(r => `<button type="button" class="bm-seg-btn ${Math.abs(bmTtsRate - r) < 0.03 ? 'active' : ''}" onclick="bmTtsRate=${r}; safeSaveStorage('bm_tts_rate','${r}'); renderSettingsDrawerContent();">${r}x</button>`).join("")}
+            ${rates.map(r => `<button type="button" class="bm-seg-btn ${Math.abs(bmTtsRate - r) < 0.03 ? 'active' : ''}" onclick="setBmTtsRate(${r}, 'drawer')">${r}x</button>`).join("")}
           </div>
         </div>
         <div class="bm-set-row">
           <span>Passa al Capitolo Succ. a fine audio</span>
           <label class="bm-switch">
-            <input type="checkbox" ${bmTtsAutoNextPref ? 'checked' : ''} onchange="bmTtsAutoNextPref=this.checked; safeSaveStorage('bm_tts_autonext', this.checked ? '1' : '0'); renderSettingsDrawerContent();">
+            <input type="checkbox" ${bmTtsAutoNextPref ? 'checked' : ''} onchange="setBmTtsAutoNext(this.checked, 'drawer')">
             <span class="bm-slider"></span>
           </label>
         </div>
@@ -7574,8 +7577,8 @@ document.addEventListener("visibilitychange", () => {
 });
 // Azzera i testi di lettura legati alle viste (Testo del Giorno, Perspicacia, Cartine) quando si cambia schermata
 function clearSpeechContext() {
-  window.currentInsightSpeechText = "";
-  window.currentDailySpeechText = "";
+  currentInsightSpeechText = "";
+  currentDailySpeechText = "";
 }
 function getActiveTTSLangCode(fullLocale = false) {
   if ((typeof currentInsightSpeechText === "string" && currentInsightSpeechText.trim()) ||
@@ -8317,10 +8320,13 @@ function getActiveEpubStatusEl() {
 }
 
 async function importUniversalEpubFiles(event, targetId, labelName) {
-  const files = Array.from(event.target.files || []);
+  const inputEl = event.target;
+  const files = Array.from((inputEl && inputEl.files) || []);
   if (!files.length) return;
   const statusEl = getActiveEpubStatusEl();
+  const setStatus = msg => { if (statusEl) statusEl.innerHTML = msg; };
   if (typeof JSZip === "undefined") {
+    inputEl.value = "";
     showBlueInfoModal("⚠️ Libreria Mancante", "Libreria JSZip non caricata. Verifica la connessione internet.");
     return;
   }
@@ -8334,31 +8340,42 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
         }
       });
     }
+    const safeStatusProxy = statusEl || { innerHTML: "" };
     for (const file of files) {
-      statusEl.innerHTML = `⏳ Analisi di <b>${escapeHtml(file.name)}</b> in corso...`;
+      setStatus(`⏳ Analisi di <b>${escapeHtml(file.name)}</b> in corso...`);
       const zip = await JSZip.loadAsync(file);
       const allFiles = Object.keys(zip.files);
       const isJwEpub = targetId.startsWith("gb:nwt") || targetId.startsWith("gb:bi12") ||
       allFiles.some(f => /_BI12_\.|\.GE-split|biblechapternav/i.test(f));
       if (!isJwEpub) {
-        await extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, labelName);
+        await extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, safeStatusProxy, labelName);
       } else {
-        await extractJwFormatEpub(zip, allFiles, mergedBooksMap, statusEl, labelName);
+        await extractJwFormatEpub(zip, allFiles, mergedBooksMap, safeStatusProxy, labelName);
       }
     }
     const finalBooksData = [];
     let importedCount = 0;
+    let totalFootnotes = 0;
+    let booksWithOutlines = 0;
     for (let bId = 1; bId <= 66; bId++) {
       const bMeta = getBook(bId);
       const existing = mergedBooksMap.get(bId);
       if (existing && existing.chapters && existing.chapters.length > 0) {
         importedCount++;
+        let hasOut = false;
+        existing.chapters.forEach(c => {
+          if (c.footnotes && typeof c.footnotes === "object") {
+            Object.values(c.footnotes).forEach(arr => { if (Array.isArray(arr)) totalFootnotes += arr.length; });
+          }
+          if (Array.isArray(c.outline) && c.outline.length > 0) hasOut = true;
+        });
+        if (hasOut) booksWithOutlines++;
         finalBooksData.push(existing);
       } else {
         finalBooksData.push({ nr: bId, name: bMeta.name, chapters: [] });
       }
     }
-    statusEl.innerHTML = `💾 Salvataggio permanente nel database Offline...`;
+    setStatus(`💾 Salvataggio permanente nel database Offline...`);
     const fullBibleObj = { id: targetId, name: labelName, books: finalBooksData };
     await saveOfflineBible(targetId, fullBibleObj);
     if (!state.downloadedBibles.includes(targetId)) {
@@ -8369,14 +8386,20 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
     state.trans1 = targetId;
     document.getElementById("trans1").value = targetId;
     safeSaveStorage("bm_trans1", targetId);
-    statusEl.innerHTML = `✔ <b>${escapeHtml(labelName)}</b> salvata Offline (${importedCount}/66 libri pronti)!`;
+    const extras = [];
+    if (totalFootnotes > 0) extras.push(`${totalFootnotes.toLocaleString("it-IT")} note`);
+    if (booksWithOutlines > 0) extras.push(`${booksWithOutlines} sommari`);
+    const extraSuffix = extras.length ? ` • ${extras.join(" • ")}` : "";
+    setStatus(`✔ <b>${escapeHtml(labelName)}</b> salvata Offline (${importedCount}/66 libri${extraSuffix})!`);
     setTimeout(() => {
       closeProModal();
       loadChapterView();
     }, 1000);
   } catch (err) {
     console.error(err);
-    statusEl.innerHTML = `❌ Errore durante l'importazione: ${escapeHtml(err.message)}`;
+    setStatus(`❌ Errore durante l'importazione: ${escapeHtml(err.message)}`);
+  } finally {
+    if (inputEl) inputEl.value = "";
   }
 }
 
@@ -8749,7 +8772,7 @@ function parseJwEpubChapterXhtml(xhtml) {
       const src = decodeURIComponent((contentEl.getAttribute("src") || "").trim());
       if (!src) return;
 
-      // Se l'ancora contiene già #bm_book_X (come nei file NR preparati da Claude), estrae direttamente il numero del libro!
+      // Se l'ancora contiene già #bm_book_X, estrae direttamente il numero del libro
       const bmBookMatch = src.match(/#bm_book_(\d+)$/i);
       if (bmBookMatch) {
         currentBookId = parseInt(bmBookMatch[1], 10);
@@ -8966,15 +8989,18 @@ function parseJwEpubChapterXhtml(xhtml) {
 let currentDailyOffset = 0;
 
 async function importDailyTextEpub(event) {
-  const file = event.target.files?.[0];
+  const inputEl = event.target;
+  const file = inputEl && inputEl.files ? inputEl.files[0] : null;
   if (!file) return;
   const statusEl = getActiveEpubStatusEl();
+  const setStatus = msg => { if (statusEl) statusEl.innerHTML = msg; };
   if (typeof JSZip === "undefined") {
+    inputEl.value = "";
     showBlueInfoModal("⚠️ Libreria Mancante", "Libreria JSZip non caricata. Verifica la connessione internet.");
     return;
   }
   try {
-    statusEl.innerHTML = `⏳ Estrazione dei 365 giorni da <b>${escapeHtml(file.name)}</b>...`;
+    setStatus(`⏳ Estrazione dei 365 giorni da <b>${escapeHtml(file.name)}</b>...`);
     const zip = await JSZip.loadAsync(file);
     const allFiles = Object.keys(zip.files);
 
@@ -8999,7 +9025,7 @@ async function importDailyTextEpub(event) {
     for (let mIdx = 0; mIdx < 12; mIdx++) {
       const monthNum = mIdx + 1;
       const basePrefix = monthBasePrefixes[mIdx];
-      statusEl.innerHTML = `⏳ Estrazione mese ${monthNum}/12...`;
+      setStatus(`⏳ Estrazione mese ${monthNum}/12...`);
 
       for (let dayNum = 1; dayNum <= 31; dayNum++) {
         const candidatePath = dayNum === 1
@@ -9043,13 +9069,15 @@ async function importDailyTextEpub(event) {
     }
 
     await saveOfflineBible("bm:daily_text", { updated: Date.now(), days: dailyMap });
-    statusEl.innerHTML = `✔ Scrittura del Giorno salvata offline con successo!`;
+    setStatus(`✔ Scrittura del Giorno salvata offline con successo!`);
     setTimeout(() => {
       closeProModal();
       showDailyTextView(0);
     }, 800);
   } catch (err) {
-    statusEl.innerHTML = `❌ Errore: ${escapeHtml(err.message)}`;
+    setStatus(`❌ Errore: ${escapeHtml(err.message)}`);
+  } finally {
+    if (inputEl) inputEl.value = "";
   }
 }
 
@@ -9091,9 +9119,11 @@ function openDailyCalendarPickerModal() {
 }
 
 function jumpToPickedDailyDate() {
-  const m = Number(document.getElementById("dailyPickMonth")?.value) || 1;
-  const d = Number(document.getElementById("dailyPickDay")?.value) || 1;
+  const m = Math.min(12, Math.max(1, Number(document.getElementById("dailyPickMonth")?.value) || 1));
+  const rawD = Number(document.getElementById("dailyPickDay")?.value) || 1;
   const now = new Date();
+  const maxDayInMonth = new Date(now.getFullYear(), m, 0).getDate();
+  const d = Math.min(maxDayInMonth, Math.max(1, rawD));
   const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const targetMidnight = new Date(now.getFullYear(), m - 1, d);
   const diffDays = Math.round((targetMidnight - todayMidnight) / 86400000);
@@ -9161,7 +9191,7 @@ async function showDailyTextView(dayOffset = 0, fromBack = false) {
     return;
   }
   const entry = savedDaily.days[dayKey];
-  window.currentDailySpeechText = `${entry.dateTitle}. ${entry.theme}. ${entry.comment}`;
+  currentDailySpeechText = `${entry.dateTitle}. ${entry.theme}. ${entry.comment}`;
   const isToday = currentDailyOffset === 0;
   main.innerHTML = `
     <div class="chapter-header" style="flex-wrap:wrap; gap:8px;">
@@ -9280,9 +9310,11 @@ function splitCleanTextIntoEntries(rawText, entriesArray) {
 }
 
 async function importInsightFiles(event) {
-  const files = Array.from(event.target.files || []);
+  const inputEl = event.target;
+  const files = Array.from((inputEl && inputEl.files) || []);
   if (!files.length) return;
   const statusEl = getActiveEpubStatusEl();
+  const setStatus = msg => { if (statusEl) setStatus(msg); };
   if (typeof JSZip === "undefined") {
     showBlueInfoModal("⚠️ Libreria Mancante", "Libreria JSZip non caricata. Verifica la connessione internet.");
     return;
@@ -9292,7 +9324,7 @@ async function importInsightFiles(event) {
     const parser = new DOMParser();
     for (const file of files) {
       const fName = file.name.toLowerCase();
-      statusEl.innerHTML = `⏳ Analisi di <b>${escapeHtml(file.name)}</b> in corso...`;
+      setStatus(`⏳ Analisi di <b>${escapeHtml(file.name)}</b> in corso...`);
       if (fName.endsWith(".rtf") && !fName.endsWith(".zip")) {
         const buf = await file.arrayBuffer();
         const head = new Uint8Array(buf.slice(0, 4));
@@ -9310,7 +9342,7 @@ async function importInsightFiles(event) {
       const htmlFiles = allPaths.filter(p => /\.(?:xhtml|html|htm)$/i.test(p) && !p.includes("toc") && !p.includes("nav") && !p.includes("cover") && !zip.files[p].dir);
       if (rtfFiles.length > 0) {
         for (let i = 0; i < rtfFiles.length; i++) {
-          statusEl.innerHTML = `⚙️ Decodifica volume RTF ${i + 1}/${rtfFiles.length}...`;
+          setStatus(`⚙️ Decodifica volume RTF ${i + 1}/${rtfFiles.length}...`);
           const uint8 = await zip.files[rtfFiles[i]].async("uint8array");
           const rawRtf = new TextDecoder("windows-1252").decode(uint8);
           const clean = parseRtfToCleanText(rawRtf);
@@ -9318,7 +9350,7 @@ async function importInsightFiles(event) {
         }
       } else if (htmlFiles.length > 0) {
         for (let i = 0; i < htmlFiles.length; i++) {
-          if (i % 25 === 0) statusEl.innerHTML = `⚙️ Estrazione voci (${i + 1}/${htmlFiles.length})...`;
+          if (i % 25 === 0) setStatus(`⚙️ Estrazione voci (${i + 1}/${htmlFiles.length})...`);
           const rawHtml = await zip.files[htmlFiles[i]].async("string");
           const doc = parser.parseFromString(rawHtml, "text/html");
           doc.querySelectorAll("script, style, rt, .footnote").forEach(el => el.remove());
@@ -9348,15 +9380,17 @@ async function importInsightFiles(event) {
     insightMemCache = payload;
     bmInsightVerseCache.clear();
     bmDynamicCatalogEnriched = false;
-    statusEl.innerHTML = `💾 Salvataggio di ${entries.length} voci nel database offline...`;
+    setStatus(`💾 Salvataggio di ${entries.length} voci nel database offline...`);
     await idbPut("bm:insight_it", payload);
-    statusEl.innerHTML = `✔ Perspicacia salvata offline (${entries.length} voci pronte)!`;
+    setStatus(`✔ Perspicacia salvata offline (${entries.length} voci pronte)!`);
     setTimeout(() => {
       closeProModal();
       showInsightView();
     }, 900);
   } catch (err) {
-    statusEl.innerHTML = `❌ Errore: ${escapeHtml(err.message)}`;
+    setStatus(`❌ Errore: ${escapeHtml(err.message)}`);
+  } finally {
+    if (inputEl) inputEl.value = "";
   }
 }
 
@@ -9456,8 +9490,9 @@ async function showInsightView(selectedIndex = null, fromBack = false) {
   }
   if (selectedIndex !== null && data.entries[selectedIndex]) {
     const item = data.entries[selectedIndex];
+    currentViewContext.title = item.title;
     setHeaderCenterPill(item.title, "insight");
-    window.currentInsightSpeechText = `${item.title}. ${item.body}`;
+    currentInsightSpeechText = `${item.title}. ${item.body}`;
 
     const baseHtml = formatNoteLinks(item.body);
     const { html: highlightedBody, count: hitCount } = highlightHtmlSafe(baseHtml, insightSearchQuery);
@@ -9651,7 +9686,8 @@ function siRenderParas(text, defaultBookId = null) {
 }
 
 async function importSiFile(event) {
-  const file = event.target.files && event.target.files[0];
+  const inputEl = event.target;
+  const file = inputEl && inputEl.files && inputEl.files[0];
   if (!file) return;
   const statusEl = getActiveEpubStatusEl();
   const setStatus = html => {
@@ -9687,6 +9723,8 @@ async function importSiFile(event) {
     }, 900);
   } catch (err) {
     setStatus(`❌ Errore: ${escapeHtml(err.message)}`);
+  } finally {
+    if (inputEl) inputEl.value = "";
   }
 }
 
@@ -9835,7 +9873,7 @@ async function showSiReader(kind, i, ci, fromBack = false) {
   const itemName = kind === "x" ? item.title : siBookLabel(item);
   const title = item.chapters.length > 1 ? `${itemName} — ${ch.title}` : itemName;
   setHeaderCenterPill(extractSiPillLabel(kind, item, ch), kind === "x" ? "si_index" : "si_book");
-  window.currentInsightSpeechText = `${title}. ${String(ch.content || "").replace(/\[[a-z]{1,2}\]/g, "").replace(/[ \t]+/g, " ").trim()}`;
+  currentInsightSpeechText = `${title}. ${String(ch.content || "").replace(/\[[a-z]{1,2}\]/g, "").replace(/[ \t]+/g, " ").trim()}`;
   let prev = null, next = null;
   if (ci > 0) prev = [i, ci - 1];
   else if (i > 0) prev = [i - 1, list[i - 1].chapters.length - 1];
@@ -9988,6 +10026,7 @@ async function showMapsView(selectedIdx = null, fromBack = false) {
   if (!fromBack && currentViewContext.type !== "maps") saveCurrentPositionToHistory();
   closeActionBar();
   stopAllAudio();
+  clearSpeechContext();
   setActiveTab("", "mapsTabBtn");
   currentViewContext = { type: "maps", mapIdx: null, label: "🗺️ Cartine Bibliche" };
   document.getElementById("currentRefLabel").textContent = "🗺️ Cartine Bibliche";
@@ -10009,7 +10048,7 @@ async function showMapsView(selectedIdx = null, fromBack = false) {
       })}`;
     return;
   }
-  window.currentInsightSpeechText = `Cartine bibliche. ${meta.maps.map(m => m.title).join(". ")}.`;
+  currentInsightSpeechText = `Cartine bibliche. ${meta.maps.map(m => m.title).join(". ")}.`;
     main.innerHTML = `
     <div class="section-title">
       <span>🗺️ “Vedete il buon paese” (${meta.maps.length})</span>
@@ -10065,8 +10104,9 @@ function bpParseCell(c, grid) {
   return { col, row, cw: side, ch: side };
 }
 async function openMapViewer(mapId, cells, label, fromBack = false) {
+  const reqId = ++bpLoadReqId;
   const meta = await bpGetMeta();
-  if (!meta) return;
+  if (!meta || reqId !== bpLoadReqId) return;
   const map = bpMapById(mapId);
   if (!map) return;
   if (!fromBack && document.getElementById("mapsViewer").style.display !== "flex") {
@@ -10089,8 +10129,10 @@ async function openMapViewer(mapId, cells, label, fromBack = false) {
   msg.style.display = "block";
   wrap.style.visibility = "hidden";
   const uri = await idbGet(BP_DB_IMG + mapId);
+  if (reqId !== bpLoadReqId) return;
   if (!uri) { msg.textContent = "Immagine non trovata. Ricarica il file JSON dal Backup."; return; }
   img.onload = () => {
+    if (reqId !== bpLoadReqId) return;
     msg.style.display = "none";
     wrap.style.width = bpV.w + "px"; wrap.style.height = bpV.h + "px";
     img.style.width = bpV.w + "px"; img.style.height = bpV.h + "px";
@@ -10612,7 +10654,7 @@ function confirmImportBackupNow() {
       safeSaveStorage("bm_last_book", String(state.bookId));
     }
     if (parsed.chapter) {
-      state.chapter = Math.max(1, Number(parsed.chapter) || 1);
+      state.chapter = Math.min(getBook(state.bookId).ch, Math.max(1, Number(parsed.chapter) || 1));
       safeSaveStorage("bm_last_ch", String(state.chapter));
     }
     if (parsed.fontSize) {
@@ -10628,8 +10670,12 @@ function confirmImportBackupNow() {
       saveBmSettings();
     }
     if (parsed.ttsRate) {
-      bmTtsRate = Number(parsed.ttsRate) || 1.0;
+      bmTtsRate = Math.min(1.5, Math.max(0.75, Number(parsed.ttsRate) || 1.0));
       safeSaveStorage("bm_tts_rate", String(bmTtsRate));
+      if (!bmAudioPlaying) {
+        const ttsBtn = document.getElementById("ttsChapterBtn");
+        if (ttsBtn) ttsBtn.innerHTML = `<span class="tab-icon">🔊</span><span>${bmTtsRate !== 1 ? "Ascolta " + bmTtsRate + "x" : "Ascolta"}</span>`;
+      }
     }
     if (parsed.ttsAutoNext !== undefined) {
       bmTtsAutoNextPref = Boolean(parsed.ttsAutoNext);
@@ -11123,10 +11169,9 @@ function bpCitedRefs(text) {
 function searchWordInInsight(word) {
   closeProModal();
   closeActionBar();
-  saveCurrentPositionToHistory(state.bookId, state.chapter);
   insightActiveLetter = "TUTTE";
   insightSearchQuery = word || "";
-  showInsightView(null);
+  return showInsightView(null);
 }
 async function openDeepenDailyModal() {
   const savedDaily = await getOfflineBible("bm:daily_text");
@@ -11212,7 +11257,7 @@ async function openDeepenDailyModal() {
       placesHtml = `<div class="section-title"><span>Luoghi citati</span><span>${places.length}</span></div>` + places.map(bpCardHtml).join("");
     }
   }
-  window.__lastDailyDossier = {
+  lastDailyDossier = {
     theme: rawTheme || "Scrittura del Giorno",
     refs: refs,
     keywords: finalKeywords,
@@ -11253,7 +11298,7 @@ function exportSingleNoteDossier(noteId, refFallback) {
 
 function exportDailyDossierNow(btnEl) {
   bmChimeHaptic();
-  const d = window.__lastDailyDossier;
+  const d = lastDailyDossier;
   if (!d) return;
   const dossier = [
     `━━━ ☀️ DOSSIER SCRITTURA DEL GIORNO ━━━`,
@@ -11323,11 +11368,11 @@ document.addEventListener("touchend", () => setTimeout(handlePortionTextSelectio
 // ============================================================================
 // MODULO PWA 100% OFFLINE (Service Worker Registration & Verifica Aggiornamenti)
 // ============================================================================
-window.__bmSwReg = null;
+bmSwReg = null;
 function initBmServiceWorker() {
   if (!("serviceWorker" in navigator) || !/^https?:$/i.test(window.location.protocol)) return;
   navigator.serviceWorker.register("./sw.js").then(reg => {
-    window.__bmSwReg = reg;
+    bmSwReg = reg;
     reg.addEventListener("updatefound", () => {
       const nw = reg.installing;
       if (!nw) return;
@@ -11351,7 +11396,7 @@ async function checkBmPwaUpdates() {
     return;
   }
   try {
-    const reg = window.__bmSwReg || await navigator.serviceWorker.getRegistration();
+    const reg = bmSwReg || await navigator.serviceWorker.getRegistration();
     let statusLine = "Service Worker non ancora attivo.";
     if (reg && reg.active) {
       try { await reg.update(); } catch (e) { console.debug(e); }
@@ -11718,16 +11763,14 @@ document.addEventListener("touchend", function(e) {
   }, { passive: false, capture: true });
 });
 
+// Gestore Tastiera Unificato (Tendine Blu PRO + Tasto Esc chiude sempre il livello più alto aperto)
 document.addEventListener("keydown", function(e) {
   const sel = e.target && e.target.closest ? e.target.closest("select") : null;
   if (sel && (e.key === "Enter" || e.key === " ")) {
     e.preventDefault();
     openCustomSelectMenu(sel);
+    return;
   }
-}, true);
-
-// Tasto Esc (tablet con tastiera / desktop): chiude sempre il livello più alto aperto
-document.addEventListener("keydown", function(e) {
   if (e.key !== "Escape") return;
   if (document.getElementById("bmSettingsDrawer")?.classList.contains("open")) { closeSettingsDrawer(); return; }
   if (document.getElementById("bmSelectModal")?.style.display === "flex") { closeBmSelectModal(); return; }
@@ -11735,8 +11778,9 @@ document.addEventListener("keydown", function(e) {
   if (document.getElementById("myReadModal")?.style.display === "flex") { document.getElementById("myReadModal").style.display = "none"; return; }
   if (document.getElementById("proModal")?.style.display === "flex") { closeProModal(); return; }
   if (document.getElementById("noteModal")?.style.display === "flex") { closeNoteModal(); return; }
-  if (document.getElementById("verseActionBar")?.style.display === "flex") { closeActionBar(); }
-});
+  if (document.getElementById("verseActionBar")?.style.display === "flex") { closeActionBar(); return; }
+  if (bmZenModeActive) { toggleBmZenMode(); }
+}, true);
 
 // ============================================================================
 // 1. RIMOZIONE RIQUADRO PERMANENTE VERSETTO AL TOCCO SUL CAPITOLO
@@ -11778,7 +11822,8 @@ document.getElementById("mainContainer")?.addEventListener("touchend", function(
   const dx = e.changedTouches[0].clientX - bmSwipeStartX;
   const dy = e.changedTouches[0].clientY - bmSwipeStartY;
   if (Math.abs(dx) < 88 || Math.abs(dy) > 38 || Math.abs(dx) < Math.abs(dy) * 2.4) return;
-  const anyModalOpen = ["proModal", "noteModal", "myReadModal", "bmSelectModal", "mapsViewer"].some(id => {
+  const drawerOpen = document.getElementById("bmSettingsDrawer")?.classList.contains("open");
+  const anyModalOpen = drawerOpen || ["proModal", "noteModal", "myReadModal", "bmSelectModal", "mapsViewer"].some(id => {
     const el = document.getElementById(id);
     return el && el.style.display === "flex";
   });
@@ -11870,21 +11915,23 @@ function openTtsSettingsModal() {
   modal.style.display = "flex";
 }
 
-function setBmTtsRate(newRate) {
-  bmTtsRate = Number(newRate) || 1.0;
+function setBmTtsRate(newRate, refreshTarget = "modal") {
+  bmTtsRate = Math.min(1.5, Math.max(0.75, Number(newRate) || 1.0));
   safeSaveStorage("bm_tts_rate", String(bmTtsRate));
   if (!bmAudioPlaying) {
     const btn = document.getElementById("ttsChapterBtn");
     if (btn) btn.innerHTML = `<span class="tab-icon">🔊</span><span>${bmTtsRate !== 1 ? "Ascolta " + bmTtsRate + "x" : "Ascolta"}</span>`;
   }
-  openTtsSettingsModal();
+  if (refreshTarget === "drawer") renderSettingsDrawerContent();
+  else openTtsSettingsModal();
 }
 
-function setBmTtsAutoNext(val) {
+function setBmTtsAutoNext(val, refreshTarget = "modal") {
   bmTtsAutoNextPref = Boolean(val);
   bmAutoNextChapter = bmTtsAutoNextPref;
   safeSaveStorage("bm_tts_autonext", bmTtsAutoNextPref ? "1" : "0");
-  openTtsSettingsModal();
+  if (refreshTarget === "drawer") renderSettingsDrawerContent();
+  else openTtsSettingsModal();
 }
 
 // ============================================================================
@@ -12025,6 +12072,12 @@ async function executeOmniSearch() {
       return;
     }
 
+    if (bmZenModeActive) {
+      toggleBmZenMode();
+      try { window.history.pushState({ bmGuard: true }, ""); } catch (e) { console.debug(e); }
+      return;
+    }
+
     if (navHistory.length > 0) {
       bmHaptic(12);
       goBackHistory();
@@ -12036,6 +12089,7 @@ async function executeOmniSearch() {
   if (mainEl && typeof MutationObserver !== "undefined") {
     let lastAnimAt = 0;
     const obs = new MutationObserver(() => {
+      syncBmPaperMode();
       const now = Date.now();
       if (now - lastAnimAt < 90) return;
       lastAnimAt = now;
@@ -12149,7 +12203,7 @@ function returnToXRayChapterHighlighted() {
 }
 
 function prepareXRayJumpContext() {
-  const d = window.__lastXRayData;
+  const d = lastXRayData;
   if (!d) return;
   bmXRayReturnState = { bookId: d.bookId, chapter: d.chapter, verse: d.verse };
   // Fissa il versetto anche su state.selectedVerse prima che saveCurrentPositionToHistory scatti,
@@ -12163,14 +12217,14 @@ function openConcordanceFromXRay(word) {
   bmHaptic(14);
   prepareXRayJumpContext();
   searchWordInConcordance(word);
-  injectXRayReturnBanner();
 }
 
 function openInsightFromXRay(word) {
   bmHaptic(14);
   prepareXRayJumpContext();
-  searchWordInInsight(word);
-  injectXRayReturnBanner();
+  Promise.resolve(searchWordInInsight(word)).finally(() => {
+    if (bmXRayReturnState) injectXRayReturnBanner();
+  });
 }
 
 async function openStrongCodeFromXRay(codeStr, fallbackWord) {
@@ -12202,13 +12256,14 @@ async function openStrongCodeFromXRay(codeStr, fallbackWord) {
     }
     inp.value = fallbackWord || cleanCode;
   }
-  executeSearch(1);
-  injectXRayReturnBanner();
+  Promise.resolve(executeSearch(1)).finally(() => {
+    if (bmXRayReturnState) injectXRayReturnBanner();
+  });
 }
 
 async function stepXRayVerse(delta) {
   bmHaptic(14);
-  const d = window.__lastXRayData;
+  const d = lastXRayData;
   const curV = d && d.verse ? Number(d.verse) : (state.selectedVerse || 1);
 
   // Tetto reale = numero più alto tra i versetti mostrati a schermo (vale per qualsiasi Bibbia, online o offline)
@@ -12230,14 +12285,14 @@ let bmXRayRootsActive = true;
 function toggleXRayDiffHighlight() {
   bmHaptic(14);
   bmXRayDiffActive = !bmXRayDiffActive;
-  const curV = (window.__lastXRayData && window.__lastXRayData.verse) || state.selectedVerse || 1;
+  const curV = (lastXRayData && lastXRayData.verse) || state.selectedVerse || 1;
   openVerseXRayModal(curV);
 }
 
 function toggleXRayRootsLens() {
   bmHaptic(14);
   bmXRayRootsActive = !bmXRayRootsActive;
-  const curV = (window.__lastXRayData && window.__lastXRayData.verse) || state.selectedVerse || 1;
+  const curV = (lastXRayData && lastXRayData.verse) || state.selectedVerse || 1;
   openVerseXRayModal(curV);
 }
 
@@ -12250,7 +12305,7 @@ function showXRayRootPopup(dictKey) {
   if (!modal || !body) return;
   // Le voci possono avere più codici (es. "H7225 / G746"): si usa quello del testamento del versetto aperto
   const codes = String(d.code).toUpperCase().match(/[HG]\d{1,4}/g) || [];
-  const strongCode = codes.find(c => c[0] === (window.__lastXRayData && window.__lastXRayData.bookId >= 40 ? "G" : "H")) || codes[0] || d.code;
+  const strongCode = codes.find(c => c[0] === (lastXRayData && lastXRayData.bookId >= 40 ? "G" : "H")) || codes[0] || d.code;
   body.innerHTML = `
     <div style="text-align:center; padding:4px 0 12px 0;">
       <div style="font-size:28px; margin-bottom:4px;">🏛️📜</div>
@@ -12282,8 +12337,12 @@ function decorateXRayInterlinearRoots(htmlText) {
     if (!dictKey || seenInVerse.has(dictKey)) return match;
     const d = PRO_STRONG_DICT[dictKey];
     seenInVerse.add(dictKey);
-    const shortRoot = d.orig.split("/")[0].replace(/\([^)]*\)/g, "").trim();
-    const shortCode = d.code.split("/")[0].trim();
+    const isNT = (lastXRayData ? lastXRayData.bookId : state.bookId) >= 40;
+    const origParts = d.orig.split("/").map(s => s.replace(/\([^)]*\)/g, "").trim()).filter(Boolean);
+    const codeParts = d.code.split("/").map(s => s.trim()).filter(Boolean);
+    const prefIdx = codeParts.findIndex(c => c.toUpperCase().startsWith(isNT ? "G" : "H"));
+    const shortCode = (prefIdx > -1 ? codeParts[prefIdx] : codeParts[0]) || d.code;
+    const shortRoot = (prefIdx > -1 && origParts[prefIdx] ? origParts[prefIdx] : origParts[0]) || d.orig;
     return `${word} <span onclick="event.stopPropagation(); showXRayRootPopup('${escapeJsStr(dictKey)}')" title="${escapeHtml(d.orig)} — ${escapeHtml(d.def)}" style="display:inline-flex; align-items:center; gap:3px; background:linear-gradient(135deg, rgba(255,213,79,0.22), rgba(0,229,255,0.18)); color:#ffd54f; border:1px solid rgba(255,213,79,0.75); border-radius:6px; padding:0 5px; font-size:11px; font-weight:800; cursor:pointer; vertical-align:baseline;">${escapeHtml(shortRoot)}·${escapeHtml(shortCode)}</span>`;
   });
 }
@@ -12307,7 +12366,7 @@ function formatXRayDiffWords(baseText, targetText, isPrimary = false) {
 
 function copyXRayComparisonDossier(btnEl) {
   bmChimeHaptic();
-  const d = window.__lastXRayDossier;
+  const d = lastXRayDossier;
   if (!d) return;
   const rowsList = d.rows || d.editions || [];
   const lines = [
@@ -12321,7 +12380,7 @@ function copyXRayComparisonDossier(btnEl) {
 
 function saveXRayDossierAsNote(btnEl) {
   bmChimeHaptic();
-  const d = window.__lastXRayDossier;
+  const d = lastXRayDossier;
   if (!d) return;
   const rowsList = d.rows || d.editions || [];
   const bodyLines = [
@@ -12331,7 +12390,7 @@ function saveXRayDossierAsNote(btnEl) {
 
   const noteTitle = `${d.ref} (Raggi X)`;
   const existingIdx = state.notes.findIndex(n => n.ref === noteTitle);
-  const curV = (window.__lastXRayData && window.__lastXRayData.verse) || state.selectedVerse || 1;
+  const curV = (lastXRayData && lastXRayData.verse) || state.selectedVerse || 1;
   const noteObj = {
     id: (existingIdx > -1 && state.notes[existingIdx].id) ? state.notes[existingIdx].id : Date.now(),
     bookId: state.bookId,
@@ -12350,8 +12409,11 @@ function saveXRayDossierAsNote(btnEl) {
 }
 
 async function openVerseXRayModal(forcedVerseNum) {
+  const reqId = ++currentXRayReqId;
   bmHaptic(14);
-  const book = getBook(state.bookId);
+  const targetBookId = state.bookId;
+  const targetChapter = state.chapter;
+  const book = getBook(targetBookId);
   const vNum = (typeof forcedVerseNum === "number" && forcedVerseNum > 0)
     ? forcedVerseNum
     : (state.selectedVerse || 1);
@@ -12363,8 +12425,8 @@ async function openVerseXRayModal(forcedVerseNum) {
     selectVerseDataFromDOM(vNum);
   }
   const rawVerse = state.selectedVerseText || "";
-  const refStr = `${book.name} ${state.chapter}:${vNum}`;
-  window.__lastXRayData = { bookId: state.bookId, chapter: state.chapter, verse: vNum, ref: refStr };
+  const refStr = `${book.name} ${targetChapter}:${vNum}`;
+  lastXRayData = { bookId: targetBookId, chapter: targetChapter, verse: vNum, ref: refStr };
   if (typeof forcedVerseNum !== "number") closeActionBar();
 
   document.getElementById("proModalTitle").textContent = `🔬 Raggi X: ${refStr}`;
@@ -12373,20 +12435,18 @@ async function openVerseXRayModal(forcedVerseNum) {
   document.getElementById("proModal").style.display = "flex";
 
   const candidateIds = [...new Set([state.trans1, state.trans2, state.trans3, ...state.downloadedBibles])];
-  const rawLoadedList = [];
-
-  for (const tId of candidateIds) {
+  const resolvedRows = await Promise.all(candidateIds.map(async tId => {
     const bMeta = dynamicCatalog.find(b => b.id === tId) || CORE_BIBLES.find(b => b.id === tId);
-    if (!bMeta) continue;
+    if (!bMeta) return null;
     let vTxt = "";
     const fullOff = await getOfflineBible(tId);
     if (fullOff && Array.isArray(fullOff.books)) {
-      const bObj = fullOff.books.find(b => Number(b.nr) === Number(state.bookId));
-      const cObj = bObj && bObj.chapters ? bObj.chapters.find(c => Number(c.chapter) === Number(state.chapter)) : null;
+      const bObj = fullOff.books.find(b => Number(b.nr) === Number(targetBookId));
+      const cObj = bObj && bObj.chapters ? bObj.chapters.find(c => Number(c.chapter) === Number(targetChapter)) : null;
       const vObj = cObj && cObj.verses ? cObj.verses.find(v => Number(v.verse) === Number(vNum)) : null;
       if (vObj && vObj.text) vTxt = stripTagsToPlainText(vObj.text);
     } else {
-      const cachedCh = safeGetStorage(`bm_ch_${tId}_${state.bookId}_${state.chapter}`);
+      const cachedCh = safeGetStorage(`bm_ch_${tId}_${targetBookId}_${targetChapter}`);
       if (cachedCh) {
         try {
           const arr = JSON.parse(cachedCh);
@@ -12395,14 +12455,14 @@ async function openVerseXRayModal(forcedVerseNum) {
         } catch (e) { console.debug(e); }
       }
     }
-    if (vTxt) {
-      rawLoadedList.push({ id: tId, name: bMeta.name, lang: bMeta.lang || "Global", text: vTxt });
-    }
-  }
+    return vTxt ? { id: tId, name: bMeta.name, lang: bMeta.lang || "Global", text: vTxt } : null;
+  }));
+  if (reqId !== currentXRayReqId) return;
+  const rawLoadedList = resolvedRows.filter(Boolean);
 
   const sortedVersions = sortXRayBiblesHierarchy(rawLoadedList);
   const baseTextForDiff = (rawLoadedList.find(r => r.id === state.trans1) || sortedVersions[0] || {}).text || rawVerse;
-  window.__lastXRayDossier = { ref: refStr, rows: sortedVersions };
+  lastXRayDossier = { ref: refStr, rows: sortedVersions };
 
   const versionsHtml = sortedVersions.map(r => `
     <div class="result-card" style="cursor:default; margin-bottom:7px; padding:10px; ${r.id === state.trans1 ? 'border-left:3.5px solid #00e5ff;' : ''}">
@@ -12434,6 +12494,7 @@ async function openVerseXRayModal(forcedVerseNum) {
 
   let placesHtml = "";
   const mapMeta = await bpGetMeta();
+  if (reqId !== currentXRayReqId) return;
   if (mapMeta && baseTextForDiff) {
     const foundPlaces = bpScanText(baseTextForDiff);
     if (foundPlaces.length > 0) {
@@ -13108,12 +13169,10 @@ function jumpToMessianicProphecyIndex(targetIdx, expandBubble = true) {
   saveCurrentPositionToHistory(p.b, p.c);
   state.bookId = p.b;
   state.chapter = p.c;
-  window.__bmPendingProphecyIdx = targetIdx;
+  bmPendingProphecyIdx = targetIdx;
   loadChapterView().then(() => {
-    setTimeout(() => {
-      highlightMessianicVersesInDOM(p, true);
-      scrollToVerseAndHighlight(p.v);
-    }, 260);
+    highlightMessianicVersesInDOM(p, false);
+    scrollToVerseAndHighlight(p.v);
   });
 }
 
@@ -13238,9 +13297,12 @@ function openGreekFulfillmentAction() {
 let bmMessianicOnlyNtFilter = false;
 let bmMessianicSearchQ = "";
 
-function openMessianicCatalogModal(onlyNtCited = false) {
+async function openMessianicCatalogModal(onlyNtCited = false) {
   bmChimeHaptic();
   bmMessianicOnlyNtFilter = Boolean(onlyNtCited);
+  if (!bmDynamicCatalogEnriched) {
+    try { await enrichMessianicPropheciesFromOfflineDB(); } catch (e) { console.debug(e); }
+  }
   document.getElementById("proModalTitle").textContent = `💡 Profezie Messianiche (${bmProphecyList.length})`;
   const body = document.getElementById("proModalBody");
   if (!body) return;
@@ -13403,17 +13465,22 @@ async function evaluateMessianicBulbForCurrentView() {
     return;
   }
 
+  const expectedBook = state.bookId;
+  const expectedCh = state.chapter;
   await enrichMessianicPropheciesFromOfflineDB();
-  const matches = findPropheciesForCurrentChapter(state.bookId, state.chapter);
+  if (!currentViewContext || currentViewContext.type !== "bible" || state.bookId !== expectedBook || state.chapter !== expectedCh || bmSettings.messianicBulb === false) {
+    return;
+  }
+  const matches = findPropheciesForCurrentChapter(expectedBook, expectedCh);
 
   if (!matches.length) {
     widget.classList.remove("visible");
     return;
   }
 
-  if (typeof window.__bmPendingProphecyIdx === "number" && matches.includes(window.__bmPendingProphecyIdx)) {
-    bmCurrentProphecyIdx = window.__bmPendingProphecyIdx;
-    window.__bmPendingProphecyIdx = null;
+  if (typeof bmPendingProphecyIdx === "number" && matches.includes(bmPendingProphecyIdx)) {
+    bmCurrentProphecyIdx = bmPendingProphecyIdx;
+    bmPendingProphecyIdx = null;
   } else if (!matches.includes(bmCurrentProphecyIdx)) {
     bmCurrentProphecyIdx = matches[0];
   }

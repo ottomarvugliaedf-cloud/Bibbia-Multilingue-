@@ -1,5 +1,5 @@
-// Service Worker — Bibbia Multilingue PRO (v13 Offline Shell)
-const BM_SW_VERSION = "bm-pro-shell-v13-3";
+// Service Worker — Bibbia Multilingue PRO (v13.4 Offline Shell)
+const BM_SW_VERSION = "bm-pro-shell-v13-4";
 const BM_APP_SHELL = [
   "./",
   "./index.html",
@@ -8,6 +8,10 @@ const BM_APP_SHELL = [
   "./icon-512.png"
 ];
 const BM_JSZIP_CDN = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+
+function safeCachePut(cache, req, res) {
+  return cache.put(req, res).catch(() => {});
+}
 
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
@@ -18,11 +22,11 @@ self.addEventListener("install", (event) => {
     // Pre-cache JSZip CDN così anche l'importazione EPUB/ZIP funziona offline in modalità aereo
     try {
       const resp = await fetch(BM_JSZIP_CDN, { mode: "cors", credentials: "omit" });
-      if (resp && resp.ok) await cache.put(BM_JSZIP_CDN, resp.clone());
+      if (resp && resp.ok) await safeCachePut(cache, BM_JSZIP_CDN, resp.clone());
     } catch (_e) {
       try {
         const opaque = await fetch(new Request(BM_JSZIP_CDN, { mode: "no-cors" }));
-        if (opaque) await cache.put(BM_JSZIP_CDN, opaque);
+        if (opaque) await safeCachePut(cache, BM_JSZIP_CDN, opaque);
       } catch (_e2) { console.debug(_e2); }
     }
     self.skipWaiting();
@@ -77,7 +81,7 @@ self.addEventListener("fetch", (event) => {
       const cached = await cache.match(req, { ignoreSearch: true }) || await cache.match(BM_JSZIP_CDN);
       if (cached) return cached;
       const net = await fetch(req);
-      if (net && (net.ok || net.type === "opaque")) cache.put(req, net.clone());
+      if (net && (net.ok || net.type === "opaque")) event.waitUntil(safeCachePut(cache, req, net.clone()));
       return net;
     })());
     return;
@@ -89,7 +93,7 @@ self.addEventListener("fetch", (event) => {
       const cache = await caches.open(BM_SW_VERSION);
       try {
         const net = await fetch(req);
-        if (net && net.ok) cache.put(req, net.clone());
+        if (net && net.ok) event.waitUntil(safeCachePut(cache, req, net.clone()));
         return net;
       } catch (_e) {
         const cached = await cache.match(req);
@@ -100,17 +104,21 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 3. App Shell same-origin: Stale-While-Revalidate (avvio immediato offline + aggiornamento silente)
+  // 3. App Shell same-origin: Stale-While-Revalidate (avvio immediato offline + aggiornamento silente garantito)
   if (url.origin === self.location.origin) {
     event.respondWith((async () => {
       const cache = await caches.open(BM_SW_VERSION);
       const cached = await cache.match(req, { ignoreSearch: true }) ||
         (req.mode === "navigate" ? await cache.match("./index.html") : null);
       const fetchPromise = fetch(req).then((net) => {
-        if (net && net.ok) cache.put(req, net.clone());
+        if (net && net.ok) return safeCachePut(cache, req, net.clone()).then(() => net);
         return net;
       }).catch(() => null);
-      return cached || (await fetchPromise) || new Response("Offline", { status: 503 });
+      if (cached) {
+        event.waitUntil(fetchPromise);
+        return cached;
+      }
+      return (await fetchPromise) || new Response("Offline", { status: 503 });
     })());
   }
 });
