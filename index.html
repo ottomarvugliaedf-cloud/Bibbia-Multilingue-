@@ -1512,6 +1512,278 @@ body.oled-mode .pub-ref-badge {
     body.bm-paper-on #mapsViewer .bp-it { border-bottom-color: #d8ccb4; }
     body.bm-paper-on #mapsViewer .bp-it.click:active { background: #e8dec8; }
     body.bm-paper-on #mapsViewer .bp-g { color: #8c5818; }
+
+  /* ===== Modulo Lampadina Profezie Messianiche ===== */
+  #bmProphecyWidget {
+    position: fixed;
+    right: 14px;
+    bottom: 84px;
+    z-index: 950;
+    display: none;
+    align-items: flex-end;
+    gap: 10px;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    pointer-events: none;
+  }
+  #bmProphecyWidget.visible {
+    display: flex;
+  }
+
+  .bm-bulb-orb {
+    pointer-events: auto;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fff9c4 0%, #ffd54f 26%, #1565c0 68%, #041a42 100%);
+    border: 2px solid #00e5ff;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65), 0 0 22px rgba(255, 213, 79, 0.75), inset 0 2px 4px rgba(255, 255, 255, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    position: relative;
+    flex-shrink: 0;
+    animation: bmBulbFloat 3.2s ease-in-out infinite;
+    transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease;
+  }
+  .bm-bulb-orb:active {
+    cursor: grabbing;
+    transform: scale(0.94);
+  }
+  .bm-bulb-orb svg {
+    width: 34px;
+    height: 34px;
+    filter: drop-shadow(0 0 6px rgba(255, 235, 59, 0.95));
+    animation: bmBulbFilamentGlow 1.9s ease-in-out infinite alternate;
+  }
+  .bm-bulb-spark {
+    position: absolute;
+    inset: -5px;
+    border-radius: 50%;
+    border: 1.5px dashed rgba(255, 235, 59, 0.65);
+    animation: bmSparkSpin 12s linear infinite;
+    pointer-events: none;
+  }
+  .bm-bulb-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: linear-gradient(135deg, #00e5ff, #0288d1);
+    color: #041a42;
+    font-size: 10.5px;
+    font-weight: 900;
+    padding: 2px 6px;
+    border-radius: 999px;
+    border: 1.5px solid #ffffff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.45);
+  }
+
+  @keyframes bmBulbFloat {
+    0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+    25% { transform: translate3d(0, -5px, 0) rotate(-3deg); }
+    75% { transform: translate3d(0, 3px, 0) rotate(3deg); }
+  }
+  @keyframes bmBulbFilamentGlow {
+    0% { filter: drop-shadow(0 0 4px rgba(255, 213, 79, 0.7)); transform: scale(0.97); }
+    100% { filter: drop-shadow(0 0 12px rgba(255, 255, 141, 1)); transform: scale(1.05); }
+  }
+  @keyframes bmSparkSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .bm-prophecy-bubble {
+    pointer-events: auto;
+    width: min(320px, calc(100vw - 88px));
+    background: linear-gradient(160deg, #0a367e 0%, #062356 62%, #041a42 100%);
+    color: #ffffff;
+    border: 1.5px solid #00e5ff;
+    border-radius: 16px 16px 4px 16px;
+    padding: 11px 13px;
+    box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.32), 0 14px 34px rgba(0, 0, 0, 0.72), 0 0 20px rgba(0, 229, 255, 0.35);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transform-origin: bottom right;
+    animation: bmBubblePopIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    position: relative;
+  }
+  .bm-prophecy-bubble.minimized {
+    display: none;
+  }
+  @keyframes bmBubblePopIn {
+    0% { opacity: 0; transform: scale(0.84) translate3d(12px, 10px, 0); }
+    100% { opacity: 1; transform: scale(1) translate3d(0, 0, 0); }
+  }
+
+  .bm-pb-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    border-bottom: 1px solid rgba(41, 182, 246, 0.4);
+    padding-bottom: 6px;
+    margin-bottom: 7px;
+  }
+  .bm-pb-kicker {
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #ffd54f;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .bm-pb-close {
+    background: rgba(4, 26, 66, 0.65);
+    border: 1px solid rgba(79, 195, 247, 0.55);
+    color: #cfe3ff;
+    border-radius: 6px;
+    padding: 1px 7px;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .bm-pb-title {
+    font-size: 14px;
+    font-weight: 900;
+    color: #00e5ff;
+    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .bm-pb-desc {
+    font-size: 12.5px;
+    line-height: 1.44;
+    color: #e3f2fd;
+    margin-bottom: 9px;
+    cursor: pointer;
+  }
+  .bm-pb-readmore {
+    display: inline-block;
+    color: #ffd54f;
+    font-weight: 800;
+    font-size: 11.5px;
+    margin-left: 4px;
+    text-decoration: underline;
+  }
+
+  .bm-pb-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 40px; /* = larghezza freccia 34px + gap 6px: allinea la pillola arancione a quella verde */
+  }
+  .bm-pb-arrow {
+    flex: 0 0 34px;
+    width: 34px;
+    background: linear-gradient(135deg, #1565c0 0%, #0a367e 100%);
+    color: #ffffff;
+    border: 1px solid #4fc3f7;
+    border-radius: 9px;
+    padding: 7px 0;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 900;
+    cursor: pointer;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 2px 6px rgba(0,0,0,0.35);
+    user-select: none;
+    -webkit-user-select: none;
+    transition: transform 0.12s ease, background 0.15s ease;
+  }
+  .bm-pb-arrow:active {
+    transform: scale(0.93);
+    background: #00e5ff;
+    color: #041a42;
+  }
+  
+  #bmPbPrevBtn {
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.25),
+      0 0 0 2px #062356,
+      0 0 0 3.5px #4fc3f7,
+      0 2px 8px rgba(0,0,0,0.35);
+  }
+
+  .bm-pb-ref-btn {
+    flex: 1;
+    min-width: 0;
+    background: linear-gradient(135deg, #69f0ae 0%, #00c853 50%, #00a152 100%);
+    color: #041a42;
+    border: 1.5px solid #ffffff;
+    border-radius: 10px;
+    padding: 7px 9px;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.2px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    box-shadow: 0 0 14px rgba(105, 240, 174, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.75);
+    transition: transform 0.14s ease, box-shadow 0.18s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .bm-pb-ref-btn:active {
+    transform: scale(0.95);
+    box-shadow: 0 0 22px rgba(0, 229, 255, 0.95);
+  }
+
+  .bm-pb-greek-btn {
+    flex: 1;
+    background: linear-gradient(135deg, #ffd54f 0%, #ffb300 50%, #ff8f00 100%);
+    color: #041a42;
+    border: 1.5px solid #ffffff;
+    border-radius: 10px;
+    padding: 7px 9px;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.2px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    box-shadow: 0 0 14px rgba(255, 213, 79, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.75);
+    transition: transform 0.14s ease, box-shadow 0.18s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .bm-pb-greek-btn:active {
+    transform: scale(0.95);
+    box-shadow: 0 0 22px rgba(0, 229, 255, 0.95);
+  }
+
+  .bm-pb-footer-hint {
+    font-size: 10.5px;
+    color: #9ec9ff;
+    margin-top: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .bm-messianic-verse-box {
+    outline: 2.5px solid #ffd54f !important;
+    box-shadow: 0 0 16px rgba(255, 213, 79, 0.55), inset 0 0 12px rgba(0, 229, 255, 0.22) !important;
+    background: linear-gradient(90deg, rgba(255, 213, 79, 0.16) 0%, rgba(0, 229, 255, 0.10) 100%) !important;
+    border-radius: 8px !important;
+    position: relative;
+    transition: all 0.25s ease;
+  }
+  main.bm-paper-reading .bm-messianic-verse-box {
+    outline: 2.5px solid #b45309 !important;
+    background: rgba(245, 158, 11, 0.18) !important;
+    box-shadow: 0 2px 10px rgba(180, 83, 9, 0.25) !important;
+  }
   </style>
 </head>
 <body>
@@ -1567,7 +1839,7 @@ body.oled-mode .pub-ref-badge {
     <div class="header-controls">
       <button class="icon-btn" onclick="changeFontSize(-2)" title="Riduci testo">A-</button>
       <button class="icon-btn" onclick="changeFontSize(2)" title="Ingrandisci testo">A+</button>
-      <button class="icon-btn" id="settingsGearBtn" onclick="openSettingsDrawer()" title="Impostazioni, Moduli e Backup">⚙️</button>
+      <button class="icon-btn" onclick="openSettingsDrawer()" title="Impostazioni, Moduli e Backup">⚙️</button>
     </div>
   </header>
   <!-- Selettori Traduzioni Attive (Supporta 1x, 2x e 3x) -->
@@ -1664,7 +1936,7 @@ body.oled-mode .pub-ref-badge {
       <div id="bpWrap" class="bp-wrap"><img id="bpImg" alt=""></div>
       <div id="bpMsg" class="bp-msg"></div>
     </div>
-    <div id="bpVtools" class="bp-vtools">
+    <div class="bp-vtools">
       <button class="bp-tool-btn" onclick="bpZoomBtn(1/1.5)" title="Riduci zoom">🔍−</button>
       <button class="bp-tool-btn" onclick="bpZoomBtn(1.5)" title="Ingrandisci zoom">🔍+</button>
       <button class="bp-tool-btn" onclick="bpFitView()" title="Adatta cartina allo schermo">🔄 Adatta</button>
@@ -1697,7 +1969,7 @@ body.oled-mode .pub-ref-badge {
     <button class="tab-btn" id="ttsChapterBtn" style="user-select:none;-webkit-user-select:none;" onpointerdown="onTtsBtnDown(event)" onpointerup="onTtsBtnUp()" onpointerleave="onTtsBtnUp()" onpointercancel="onTtsBtnUp()" oncontextmenu="event.preventDefault()" onclick="onTtsBtnClick(event)" title="Tocca per avviare/fermare la lettura • Tieni premuto per velocità e opzioni audio">
       <span class="tab-icon">🔊</span><span>Ascolta</span>
     </button>
-    <button class="tab-btn" id="tabMyReading" style="user-select:none;-webkit-user-select:none;" onpointerdown="onMyReadBtnDown(event)" onpointerup="onMyReadBtnUp()" onpointerleave="onMyReadBtnUp()" onpointercancel="onMyReadBtnUp()" oncontextmenu="event.preventDefault()" onclick="onMyReadBtnClick(event)" title="Tocca per aprire Mia lettura • Tieni premuto per azzerare il segnalibro">
+    <button class="tab-btn" style="user-select:none;-webkit-user-select:none;" onpointerdown="onMyReadBtnDown(event)" onpointerup="onMyReadBtnUp()" onpointerleave="onMyReadBtnUp()" onpointercancel="onMyReadBtnUp()" oncontextmenu="event.preventDefault()" onclick="onMyReadBtnClick(event)" title="Tocca per aprire Mia lettura • Tieni premuto per azzerare il segnalibro">
       <span class="tab-icon">🕯️</span><span id="myReadLabel">Mia lettura</span>
     </button>
     <button class="tab-btn" id="tabSaved" onclick="showSavedView()">
@@ -1998,9 +2270,11 @@ let state = {
 if (!Array.isArray(state.downloadedBibles) || state.downloadedBibles.length === 0) {
   state.downloadedBibles = [...DEFAULT_ACTIVE_IDS];
 }
-if (!Array.isArray(state.bookmarks)) state.bookmarks = [];
-if (!Array.isArray(state.notes)) state.notes = [];
+if (!state.highlights || typeof state.highlights !== "object" || Array.isArray(state.highlights)) state.highlights = {};
+state.bookmarks = Array.isArray(state.bookmarks) ? state.bookmarks.filter(b => b && typeof b === "object") : [];
+state.notes = Array.isArray(state.notes) ? state.notes.filter(n => n && typeof n === "object") : [];
 state.notes.forEach((n, i) => { if (!n.id) n.id = Date.now() + i; });
+state.chapter = Math.min(state.chapter, getBook(state.bookId).ch);
 
 function openDB() {
   if (dbInstancePromise) return dbInstancePromise;
@@ -2025,54 +2299,67 @@ function openDB() {
   });
   return dbInstancePromise;
 }
-async function getOfflineBible(id) {
-  if (memoryBibleCache.has(id)) {
-    return memoryBibleCache.get(id);
-  }
+// Accesso unico al database offline (store "bibles"): lettura, scrittura, cancellazione.
+// Ogni operazione gestisce anche l'annullamento della transazione (es. spazio esaurito),
+// altrimenti il chiamante resterebbe in attesa per sempre.
+async function idbGet(key) {
   try {
     const db = await openDB();
-    return new Promise(res => {
-      const tx = db.transaction("bibles", "readonly");
-      const req = tx.objectStore("bibles").get(id);
-      req.onsuccess = () => {
-        if (req.result) {
-          if (memoryBibleCache.size >= 4) {
-            const oldestKey = memoryBibleCache.keys().next().value;
-            memoryBibleCache.delete(oldestKey);
-          }
-          memoryBibleCache.set(id, req.result);
-        }
-        res(req.result || null);
-      };
+    return await new Promise(res => {
+      const req = db.transaction("bibles", "readonly").objectStore("bibles").get(key);
+      req.onsuccess = () => res(req.result || null);
       req.onerror = () => res(null);
     });
-  } catch (e) { console.debug(e); return null; }
-}
-async function saveOfflineBible(id, data) {
-  if (memoryBibleCache.size >= 4 && !memoryBibleCache.has(id)) {
-    const oldestKey = memoryBibleCache.keys().next().value;
-    memoryBibleCache.delete(oldestKey);
+  } catch (e) {
+    console.debug(e);
+    dbInstancePromise = null;
+    return null;
   }
-  memoryBibleCache.set(id, data);
+}
+async function idbPut(key, value) {
   const db = await openDB();
   return new Promise((res, rej) => {
     const tx = db.transaction("bibles", "readwrite");
-    tx.objectStore("bibles").put(data, id);
+    tx.objectStore("bibles").put(value, key);
     tx.oncomplete = () => res();
-    tx.onerror = e => rej(e);
+    tx.onerror = () => rej(tx.error || new Error("Errore di scrittura"));
+    tx.onabort = () => rej(tx.error || new Error("Spazio insufficiente o scrittura annullata"));
   });
+}
+async function idbDelete(key) {
+  try {
+    const db = await openDB();
+    await new Promise((res, rej) => {
+      const tx = db.transaction("bibles", "readwrite");
+      tx.objectStore("bibles").delete(key);
+      tx.oncomplete = () => res();
+      tx.onerror = () => rej(tx.error || new Error("Errore di cancellazione"));
+      tx.onabort = () => rej(tx.error || new Error("Cancellazione annullata"));
+    });
+  } catch (e) {
+    console.debug(e);
+    dbInstancePromise = null;
+  }
+}
+function cacheBibleInMemory(id, data) {
+  if (!memoryBibleCache.has(id) && memoryBibleCache.size >= 4) {
+    memoryBibleCache.delete(memoryBibleCache.keys().next().value);
+  }
+  memoryBibleCache.set(id, data);
+}
+async function getOfflineBible(id) {
+  if (memoryBibleCache.has(id)) return memoryBibleCache.get(id);
+  const data = await idbGet(id);
+  if (data) cacheBibleInMemory(id, data);
+  return data;
+}
+async function saveOfflineBible(id, data) {
+  cacheBibleInMemory(id, data);
+  await idbPut(id, data);
 }
 async function removeOfflineBible(id) {
   memoryBibleCache.delete(id);
-  try {
-    const db = await openDB();
-    return new Promise((res, rej) => {
-      const tx = db.transaction("bibles", "readwrite");
-      tx.objectStore("bibles").delete(id);
-      tx.oncomplete = () => res();
-      tx.onerror = e => rej(e);
-    });
-  } catch (e) { console.debug(e); }
+  await idbDelete(id);
 }
 async function loadFullGlobalCatalog() {
   if (catalogLoaded) return dynamicCatalog;
@@ -3196,7 +3483,7 @@ function renderSettingsDrawerContent() {
         <div class="bm-set-row">
           <span>💡 Lampadina Profezie Messianiche</span>
           <label class="bm-switch">
-            <input type="checkbox" id="bmToggleMessianicBulbInput" ${bmSettings.messianicBulb !== false ? 'checked' : ''} onchange="setBmSettingProp('messianicBulb', this.checked); evaluateMessianicBulbForCurrentView();">
+            <input type="checkbox" ${bmSettings.messianicBulb !== false ? 'checked' : ''} onchange="setBmSettingProp('messianicBulb', this.checked); evaluateMessianicBulbForCurrentView();">
             <span class="bm-slider"></span>
           </label>
         </div>
@@ -5100,6 +5387,10 @@ function getActiveTTSLangCode(fullLocale = false) {
   if (langName.includes("ukra")) return fullLocale ? "uk-UA" : "uk";
   return fullLocale ? "en-US" : "en";
 }
+// Simboli tecnici/tipografici e parentesi svuotate che la voce non deve mai leggere (definiti una sola volta)
+const SPEECH_SYMBOLS_RE = /[\^*+#~_|\\/<>«»"“”{}\u02C6\u0302`´§°•♦▪▸►★☆†‡※]/g;
+const SPEECH_EMPTY_PARENS_RE = /\([\s,;:–—.\-*^+#~|§°•†‡]*\)/g;
+
 function stripPillsOnlyFromText(rawText) {
   if (!rawText) return "";
   const tmp = document.createElement("div");
@@ -5108,7 +5399,7 @@ function stripPillsOnlyFromText(rawText) {
   // Rimuove dal clone SOLO le pillole azzurre, le pillole viola, i numeri versetto e gli apici nota
   tmp.querySelectorAll(".tag-badge, .pub-ref-badge, .verse-num, sup, script, style").forEach(el => el.remove());
   return tmp.textContent || "";
-    }
+}
 
 function cleanTextForSpeech(rawText) {
   if (!rawText) return "";
@@ -5117,15 +5408,15 @@ function cleanTextForSpeech(rawText) {
     .replace(/<[^>]*>?/gm, " ")
     .replace(/\[[^\]]*\]/g, " ")
     // Rimuove SOLO le parentesi rimaste vuote (o con soli segni/simboli) dopo aver tolto le pillole azzurre/viola
-    .replace(/\([\s,;:–—.\-*^+#~|§°•†‡]*\)/g, " ")
+    .replace(SPEECH_EMPTY_PARENS_RE, " ")
     .replace(/📝\s*Nota/gi, " ")
     .replace(/🔗\s*Paralleli/gi, " ")
     .replace(/\b[HG]\d{1,4}\b/gi, " ")
     // Rimuove ^ (accento circonflesso), * (asterisco) e tutti i simboli tecnici/tipografici che non vanno mai letti
-    .replace(/[\^*+#~_|\\/<>«»""“”{}^\u02C6\u0302`´§°•♦▪▸►★☆†‡※]/g, " ")
+    .replace(SPEECH_SYMBOLS_RE, " ")
     .replace(/\s+/g, " ")
     .trim();
-  }
+}
 
 function splitTextForAudio(text, maxLen = 165) {
   const cleanFull = cleanTextForSpeech(text);
@@ -5152,13 +5443,13 @@ function extractCleanSelectedText() {
   const frag = sel.getRangeAt(0).cloneContents();
   frag.querySelectorAll(".verse-num, .tag-badge, .pub-ref-badge, sup, script, style").forEach(el => el.remove());
   return (frag.textContent || "")
-    .replace(/\([\s,;:–—.\-*^+#~|§°•†‡]*\)/g, " ")
+    .replace(SPEECH_EMPTY_PARENS_RE, " ")
     .replace(/📝\s*Nota/gi, " ")
     .replace(/🔗\s*Paralleli/gi, " ")
-    .replace(/[\^*+#~_|\\/<>«»""“”{}^\u02C6\u0302`´§°•♦▪▸►★☆†‡※]/g, " ")
+    .replace(SPEECH_SYMBOLS_RE, " ")
     .replace(/\s+/g, " ")
     .trim();
-  }
+}
 
 function clearTtsKaraokeHighlight() {
   document.querySelectorAll(".bm-tts-active-verse").forEach(el => {
@@ -5391,7 +5682,7 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
           }
         };
         window.speechSynthesis.speak(u);
-  } catch (e) {
+      } catch (e) {
         playWebViewStreamQueue(activeTtsQueue, idx, mySession);
       }
     };
@@ -6657,18 +6948,9 @@ async function importInsightFiles(event) {
 
 async function getInsightData() {
   if (insightMemCache && Array.isArray(insightMemCache.entries)) return insightMemCache;
-  try {
-    const db = await openDB();
-    return new Promise(res => {
-      const tx = db.transaction("bibles", "readonly");
-      const req = tx.objectStore("bibles").get("bm:insight_it");
-      req.onsuccess = () => {
-        if (req.result) insightMemCache = req.result;
-        res(req.result || null);
-      };
-      req.onerror = () => res(null);
-    });
-  } catch (e) { console.debug(e); return null; }
+  const data = await idbGet("bm:insight_it");
+  if (data) insightMemCache = data;
+  return data;
 }
 
 function normalizeForSearch(str) {
@@ -6995,21 +7277,9 @@ async function importSiFile(event) {
 
 async function getSiData() {
   if (siMemCache && Array.isArray(siMemCache.books)) return siMemCache;
-  try {
-    const db = await openDB();
-    return new Promise(res => {
-      const tx = db.transaction("bibles", "readonly");
-      const req = tx.objectStore("bibles").get("bm:si_it");
-      req.onsuccess = () => {
-        if (req.result) siMemCache = req.result;
-        res(req.result || null);
-      };
-      req.onerror = () => res(null);
-    });
-  } catch (e) {
-    console.debug(e);
-    return null;
-  }
+  const data = await idbGet("bm:si_it");
+  if (data) siMemCache = data;
+  return data;
 }
 
 async function showSiView(fromBack = false) {
@@ -7214,28 +7484,6 @@ let bpMaxKeyWords = 1;
 let mapsSearchQuery = "";
 let mapsSearchTimeout = null;
 
-// ---------- IndexedDB (riusa openDB() dell'app, senza toccare la cache delle Bibbie) ----------
-async function bpDbGet(key) {
-  try {
-    const db = await openDB();
-    return await new Promise(res => {
-      const req = db.transaction("bibles", "readonly").objectStore("bibles").get(key);
-      req.onsuccess = () => res(req.result || null);
-      req.onerror = () => res(null);
-    });
-  } catch (e) { console.debug(e); return null; }
-}
-
-async function bpDbPut(key, value) {
-  const db = await openDB();
-  return new Promise((res, rej) => {
-    const tx = db.transaction("bibles", "readwrite");
-    tx.objectStore("bibles").put(value, key);
-    tx.oncomplete = () => res();
-    tx.onerror = () => rej(tx.error || new Error("Errore di scrittura"));
-    tx.onabort = () => rej(tx.error || new Error("Spazio insufficiente o scrittura annullata"));
-  });
-}
 function bpBuildPlaceMap() {
   bpPlaceMap = new Map();
   bpMaxKeyWords = 1;
@@ -7248,7 +7496,7 @@ function bpBuildPlaceMap() {
 }
 async function bpGetMeta() {
   if (bpMeta) return bpMeta;
-  const m = await bpDbGet(BP_DB_META);
+  const m = await idbGet(BP_DB_META);
   if (m && Array.isArray(m.places) && Array.isArray(m.maps)) { bpMeta = m; bpBuildPlaceMap(); }
   return bpMeta;
 }
@@ -7296,14 +7544,14 @@ async function importMapsArchive(event) {
     for (const { m, c } of list) {
       n++;
       setStatus(`💾 Salvataggio cartina HD ${n} di ${list.length}...`);
-      await bpDbPut(BP_DB_IMG + m.id, m.image.dataUri);
+      await idbPut(BP_DB_IMG + m.id, m.image.dataUri);
       const thumb = await bpMakeThumb(m.image.dataUri);
       const { image, ...rest } = m;
       metaMaps.push({ ...rest, chapterTitle: c.title, thumb, image: { file: image.file, width: image.width, height: image.height, mime: image.mime } });
     }
     const meta = { updated: Date.now(), title: parsed.title, counts: parsed.counts, places: parsed.places, maps: metaMaps };
-    await bpDbPut(BP_DB_META, meta);
-    try { const dbOld = await openDB(); dbOld.transaction("bibles", "readwrite").objectStore("bibles").delete("bm:maps_it"); } catch (e) { console.debug(e); }
+    await idbPut(BP_DB_META, meta);
+    await idbDelete("bm:maps_it");
     bpMeta = meta;
     bpBuildPlaceMap();
     setStatus(`✔ Cartine salvate offline: ${metaMaps.length} cartine, ${meta.places.length} luoghi!`);
@@ -7353,7 +7601,7 @@ async function showMapsView(selectedIdx = null, fromBack = false) {
       <span>${getBackBtnHtml()}</span>
     </div>
     <div class="search-box">
-      <input type="text" id="mapsSearchInput" class="search-input" value="${escapeHtml(mapsSearchQuery)}" placeholder="🔍 Cerca una cartina o un luogo (es. Esodo, Betania, Paolo)..." oninput="onMapsSearchInput(this.value)">
+      <input type="text" class="search-input" value="${escapeHtml(mapsSearchQuery)}" placeholder="🔍 Cerca una cartina o un luogo (es. Esodo, Betania, Paolo)..." oninput="onMapsSearchInput(this.value)">
     </div>
     <div id="mapsGridContainer"></div>`;
   renderMapsGridList();
@@ -7425,7 +7673,7 @@ async function openMapViewer(mapId, cells, label, fromBack = false) {
   msg.textContent = "Caricamento cartina HD...";
   msg.style.display = "block";
   wrap.style.visibility = "hidden";
-  const uri = await bpDbGet(BP_DB_IMG + mapId);
+  const uri = await idbGet(BP_DB_IMG + mapId);
   if (!uri) { msg.textContent = "Immagine non trovata. Ricarica il file JSON dal Backup."; return; }
   img.onload = () => {
     msg.style.display = "none";
@@ -7817,7 +8065,7 @@ function renderReadingPlanModalContent(scrollToToday = true) {
     ${pickerHtml}
     <div style="background:#041a42; border:1px solid rgba(41,182,246,0.4); border-radius:8px; padding:7px 10px; margin-bottom:8px;">
       <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:#cfe3ff; margin-bottom:5px;">
-        <span id="rpProgressText">✔ <b>${doneCount}/365</b> gg (${pct}% • ~${estChaptersDone} cap.)</span>
+        <span>✔ <b>${doneCount}/365</b> gg (${pct}% • ~${estChaptersDone} cap.)</span>
         ${paceHtml}
       </div>
       <div style="width:100%; height:5px; background:#062356; border-radius:999px; overflow:hidden;">
@@ -9882,278 +10130,6 @@ function toggleBmZenMode() {
      MODULO PRO v2: ASSISTENTE LAMPADINA ANIMATA DELLE PROFEZIE MESSIANICHE (365+)
      Testo Integrale nel Modale • Switch Impostazioni • Icona Strong 🏺 Dedicata
      ============================================================================ -->
-<style>
-  #bmProphecyWidget {
-    position: fixed;
-    right: 14px;
-    bottom: 84px;
-    z-index: 950;
-    display: none;
-    align-items: flex-end;
-    gap: 10px;
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
-    pointer-events: none;
-  }
-  #bmProphecyWidget.visible {
-    display: flex;
-  }
-
-  .bm-bulb-orb {
-    pointer-events: auto;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, #fff9c4 0%, #ffd54f 26%, #1565c0 68%, #041a42 100%);
-    border: 2px solid #00e5ff;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65), 0 0 22px rgba(255, 213, 79, 0.75), inset 0 2px 4px rgba(255, 255, 255, 0.65);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: grab;
-    position: relative;
-    flex-shrink: 0;
-    animation: bmBulbFloat 3.2s ease-in-out infinite;
-    transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease;
-  }
-  .bm-bulb-orb:active {
-    cursor: grabbing;
-    transform: scale(0.94);
-  }
-  .bm-bulb-orb svg {
-    width: 34px;
-    height: 34px;
-    filter: drop-shadow(0 0 6px rgba(255, 235, 59, 0.95));
-    animation: bmBulbFilamentGlow 1.9s ease-in-out infinite alternate;
-  }
-  .bm-bulb-spark {
-    position: absolute;
-    inset: -5px;
-    border-radius: 50%;
-    border: 1.5px dashed rgba(255, 235, 59, 0.65);
-    animation: bmSparkSpin 12s linear infinite;
-    pointer-events: none;
-  }
-  .bm-bulb-badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: linear-gradient(135deg, #00e5ff, #0288d1);
-    color: #041a42;
-    font-size: 10.5px;
-    font-weight: 900;
-    padding: 2px 6px;
-    border-radius: 999px;
-    border: 1.5px solid #ffffff;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.45);
-  }
-
-  @keyframes bmBulbFloat {
-    0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
-    25% { transform: translate3d(0, -5px, 0) rotate(-3deg); }
-    75% { transform: translate3d(0, 3px, 0) rotate(3deg); }
-  }
-  @keyframes bmBulbFilamentGlow {
-    0% { filter: drop-shadow(0 0 4px rgba(255, 213, 79, 0.7)); transform: scale(0.97); }
-    100% { filter: drop-shadow(0 0 12px rgba(255, 255, 141, 1)); transform: scale(1.05); }
-  }
-  @keyframes bmSparkSpin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-
-  .bm-prophecy-bubble {
-    pointer-events: auto;
-    width: min(320px, calc(100vw - 88px));
-    background: linear-gradient(160deg, #0a367e 0%, #062356 62%, #041a42 100%);
-    color: #ffffff;
-    border: 1.5px solid #00e5ff;
-    border-radius: 16px 16px 4px 16px;
-    padding: 11px 13px;
-    box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.32), 0 14px 34px rgba(0, 0, 0, 0.72), 0 0 20px rgba(0, 229, 255, 0.35);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    transform-origin: bottom right;
-    animation: bmBubblePopIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-    position: relative;
-  }
-  .bm-prophecy-bubble.minimized {
-    display: none;
-  }
-  @keyframes bmBubblePopIn {
-    0% { opacity: 0; transform: scale(0.84) translate3d(12px, 10px, 0); }
-    100% { opacity: 1; transform: scale(1) translate3d(0, 0, 0); }
-  }
-
-  .bm-pb-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 6px;
-    border-bottom: 1px solid rgba(41, 182, 246, 0.4);
-    padding-bottom: 6px;
-    margin-bottom: 7px;
-  }
-  .bm-pb-kicker {
-    font-size: 11px;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    color: #ffd54f;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-  .bm-pb-close {
-    background: rgba(4, 26, 66, 0.65);
-    border: 1px solid rgba(79, 195, 247, 0.55);
-    color: #cfe3ff;
-    border-radius: 6px;
-    padding: 1px 7px;
-    font-size: 12px;
-    font-weight: 800;
-    cursor: pointer;
-  }
-  .bm-pb-title {
-    font-size: 14px;
-    font-weight: 900;
-    color: #00e5ff;
-    margin-bottom: 3px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 6px;
-  }
-  .bm-pb-desc {
-    font-size: 12.5px;
-    line-height: 1.44;
-    color: #e3f2fd;
-    margin-bottom: 9px;
-    cursor: pointer;
-  }
-  .bm-pb-readmore {
-    display: inline-block;
-    color: #ffd54f;
-    font-weight: 800;
-    font-size: 11.5px;
-    margin-left: 4px;
-    text-decoration: underline;
-  }
-
-  .bm-pb-controls {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 0 40px; /* = larghezza freccia 34px + gap 6px: allinea la pillola arancione a quella verde */
-  }
-  .bm-pb-arrow {
-    flex: 0 0 34px;
-    width: 34px;
-    background: linear-gradient(135deg, #1565c0 0%, #0a367e 100%);
-    color: #ffffff;
-    border: 1px solid #4fc3f7;
-    border-radius: 9px;
-    padding: 7px 0;
-    text-align: center;
-    font-size: 13px;
-    font-weight: 900;
-    cursor: pointer;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 2px 6px rgba(0,0,0,0.35);
-    user-select: none;
-    -webkit-user-select: none;
-    transition: transform 0.12s ease, background 0.15s ease;
-  }
-  .bm-pb-arrow:active {
-    transform: scale(0.93);
-    background: #00e5ff;
-    color: #041a42;
-  }
-  
-  #bmPbPrevBtn {
-    box-shadow:
-      inset 0 1px 0 rgba(255,255,255,0.25),
-      0 0 0 2px #062356,
-      0 0 0 3.5px #4fc3f7,
-      0 2px 8px rgba(0,0,0,0.35);
-  }
-
-  .bm-pb-ref-btn {
-    flex: 1;
-    min-width: 0;
-    background: linear-gradient(135deg, #69f0ae 0%, #00c853 50%, #00a152 100%);
-    color: #041a42;
-    border: 1.5px solid #ffffff;
-    border-radius: 10px;
-    padding: 7px 9px;
-    font-size: 12px;
-    font-weight: 900;
-    letter-spacing: 0.2px;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    box-shadow: 0 0 14px rgba(105, 240, 174, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.75);
-    transition: transform 0.14s ease, box-shadow 0.18s ease;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .bm-pb-ref-btn:active {
-    transform: scale(0.95);
-    box-shadow: 0 0 22px rgba(0, 229, 255, 0.95);
-  }
-
-  .bm-pb-greek-btn {
-    flex: 1;
-    background: linear-gradient(135deg, #ffd54f 0%, #ffb300 50%, #ff8f00 100%);
-    color: #041a42;
-    border: 1.5px solid #ffffff;
-    border-radius: 10px;
-    padding: 7px 9px;
-    font-size: 12px;
-    font-weight: 900;
-    letter-spacing: 0.2px;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    box-shadow: 0 0 14px rgba(255, 213, 79, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.75);
-    transition: transform 0.14s ease, box-shadow 0.18s ease;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .bm-pb-greek-btn:active {
-    transform: scale(0.95);
-    box-shadow: 0 0 22px rgba(0, 229, 255, 0.95);
-  }
-
-  .bm-pb-footer-hint {
-    font-size: 10.5px;
-    color: #9ec9ff;
-    margin-top: 6px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .bm-messianic-verse-box {
-    outline: 2.5px solid #ffd54f !important;
-    box-shadow: 0 0 16px rgba(255, 213, 79, 0.55), inset 0 0 12px rgba(0, 229, 255, 0.22) !important;
-    background: linear-gradient(90deg, rgba(255, 213, 79, 0.16) 0%, rgba(0, 229, 255, 0.10) 100%) !important;
-    border-radius: 8px !important;
-    position: relative;
-    transition: all 0.25s ease;
-  }
-  main.bm-paper-reading .bm-messianic-verse-box {
-    outline: 2.5px solid #b45309 !important;
-    background: rgba(245, 158, 11, 0.18) !important;
-    box-shadow: 0 2px 10px rgba(180, 83, 9, 0.25) !important;
-  }
-</style>
 
 <div id="bmProphecyWidget" aria-live="polite">
   <div id="bmProphecyBubble" class="bm-prophecy-bubble">
@@ -10176,7 +10152,7 @@ function toggleBmZenMode() {
 
       <button type="button" id="bmPbRef" class="bm-pb-ref-btn" onclick="focusCurrentMessianicVerses()" title="Riquadra i versetti della profezia nel capitolo">📖 Genesi 3:15</button>
 
-      <button type="button" id="bmPbNextBtn" class="bm-pb-arrow" onclick="stepMessianicProphecy(1)" title="Vai alla profezia messianica successiva">▶</button>
+      <button type="button" class="bm-pb-arrow" onclick="stepMessianicProphecy(1)" title="Vai alla profezia messianica successiva">▶</button>
     </div>
     <span id="bmPbCategory" class="tag-badge" style="display:block; width:fit-content; margin:0 auto 6px auto; font-size:10.5px; background:#041a42; color:#84ffff; border-color:#29b6f6;">Origine</span>
     <!-- Toccando il testo del fumetto si apre subito la Nota Integrale senza tagli -->
