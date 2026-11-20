@@ -222,19 +222,6 @@
       z-index: 100;
       flex-shrink: 0;
     }
-    /* Rifinitura dedicata PWA Chrome (standalone/fullscreen): elimina il doppio spazio superiore e fonde lo stacco della barra di stato */
-    @media (display-mode: standalone), (display-mode: fullscreen) {
-      header {
-        padding-top: max(10px, env(safe-area-inset-top, 10px));
-        background: linear-gradient(180deg, var(--primary-dark) 0%, transparent 45%), linear-gradient(270deg, var(--primary-dark) 0%, var(--primary-main) 50%, var(--primary-dark) 100%);
-      }
-      .bm-drawer-panel, .bp-vhead {
-        padding-top: max(12px, env(safe-area-inset-top, 12px));
-      }
-      nav.bottom-nav {
-        padding-bottom: max(8px, env(safe-area-inset-bottom, 8px));
-      }
-    }
     .header-left {
       display: flex;
       align-items: center;
@@ -4280,20 +4267,6 @@ async function idbDelete(key) {
     dbInstancePromise = null;
   }
 }
-async function idbGetAllKeys() {
-  try {
-    const db = await openDB();
-    return await new Promise(res => {
-      const req = db.transaction("bibles", "readonly").objectStore("bibles").getAllKeys();
-      req.onsuccess = () => res(Array.isArray(req.result) ? req.result.map(String) : []);
-      req.onerror = () => res([]);
-    });
-  } catch (e) {
-    console.debug(e);
-    dbInstancePromise = null;
-    return [];
-  }
-}
 function cacheBibleInMemory(id, data) {
   if (!memoryBibleCache.has(id) && memoryBibleCache.size >= 4) {
     memoryBibleCache.delete(memoryBibleCache.keys().next().value);
@@ -5694,20 +5667,17 @@ function renderSettingsDrawerContent() {
       </button>
       <div class="bm-acc-content">
         <div style="display:flex; flex-direction:column; gap:8px; padding-top:6px;">
-          <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00c853; --btn-glow:rgba(0,229,255,0.8); background:linear-gradient(135deg, #1b5e20, #2e7d32);" onclick="closeSettingsDrawer(); openLibraryMigrationModal();">
-            📦 Migra Libreria Offline (Esporta / Importa Tutto)
+          <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,176,255,0.75); background:#1565c0;" onclick="closeSettingsDrawer(); exportBackupJson();">
+            📤 Esporta Backup Completo (.json)
           </button>
-          <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#4fc3f7; --btn-glow:rgba(79,195,247,0.75); background:#0288d1;" onclick="closeSettingsDrawer(); exportBackupJson();">
-            📤 Esporta Backup Dati Studio (.json)
-          </button>
-          <label class="myread-action-btn btn-color-anim" style="--btn-bg:#29b6f6; --btn-glow:rgba(41,182,246,0.75); background:#1565c0; text-align:center; display:block;">
+          <label class="myread-action-btn btn-color-anim" style="--btn-bg:#0288d1; --btn-glow:rgba(2,136,209,0.75); background:#0a367e; text-align:center; display:block;">
             📥 Importa File di Backup (.json)
             <input type="file" accept=".json,application/json" style="display:none;" onchange="closeSettingsDrawer(); importBackupJson(event)">
           </label>
-          <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#1e88e5; --btn-glow:rgba(30,136,229,0.75); background:#0a367e;" onclick="clearChapterCacheOnly(); showBlueInfoModal('🧹 Cache Capitoli Pulita', 'La cache temporanea dei capitoli online è stata svuotata (le tue Bibbie EPUB e le note sono intatte).');">
+          <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#5e35b1; --btn-glow:rgba(149,117,205,0.75); background:#062356;" onclick="clearChapterCacheOnly(); showBlueInfoModal('🧹 Cache Capitoli Pulita', 'La cache temporanea dei capitoli online è stata svuotata (le tue Bibbie EPUB e le note sono intatte).');">
             🧹 Svuota Cache Capitoli Online
           </button>
-          <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#1565c0; --btn-glow:rgba(41,182,246,0.75); background:#041a42;" onclick="checkBmPwaUpdates()">
+          <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00897b; --btn-glow:rgba(0,229,255,0.75); background:#004d40;" onclick="checkBmPwaUpdates()">
             🔄 Stato Offline PWA & Aggiornamenti
           </button>
         </div>
@@ -8491,9 +8461,8 @@ function openBackupModal() {
       </label>
       <div class="epub-import-status" style="font-size:13px; font-weight:700; color:var(--primary-light); text-align:center; padding:4px;"></div>
     </div>
-     <div class="section-title"><span>💾 Backup & Migrazione Completa</span></div>
+     <div class="section-title"><span>💾 Backup & Ripristino Dati Studio</span></div>
     <div style="display:flex; flex-direction:column; gap:10px;">
-      <button class="search-btn" style="background:linear-gradient(135deg, #1b5e20, #2e7d32);" onclick="openLibraryMigrationModal()">📦 Migra Libreria Offline (Bibbie, Moduli & Studio)</button>
       <button class="search-btn" style="background:linear-gradient(135deg, #0a367e, #1565c0);" onclick="setAsMyReading()">🕯️ Fissa il capitolo attuale come "Mia lettura"</button>
       <button class="search-btn" onclick="exportBackupJson()">📤 Esporta / Condividi File di Backup (.json)</button>
       <label class="nav-btn" style="text-align:center; padding:10px; cursor:pointer;">
@@ -8610,7 +8579,6 @@ function matchItalianBookNameToId(rawTitle, isStrictFromBody = false) {
     "apocalisse": 66, "rivelazione": 66, "giovanniapocalisse": 66, "apocalissedigiovanni": 66, "ap": 66, "riv": 66
   };
 
-  if (clean === "canticodisalomone") return 22;
   if (isStrictFromBody && clean.length <= 3 && clean !== "rut") return null;
   return exactBookMap[clean] || null;
     }
@@ -9157,7 +9125,6 @@ function parseJwEpubChapterXhtml(xhtml) {
     activeVersesMap = new Map();
   };
 
-  const hasTocAnchors = anchorMarkers.size > 0;
   for (let fIdx = 0; fIdx < orderedHtmlFiles.length; fIdx++) {
     const fPath = orderedHtmlFiles[fIdx];
     const fBase = fPath.split("/").pop();
@@ -9240,22 +9207,18 @@ function parseJwEpubChapterXhtml(xhtml) {
         let txt = (anchorParts[aIdx] || "").trim();
         if (!txt) continue;
 
-        if (tag.startsWith("h") || (!txt.includes("%%%V_") && txt.length < 36)) {
+        if (tag.startsWith("h") || (!txt.includes("%%%V_") && txt.length < 32)) {
           const chOnly = txt.match(/^(?:capitolo|cap\.?|salmo)\s*(\d{1,3})\.?$|^(\d{1,3})\.?$/i);
           if (chOnly && activeBookId) {
             const parsedCh = parseInt(chOnly[1] || chOnly[2], 10);
-            const maxCh = getBook(activeBookId).ch;
-            if (parsedCh > 0 && parsedCh <= maxCh) {
-              const shouldAdvance = !hasTocAnchors || (activeVersesMap.size > 0 && parsedCh !== activeChapter);
-              if (shouldAdvance) {
-                flushCurrentChapter();
-                activeChapter = parsedCh;
-                continue;
-              }
+            if (parsedCh > 0 && parsedCh <= 150 && parsedCh !== activeChapter) {
+              flushCurrentChapter();
+              activeChapter = parsedCh;
             }
+            continue;
           }
-          if (tag.startsWith("h") || (!hasTocAnchors && txt.length <= 28)) {
-            const maybeBId = matchItalianBookNameToId(txt, !tag.startsWith("h"));
+          if (tag.startsWith("h")) {
+            const maybeBId = matchItalianBookNameToId(txt, true);
             if (maybeBId === -1) {
               flushCurrentChapter();
               activeBookId = null;
@@ -9264,7 +9227,7 @@ function parseJwEpubChapterXhtml(xhtml) {
               flushCurrentChapter();
               activeBookId = maybeBId;
               const inlineCh = txt.match(/\s+(\d{1,3})\.?$/);
-              activeChapter = inlineCh ? Math.min(getBook(activeBookId).ch, Math.max(1, parseInt(inlineCh[1], 10))) : 1;
+              activeChapter = inlineCh ? parseInt(inlineCh[1], 10) : 1;
               continue;
             }
           }
@@ -9306,9 +9269,6 @@ function parseJwEpubChapterXhtml(xhtml) {
         }
       }
     });
-    if (!hasTocAnchors && activeVersesMap.size >= 4) {
-      flushCurrentChapter();
-    }
   }
   flushCurrentChapter();
 }
@@ -11331,10 +11291,10 @@ function scrollRpToToday(smooth = false) {
   scrollRpToIndex(getDayOfYearIndex(), smooth);
 }
 
-function buildStudioBackupObject() {
-  return {
+function exportBackupJson() {
+  const data = {
     app: "BibbiaMultilingue_PRO",
-    version: "PRO_v14.2",
+    version: "PRO_v14.0",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
@@ -11360,111 +11320,15 @@ function buildStudioBackupObject() {
     notes: state.notes,
     readingPlan: rpState
   };
-}
-
-function applyStudioBackupObject(parsed) {
-  if (!parsed || typeof parsed !== "object") return;
-  if (parsed.bookId) {
-    state.bookId = Math.min(66, Math.max(1, Number(parsed.bookId) || 1));
-    safeSaveStorage("bm_last_book", String(state.bookId));
-  }
-  if (parsed.chapter) {
-    state.chapter = Math.min(getBook(state.bookId).ch, Math.max(1, Number(parsed.chapter) || 1));
-    safeSaveStorage("bm_last_ch", String(state.chapter));
-  }
-  if (parsed.fontSize) {
-    changeFontSize(Number(parsed.fontSize) - state.fontSize);
-  }
-  if (parsed.themeMode && ["light", "dark", "oled"].includes(parsed.themeMode)) {
-    state.themeMode = parsed.themeMode;
-    safeSaveStorage("bm_theme", state.themeMode);
-    applySavedTheme();
-  }
-  if (parsed.bmSettings && typeof parsed.bmSettings === "object") {
-    bmSettings = { ...bmSettings, ...parsed.bmSettings };
-    saveBmSettings();
-  }
-  if (parsed.siViewMode === "full" || parsed.siViewMode === "sections") {
-    siViewMode = parsed.siViewMode;
-    safeSaveStorage("bm_si_view_mode", siViewMode);
-  }
-  if (parsed.ttsRate) {
-    bmTtsRate = Math.min(1.5, Math.max(0.75, Number(parsed.ttsRate) || 1.0));
-    safeSaveStorage("bm_tts_rate", String(bmTtsRate));
-    if (!bmAudioPlaying) {
-      const ttsBtn = document.getElementById("ttsChapterBtn");
-      if (ttsBtn) ttsBtn.innerHTML = `<span class="tab-icon">🔊</span><span>${bmTtsRate !== 1 ? "Ascolta " + bmTtsRate + "x" : "Ascolta"}</span>`;
-    }
-  }
-  if (parsed.ttsAutoNext !== undefined) {
-    bmTtsAutoNextPref = Boolean(parsed.ttsAutoNext);
-    safeSaveStorage("bm_tts_autonext", bmTtsAutoNextPref ? "1" : "0");
-  }
-  if (parsed.personalReading && typeof parsed.personalReading === "object") {
-    const pBook = Math.min(66, Math.max(1, Number(parsed.personalReading.book) || 0));
-    const pChRaw = Number(parsed.personalReading.ch) || 0;
-    if (pBook >= 1 && pChRaw >= 1) {
-      const pCh = Math.min(getBook(pBook).ch, pChRaw);
-      safeSaveStorage("bm_pers_book", String(pBook));
-      safeSaveStorage("bm_pers_ch", String(pCh));
-      safeSaveStorage("bm_pers_scroll", String(Math.max(0, Number(parsed.personalReading.scroll) || 0)));
-    }
-    updateMyReadingLabel();
-  }
-  if (typeof parsed.studyMinutes === "number" && parsed.studyMinutes > 0) {
-    const curMins = Number(safeGetStorage("bm_study_minutes_v1")) || 0;
-    safeSaveStorage("bm_study_minutes_v1", String(Math.max(curMins, Math.round(parsed.studyMinutes))));
-  }
-  if (parsed.highlights && typeof parsed.highlights === "object" && !Array.isArray(parsed.highlights)) {
-    state.highlights = parsed.highlights;
-    safeSaveStorage("bm_hl", JSON.stringify(state.highlights));
-  }
-  if (Array.isArray(parsed.bookmarks)) {
-    state.bookmarks = parsed.bookmarks.filter(b => b && typeof b === "object");
-    safeSaveStorage("bm_bm", JSON.stringify(state.bookmarks));
-  }
-  if (Array.isArray(parsed.notes)) {
-    state.notes = parsed.notes
-      .filter(n => n && typeof n === "object")
-      .map((n, idx) => ({ ...n, id: n.id || (Date.now() + idx) }));
-    safeSaveStorage("bm_notes", JSON.stringify(state.notes));
-  }
-  if (Array.isArray(parsed.downloadedBibles) && parsed.downloadedBibles.length > 0) {
-    state.downloadedBibles = parsed.downloadedBibles.filter(x => typeof x === "string" && x.trim());
-    if (!state.downloadedBibles.length) state.downloadedBibles = [...DEFAULT_ACTIVE_IDS];
-    safeSaveStorage("bm_v10_pro_bibles", JSON.stringify(state.downloadedBibles));
-  }
-  if (parsed.trans1) { state.trans1 = String(parsed.trans1); safeSaveStorage("bm_trans1", state.trans1); }
-  if (parsed.trans2) { state.trans2 = String(parsed.trans2); safeSaveStorage("bm_trans2", state.trans2); }
-  if (parsed.trans3) { state.trans3 = String(parsed.trans3); safeSaveStorage("bm_trans3", state.trans3); }
-  if (parsed.bulbPosition && typeof parsed.bulbPosition === "object" && !Array.isArray(parsed.bulbPosition)) {
-    safeSaveStorage("bm_bulb_pos_v1", JSON.stringify(parsed.bulbPosition));
-    applySavedBulbPosition();
-  }
-  if (parsed.readingPlan && typeof parsed.readingPlan === "object" && !Array.isArray(parsed.readingPlan)) {
-    const validPlanId = READING_PLAN_TYPES.some(p => p.id === parsed.readingPlan.planId)
-      ? parsed.readingPlan.planId
-      : "chronological";
-    const validChecked = (parsed.readingPlan.checked && typeof parsed.readingPlan.checked === "object" && !Array.isArray(parsed.readingPlan.checked))
-      ? parsed.readingPlan.checked
-      : {};
-    rpState = { planId: validPlanId, checked: validChecked };
-    safeSaveStorage("bm_reading_plan_v1", JSON.stringify(rpState));
-    updateReadingPlanHeaderBtn();
-  }
-}
-
-async function deliverJsonBlobFile(blob, fileName, shareTitle) {
-  if (navigator.canShare && typeof File !== "undefined") {
+  const jsonStr = JSON.stringify(data, null, 2);
+  const fileName = `BM_PRO_Backup_${getLocalIsoDateStr()}.json`;
+  const blob = new Blob([jsonStr], { type: "application/json" });
+  if (navigator.canShare) {
     try {
       const file = new File([blob], fileName, { type: "application/json" });
       if (navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({ files: [file], title: shareTitle });
-          return "shared";
-        } catch (err) {
-          if (err && err.name === "AbortError") return "cancelled";
-        }
+        navigator.share({ files: [file], title: "Backup Bibbia Multilingue PRO" }).catch(() => {});
+        return;
       }
     } catch (e) { console.debug(e); }
   }
@@ -11472,18 +11336,8 @@ async function deliverJsonBlobFile(blob, fileName, shareTitle) {
   const objUrl = URL.createObjectURL(blob);
   a.href = objUrl;
   a.download = fileName;
-  document.body.appendChild(a);
   a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(objUrl), 60000);
-  return "downloaded";
-}
-
-function exportBackupJson() {
-  const jsonStr = JSON.stringify(buildStudioBackupObject(), null, 2);
-  const fileName = `BM_PRO_Backup_${getLocalIsoDateStr()}.json`;
-  const blob = new Blob([jsonStr], { type: "application/json" });
-  deliverJsonBlobFile(blob, fileName, "Backup Bibbia Multilingue PRO");
+  setTimeout(() => URL.revokeObjectURL(objUrl), 15000);
 }
 let pendingBackupRawText = null;
 
@@ -11523,243 +11377,99 @@ function confirmImportBackupNow() {
   try {
     const parsed = JSON.parse(pendingBackupRawText);
     pendingBackupRawText = null;
-    applyStudioBackupObject(parsed);
+    if (parsed.bookId) {
+      state.bookId = Math.min(66, Math.max(1, Number(parsed.bookId) || 1));
+      safeSaveStorage("bm_last_book", String(state.bookId));
+    }
+    if (parsed.chapter) {
+      state.chapter = Math.min(getBook(state.bookId).ch, Math.max(1, Number(parsed.chapter) || 1));
+      safeSaveStorage("bm_last_ch", String(state.chapter));
+    }
+    if (parsed.fontSize) {
+      changeFontSize(Number(parsed.fontSize) - state.fontSize);
+    }
+    if (parsed.themeMode && ["light", "dark", "oled"].includes(parsed.themeMode)) {
+      state.themeMode = parsed.themeMode;
+      safeSaveStorage("bm_theme", state.themeMode);
+      applySavedTheme();
+    }
+    if (parsed.bmSettings && typeof parsed.bmSettings === "object") {
+      bmSettings = { ...bmSettings, ...parsed.bmSettings };
+      saveBmSettings();
+    }
+    if (parsed.siViewMode === "full" || parsed.siViewMode === "sections") {
+      siViewMode = parsed.siViewMode;
+      safeSaveStorage("bm_si_view_mode", siViewMode);
+    }
+    if (parsed.ttsRate) {
+      bmTtsRate = Math.min(1.5, Math.max(0.75, Number(parsed.ttsRate) || 1.0));
+      safeSaveStorage("bm_tts_rate", String(bmTtsRate));
+      if (!bmAudioPlaying) {
+        const ttsBtn = document.getElementById("ttsChapterBtn");
+        if (ttsBtn) ttsBtn.innerHTML = `<span class="tab-icon">🔊</span><span>${bmTtsRate !== 1 ? "Ascolta " + bmTtsRate + "x" : "Ascolta"}</span>`;
+      }
+    }
+    if (parsed.ttsAutoNext !== undefined) {
+      bmTtsAutoNextPref = Boolean(parsed.ttsAutoNext);
+      safeSaveStorage("bm_tts_autonext", bmTtsAutoNextPref ? "1" : "0");
+    }
+    if (parsed.personalReading && typeof parsed.personalReading === "object") {
+      const pBook = Math.min(66, Math.max(1, Number(parsed.personalReading.book) || 0));
+      const pChRaw = Number(parsed.personalReading.ch) || 0;
+      if (pBook >= 1 && pChRaw >= 1) {
+        const pCh = Math.min(getBook(pBook).ch, pChRaw);
+        safeSaveStorage("bm_pers_book", String(pBook));
+        safeSaveStorage("bm_pers_ch", String(pCh));
+        safeSaveStorage("bm_pers_scroll", String(Math.max(0, Number(parsed.personalReading.scroll) || 0)));
+      }
+      updateMyReadingLabel();
+    }
+    if (typeof parsed.studyMinutes === "number" && parsed.studyMinutes > 0) {
+      const curMins = Number(safeGetStorage("bm_study_minutes_v1")) || 0;
+      safeSaveStorage("bm_study_minutes_v1", String(Math.max(curMins, Math.round(parsed.studyMinutes))));
+    }
+    if (parsed.highlights && typeof parsed.highlights === "object" && !Array.isArray(parsed.highlights)) {
+      state.highlights = parsed.highlights;
+      safeSaveStorage("bm_hl", JSON.stringify(state.highlights));
+    }
+    if (Array.isArray(parsed.bookmarks)) {
+      state.bookmarks = parsed.bookmarks.filter(b => b && typeof b === "object");
+      safeSaveStorage("bm_bm", JSON.stringify(state.bookmarks));
+    }
+    if (Array.isArray(parsed.notes)) {
+      state.notes = parsed.notes
+        .filter(n => n && typeof n === "object")
+        .map((n, idx) => ({ ...n, id: n.id || (Date.now() + idx) }));
+      safeSaveStorage("bm_notes", JSON.stringify(state.notes));
+    }
+    if (Array.isArray(parsed.downloadedBibles) && parsed.downloadedBibles.length > 0) {
+      state.downloadedBibles = parsed.downloadedBibles.filter(x => typeof x === "string" && x.trim());
+      if (!state.downloadedBibles.length) state.downloadedBibles = [...DEFAULT_ACTIVE_IDS];
+      safeSaveStorage("bm_v10_pro_bibles", JSON.stringify(state.downloadedBibles));
+    }
+    if (parsed.trans1) { state.trans1 = String(parsed.trans1); safeSaveStorage("bm_trans1", state.trans1); }
+    if (parsed.trans2) { state.trans2 = String(parsed.trans2); safeSaveStorage("bm_trans2", state.trans2); }
+    if (parsed.trans3) { state.trans3 = String(parsed.trans3); safeSaveStorage("bm_trans3", state.trans3); }
+    if (parsed.bulbPosition && typeof parsed.bulbPosition === "object" && !Array.isArray(parsed.bulbPosition)) {
+      safeSaveStorage("bm_bulb_pos_v1", JSON.stringify(parsed.bulbPosition));
+      applySavedBulbPosition();
+    }
+    if (parsed.readingPlan && typeof parsed.readingPlan === "object" && !Array.isArray(parsed.readingPlan)) {
+      const validPlanId = READING_PLAN_TYPES.some(p => p.id === parsed.readingPlan.planId)
+        ? parsed.readingPlan.planId
+        : "chronological";
+      const validChecked = (parsed.readingPlan.checked && typeof parsed.readingPlan.checked === "object" && !Array.isArray(parsed.readingPlan.checked))
+        ? parsed.readingPlan.checked
+        : {};
+      rpState = { planId: validPlanId, checked: validChecked };
+      safeSaveStorage("bm_reading_plan_v1", JSON.stringify(rpState));
+      updateReadingPlanHeaderBtn();
+    }
     closeProModal();
     populateSelects().finally(() => loadChapterView());
     showBlueInfoModal("✔ Backup Ripristinato", "Tutti i tuoi dati di studio, impostazioni e il segnalibro Mia Lettura sono stati ripristinati!");
   } catch (err) {
     showBlueInfoModal("❌ File Non Valido", "Errore nel formato del file di backup (.json).");
-  }
-}
-
-// ============================================================================
-// 📦 MODULO MIGRAZIONE LIBRERIA OFFLINE (AppsGeyser ➔ Chrome PWA in 1 tocco)
-// Esporta e re-importa Bibbie EPUB, Perspicacia, Tutta la Scrittura, Giorno, Cartine HD e Dati Studio
-// ============================================================================
-let bmMigrationModulesCache = [];
-
-function describeIdbMigrationModule(id, extraCount = 0) {
-  if (id === "bm:si_it") return { icon: "📘", title: "Tutta la Scrittura", fileSlug: "tutta_la_scrittura", prio: 1 };
-  if (id === "bm:insight_it") return { icon: "📚", title: "Perspicacia (it)", fileSlug: "perspicacia", prio: 2 };
-  if (id === "bm:daily_text") return { icon: "☀️", title: "Scrittura del Giorno", fileSlug: "scrittura_giorno", prio: 3 };
-  if (id === "bm:maps_bundle") return { icon: "🗺️", title: `Cartine Bibliche HD${extraCount ? ` (${extraCount} tavole)` : ""}`, fileSlug: "cartine_hd", prio: 4 };
-  if (id === "bm:strong_ext") return { icon: "🏺", title: "Lessico Strong Esteso", fileSlug: "strong_esteso", prio: 5 };
-  if (id === "bm:xrefs_ext") return { icon: "🔗", title: "Riferimenti Incrociati Estesi", fileSlug: "riferimenti_estesi", prio: 6 };
-  const bMeta = dynamicCatalog.find(b => b.id === id) || CORE_BIBLES.find(b => b.id === id);
-  const label = bMeta ? bMeta.name : `Bibbia offline (${id})`;
-  const slug = String(id).replace(/[^a-zA-Z0-9_-]+/g, "_");
-  return { icon: "📖", title: label, fileSlug: `bibbia_${slug}`, prio: 10 };
-}
-
-async function scanOfflineLibraryModules() {
-  const allKeys = await idbGetAllKeys();
-  const mapImgKeys = allKeys.filter(k => k.startsWith(BP_DB_IMG));
-  const hasMapsMeta = allKeys.includes(BP_DB_META);
-  const modules = [];
-
-  if (hasMapsMeta || mapImgKeys.length > 0) {
-    const keys = [];
-    if (hasMapsMeta) keys.push(BP_DB_META);
-    mapImgKeys.forEach(k => keys.push(k));
-    const desc = describeIdbMigrationModule("bm:maps_bundle", mapImgKeys.length);
-    modules.push({ id: "bm:maps_bundle", keys, ...desc });
-  }
-
-  for (const k of allKeys) {
-    if (k === BP_DB_META || k.startsWith(BP_DB_IMG) || k === "bm:maps_it") continue;
-    const desc = describeIdbMigrationModule(k);
-    modules.push({ id: k, keys: [k], ...desc });
-  }
-
-  modules.sort((a, b) => (a.prio - b.prio) || a.title.localeCompare(b.title, "it"));
-  bmMigrationModulesCache = modules;
-  return modules;
-}
-
-async function openLibraryMigrationModal() {
-  bmChimeHaptic();
-  closeActionBar();
-  document.getElementById("proModalTitle").textContent = "📦 Migra Libreria Offline";
-  const body = document.getElementById("proModalBody");
-  if (!body) return;
-  body.innerHTML = `<div class="loader">🔍 Scansione del database offline in corso...</div>`;
-  document.getElementById("proModal").style.display = "flex";
-
-  const modules = await scanOfflineLibraryModules();
-  const totalCount = modules.length;
-
-  const listHtml = totalCount > 0
-    ? modules.map((m, idx) => `
-        <div class="result-card" style="display:flex; justify-content:space-between; align-items:center; gap:8px; cursor:default; padding:9px 10px; margin-bottom:6px;">
-          <div style="min-width:0; flex:1;">
-            <div style="font-size:13px; font-weight:800; color:#ffffff; word-break:break-word;">${m.icon} ${escapeHtml(m.title)}</div>
-          </div>
-          <button type="button" class="badge-btn" style="background:#1565c0; flex-shrink:0;" onclick="exportSingleLibraryModule(${idx})">📤 Esporta</button>
-        </div>`).join("")
-    : `<div class="loader" style="padding:14px;">Nessun modulo offline salvato in questa istanza dell'app.<br><span style="font-size:12px;">Usa il pulsante verde qui sopra per importare i file esportati da AppsGeyser!</span></div>`;
-
-  body.innerHTML = `
-    <div style="font-size:12.5px; color:#cfe3ff; line-height:1.45; margin-bottom:10px;">
-      Trasferisci <b>tutto</b> (Bibbie EPUB, Tutta la Scrittura, Perspicacia, Giorno, Cartine HD e Dati Studio) da AppsGeyser alla PWA di Chrome senza riconvertire nessun file.
-    </div>
-    <div id="bmMigrationStatus" style="display:none; font-size:13px; font-weight:800; color:#84ffff; background:#062356; border:1px solid #00e5ff; border-radius:8px; padding:8px 10px; margin-bottom:10px; text-align:center;"></div>
-    <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
-      <label class="myread-action-btn btn-color-anim" style="--btn-bg:#00c853; --btn-glow:rgba(0,229,255,0.8); background:linear-gradient(135deg, #1b5e20, #2e7d32); text-align:center; display:block;">
-        📥 Importa File di Migrazione (1 o più .json)
-        <input type="file" accept=".json,application/json" multiple style="display:none;" onchange="importLibraryMigrationFiles(event)">
-      </label>
-      ${totalCount > 0 ? `
-        <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,229,255,0.85); background:linear-gradient(135deg, #0d47a1, #1565c0);" onclick="exportFullLibraryBundle()">
-          📦 Esporta TUTTA la Libreria + Dati Studio (${totalCount} moduli)
-        </button>
-      ` : ""}
-    </div>
-    <div class="section-title">
-      <span>Moduli Salvati in Memoria (${totalCount})</span>
-      <span style="font-size:11px; opacity:0.85;">Esporta singolarmente se serve</span>
-    </div>
-    <div style="max-height:42vh; overflow-y:auto; padding-right:2px;">
-      ${listHtml}
-    </div>
-  `;
-}
-
-function setMigrationStatus(htmlMsg) {
-  const el = document.getElementById("bmMigrationStatus");
-  if (!el) return;
-  el.style.display = "block";
-  el.innerHTML = htmlMsg;
-}
-
-async function buildAndDeliverLibraryBundle(keysList, includeStudio, fileName, shareTitle) {
-  const parts = [
-    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v14.2","date":',
-    JSON.stringify(new Date().toISOString())
-  ];
-  if (includeStudio) {
-    parts.push(',"studioBackup":', JSON.stringify(buildStudioBackupObject()));
-  }
-  parts.push(',"entries":[');
-  let written = 0;
-  for (let i = 0; i < keysList.length; i++) {
-    const k = keysList[i];
-    setMigrationStatus(`⚙️ Preparazione blocco ${i + 1}/${keysList.length}...`);
-    const val = await idbGet(k);
-    if (val === null || val === undefined) continue;
-    if (written > 0) parts.push(",");
-    parts.push('{"key":', JSON.stringify(k), ',"value":', JSON.stringify(val), "}");
-    written++;
-  }
-  parts.push("]}");
-  const blob = new Blob(parts, { type: "application/json" });
-  const sizeMb = (blob.size / (1024 * 1024)).toFixed(2);
-  setMigrationStatus(`📤 Invio file <b>${escapeHtml(fileName)}</b> (${sizeMb} MB)...`);
-  const outcome = await deliverJsonBlobFile(blob, fileName, shareTitle);
-  if (outcome === "cancelled") {
-    setMigrationStatus(`ℹ️ Esportazione annullata (${sizeMb} MB).`);
-  } else {
-    setMigrationStatus(`✔ Esportato <b>${escapeHtml(fileName)}</b> (${sizeMb} MB, ${written} blocchi)! Salvalo in Download o condividilo con Files/X-Plore.`);
-  }
-}
-
-async function exportSingleLibraryModule(modIdx) {
-  bmHaptic(14);
-  const mod = bmMigrationModulesCache[Number(modIdx)];
-  if (!mod) return;
-  try {
-    const fileName = `BM_PRO_Modulo_${mod.fileSlug}.json`;
-    await buildAndDeliverLibraryBundle(mod.keys, false, fileName, `BM PRO — ${mod.title}`);
-  } catch (err) {
-    setMigrationStatus(`❌ Errore esportazione: ${escapeHtml(err.message || String(err))}`);
-  }
-}
-
-async function exportFullLibraryBundle() {
-  bmChimeHaptic();
-  try {
-    const modules = bmMigrationModulesCache.length ? bmMigrationModulesCache : await scanOfflineLibraryModules();
-    const allKeys = [];
-    modules.forEach(m => m.keys.forEach(k => allKeys.push(k)));
-    const fileName = `BM_PRO_Migrazione_Completa_${getLocalIsoDateStr()}.json`;
-    await buildAndDeliverLibraryBundle(allKeys, true, fileName, "Migrazione Completa Bibbia Multilingue PRO");
-  } catch (err) {
-    setMigrationStatus(`❌ File troppo grande per questa WebView (${escapeHtml(err.message || "memoria")}). Usa i pulsanti 📤 Esporta dei singoli moduli qui sotto!`);
-  }
-}
-
-async function importLibraryMigrationFiles(event) {
-  const inputEl = event.target;
-  const files = Array.from((inputEl && inputEl.files) || []);
-  if (!files.length) return;
-  let importedBlocks = 0;
-  let restoredStudio = false;
-  try {
-    for (let fIdx = 0; fIdx < files.length; fIdx++) {
-      const file = files[fIdx];
-      setMigrationStatus(`⏳ Lettura file ${fIdx + 1}/${files.length}: <b>${escapeHtml(file.name)}</b>...`);
-      const parsed = JSON.parse(await file.text());
-      if (!parsed || typeof parsed !== "object") continue;
-
-      if (parsed.bmLibraryBundle === true && Array.isArray(parsed.entries)) {
-        for (let eIdx = 0; eIdx < parsed.entries.length; eIdx++) {
-          const item = parsed.entries[eIdx];
-          if (!item || typeof item.key !== "string" || !item.key.trim() || item.value === undefined) continue;
-          const k = item.key.trim();
-          setMigrationStatus(`💾 Salvataggio offline (${fIdx + 1}/${files.length}) · blocco ${eIdx + 1}/${parsed.entries.length}...`);
-          await idbPut(k, item.value);
-          importedBlocks++;
-          if ((k.startsWith("gb:") || k.startsWith("epub:") || k.startsWith("helloao:")) && !state.downloadedBibles.includes(k)) {
-            state.downloadedBibles.unshift(k);
-          }
-        }
-        if (parsed.studioBackup && typeof parsed.studioBackup === "object") {
-          applyStudioBackupObject(parsed.studioBackup);
-          restoredStudio = true;
-        }
-      } else if (parsed.app === "BibbiaMultilingue_PRO") {
-        applyStudioBackupObject(parsed);
-        restoredStudio = true;
-      } else if (Array.isArray(parsed.books)) {
-        const books = parsed.books
-          .filter(b => b && Array.isArray(b.chapters) && b.chapters.length > 0)
-          .sort((a, b) => (Number(a.bookNumber) || 0) - (Number(b.bookNumber) || 0));
-        if (books.length > 0) {
-          await idbPut("bm:si_it", {
-            updated: Date.now(),
-            title: parsed.title || "Tutta la Scrittura è ispirata da Dio e utile",
-            frontMatter: Array.isArray(parsed.frontMatter) ? parsed.frontMatter : [],
-            books,
-            extras: Array.isArray(parsed.extras) ? parsed.extras : []
-          });
-          importedBlocks++;
-        }
-      }
-    }
-
-    safeSaveStorage("bm_v10_pro_bibles", JSON.stringify(state.downloadedBibles));
-    memoryBibleCache.clear();
-    insightMemCache = null;
-    insightTitleIndexMap = null;
-    resetInsightLookupCaches();
-    siMemCache = null;
-    bpMeta = null;
-    bpPlaceMap = null;
-    bmDynamicCatalogEnriched = false;
-    await loadExternalExegeticalModules();
-    await populateSelects();
-    updateReadingPlanHeaderBtn();
-    updateMyReadingLabel();
-
-    await openLibraryMigrationModal();
-    const summaryParts = [];
-    if (importedBlocks > 0) summaryParts.push(`${importedBlocks} blocchi libreria salvati`);
-    if (restoredStudio) summaryParts.push("dati studio e impostazioni ripristinati");
-    setMigrationStatus(`✔ Migrazione completata: ${summaryParts.join(" + ") || "nessun dato compatibile trovato"}!`);
-    bmChimeHaptic();
-  } catch (err) {
-    setMigrationStatus(`❌ Errore importazione: ${escapeHtml(err.message || String(err))}`);
-  } finally {
-    if (inputEl) inputEl.value = "";
   }
 }
 
