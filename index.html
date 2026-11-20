@@ -8610,6 +8610,7 @@ function matchItalianBookNameToId(rawTitle, isStrictFromBody = false) {
     "apocalisse": 66, "rivelazione": 66, "giovanniapocalisse": 66, "apocalissedigiovanni": 66, "ap": 66, "riv": 66
   };
 
+  if (clean === "canticodisalomone") return 22;
   if (isStrictFromBody && clean.length <= 3 && clean !== "rut") return null;
   return exactBookMap[clean] || null;
     }
@@ -9156,6 +9157,7 @@ function parseJwEpubChapterXhtml(xhtml) {
     activeVersesMap = new Map();
   };
 
+  const hasTocAnchors = anchorMarkers.size > 0;
   for (let fIdx = 0; fIdx < orderedHtmlFiles.length; fIdx++) {
     const fPath = orderedHtmlFiles[fIdx];
     const fBase = fPath.split("/").pop();
@@ -9238,18 +9240,22 @@ function parseJwEpubChapterXhtml(xhtml) {
         let txt = (anchorParts[aIdx] || "").trim();
         if (!txt) continue;
 
-        if (tag.startsWith("h") || (!txt.includes("%%%V_") && txt.length < 32)) {
+        if (tag.startsWith("h") || (!txt.includes("%%%V_") && txt.length < 36)) {
           const chOnly = txt.match(/^(?:capitolo|cap\.?|salmo)\s*(\d{1,3})\.?$|^(\d{1,3})\.?$/i);
           if (chOnly && activeBookId) {
             const parsedCh = parseInt(chOnly[1] || chOnly[2], 10);
-            if (parsedCh > 0 && parsedCh <= 150 && parsedCh !== activeChapter) {
-              flushCurrentChapter();
-              activeChapter = parsedCh;
+            const maxCh = getBook(activeBookId).ch;
+            if (parsedCh > 0 && parsedCh <= maxCh) {
+              const shouldAdvance = !hasTocAnchors || (activeVersesMap.size > 0 && parsedCh !== activeChapter);
+              if (shouldAdvance) {
+                flushCurrentChapter();
+                activeChapter = parsedCh;
+                continue;
+              }
             }
-            continue;
           }
-          if (tag.startsWith("h")) {
-            const maybeBId = matchItalianBookNameToId(txt, true);
+          if (tag.startsWith("h") || (!hasTocAnchors && txt.length <= 28)) {
+            const maybeBId = matchItalianBookNameToId(txt, !tag.startsWith("h"));
             if (maybeBId === -1) {
               flushCurrentChapter();
               activeBookId = null;
@@ -9258,7 +9264,7 @@ function parseJwEpubChapterXhtml(xhtml) {
               flushCurrentChapter();
               activeBookId = maybeBId;
               const inlineCh = txt.match(/\s+(\d{1,3})\.?$/);
-              activeChapter = inlineCh ? parseInt(inlineCh[1], 10) : 1;
+              activeChapter = inlineCh ? Math.min(getBook(activeBookId).ch, Math.max(1, parseInt(inlineCh[1], 10))) : 1;
               continue;
             }
           }
@@ -9300,6 +9306,9 @@ function parseJwEpubChapterXhtml(xhtml) {
         }
       }
     });
+    if (!hasTocAnchors && activeVersesMap.size >= 4) {
+      flushCurrentChapter();
+    }
   }
   flushCurrentChapter();
 }
