@@ -1,5 +1,5 @@
-// Service Worker — Bibbia Multilingue PRO (v14.1 — Migrazione Libreria Offline)
-const BM_SW_VERSION = "bm-pro-shell-v14-1";
+// Service Worker — Bibbia Multilingue PRO (v14.2 — Menu Zaffiro, Nome Completo & PWA Fullscreen)
+const BM_SW_VERSION = "bm-pro-shell-v14-2";
 const BM_API_CACHE = "bm-pro-api-v1";
 const BM_CRITICAL_SHELL = [
   "./index.html",
