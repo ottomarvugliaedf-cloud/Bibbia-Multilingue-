@@ -5261,6 +5261,7 @@ async function renderChapterView() {
         <div class="chapter-title" onclick="showChaptersView(${state.bookId})" style="cursor:pointer;">${escapeHtml(book.name)} ${state.chapter}▾</div>
         <div class="chapter-nav-btns">
           ${backBtnHtml}
+          <button class="nav-btn" onclick="openChapterDossierModal()" title="Dossier Esegetico Completo del Capitolo">💎</button>
           <button class="nav-btn" onclick="prevChapter()">◀Prec</button>
           <button class="nav-btn" onclick="nextChapter()">Succ▶</button>
         </div>
@@ -7015,7 +7016,7 @@ function filterStrongModalQuickSearch(queryStr) {
     const hay = normalizeForSearch(`${k} ${d.code} ${d.orig} ${d.def}`);
     if (hay.includes(q)) hits.push({ k, d, exact: normalizeForSearch(k) === q || normalizeForSearch(d.code).includes(q) });
   });
-  hits.sort((a, b) => (b.exact - a.exact) || a.k.localeCompare(b.k, "it"));
+  hits.sort((a, b) => (Number(b.exact) - Number(a.exact)) || a.k.localeCompare(b.k, "it"));
   if (!hits.length) {
     box.innerHTML = `<div style="font-size:12.5px; color:#9ec9ff; padding:6px 2px;">Nessuna radice trovata nel lessico per "<b>${escapeHtml(queryStr)}</b>".</div>`;
     return;
@@ -11155,7 +11156,7 @@ function scrollRpToToday(smooth = false) {
 function exportBackupJson() {
   const data = {
     app: "BibbiaMultilingue_PRO",
-    version: "PRO_v13.7",
+    version: "PRO_v13.8",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
@@ -11472,7 +11473,7 @@ function bpGroupRefs(p) {
   (p.r || []).forEach(r => { add(r.m, r.p, r.g, false); (r.m2 || []).forEach(x => add(x, r.p, r.g, true)); });
   return [...by.values()]
     .map(g => ({ ...g, pages: [...g.pages].sort((a, b) => a - b) }))
-    .sort((a, b) => (a.alt - b.alt) || ((bpUi.mapScore.get(b.mapId) || 0) - (bpUi.mapScore.get(a.mapId) || 0)) || (!!b.cells.length - !!a.cells.length) || a.mapId.localeCompare(b.mapId));
+    .sort((a, b) => (Number(a.alt) - Number(b.alt)) || ((bpUi.mapScore.get(b.mapId) || 0) - (bpUi.mapScore.get(a.mapId) || 0)) || (Number(b.cells.length > 0) - Number(a.cells.length > 0)) || a.mapId.localeCompare(b.mapId));
 }
 
 function bpRefButton(pi, gi, g) {
@@ -12019,7 +12020,10 @@ async function checkBmPwaUpdates() {
         reg.active.postMessage({ type: "GET_CACHE_STATUS" }, [ch.port2]);
       });
       if (info) {
-        statusLine = `✔ <b>App Shell 100% Offline Attiva</b><br>• Versione cache: <code>${escapeHtml(info.version)}</code><br>• Risorse in cache: <b>${info.cachedCount}</b><br>• Motore EPUB/ZIP locale (jszip.min.js): <b>${info.hasJszip ? "Integrato & pronto anche in aereo ✔" : "In caricamento"}</b>`;
+        const shellBadge = info.hasCoreShell
+          ? "✔ <b>App Shell 100% Offline Completa</b>"
+          : "⚠️ <b>App Shell Parziale</b> (ricarica con rete per completare)";
+        statusLine = `${shellBadge}<br>• Versione cache: <code>${escapeHtml(info.version)}</code><br>• Risorse in cache: <b>${info.cachedCount}</b><br>• File critici (HTML/ZIP/Manifest): <b>${info.hasCoreShell ? "Verificati ✔" : "Incompleti"}</b><br>• Motore EPUB/ZIP locale (jszip.min.js): <b>${info.hasJszip ? "Integrato & pronto anche in aereo ✔" : "In caricamento"}</b>`;
       } else {
         statusLine = "✔ Service Worker attivo e sincronizzato.";
       }
@@ -12948,16 +12952,17 @@ function toggleXRayRootsLens() {
   openVerseXRayModal(curV);
 }
 
-function showXRayRootPopup(dictKey) {
+function showXRayRootPopup(dictKey, contextBookId = null) {
   bmChimeHaptic();
   const d = PRO_STRONG_DICT[dictKey];
   if (!d) return;
   const modal = document.getElementById("myReadModal");
   const body = document.getElementById("myReadModalBody");
   if (!modal || !body) return;
-  // Le voci possono avere più codici (es. "H7225 / G746"): si usa quello del testamento del versetto aperto
+  // Le voci possono avere più codici (es. "H7225 / G746"): si usa quello del testamento del versetto o capitolo aperto
+  const refBookId = contextBookId !== null ? Number(contextBookId) : (lastXRayData ? lastXRayData.bookId : state.bookId);
   const codes = String(d.code).toUpperCase().match(/[HG]\d{1,4}/g) || [];
-  const strongCode = codes.find(c => c[0] === (lastXRayData && lastXRayData.bookId >= 40 ? "G" : "H")) || codes[0] || d.code;
+  const strongCode = codes.find(c => c[0] === (refBookId >= 40 ? "G" : "H")) || codes[0] || d.code;
   body.innerHTML = `
     <div style="text-align:center; padding:4px 0 12px 0;">
       <div style="font-size:28px; margin-bottom:4px;">🏛️📜</div>
@@ -14150,6 +14155,299 @@ async function evaluateMessianicBulbForCurrentView() {
 
   renderMessianicWidgetUI(matches);
   highlightMessianicVersesInDOM(bmProphecyList[bmCurrentProphecyIdx], false);
+}
+// ============================================================================
+// 💎 MODULO REGALO PRO: DOSSIER ESEGETICO COMPLETO DEL CAPITOLO (100% OFFLINE)
+// Sintetizza in un unico pannello Sommario, Profezie, Luoghi HD, Strong, Note & SI
+// ============================================================================
+let chapterDossierReqId = 0;
+let lastChapterDossier = null;
+
+async function openChapterDossierModal() {
+  const reqId = ++chapterDossierReqId;
+  bmChimeHaptic();
+  closeActionBar();
+
+  const targetBookId = state.bookId;
+  const targetChapter = state.chapter;
+  const book = getBook(targetBookId);
+  const titleStr = `${book.name} ${targetChapter}`;
+  const activeTransMeta = dynamicCatalog.find(b => b.id === state.trans1) || CORE_BIBLES.find(b => b.id === state.trans1);
+  const activeTransName = activeTransMeta ? activeTransMeta.name : state.trans1;
+
+  document.getElementById("proModalTitle").textContent = `💎 Dossier del Capitolo — ${titleStr}`;
+  const body = document.getElementById("proModalBody");
+  if (!body) return;
+  body.innerHTML = `<div class="loader">💎 Elaborazione del Dossier completo di <b>${escapeHtml(titleStr)}</b> su tutti i moduli offline...</div>`;
+  document.getElementById("proModal").style.display = "flex";
+
+  // 1. Raccoglie i versetti del capitolo (dal DOM o dal DB)
+  let verses = [];
+  const domRows = [...document.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3")];
+  if (currentViewContext.type === "bible" && domRows.length > 0) {
+    verses = domRows.map(r => ({
+      verse: parseInt((r.id || "").replace("v_", ""), 10) || 0,
+      text: r.getAttribute("data-text") || ""
+    })).filter(v => v.verse > 0 && v.text);
+  }
+  if (!verses.length) {
+    try {
+      const fetched = await fetchChapterData(state.trans1, targetBookId, targetChapter);
+      verses = (fetched || []).map(v => ({ verse: Number(v.verse), text: stripTagsToPlainText(v.text) }));
+    } catch (e) { console.debug(e); }
+  }
+  if (reqId !== chapterDossierReqId) return;
+
+  // 2. Interroga in parallelo tutti i moduli offline
+  const [outline, footnotesMap, mapMeta, siData] = await Promise.all([
+    fetchChapterOutline(state.trans1, targetBookId, targetChapter),
+    fetchChapterFootnotes(state.trans1, targetBookId, targetChapter),
+    bpGetMeta(),
+    getSiData()
+  ]);
+  await enrichMessianicPropheciesFromOfflineDB();
+  if (reqId !== chapterDossierReqId) return;
+
+  // 3. Statistiche di lettura & studio personale nel capitolo
+  const fullPlainText = verses.map(v => v.text).join(" ");
+  const wordCount = fullPlainText.trim() ? fullPlainText.trim().split(/\s+/).length : 0;
+  const estMinutes = Math.max(1, Math.round(wordCount / 175));
+  const hlPrefix = `${targetBookId}_${targetChapter}_`;
+  const chapterHighlights = Object.keys(state.highlights || {}).filter(k => k.startsWith(hlPrefix));
+  const chapterNotes = (state.notes || []).filter(n => Number(n.bookId) === targetBookId && Number(n.chapter) === targetChapter);
+  const chapterBookmarks = (state.bookmarks || []).filter(b => Number(b.bookId) === targetBookId && Number(b.chapter) === targetChapter);
+
+  // 4. Profezie Messianiche nel capitolo
+  const prophecyIdxs = findPropheciesForCurrentChapter(targetBookId, targetChapter);
+  const prophecies = prophecyIdxs.map(idx => ({ idx, p: bmProphecyList[idx] })).filter(x => x.p);
+
+  // 5. Geografia & Cartina Principale Consigliata
+  let places = [];
+  let bestMap = null;
+  if (mapMeta && fullPlainText) {
+    places = bpScanText(fullPlainText, domRows.length ? domRows : null);
+    bpComputeMapScore(places);
+    if (bpUi.bestMapId) bestMap = bpMapById(bpUi.bestMapId);
+  }
+
+  // 6. Radici Strong Ebraico/Greche chiave rilevate nel capitolo (ordinate per frequenza)
+  const rootCounts = new Map();
+  const isNT = targetBookId >= 40;
+  fullPlainText.replace(/[A-Za-zÀ-ÖØ-öø-ÿ]{3,}/g, w => {
+    const dk = getStrongDictKey(w);
+    if (dk) rootCounts.set(dk, (rootCounts.get(dk) || 0) + 1);
+    return w;
+  });
+  const topRoots = [...rootCounts.entries()]
+    .sort((a, b) => (b[1] - a[1]) || a[0].localeCompare(b[0], "it"))
+    .slice(0, 12)
+    .map(([dictKey, count]) => {
+      const d = PRO_STRONG_DICT[dictKey];
+      const codeParts = d.code.split("/").map(s => s.trim()).filter(Boolean);
+      const origParts = d.orig.split("/").map(s => s.replace(/\([^)]*\)/g, "").trim()).filter(Boolean);
+      const prefIdx = codeParts.findIndex(c => c.toUpperCase().startsWith(isNT ? "G" : "H"));
+      return {
+        dictKey,
+        count,
+        code: (prefIdx > -1 ? codeParts[prefIdx] : codeParts[0]) || d.code,
+        orig: (prefIdx > -1 && origParts[prefIdx] ? origParts[prefIdx] : origParts[0]) || d.orig
+      };
+    });
+
+  // 7. Note in calce ufficiali del capitolo
+  const fnEntries = Object.keys(footnotesMap || {})
+    .map(k => ({ v: Number(k), notes: footnotesMap[k] }))
+    .filter(x => x.v > 0 && Array.isArray(x.notes) && x.notes.length > 0)
+    .sort((a, b) => a.v - b.v);
+  const totalFnCount = fnEntries.reduce((acc, x) => acc + x.notes.length, 0);
+
+  // 8. Ponte diretto a Tutta la Scrittura
+  const siBookIdx = (siData && Array.isArray(siData.books))
+    ? siData.books.findIndex(b => Number(b.bookNumber) === targetBookId)
+    : -1;
+
+  // Salva snapshot strutturato per copia / salvataggio in Appunti
+  lastChapterDossier = {
+    bookId: targetBookId,
+    bookName: book.name,
+    chapter: targetChapter,
+    title: titleStr,
+    transName: activeTransName,
+    verseCount: verses.length,
+    wordCount,
+    estMinutes,
+    outline,
+    prophecies: prophecies.map(x => ({
+      ref: `${getBook(x.p.b).name} ${x.p.c}:${x.p.v}`,
+      desc: x.p.fullDesc || x.p.desc || "",
+      nt: x.p.nt || []
+    })),
+    places: places.map(r => r.surface),
+    bestMapTitle: bestMap ? bestMap.title : "",
+    topRoots,
+    totalFnCount,
+    personalCounts: { hl: chapterHighlights.length, bm: chapterBookmarks.length, notes: chapterNotes.length }
+  };
+
+  // Costruzione sezioni HTML pulite (omettendo solo quelle effettivamente vuote)
+  const outlineHtml = outline.length ? `
+    <div class="section-title"><span>📑 Sommario Ufficiale</span><span>${outline.filter(i => i.lvl > 0).length || outline.length} punti</span></div>
+    <div style="background:#062356; border:1px solid rgba(41,182,246,0.45); border-radius:9px; padding:8px 10px; margin-bottom:10px;">
+      ${outline.map(it => {
+        if (it.lvl === 0) return `<div style="font-size:11px; font-weight:900; color:#ffd54f; text-transform:uppercase; margin:4px 0;">${escapeHtml(it.text)}</div>`;
+        const pad = it.lvl === 1 ? 2 : (it.lvl === 2 ? 14 : 24);
+        const vSpec = String(it.verses || "").trim();
+        const clickJs = vSpec ? `closeProModal(); scrollToVerseAndHighlight('${escapeJsStr(vSpec)}');` : "";
+        return `<div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px; padding:3px 2px 3px ${pad}px; font-size:13px; line-height:1.42; color:#e3f2fd; ${clickJs ? 'cursor:pointer;' : ''}" ${clickJs ? `onclick="${clickJs}"` : ""}>
+          <span>${it.lvl >= 2 ? "• " : ""}${escapeHtml(it.text)}</span>
+          ${vSpec ? `<span class="bm-outline-v">${escapeHtml(vSpec)}</span>` : ""}
+        </div>`;
+      }).join("")}
+    </div>` : "";
+
+  const propheciesHtml = prophecies.length ? `
+    <div class="section-title"><span>💡 Profezie Messianiche nel Capitolo</span><span>${prophecies.length}</span></div>
+    <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:10px;">
+      ${prophecies.map(({ idx, p }) => {
+        const pRef = `${getBook(p.b).name} ${p.c}:${p.v}`;
+        return `<div class="result-card" style="margin-bottom:0; padding:9px 10px; border-left:3.5px solid #ffd54f;" onclick="jumpToMessianicProphecyIndex(${idx}, true)">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:3px;">
+            <span style="font-weight:900; font-size:13.5px; color:#ffd54f;">💡 ${escapeHtml(pRef)}</span>
+            <span class="tag-badge" style="font-size:10.5px;">${escapeHtml(p.cat || "Messia")}</span>
+          </div>
+          <div class="bm-justify-text" style="font-size:12.5px; color:#e3f2fd; line-height:1.45;">${escapeHtml(p.desc || "")}</div>
+        </div>`;
+      }).join("")}
+    </div>` : "";
+
+  const placesHtml = places.length ? `
+    <div class="section-title"><span>📍 Geografia del Capitolo</span><span>${places.length} luoghi</span></div>
+    ${bestMap ? `
+      <div class="result-card" style="background:linear-gradient(135deg, #0d47a1, #1565c0) !important; border:1.5px solid #00e5ff !important; margin-bottom:8px; padding:9px 11px;" onclick="closeProModal(); openMapViewer('${bestMap.id}', [], '')">
+        <div style="font-size:10.5px; font-weight:900; color:#84ffff; text-transform:uppercase;">⭐ Cartina Consigliata</div>
+        <div style="font-size:14px; font-weight:900; color:#ffffff;">🗺️ ${escapeHtml(bestMap.title)}</div>
+        <div style="font-size:11.5px; color:#cfe3ff;">${escapeHtml(bpPages(bestMap.pages))} · Tocca per aprire HD →</div>
+      </div>` : ""}
+    <div style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px;">
+      ${places.map(r => `<span class="tag-badge" style="padding:4px 9px; font-size:12px;" onclick="closeProModal(); bpOpenSurface('${escapeJsStr(r.key)}', '${escapeJsStr(r.surface)}')">📍 ${escapeHtml(r.surface)}${r.count > 1 ? ` (${r.count})` : ""}</span>`).join("")}
+    </div>` : "";
+
+  const rootsHtml = topRoots.length ? `
+    <div class="section-title"><span>🏺 Radici Strong Principali</span><span>${topRoots.length}</span></div>
+    <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;">
+      ${topRoots.map(r => `<span class="tag-badge" style="background:rgba(255,213,79,0.14); color:#ffd54f; border-color:rgba(255,213,79,0.65); padding:4px 9px; font-size:12px;" onclick="showXRayRootPopup('${escapeJsStr(r.dictKey)}', ${targetBookId})" title="${escapeHtml(r.orig)}">
+        ${escapeHtml(r.dictKey)} · ${escapeHtml(r.code)}${r.count > 1 ? ` ×${r.count}` : ""}
+      </span>`).join("")}
+    </div>` : "";
+
+  const fnHtml = fnEntries.length ? `
+    <div class="section-title"><span>📌 Note in Calce Ufficiali</span><span>${totalFnCount} note</span></div>
+    <div style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px;">
+      ${fnEntries.map(x => `<span class="bm-footnote-badge" style="padding:3px 8px; font-size:12px;" onclick="openVerseFootnotesModal(${x.v})">📌 v. ${x.v}${x.notes.length > 1 ? ` (${x.notes.length})` : ""}</span>`).join("")}
+    </div>` : "";
+
+  const personalHtml = (chapterNotes.length || chapterBookmarks.length || chapterHighlights.length) ? `
+    <div class="section-title"><span>📝 Il tuo Studio in questo Capitolo</span><span>${chapterHighlights.length}🎨 · ${chapterBookmarks.length}🔖 · ${chapterNotes.length}📝</span></div>
+    ${chapterNotes.length ? `<div style="display:flex; flex-direction:column; gap:6px; margin-bottom:10px;">
+      ${chapterNotes.map(n => `<div class="result-card" style="margin-bottom:0; padding:8px 10px;" onclick="closeProModal(); openNoteModalForVerse('${escapeJsStr(n.ref)}')">
+        <div style="font-size:12.5px; font-weight:800; color:#ffd54f;">📝 ${escapeHtml(n.ref)}</div>
+        <div style="font-size:12.5px; color:#e3f2fd; margin-top:2px;">${escapeHtml((n.text || "").slice(0, 120))}${(n.text || "").length > 120 ? "…" : ""}</div>
+      </div>`).join("")}
+    </div>` : `<div style="font-size:12.5px; color:#cfe3ff; margin-bottom:10px;">Hai <b>${chapterHighlights.length}</b> versetti evidenziati e <b>${chapterBookmarks.length}</b> preferiti in questo capitolo.</div>`}` : "";
+
+  const siBtnHtml = siBookIdx > -1
+    ? `<button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,176,255,0.75); background:#1565c0; margin-bottom:8px;" onclick="closeProModal(); siSearchQuery=''; openSiBookRespectingMode(${siBookIdx});">📘 Studia ${escapeHtml(book.name)} in Tutta la Scrittura</button>`
+    : "";
+
+  body.innerHTML = `
+    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; margin-bottom:10px; text-align:center;">
+      <div style="background:#062356; border:1px solid #29b6f6; border-radius:8px; padding:7px 4px;">
+        <div style="font-size:16px; font-weight:900; color:#00e5ff;">${verses.length}</div>
+        <div style="font-size:10.5px; color:#9ec9ff; font-weight:700;">Versetti</div>
+      </div>
+      <div style="background:#062356; border:1px solid #29b6f6; border-radius:8px; padding:7px 4px;">
+        <div style="font-size:16px; font-weight:900; color:#ffd54f;">~${estMinutes} min</div>
+        <div style="font-size:10.5px; color:#9ec9ff; font-weight:700;">Lettura (${wordCount} par.)</div>
+      </div>
+      <div style="background:#062356; border:1px solid #29b6f6; border-radius:8px; padding:7px 4px;">
+        <div style="font-size:16px; font-weight:900; color:#ccff00;">${totalFnCount + prophecies.length + places.length}</div>
+        <div style="font-size:10.5px; color:#9ec9ff; font-weight:700;">Risorse Offline</div>
+      </div>
+    </div>
+    ${outlineHtml}
+    ${propheciesHtml}
+    ${placesHtml}
+    ${rootsHtml}
+    ${fnHtml}
+    ${personalHtml}
+    ${siBtnHtml}
+    <div style="display:flex; gap:8px; margin-top:4px;">
+      <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,229,255,0.75); background:#0d47a1; flex:1; font-size:13px;" onclick="copyChapterDossierText(this)">📋 Copia Dossier</button>
+      <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#2e7d32; --btn-glow:rgba(76,175,80,0.75); background:#2e7d32; flex:1; font-size:13px;" onclick="saveChapterDossierAsNote(this)">📝 Salva in Appunti</button>
+    </div>
+  `;
+}
+
+function formatChapterDossierPlainText(d) {
+  const lines = [
+    `━━━ 💎 DOSSIER ESEGETICO: ${d.title.toUpperCase()} ━━━`,
+    `📖 Edizione: ${d.transName}`,
+    `📊 ${d.verseCount} versetti • ${d.wordCount} parole • Lettura stimata: ~${d.estMinutes} min`
+  ];
+  if (d.outline && d.outline.length) {
+    lines.push("", "📑 SOMMARIO UFFICIALE:");
+    d.outline.forEach(it => {
+      if (it.lvl === 0) lines.push(`[${it.text}]`);
+      else lines.push(`${"  ".repeat(Math.max(0, it.lvl - 1))}• ${it.text}${it.verses ? ` (vv. ${it.verses})` : ""}`);
+    });
+  }
+  if (d.prophecies && d.prophecies.length) {
+    lines.push("", `💡 PROFEZIE MESSIANICHE (${d.prophecies.length}):`);
+    d.prophecies.forEach(p => {
+      lines.push(`• ${p.ref}: ${p.desc}${p.nt.length ? ` [NT: ${p.nt.join(", ")}]` : ""}`);
+    });
+  }
+  if (d.places && d.places.length) {
+    lines.push("", `📍 LUOGHI GEOGRAFICI (${d.places.length}): ${d.places.join(", ")}${d.bestMapTitle ? ` • Cartina: ${d.bestMapTitle}` : ""}`);
+  }
+  if (d.topRoots && d.topRoots.length) {
+    lines.push("", `🏺 RADICI STRONG CHIAVE: ${d.topRoots.map(r => `${r.dictKey} (${r.code})`).join(", ")}`);
+  }
+  if (d.totalFnCount > 0) {
+    lines.push("", `📌 NOTE IN CALCE UFFICIALI PRESENTI: ${d.totalFnCount}`);
+  }
+  lines.push("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  return lines.join("\n");
+}
+
+function copyChapterDossierText(btnEl) {
+  bmChimeHaptic();
+  if (!lastChapterDossier) return;
+  copyPubRefToClipboard(formatChapterDossierPlainText(lastChapterDossier));
+  if (btnEl) btnEl.textContent = "✔ Dossier Copiato!";
+}
+
+function saveChapterDossierAsNote(btnEl) {
+  bmChimeHaptic();
+  const d = lastChapterDossier;
+  if (!d) return;
+  const noteTitle = `${d.title} (Dossier Capitolo)`;
+  const existingIdx = state.notes.findIndex(n => n.ref === noteTitle);
+  const noteObj = {
+    id: (existingIdx > -1 && state.notes[existingIdx].id) ? state.notes[existingIdx].id : Date.now(),
+    bookId: d.bookId,
+    chapter: d.chapter,
+    verse: 1,
+    ref: noteTitle,
+    verseText: `${d.verseCount} versetti • ~${d.estMinutes} min di lettura`,
+    text: formatChapterDossierPlainText(d),
+    tags: ["dossier", d.bookName.toLowerCase().replace(/\s+/g, "-")],
+    date: new Date().toLocaleDateString("it-IT")
+  };
+  if (existingIdx > -1) state.notes[existingIdx] = noteObj;
+  else state.notes.unshift(noteObj);
+  safeSaveStorage("bm_notes", JSON.stringify(state.notes));
+  if (btnEl) btnEl.textContent = "✔ Salvato in Appunti!";
 }
 // ============================================================================
 // AVVIO APPLICAZIONE (BOOT UNIFICATO — TUTTI I MODULI CARICATI)

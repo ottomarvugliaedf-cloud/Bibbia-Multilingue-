@@ -1,10 +1,12 @@
-// Service Worker — Bibbia Multilingue PRO (v13.7 — 100% Locale, Zero CDN)
-const BM_SW_VERSION = "bm-pro-shell-v13-7";
-const BM_APP_SHELL = [
-  "./",
+// Service Worker — Bibbia Multilingue PRO (v13.8 — Installazione Atomica, 100% Locale)
+const BM_SW_VERSION = "bm-pro-shell-v13-8";
+const BM_CRITICAL_SHELL = [
   "./index.html",
   "./jszip.min.js",
-  "./manifest.json",
+  "./manifest.json"
+];
+const BM_OPTIONAL_SHELL = [
+  "./",
   "./icon-192.png",
   "./icon-512.png"
 ];
@@ -16,8 +18,12 @@ function safeCachePut(cache, req, res) {
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(BM_SW_VERSION);
+    // File critici in modalità atomica: se uno manca o fallisce, l'installazione abortisce e resta attiva la versione precedente sana
+    await Promise.all(
+      BM_CRITICAL_SHELL.map((url) => cache.add(new Request(url, { cache: "reload" })))
+    );
     await Promise.allSettled(
-      BM_APP_SHELL.map((url) => cache.add(new Request(url, { cache: "reload" })))
+      BM_OPTIONAL_SHELL.map((url) => cache.add(new Request(url, { cache: "reload" })))
     );
     self.skipWaiting();
   })());
@@ -42,14 +48,20 @@ self.addEventListener("message", (event) => {
       try {
         const cache = await caches.open(BM_SW_VERSION);
         const reqs = await cache.keys();
-        const hasJszip = reqs.some((r) => r.url.includes("jszip.min.js"));
+        const urls = reqs.map((r) => r.url);
+        const criticalChecks = await Promise.all(
+          BM_CRITICAL_SHELL.map((u) => cache.match(u, { ignoreSearch: true }))
+        );
+        const hasCoreShell = criticalChecks.every(Boolean);
+        const hasJszip = urls.some((u) => u.includes("jszip.min.js"));
         event.ports[0].postMessage({
           version: BM_SW_VERSION,
           cachedCount: reqs.length,
+          hasCoreShell,
           hasJszip
         });
       } catch (_e) {
-        event.ports[0].postMessage({ version: BM_SW_VERSION, cachedCount: 0, hasJszip: false });
+        event.ports[0].postMessage({ version: BM_SW_VERSION, cachedCount: 0, hasCoreShell: false, hasJszip: false });
       }
     })();
   }
