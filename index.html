@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
   <meta name="referrer" content="no-referrer">
-  <meta name="theme-color" content="#072a60">
+  <meta name="theme-color" content="#041a42">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -64,6 +64,14 @@
       --verse-hover: #141414;
       --diff-bg: rgba(245, 158, 11, 0.3);
     }
+    /* Root canvas sempre scuro: azzera il flash del rettangolo bianco in fondo su WebView AppsGeyser */
+    html {
+      background-color: #041a42;
+      height: 100%;
+      overflow: hidden;
+    }
+    html.dark-mode { background-color: #091526; }
+    html.oled-mode { background-color: #000000; }
     /* Tutti i sottomenù a tendina (Libri, Capitoli, Ricerca, Traduzioni) e campi su scala di Blu Mia Lettura */
     select, .trans-select, select option, select optgroup,
     .search-input, .bp-search, .modal-textarea {
@@ -140,15 +148,16 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100lvh;
-  min-height: 100vh;
-  background: radial-gradient(circle at 50% 50%, #1e88e5 0%, #0a367e 55%, #020b1c 100%);
+  right: 0;
+  bottom: -240px;
+  min-height: calc(100lvh + 240px);
+  background-color: #020b1c;
+  background-image: radial-gradient(circle at 50% var(--splash-locked-top, 50vh), #1e88e5 0%, #0a367e 45%, #020b1c 88%);
   z-index: 9999;
   overflow: hidden;
   contain: layout paint style;
-  transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s ease;
-  will-change: opacity, transform;
+  transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: opacity;
   backface-visibility: hidden;
 }
 .splash-center-lock {
@@ -463,7 +472,7 @@
       font-weight: 800;
     }
 
-    /* TUTTI GLI ALTRI TASTI DELLA BARRA SUPERIORE (Perspicacia, Tutta la Scrittura, Cartine, Giorno, Catalogo, Diff):
+    /* TUTTI GLI ALTRI TASTI DELLA BARRA SUPERIORE (Perspicacia, Tutta la Scrittura, Cartine, Giorno, Diff):
        Transizione radiale e attestazione finale su Azzurro Fosforescente (#00e5ff) */
     .quick-pill:not(#booksTabBtn):not(#readTabBtn).highlight,
     .bm-drawer-quick-btn.bm-lit {
@@ -498,7 +507,7 @@
       font-weight: 800;
     }
 
-    /* TUTTI GLI ALTRI TASTI DELLA BARRA INFERIORE (Dove?, Ascolta, Mia lettura, Preferiti, Appunti, Backup):
+    /* TUTTI GLI ALTRI TASTI DELLA BARRA INFERIORE (Dove?, Ascolta, Mia lettura, Preferiti, Appunti):
        Transizione radiale e attestazione finale su Azzurro Fosforescente (#00e5ff) */
     .tab-btn:not(#tabSearch):not(#parallelBtn).active .tab-icon {
       animation: bmRadialToCyanGlow 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
@@ -527,10 +536,19 @@
       -webkit-touch-callout: none;
       transition: transform 0.1s ease, background-color 0.1s ease, box-shadow 0.1s ease;
     }
-    button, .tab-btn, .nav-btn, .search-btn, .quick-pill, .verse-num, .tag-badge, .pub-ref-badge, #myReadModal {
+    button, .tab-btn, .nav-btn, .search-btn, .quick-pill, .verse-num, .tag-badge, .pub-ref-badge {
       -webkit-user-select: none;
       user-select: none;
       -webkit-touch-callout: none;
+    }
+    .bm-rtl {
+      direction: rtl;
+      text-align: right !important;
+      unicode-bidi: isolate;
+    }
+    .bm-rtl .verse-num {
+      margin-right: 0;
+      margin-left: 5px;
     }
     main {
       flex: 1;
@@ -2007,12 +2025,15 @@ body.oled-mode .pub-ref-badge {
 (function () {
   var splash = document.getElementById("splashScreen");
   var timer, done = false;
+  function getStableViewportHeight() {
+    var vv = window.visualViewport ? window.visualViewport.height : 0;
+    return Math.max(window.innerHeight || 0, document.documentElement.clientHeight || 0, Math.round(vv)) || (window.screen ? window.screen.height : 800);
+  }
   function lockCenterAndReveal() {
     if (done) return;
     done = true;
     window.removeEventListener("resize", onResizeStabilize);
-    var h = window.innerHeight || document.documentElement.clientHeight || window.screen.height || 800;
-    splash.style.height = Math.max(h, window.screen ? window.screen.height : h) + "px";
+    var h = getStableViewportHeight();
     splash.style.setProperty("--splash-locked-top", Math.round(h / 2) + "px");
     requestAnimationFrame(function () {
       splash.classList.add("ready");
@@ -2021,11 +2042,11 @@ body.oled-mode .pub-ref-badge {
   }
   function onResizeStabilize() {
     clearTimeout(timer);
-    timer = setTimeout(lockCenterAndReveal, 520);
+    timer = setTimeout(lockCenterAndReveal, 420);
   }
   window.addEventListener("resize", onResizeStabilize);
   onResizeStabilize();
-  setTimeout(lockCenterAndReveal, 1100);
+  setTimeout(lockCenterAndReveal, 1000);
 })();
 </script>
   
@@ -2037,7 +2058,6 @@ body.oled-mode .pub-ref-badge {
         <span id="readingPlanHeaderLabel">Gen 1 - 3</span>
         <span>▾</span>
       </button>
-      <span id="currentRefLabel" style="display:none;"></span>
     </div>
     <div class="header-center-slot">
       <button type="button" id="currentBookChapterPill" class="header-center-pill" style="display:none;" onclick="onHeaderCenterPillClick()" title="Posizione di lettura attuale">
@@ -2334,7 +2354,6 @@ const BIBLE_BOOKS = [
   { id: "gb:riveduta", name: "🇮🇹 Italiano: Riveduta 1927 (Luzzi)", lang: "Italian" },
   { id: "gb:giovanni", name: "🇮🇹 Italiano: Giovanni Diodati (1649)", lang: "Italian" },
   { id: "gb:kjv", name: "🇬🇧 English: King James Version (KJV)", lang: "English" },
-  { id: "gb:kjv_strongs", name: "🇬🇧🏛️ English: KJV + Numeri Strong Integrati", lang: "English" },
   { id: "gb:akjv", name: "🇬🇧 English: Authorized King James (AKJV)", lang: "English" },
   { id: "gb:web", name: "🇬🇧 English: World English Bible (WEB)", lang: "English" },
   { id: "gb:asv", name: "🇬🇧 English: American Standard (ASV 1901)", lang: "English" },
@@ -3945,11 +3964,14 @@ let PRO_CROSS_REFS = {
     "1 Corinti 15:26"
   ]
 };
+function normalizeForSearch(str) {
+  return String(str || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
 let bmStrongNormMap = null;
 function rebuildStrongNormMap() {
   bmStrongNormMap = new Map();
   Object.keys(PRO_STRONG_DICT).forEach(k => {
-    const norm = k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const norm = normalizeForSearch(k);
     if (!bmStrongNormMap.has(norm)) bmStrongNormMap.set(norm, k);
   });
 }
@@ -3958,8 +3980,27 @@ function getStrongDictKey(word) {
   if (!bmStrongNormMap) rebuildStrongNormMap();
   const low = String(word).toLowerCase();
   if (PRO_STRONG_DICT[low]) return low;
-  const norm = low.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  return bmStrongNormMap.get(norm) || null;
+  const norm = normalizeForSearch(low);
+  if (bmStrongNormMap.has(norm)) return bmStrongNormMap.get(norm);
+  // Riconoscimento flessioni/plurali italiani & inglesi di base (es. angeli->angelo, peccati->peccato, leggi->legge, profeti->profeta)
+  if (norm.length >= 4) {
+    const cands = [];
+    if (norm.endsWith("i")) {
+      cands.push(norm + "o", norm.slice(0, -1) + "o", norm.slice(0, -1) + "e", norm.slice(0, -1) + "a");
+      if (norm.endsWith("chi") || norm.endsWith("ghi")) cands.push(norm.slice(0, -2) + "o");
+    } else if (norm.endsWith("e")) {
+      cands.push(norm.slice(0, -1) + "a", norm.slice(0, -1) + "o");
+      if (norm.endsWith("che") || norm.endsWith("ghe")) cands.push(norm.slice(0, -2) + "a");
+    } else if (norm.endsWith("a")) {
+      cands.push(norm.slice(0, -1) + "o");
+    } else if (norm.endsWith("s") && norm.length >= 5) {
+      cands.push(norm.slice(0, -1));
+    }
+    for (const c of cands) {
+      if (bmStrongNormMap.has(c)) return bmStrongNormMap.get(c);
+    }
+  }
+  return null;
 }
 async function loadExternalExegeticalModules() {
   try {
@@ -4070,13 +4111,32 @@ function safeGetStorage(key) {
     return null;
   }
 }
+let bmStorageWarnedOnce = false;
 function safeSaveStorage(key, valueStr, isChapterCache = false) {
   try {
+    if (isChapterCache) {
+      const chKeys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith("bm_ch_")) chKeys.push(k);
+      }
+      if (chKeys.length >= 60) {
+        chKeys.slice(0, chKeys.length - 45).forEach(k => localStorage.removeItem(k));
+      }
+    }
     localStorage.setItem(key, valueStr);
   } catch (e) {
     clearChapterCacheOnly();
     if (!isChapterCache) {
-      try { localStorage.setItem(key, valueStr); } catch (err) { console.debug(err); }
+      try {
+        localStorage.setItem(key, valueStr);
+      } catch (err) {
+        console.debug(err);
+        if (!bmStorageWarnedOnce && typeof showBlueInfoModal === "function") {
+          bmStorageWarnedOnce = true;
+          showBlueInfoModal("⚠️ Memoria Browser Piena", "Impossibile salvare localmente le ultime modifiche (spazio esaurito). Esporta subito un backup JSON dalle Impostazioni.");
+        }
+      }
     }
   }
 }
@@ -4349,8 +4409,7 @@ function setActiveTab(tabId, quickPillId = null) {
   setHeaderCenterPill("");
   const topMap = {
     tabBooks: "booksTabBtn",
-    tabRead: "readTabBtn",
-    tabCatalog: "catalogTabBtn"
+    tabRead: "readTabBtn"
   };
   const resolvedQuickPill = quickPillId || topMap[tabId] || null;
 
@@ -4479,7 +4538,7 @@ async function fetchChapterData(transId, bookId, chapter) {
       }
     });
   } else {
-    const code = transId.includes(":") ? transId.split(":")[1] : transId;
+    const code = resolveGetBibleApiCode(transId);
     const res = await fetch(`https://api.getbible.net/v2/${code}/${bookId}/${chapter}.json`);
     if (!res.ok) throw new Error("Capitolo non disponibile");
     const data = await res.json();
@@ -4489,6 +4548,18 @@ async function fetchChapterData(transId, bookId, chapter) {
     safeSaveStorage(cacheKey, JSON.stringify(verses), true);
   }
   return verses;
+}
+function resolveGetBibleApiCode(transId) {
+  const raw = String(transId || "").includes(":") ? String(transId).split(":")[1] : String(transId || "");
+  if (raw === "kjv_strongs") return "kjv";
+  return raw;
+}
+function isRtlBible(transId) {
+  const id = String(transId || "").toLowerCase();
+  if (id === "gb:wlc" || id === "gb:aleppo" || id === "gb:svd" || id === "gb:peshitta") return true;
+  const meta = dynamicCatalog.find(b => b.id === transId) || CORE_BIBLES.find(b => b.id === transId);
+  const lang = meta ? String(meta.lang || "").toLowerCase() : "";
+  return lang.includes("hebrew") || lang.includes("arab") || lang.includes("syriac") || lang.includes("persian") || lang.includes("farsi") || lang.includes("urdu");
 }
 const BM_NWT_COMPANION_MAP = {
   "gb:bi12": "gb:nwt",
@@ -5153,7 +5224,7 @@ function highlightDiffText(baseStr, targetStr, verseNum = 1, targetTransId = sta
   const plainTarget = stripTagsToPlainText(targetStr);
   const linked = applyNameLinks(escapeHtml(plainTarget), verseNum, targetTransId);
   if (!state.diffMode || !baseStr || !plainTarget) return linked;
-  const clean = s => s.toLowerCase().replace(/[.,;:!?"'«»()]/g, "");
+  const clean = s => s.toLowerCase().replace(/[.,;:!?"'«»“”‘’—–\-()\[\]]/g, "");
   const cleanBase = new Set(clean(stripTagsToPlainText(baseStr)).split(/\s+/));
   const isDiff = plainTarget.split(/\s+/).map(w => { const c = clean(w); return c.length > 2 && !cleanBase.has(c); });
   let wordIdx = -1, inWord = false;
@@ -5183,7 +5254,6 @@ async function renderChapterView() {
   state.chapter = Math.min(book.ch, Math.max(1, Number(state.chapter) || 1));
   safeSaveStorage("bm_last_book", String(state.bookId));
   safeSaveStorage("bm_last_ch", String(state.chapter));
-  document.getElementById("currentRefLabel").textContent = `${book.name} ${state.chapter}`;
   setHeaderCenterPill(`${book.abbr} ${state.chapter}`, "bible");
   const main = document.getElementById("mainContainer");
   main.innerHTML = `<div class="loader">Caricamento di <b>${escapeHtml(book.name)} ${state.chapter}</b>...</div>`;
@@ -5200,6 +5270,15 @@ async function renderChapterView() {
       try { data3 = await fetchChapterData(state.trans3, state.bookId, state.chapter); } catch(e) { data3 = []; }
     }
     if (reqId !== currentViewReqId) return;
+    const rtl1 = isRtlBible(state.trans1);
+    const rtl2 = state.parallelCount >= 2 && isRtlBible(state.trans2);
+    const rtl3 = state.parallelCount === 3 && isRtlBible(state.trans3);
+    const rtlAttr1 = rtl1 ? ' dir="rtl"' : "";
+    const rtlCls1 = rtl1 ? " bm-rtl" : "";
+    const rtlAttr2 = rtl2 ? ' dir="rtl"' : "";
+    const rtlCls2 = rtl2 ? " bm-rtl" : "";
+    const rtlAttr3 = rtl3 ? ' dir="rtl"' : "";
+    const rtlCls3 = rtl3 ? " bm-rtl" : "";
     let versesHtml = "";
     if (state.parallelCount === 1) {
       versesHtml = data1.map(v => {
@@ -5218,7 +5297,7 @@ async function renderChapterView() {
           (hasNote ? ` <span class="tag-badge" title="Apri il tuo Appunto" onclick="event.stopPropagation(); openVerseNoteDirectly(${v.verse})">📝Nota</span>` : "") +
           ` <span class="tag-badge" title="Apri Passi Paralleli e Concordanza" onclick="event.stopPropagation(); openVerseCrossDirectly(${v.verse})">🔗Paralleli</span>`;
         return `
-          <div class="verse-row ${hlClass}" id="v_${v.verse}" data-text="${cleanText}" onclick="onVerseClick(${v.verse}, this.getAttribute('data-text'))">
+          <div class="verse-row ${hlClass}${rtlCls1}"${rtlAttr1} id="v_${v.verse}" data-text="${cleanText}" onclick="onVerseClick(${v.verse}, this.getAttribute('data-text'))">
             <span class="verse-num">${v.verse}</span><span>${formattedText}</span>${badges}
           </div>`;
       }).join("");
@@ -5232,8 +5311,8 @@ async function renderChapterView() {
         const text2 = highlightDiffText(v.text, map2[v.verse] || "—", v.verse, state.trans2);
         return `
           <div class="parallel-row ${hlClass}" id="v_${v.verse}" data-text="${cleanText}" onclick="onVerseClick(${v.verse}, this.getAttribute('data-text'))">
-            <div class="parallel-col"><span class="verse-num">${v.verse}</span>${formatInlineStrongs(v.text, v.verse)}</div>
-            <div class="parallel-col"><span class="verse-num">${v.verse}</span>${text2}</div>
+            <div class="parallel-col${rtlCls1}"${rtlAttr1}><span class="verse-num">${v.verse}</span>${formatInlineStrongs(v.text, v.verse)}</div>
+            <div class="parallel-col${rtlCls2}"${rtlAttr2}><span class="verse-num">${v.verse}</span>${text2}</div>
           </div>`;
       }).join("");
     } else {
@@ -5248,9 +5327,9 @@ async function renderChapterView() {
         const text3 = highlightDiffText(v.text, map3[v.verse] || "—", v.verse, state.trans3);
         return `
           <div class="parallel-row-3 ${hlClass}" id="v_${v.verse}" data-text="${cleanText}" onclick="onVerseClick(${v.verse}, this.getAttribute('data-text'))">
-            <div class="parallel-col"><span class="verse-num">${v.verse}</span>${formatInlineStrongs(v.text, v.verse)}</div>
-            <div class="parallel-col"><span class="verse-num">${v.verse}</span>${text2}</div>
-            <div class="parallel-col"><span class="verse-num">${v.verse}</span>${text3}</div>
+            <div class="parallel-col${rtlCls1}"${rtlAttr1}><span class="verse-num">${v.verse}</span>${formatInlineStrongs(v.text, v.verse)}</div>
+            <div class="parallel-col${rtlCls2}"${rtlAttr2}><span class="verse-num">${v.verse}</span>${text2}</div>
+            <div class="parallel-col${rtlCls3}"${rtlAttr3}><span class="verse-num">${v.verse}</span>${text3}</div>
           </div>`;
       }).join("");
     }
@@ -5940,19 +6019,7 @@ function copySelectedVerse() {
     ? nums.map(n => `[${n}] ${selectedVersesMap.get(n) || ""}`).join(" ")
     : (state.selectedVerseText || selectedVersesMap.get(nums[0]) || "");
   const fullCopy = `${ref} — "${combinedText}"`;
-  try {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(fullCopy).catch(() => {});
-    }
-    const ta = document.createElement("textarea");
-    ta.value = fullCopy;
-    ta.style.position = "fixed";
-    ta.style.opacity = "0";
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand("copy");
-    document.body.removeChild(ta);
-  } catch (e) { console.debug(e); }
+  copyPubRefToClipboard(fullCopy);
   closeActionBar();
   showBlueInfoModal(nums.length > 1 ? `📋 ${nums.length} Versetti Copiati` : "📋 Versetto Copiato", escapeHtml(fullCopy));
 }
@@ -6140,8 +6207,8 @@ function formatNoteLinks(txt, defaultBookId = null) {
     let firstVList = "";
 
     if (wordPart) {
-      const key = ((numPrefix || "") + wordPart).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "");
-      bId = SI_ABBR_MAP[key] || (BIBLE_BOOKS.find(b => b.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "") === key)?.id);
+      const key = normalizeForSearch((numPrefix || "") + wordPart).replace(/\s+/g, "");
+      bId = SI_ABBR_MAP[key] || (BIBLE_BOOKS.find(b => normalizeForSearch(b.name).replace(/\s+/g, "") === key)?.id);
       if (!bId) return fullMatch;
       firstCh = chWithBook;
       firstVList = vListWithBook || "";
@@ -6194,9 +6261,9 @@ function formatNoteLinks(txt, defaultBookId = null) {
     // Incolla qualsiasi parentesi di apertura "(", "[", "{" e di chiusura ")", "]", "}" (più eventuale punto/virgola)
     // direttamente alla pillola azzurra (.tag-badge) o viola (.pub-ref-badge) rendendole inseparabili a fine riga!
     out = out
-      .replace(/([(\[{«"“])\s+(<span class="(?:tag-badge|pub-ref-badge)")/g, "$1$2")
-      .replace(/(<\/span>)\s+([)\]}»"”.,;!?])/g, "$1$2")
-      .replace(/([(\[{«"“]+)?(<span class="(?:tag-badge|pub-ref-badge)"[^>]*>[^<]*<\/span>)([)\]}»"”.,;!?]+)?/g, (_m, openP, pill, closeP) => {
+      .replace(/((?:&quot;|[(\[{«“]))\s+(<span class="(?:tag-badge|pub-ref-badge)")/g, "$1$2")
+      .replace(/(<\/span>)\s+((?:&quot;|[)\]}»”.,;!?]))/g, "$1$2")
+      .replace(/((?:&quot;|[(\[{«“])+)?(<span class="(?:tag-badge|pub-ref-badge)"[^>]*>[^<]*<\/span>)((?:&quot;|[)\]}»”.,;!?])+)?/g, (_m, openP, pill, closeP) => {
         if (!openP && !closeP) return pill;
         return `<span class="bm-nowrap-pill">${openP || ""}${pill}${closeP || ""}</span>`;
       });
@@ -6217,33 +6284,38 @@ function onPubRefClick(ev, ref) {
   showPubRefModal(ref);
 }
 
+function fallbackCopyTextExec(txt) {
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = txt;
+    ta.setAttribute("readonly", "");
+    ta.style.cssText = "position:fixed;left:-9999px;top:0;opacity:0;";
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, ta.value.length);
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return Boolean(ok);
+  } catch (e) {
+    console.debug(e);
+    return false;
+  }
+}
+
 function copyPubRefToClipboard(txt) {
   if (!txt) return false;
-  let success = false;
-  try {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(txt);
-      success = true;
-    }
-  } catch (e) { console.debug(e); }
-  if (!success) {
+  if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
     try {
-      const ta = document.createElement("textarea");
-      ta.value = txt;
-      ta.style.position = "absolute";
-      ta.style.left = "-9999px";
-      ta.style.top = "0";
-      ta.style.opacity = "0.01";
-      document.body.appendChild(ta);
-      ta.focus();
-      ta.select();
-      ta.setSelectionRange(0, ta.value.length);
-      document.execCommand("copy");
-      document.body.removeChild(ta);
-      success = true;
-    } catch (e) { console.debug(e); }
+      const p = navigator.clipboard.writeText(txt);
+      if (p && typeof p.catch === "function") {
+        p.catch(() => fallbackCopyTextExec(txt));
+      }
+      return true;
+    } catch (e) {
+      console.debug(e);
+    }
   }
-  return success;
+  return fallbackCopyTextExec(txt);
 }
 
 function pubRefParse(ref) {
@@ -6428,7 +6500,7 @@ function showPubRefModal(fullRef) {
     </div>
     <div style="display:flex; flex-direction:column; gap:8px;">
       ${offlineBridgeBtn}
-      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#03a9f4; --btn-glow:rgba(3,169,244,0.75); background:#03a9f4;" onclick="pubRefOpenChrome('${u}')">${CHROME_LOGO_SVG}Apri in Chrome</button>
+      ${/android/i.test(navigator.userAgent || "") ? `<button class="myread-action-btn btn-color-anim" style="--btn-bg:#03a9f4; --btn-glow:rgba(3,169,244,0.75); background:#03a9f4;" onclick="pubRefOpenChrome('${u}')">${CHROME_LOGO_SVG}Apri in Chrome</button>` : ""}
       <button class="myread-action-btn btn-color-anim" style="--btn-bg:#1565c0; --btn-glow:rgba(41,182,246,0.75); background:#1565c0;" onclick="pubRefOpenApp('${u}')">📚 Apri nella Biblioteca Online (nell'app)</button>
       
       ${t.safeUrl ? `<button class="myread-action-btn btn-color-anim" style="--btn-bg:#8e24aa; --btn-glow:rgba(186,104,200,0.75); background:#6a1b9a;" onclick="pubRefOpenApp('${escapeJsStr(t.safeUrl)}')">📅 Apri l'annata (elenco dei numeri)</button>` : ""}
@@ -6557,7 +6629,7 @@ async function showCatalogView() {
   const langs = ["Tutte le lingue", ...new Set(dynamicCatalog.map(b => b.lang))];
   main.innerHTML = `
     <div class="section-title"><span>Catalogo Globale Traduzioni & Strong</span><span>${dynamicCatalog.length} Edizioni</span></div>
-    <div style="font-size:13px;color:var(--text-muted);margin-bottom:10px;line-height:1.4;">Tocca <b>⬇Scarica / Attiva</b> per aggiungere qualsiasi Bibbia mondiale (GetBible + HelloAO) o versione con <b>Numeri Strong (es. kjv_strongs)</b> ai menu in alto.</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:10px;line-height:1.4;">Tocca <b>⬇Scarica / Attiva</b> per aggiungere qualsiasi Bibbia mondiale (GetBible + HelloAO) o edizione con <b>tag Strong</b> ai menu in alto.</div>
     <div class="search-box">
       <input type="text" id="catFilter" class="search-input" placeholder="🔍Cerca lingua, Strong, Berean, Greco, Ebraico..." oninput="filterCatalogList()">
       <select id="catLangFilter" class="trans-select" style="max-width:155px;" onchange="filterCatalogList()">
@@ -6619,7 +6691,7 @@ async function toggleDownload(id) {
     safeSaveStorage("bm_v10_pro_bibles", JSON.stringify(state.downloadedBibles));
     if (!id.startsWith("helloao:") && !LOCAL_EPUB_IDS.includes(id)) {
       try {
-        const code = id.split(":")[1];
+        const code = resolveGetBibleApiCode(id);
         const res = await fetch(`https://api.getbible.net/v2/${code}.json`);
         if (res.ok) {
           const data = await res.json();
@@ -6641,8 +6713,13 @@ function showSearchView(fromBack = false) {
   currentViewContext = { type: "search" };
   const main = document.getElementById("mainContainer");
   const defaultSearchBible = state.downloadedBibles.includes("gb:bi12") ? "gb:bi12" : state.trans1;
-  const bibleOptionsHtml = CORE_BIBLES.map(b =>
-    `<option value="${escapeHtml(b.id)}" ${b.id === defaultSearchBible ? "selected" : ""}>Cerca in: ${escapeHtml(b.name)}</option>`
+  const searchableMap = new Map();
+  dynamicCatalog.filter(b => state.downloadedBibles.includes(b.id) && !b.id.startsWith("helloao:")).forEach(b => searchableMap.set(b.id, b));
+  CORE_BIBLES.forEach(b => { if (!searchableMap.has(b.id)) searchableMap.set(b.id, b); });
+  const searchableList = Array.from(searchableMap.values());
+  const resolvedDefault = searchableMap.has(defaultSearchBible) ? defaultSearchBible : (searchableList[0]?.id || "gb:riveduta");
+  const bibleOptionsHtml = searchableList.map(b =>
+    `<option value="${escapeHtml(b.id)}" ${b.id === resolvedDefault ? "selected" : ""}>Cerca in: ${escapeHtml(b.name)}</option>`
   ).join("");
   main.innerHTML = `
     <div class="section-title"><span>Concordanza & Ricerca Globale</span><span>${getBackBtnHtml()}</span></div>
@@ -6716,7 +6793,7 @@ function openJwLibrary(lang, searchInputId = "searchInput", directQuery) {
       <div style="font-size:14px; color:#e3f2fd; line-height:1.5;">${queryDisplay}</div>
     </div>
     <div style="display:flex; flex-direction:column; gap:8px;">
-      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#03a9f4; --btn-glow:rgba(3,169,244,0.6); background:#03a9f4;" onclick="pubRefOpenChrome('${safeUrl}')">${CHROME_LOGO_SVG}Apri in Chrome</button>
+      ${/android/i.test(navigator.userAgent || "") ? `<button class="myread-action-btn btn-color-anim" style="--btn-bg:#03a9f4; --btn-glow:rgba(3,169,244,0.6); background:#03a9f4;" onclick="pubRefOpenChrome('${safeUrl}')">${CHROME_LOGO_SVG}Apri in Chrome</button>` : ""}
       <button class="myread-action-btn btn-color-anim" style="--btn-bg:#1565c0; --btn-glow:rgba(21,101,192,0.6); background:#1565c0;" onclick="pubRefOpenApp('${safeUrl}')">📚 Apri nella Biblioteca Online (nell'app)</button>
       <button class="myread-action-btn btn-color-anim" style="--btn-bg:#7b1fa2; --btn-glow:rgba(156,39,176,0.7); background:#1a0033; margin-top:6px;" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
     </div>
@@ -6759,26 +6836,26 @@ async function executeSearch(page = 1) {
   const resDiv = document.getElementById("searchResults");
   if (isNewSearch) {
     resDiv.innerHTML = `<div class="loader">Ricerca nella Concordanza di "<b>${escapeHtml(rawQuery)}</b>" in corso...</div>`;
-    const normalizeForPhrase = (str) => String(str || "").toLowerCase()
-      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    const normalizeForPhrase = (str) => normalizeForSearch(str)
       .replace(/[^\p{L}\p{N}\s]/gu, " ")
       .replace(/\s+/g, " ")
       .trim();
     const queryNorm = normalizeForPhrase(rawQuery);
     const queryWords = queryNorm.split(" ").filter(Boolean);
+    const hasBoolOp = /\s+(?:AND|OR|NOT)\s+/.test(rawQuery);
     const buildMatcher = (qRaw) => {
-      if (/\s+not\s+/i.test(qRaw)) {
-        const parts = qRaw.split(/\s+not\s+/i);
+      if (/\s+NOT\s+/.test(qRaw)) {
+        const parts = qRaw.split(/\s+NOT\s+/);
         const inc = normalizeForPhrase(parts[0] || "");
         const exc = parts.slice(1).map(p => normalizeForPhrase(p)).filter(Boolean);
         return (txt) => { const low = normalizeForPhrase(txt); return (!inc || low.includes(inc)) && exc.every(e => !low.includes(e)); };
       }
-      if (/\s+and\s+/i.test(qRaw)) {
-        const all = qRaw.split(/\s+and\s+/i).map(p => normalizeForPhrase(p)).filter(Boolean);
+      if (/\s+AND\s+/.test(qRaw)) {
+        const all = qRaw.split(/\s+AND\s+/).map(p => normalizeForPhrase(p)).filter(Boolean);
         return (txt) => { const low = normalizeForPhrase(txt); return all.every(p => low.includes(p)); };
       }
-      if (/\s+or\s+/i.test(qRaw)) {
-        const any = qRaw.split(/\s+or\s+/i).map(p => normalizeForPhrase(p)).filter(Boolean);
+      if (/\s+OR\s+/.test(qRaw)) {
+        const any = qRaw.split(/\s+OR\s+/).map(p => normalizeForPhrase(p)).filter(Boolean);
         return (txt) => { const low = normalizeForPhrase(txt); return any.some(p => low.includes(p)); };
       }
       if (!queryWords.length) return () => false;
@@ -6791,8 +6868,7 @@ async function executeSearch(page = 1) {
     try {
       let fullBible = await getOfflineBible(searchTransId);
       if (!fullBible && !LOCAL_EPUB_IDS.includes(searchTransId)) {
-        let code = searchTransId.split(":")[1];
-        if (code === "kjv_strongs") code = "kjv"; // Fallback automatico: kjv_strongs non esiste su API v2 di GetBible
+        const code = resolveGetBibleApiCode(searchTransId);
         const res = await fetch(`https://api.getbible.net/v2/${code}.json`);
         if (res.ok) {
           fullBible = await res.json();
@@ -6819,9 +6895,10 @@ async function executeSearch(page = 1) {
           }
         }
         cachedSearchMatches = allMatches;
-        cachedSearchMeta = { query: rawQuery, total: allMatches.length, transId: searchTransId, scope, mode, queryWords };
+        const hlWords = hasBoolOp ? queryWords.filter(w => !["and", "or", "not"].includes(w)) : queryWords;
+        cachedSearchMeta = { query: rawQuery, total: allMatches.length, transId: searchTransId, scope, mode, queryWords: hlWords };
       } else {
-        const selectedBibleObj = CORE_BIBLES.find(b => b.id === searchTransId);
+        const selectedBibleObj = dynamicCatalog.find(b => b.id === searchTransId) || CORE_BIBLES.find(b => b.id === searchTransId);
         const bibleLabel = selectedBibleObj ? selectedBibleObj.name : searchTransId;
         resDiv.innerHTML = `<div class="loader">Per cercare in <b>${escapeHtml(bibleLabel)}</b> importa prima il relativo file <b>.epub</b> dalla sezione 💾 Backup:<br><br><button class="search-btn" onclick="openBackupModal()">📘 Apri Importazione EPUB</button></div>`;
         return;
@@ -6854,9 +6931,8 @@ function renderSearchResultsPage() {
 
   const highlightSearchMatches = (plainText) => {
     let safeTxt = escapeHtml(plainText);
-    const stopOps = new Set(["and", "or", "not"]);
     queryWords.forEach(w => {
-      if (w.length < 2 || stopOps.has(w)) return;
+      if (w.length < 2) return;
       const rgx = buildAccentInsensitiveRegex(w);
       safeTxt = safeTxt.replace(/(<[^>]+>)|([^<]+)/g, (_m, tag, txtNode) => {
         if (tag) return tag;
@@ -6945,6 +7021,15 @@ function buildUniversalRefsForVerse(bookId, chapter, verseNum, rawText) {
 }
 
 const bmInsightVerseCache = new Map();
+const bmInsightBookIndex = new Map();
+let bmInsightNormBodies = null;
+
+function resetInsightLookupCaches() {
+  bmInsightVerseCache.clear();
+  bmInsightBookIndex.clear();
+  bmInsightNormBodies = null;
+}
+
 function buildBookInsightCitationPattern(bookId) {
   const b = getBook(bookId);
   const alts = new Set([b.name, b.abbr]);
@@ -6961,21 +7046,39 @@ function buildBookInsightCitationPattern(bookId) {
     .map(a => a.includes("\\s*") ? a : normalizeForSearch(a).replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s+"))
     .join("|");
 }
+
+function getInsightEntriesForBook(ins, bookId, bookPat) {
+  const bId = Number(bookId);
+  if (bmInsightBookIndex.has(bId)) return bmInsightBookIndex.get(bId);
+  if (!bmInsightNormBodies || bmInsightNormBodies.length !== ins.entries.length) {
+    bmInsightNormBodies = ins.entries.map(e => normalizeForSearch(e.body));
+  }
+  const bookFilterRgx = new RegExp(`(?:^|[^\\p{L}\\p{N}])(?:${bookPat})\\.?\\s+\\d`, "iu");
+  const idxs = [];
+  for (let i = 0; i < bmInsightNormBodies.length; i++) {
+    if (bookFilterRgx.test(bmInsightNormBodies[i])) idxs.push(i);
+  }
+  bmInsightBookIndex.set(bId, idxs);
+  return idxs;
+}
+
 async function findInsightRefsForVerse(bookId, chapter, verseNum, maxHits = 14) {
   const cacheKey = `${bookId}_${chapter}_${verseNum}`;
   if (bmInsightVerseCache.has(cacheKey)) return bmInsightVerseCache.get(cacheKey);
   const ins = await getInsightData();
   if (!ins || !Array.isArray(ins.entries) || ins.entries.length === 0) return [];
-  const bookPat = buildBookInsightCitationPattern(Number(bookId));
+  const bId = Number(bookId);
+  const bookPat = buildBookInsightCitationPattern(bId);
+  const candidateIdxs = getInsightEntriesForBook(ins, bId, bookPat);
   const ch = Number(chapter), v = Number(verseNum);
   const singleChapterBooks = new Set([31, 57, 63, 64, 65]);
-  const chVerseRgx = singleChapterBooks.has(Number(bookId))
+  const chVerseRgx = singleChapterBooks.has(bId)
     ? new RegExp(`(?:^|[^\\p{L}\\p{N}])(?:${bookPat})\\.?\\s+(?:1:)?(\\d{1,3}(?:\\s*[–-]\\s*\\d{1,3})?(?:\\s*,\\s*\\d{1,3}(?:\\s*[–-]\\s*\\d{1,3})?)*)`, "giu")
     : new RegExp(`(?:^|[^\\p{L}\\p{N}])(?:${bookPat})\\.?\\s+${ch}:(\\d{1,3}(?:\\s*[–-]\\s*\\d{1,3})?(?:\\s*,\\s*\\d{1,3}(?:\\s*[–-]\\s*\\d{1,3})?)*)`, "giu");
   const matches = [];
-  for (let i = 0; i < ins.entries.length; i++) {
-    const e = ins.entries[i];
-    const normBody = normalizeForSearch(e.body);
+  for (let k = 0; k < candidateIdxs.length; k++) {
+    const i = candidateIdxs[k];
+    const normBody = bmInsightNormBodies[i];
     chVerseRgx.lastIndex = 0;
     let m;
     let matchedSpec = "";
@@ -6987,7 +7090,7 @@ async function findInsightRefsForVerse(bookId, chapter, verseNum, maxHits = 14) 
       }
     }
     if (matchedSpec) {
-      matches.push({ idx: i, title: e.title, query: `${ch}:${v}` });
+      matches.push({ idx: i, title: ins.entries[i].title, query: `${ch}:${v}` });
       if (matches.length >= maxHits) break;
     }
   }
@@ -7037,27 +7140,32 @@ function openStrongModalForVerse(clickedCode) {
   const book = getBook(state.bookId);
   const vNum = state.selectedVerse || 1;
   const rawVerse = state.selectedVerseText || "";
-  const normVerse = normalizeForSearch(rawVerse);
   const matches = [];
   const seenKeys = new Set();
-  Object.keys(PRO_STRONG_DICT).forEach(k => {
+  const addStrongCard = (k, highlightBorder = false) => {
     const d = PRO_STRONG_DICT[k];
-    const normK = normalizeForSearch(k);
-    const escapedKey = normK.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const wordRegex = new RegExp(`(?:^|[^a-z])${escapedKey}(?:$|[^a-z])`, "i");
-    const codeMatched = clickedCode && d.code.toUpperCase().includes(clickedCode.toUpperCase());
-    if ((codeMatched || wordRegex.test(normVerse)) && !seenKeys.has(normK)) {
-      seenKeys.add(normK);
-      matches.push(`
-        <div class="result-card" style="cursor:default; ${codeMatched ? 'border:2px solid var(--primary-light);' : ''}">
-          <div class="result-ref" style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;">
-            <span>${escapeHtml(k.toUpperCase())} — <span class="tag-badge">${escapeHtml(d.code)}</span></span>
-            <span class="tag-badge" onclick="searchWordInConcordance('${escapeJsStr(k)}')">🔍 Concordanza</span>
-          </div>
-          <div style="font-weight:700; margin:4px 0;">${escapeHtml(d.orig)}</div>
-          <div style="font-size:13.5px; line-height:1.45;">${escapeHtml(d.def)}</div>
-        </div>`);
-    }
+    if (!d || seenKeys.has(k)) return;
+    seenKeys.add(k);
+    matches.push(`
+      <div class="result-card" style="cursor:default; ${highlightBorder ? 'border:2px solid var(--primary-light);' : ''}">
+        <div class="result-ref" style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;">
+          <span>${escapeHtml(k.toUpperCase())} — <span class="tag-badge">${escapeHtml(d.code)}</span></span>
+          <span class="tag-badge" onclick="searchWordInConcordance('${escapeJsStr(k)}')">🔍 Concordanza</span>
+        </div>
+        <div style="font-weight:700; margin:4px 0;">${escapeHtml(d.orig)}</div>
+        <div style="font-size:13.5px; line-height:1.45;">${escapeHtml(d.def)}</div>
+      </div>`);
+  };
+  if (clickedCode) {
+    const upCode = String(clickedCode).toUpperCase();
+    Object.keys(PRO_STRONG_DICT).forEach(k => {
+      if (PRO_STRONG_DICT[k].code.toUpperCase().includes(upCode)) addStrongCard(k, true);
+    });
+  }
+  rawVerse.replace(/[A-Za-zÀ-ÖØ-öø-ÿ]{3,}/g, w => {
+    const dictKey = getStrongDictKey(w);
+    if (dictKey) addStrongCard(dictKey, false);
+    return w;
   });
   if (clickedCode && matches.length === 0) {
     matches.push(`
@@ -7495,9 +7603,16 @@ function changeFontSize(delta) {
   safeSaveStorage("bm_font_size", String(state.fontSize));
 }
 function applySavedTheme() {
+  document.documentElement.classList.remove("dark-mode", "oled-mode");
   document.body.classList.remove("dark-mode", "oled-mode");
-  if (state.themeMode === "dark") document.body.classList.add("dark-mode");
-  if (state.themeMode === "oled") document.body.classList.add("dark-mode", "oled-mode");
+  if (state.themeMode === "dark") {
+    document.documentElement.classList.add("dark-mode");
+    document.body.classList.add("dark-mode");
+  }
+  if (state.themeMode === "oled") {
+    document.documentElement.classList.add("dark-mode", "oled-mode");
+    document.body.classList.add("dark-mode", "oled-mode");
+  }
 }
 function closeProModal() {
   document.getElementById("proModal").style.display = "none";
@@ -7567,7 +7682,7 @@ function parseRefStringToTarget(str) {
   const cleanStr = String(str || "").trim().replace(/\s+/g, " ");
   const m = cleanStr.match(/^([1-3]?\s*[a-zA-ZÀ-ÿ]+(?:\s+dei\s+[a-zA-ZÀ-ÿ]+)?)\.?\s*(\d{1,3})(?:([:.,\s–-])\s*(\d.*))?$/i);
   if (!m) return null;
-  const qBook = m[1].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+  const qBook = normalizeForSearch(m[1]).replace(/[^a-z0-9]/g, "");
   const num1 = parseInt(m[2] || "1", 10);
   const sep = m[3] || "";
   const rest = (m[4] || "").trim();
@@ -7577,13 +7692,13 @@ function parseRefStringToTarget(str) {
   }
   if (!found) {
     found = BIBLE_BOOKS.find(b =>
-      b.abbr.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === qBook ||
-      b.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "") === qBook
+      normalizeForSearch(b.abbr) === qBook ||
+      normalizeForSearch(b.name).replace(/\s+/g, "") === qBook
     );
   }
   if (!found) {
     found = BIBLE_BOOKS.find(b =>
-      b.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "").startsWith(qBook)
+      normalizeForSearch(b.name).replace(/\s+/g, "").startsWith(qBook)
     );
   }
   if (!found) {
@@ -8009,7 +8124,12 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
   if ("speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined") {
     let idx = 0;
     let nativeOk = false;
+    let stallWatchdog = null;
+    const clearStallWatchdog = () => {
+      if (stallWatchdog) { clearTimeout(stallWatchdog); stallWatchdog = null; }
+    };
     const speakNextNative = () => {
+      clearStallWatchdog();
       if (bmUserStopped || !bmAudioPlaying || mySession !== bmSessionId) return;
       if (idx >= activeTtsQueue.length) {
         onSpeechFinishedSession(mySession);
@@ -8028,14 +8148,16 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
         const u = new SpeechSynthesisUtterance(item.text);
         u.lang = getActiveTTSLangCode(true);
         u.rate = bmTtsRate;
-        u.onstart = () => { nativeOk = true; };
+        u.onstart = () => { nativeOk = true; clearStallWatchdog(); };
         u.onend = () => {
+          clearStallWatchdog();
           if (!bmUserStopped && bmAudioPlaying && mySession === bmSessionId) {
             idx++;
             speakNextNative();
           }
         };
         u.onerror = (ev) => {
+          clearStallWatchdog();
           if (bmUserStopped || mySession !== bmSessionId || ev.error === "canceled" || ev.error === "interrupted") return;
           if (!nativeOk) {
             playWebViewStreamQueue(activeTtsQueue, idx, mySession);
@@ -8044,8 +8166,17 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
             speakNextNative();
           }
         };
+        if (!nativeOk) {
+          stallWatchdog = setTimeout(() => {
+            if (!nativeOk && !bmUserStopped && bmAudioPlaying && mySession === bmSessionId) {
+              try { window.speechSynthesis.cancel(); } catch (e) { console.debug(e); }
+              playWebViewStreamQueue(activeTtsQueue, idx, mySession);
+            }
+          }, 2600);
+        }
         window.speechSynthesis.speak(u);
       } catch (e) {
+        clearStallWatchdog();
         playWebViewStreamQueue(activeTtsQueue, idx, mySession);
       }
     };
@@ -8344,8 +8475,7 @@ function openBackupModal() {
 }
 function matchItalianBookNameToId(rawTitle, isStrictFromBody = false) {
   if (!rawTitle) return null;
-  const lower = rawTitle.toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  const lower = normalizeForSearch(rawTitle)
     .replace(/\([^)]*\)/g, " ") // Rimuove "(testo greco)" / "(testo ebraico)" in Ester CEI 2008
     .replace(/^[a-z0-9]{1,4}\s*[–—-]\s*/i, "") // Rimuove prefissi tipo "Gs – Giosuè", "Gb – Giobbe", "Gl – Gioele" di NR
     .replace(/\s+/g, " ")
@@ -8880,9 +9010,10 @@ function parseJwEpubChapterXhtml(xhtml) {
   const opfFile = allFiles.find(f => f.endsWith("content.opf"));
   let orderedHtmlFiles = allFiles
     .filter(f => (f.endsWith(".html") || f.endsWith(".xhtml")) && !f.includes("titlepage"))
-    .sort();
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }));
   if (opfFile) {
     try {
+      const opfDir = opfFile.includes("/") ? opfFile.slice(0, opfFile.lastIndexOf("/") + 1) : "";
       const opfTxt = await zip.files[opfFile].async("string");
       const parser = new DOMParser();
       const opfDoc = parser.parseFromString(opfTxt, "text/xml");
@@ -8890,10 +9021,26 @@ function parseJwEpubChapterXhtml(xhtml) {
       opfDoc.querySelectorAll("manifest > item").forEach(it => {
         manifestMap[it.getAttribute("id")] = it.getAttribute("href");
       });
+      const resolveOpfPath = (rawHref) => {
+        if (!rawHref) return "";
+        const dec = decodeURIComponent(rawHref).replace(/^\.\//, "");
+        const candidates = [opfDir + dec, dec];
+        for (const c of candidates) {
+          const parts = [];
+          c.split("/").forEach(seg => {
+            if (!seg || seg === ".") return;
+            if (seg === "..") parts.pop();
+            else parts.push(seg);
+          });
+          const norm = parts.join("/");
+          if (zip.files[norm]) return norm;
+        }
+        return "";
+      };
       const spineOrder = [];
       opfDoc.querySelectorAll("spine > itemref").forEach(ref => {
-        const href = manifestMap[ref.getAttribute("idref")];
-        if (href && zip.files[href] && !href.includes("titlepage")) spineOrder.push(href);
+        const resolved = resolveOpfPath(manifestMap[ref.getAttribute("idref")]);
+        if (resolved && !resolved.includes("titlepage")) spineOrder.push(resolved);
       });
       if (spineOrder.length > 0) orderedHtmlFiles = spineOrder;
     } catch (e) { console.debug(e); }
@@ -9403,7 +9550,6 @@ async function showDailyTextView(dayOffset = 0, fromBack = false) {
   const dateFormatted = targetDate.toLocaleDateString("it-IT", {
     weekday: "long", day: "numeric", month: "long"
   });
-  document.getElementById("currentRefLabel").textContent = "☀️ Scrittura del Giorno";
   const savedDaily = await getOfflineBible("bm:daily_text");
   if (reqId !== currentViewReqId) return;
   const resolvedEntry = savedDaily && savedDaily.days
@@ -9615,7 +9761,7 @@ async function importInsightFiles(event) {
     const payload = { updated: Date.now(), count: entries.length, entries };
     insightMemCache = payload;
     insightTitleIndexMap = null;
-    bmInsightVerseCache.clear();
+    resetInsightLookupCaches();
     bmDynamicCatalogEnriched = false;
     setStatus(`💾 Salvataggio di ${entries.length} voci nel database offline...`);
     await idbPut("bm:insight_it", payload);
@@ -9639,6 +9785,7 @@ async function getInsightData() {
   if (data) {
     insightMemCache = data;
     insightTitleIndexMap = null;
+    resetInsightLookupCaches();
   }
   return data;
 }
@@ -9700,10 +9847,6 @@ function linkInsightSeeRefs(htmlStr, entries) {
       return anyLinked ? (prefix + rebuilt) : full;
     });
   }).join("");
-}
-
-function normalizeForSearch(str) {
-  return (str || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
 function buildAccentInsensitiveRegex(term) {
@@ -9773,7 +9916,6 @@ async function showInsightView(selectedIndex = null, fromBack = false) {
   clearSpeechContext();
   setActiveTab("", "insightTabBtn");
   currentViewContext = { type: "insight", idx: selectedIndex, title: (selectedIndex !== null && insightMemCache?.entries?.[selectedIndex]) ? insightMemCache.entries[selectedIndex].title : "" };
-  document.getElementById("currentRefLabel").textContent = "📚 Perspicacia (it)";
   const main = document.getElementById("mainContainer");
   const data = await getInsightData();
   if (reqId !== currentViewReqId) return;
@@ -10184,7 +10326,6 @@ async function showSiView(fromBack = false) {
   clearSpeechContext();
   setActiveTab("", "siTabBtn");
   currentViewContext = { type: "si", mode: "index", label: "📘 Tutta la Scrittura" };
-  document.getElementById("currentRefLabel").textContent = "📘 Tutta la Scrittura";
   const main = document.getElementById("mainContainer");
   const data = await getSiData();
   if (reqId !== currentViewReqId) return;
@@ -10253,7 +10394,6 @@ async function showSiBook(bi, fromBack = false) {
   clearSpeechContext();
   setActiveTab("", "siTabBtn");
   currentViewContext = { type: "si", mode: "book", i: bi, label: "📘 Tutta la Scrittura" };
-  document.getElementById("currentRefLabel").textContent = "📘 Tutta la Scrittura";
   const main = document.getElementById("mainContainer");
   const data = await getSiData();
   if (reqId !== currentViewReqId) return;
@@ -10299,7 +10439,6 @@ async function showSiReader(kind, i, ci, fromBack = false, scrollToSectionIdx = 
   clearSpeechContext();
   setActiveTab("", "siTabBtn");
   currentViewContext = { type: "si", mode: "reader", kind, i, ci, label: "📘 Tutta la Scrittura" };
-  document.getElementById("currentRefLabel").textContent = "📘 Tutta la Scrittura";
   const main = document.getElementById("mainContainer");
   const data = await getSiData();
   if (reqId !== currentViewReqId) return;
@@ -10606,7 +10745,6 @@ async function showMapsView(selectedIdx = null, fromBack = false) {
   clearSpeechContext();
   setActiveTab("", "mapsTabBtn");
   currentViewContext = { type: "maps", mapIdx: null, label: "🗺️ Cartine Bibliche" };
-  document.getElementById("currentRefLabel").textContent = "🗺️ Cartine Bibliche";
   const main = document.getElementById("mainContainer");
   const meta = await bpGetMeta();
   if (reqId !== currentViewReqId) return;
@@ -11156,7 +11294,7 @@ function scrollRpToToday(smooth = false) {
 function exportBackupJson() {
   const data = {
     app: "BibbiaMultilingue_PRO",
-    version: "PRO_v13.8",
+    version: "PRO_v14.0",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
@@ -11936,9 +12074,9 @@ function dismissSplashScreen() {
   const elapsed = Date.now() - window.__splashShownAt;
   const wait = Math.max(0, 2200 - elapsed);
   setTimeout(() => {
+    splash.style.pointerEvents = "none";
     splash.style.opacity = "0";
-    splash.style.transform = "scale(1.02)";
-    setTimeout(() => splash.remove(), 600); // Allineato ai 0.6s del CSS
+    setTimeout(() => splash.remove(), 580);
   }, wait);
 }
 // Fallback di sicurezza nel caso la rete o il DB tardino
@@ -12008,9 +12146,6 @@ async function checkBmPwaUpdates() {
   try {
     const reg = bmSwReg || await navigator.serviceWorker.getRegistration();
     let statusLine = "Service Worker non ancora attivo.";
-    if (reg && reg.waiting) {
-      try { reg.waiting.postMessage({ type: "SKIP_WAITING" }); } catch (e) { console.debug(e); }
-    }
     if (reg && reg.active) {
       try { await reg.update(); } catch (e) { console.debug(e); }
       const info = await new Promise(resolve => {
@@ -12023,7 +12158,7 @@ async function checkBmPwaUpdates() {
         const shellBadge = info.hasCoreShell
           ? "✔ <b>App Shell 100% Offline Completa</b>"
           : "⚠️ <b>App Shell Parziale</b> (ricarica con rete per completare)";
-        statusLine = `${shellBadge}<br>• Versione cache: <code>${escapeHtml(info.version)}</code><br>• Risorse in cache: <b>${info.cachedCount}</b><br>• File critici (HTML/ZIP/Manifest): <b>${info.hasCoreShell ? "Verificati ✔" : "Incompleti"}</b><br>• Motore EPUB/ZIP locale (jszip.min.js): <b>${info.hasJszip ? "Integrato & pronto anche in aereo ✔" : "In caricamento"}</b>`;
+        statusLine = `${shellBadge}<br>• Versione shell: <code>${escapeHtml(info.version)}</code><br>• File App Shell in cache: <b>${info.cachedCount}</b><br>• Risorse API Bibbie in cache separata: <b>${Number(info.apiCachedCount) || 0}</b><br>• File critici (HTML/ZIP/Manifest): <b>${info.hasCoreShell ? "Verificati ✔" : "Incompleti"}</b><br>• Motore EPUB/ZIP locale (jszip.min.js): <b>${info.hasJszip ? "Integrato & pronto anche in aereo ✔" : "In caricamento"}</b>`;
       } else {
         statusLine = "✔ Service Worker attivo e sincronizzato.";
       }
@@ -12894,20 +13029,27 @@ async function openStrongCodeFromXRay(codeStr, fallbackWord) {
   const inp = document.getElementById("searchInput");
   if (!inp) return;
 
-  let useStrongsBible = false;
-  if (/^[HG]\d{1,4}$/i.test(cleanCode)) {
-    const offStrong = await getOfflineBible("gb:kjv_strongs");
-    if (offStrong && Array.isArray(offStrong.books) && offStrong.books.some(b => b.chapters && b.chapters.length > 0)) {
-      useStrongsBible = true;
+  let strongBibleId = "";
+  if (/^[HG]\d{1,4}$/i.test(cleanCode) && bibleSel) {
+    const optVals = new Set(Array.from(bibleSel.options).map(o => o.value));
+    const strongCandidate = state.downloadedBibles.find(id => id.toLowerCase().includes("strong") && optVals.has(id));
+    if (strongCandidate) {
+      const offStrong = await getOfflineBible(strongCandidate);
+      if (offStrong && Array.isArray(offStrong.books) && offStrong.books.some(b => b.chapters && b.chapters.length > 0)) {
+        strongBibleId = strongCandidate;
+      }
     }
   }
 
-  if (useStrongsBible && bibleSel) {
-    bibleSel.value = "gb:kjv_strongs";
+  if (strongBibleId && bibleSel) {
+    bibleSel.value = strongBibleId;
     inp.value = cleanCode;
   } else {
     if (bibleSel) {
-      const preferredBible = state.downloadedBibles.includes(state.trans1) ? state.trans1 : (state.downloadedBibles.includes("gb:bi12") ? "gb:bi12" : "gb:riveduta");
+      const optVals = new Set(Array.from(bibleSel.options).map(o => o.value));
+      const preferredBible = (!state.trans1.startsWith("helloao:") && optVals.has(state.trans1))
+        ? state.trans1
+        : (optVals.has("gb:bi12") ? "gb:bi12" : "gb:riveduta");
       bibleSel.value = preferredBible;
     }
     inp.value = fallbackWord || cleanCode;

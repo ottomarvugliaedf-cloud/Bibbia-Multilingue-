@@ -7,8 +7,8 @@
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#062356",
-  "theme_color": "#072a60",
+  "background_color": "#041a42",
+  "theme_color": "#041a42",
   "lang": "it",
   "categories": [
     "books",

@@ -1,5 +1,6 @@
-// Service Worker — Bibbia Multilingue PRO (v13.8 — Installazione Atomica, 100% Locale)
-const BM_SW_VERSION = "bm-pro-shell-v13-8";
+// Service Worker — Bibbia Multilingue PRO (v14.0 — Edizione Finale Definitiva)
+const BM_SW_VERSION = "bm-pro-shell-v14-0";
+const BM_API_CACHE = "bm-pro-api-v1";
 const BM_CRITICAL_SHELL = [
   "./index.html",
   "./jszip.min.js",
@@ -15,10 +16,16 @@ function safeCachePut(cache, req, res) {
   return cache.put(req, res).catch(() => {});
 }
 
+function isExactOrSubHost(hostname, domain) {
+  const h = String(hostname || "").toLowerCase();
+  const d = String(domain || "").toLowerCase();
+  return h === d || h.endsWith("." + d);
+}
+
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(BM_SW_VERSION);
-    // File critici in modalità atomica: se uno manca o fallisce, l'installazione abortisce e resta attiva la versione precedente sana
+    // File critici in modalità atomica: se uno manca o fallisce, resta attiva la versione precedente sana
     await Promise.all(
       BM_CRITICAL_SHELL.map((url) => cache.add(new Request(url, { cache: "reload" })))
     );
@@ -32,8 +39,11 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
+    // Elimina solo vecchie cache della shell preservando la cache persistente delle API bibliche
     await Promise.all(
-      keys.filter((k) => k.startsWith("bm-pro-") && k !== BM_SW_VERSION).map((k) => caches.delete(k))
+      keys
+        .filter((k) => k.startsWith("bm-pro-") && k !== BM_SW_VERSION && k !== BM_API_CACHE)
+        .map((k) => caches.delete(k))
     );
     await self.clients.claim();
   })());
@@ -41,27 +51,35 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("message", (event) => {
   const data = event.data || {};
-  if (data.type === "SKIP_WAITING") {
-    self.skipWaiting();
-  } else if (data.type === "GET_CACHE_STATUS" && event.ports && event.ports[0]) {
+  if (data.type === "GET_CACHE_STATUS" && event.ports && event.ports[0]) {
     (async () => {
       try {
-        const cache = await caches.open(BM_SW_VERSION);
-        const reqs = await cache.keys();
-        const urls = reqs.map((r) => r.url);
-        const criticalChecks = await Promise.all(
-          BM_CRITICAL_SHELL.map((u) => cache.match(u, { ignoreSearch: true }))
-        );
+        const [shellCache, apiCache] = await Promise.all([
+          caches.open(BM_SW_VERSION),
+          caches.open(BM_API_CACHE)
+        ]);
+        const [shellReqs, apiReqs, criticalChecks] = await Promise.all([
+          shellCache.keys(),
+          apiCache.keys(),
+          Promise.all(BM_CRITICAL_SHELL.map((u) => shellCache.match(u, { ignoreSearch: true })))
+        ]);
         const hasCoreShell = criticalChecks.every(Boolean);
-        const hasJszip = urls.some((u) => u.includes("jszip.min.js"));
+        const hasJszip = shellReqs.some((r) => new URL(r.url).pathname.endsWith("/jszip.min.js") || r.url.endsWith("jszip.min.js"));
         event.ports[0].postMessage({
           version: BM_SW_VERSION,
-          cachedCount: reqs.length,
+          cachedCount: shellReqs.length,
+          apiCachedCount: apiReqs.length,
           hasCoreShell,
           hasJszip
         });
       } catch (_e) {
-        event.ports[0].postMessage({ version: BM_SW_VERSION, cachedCount: 0, hasCoreShell: false, hasJszip: false });
+        event.ports[0].postMessage({
+          version: BM_SW_VERSION,
+          cachedCount: 0,
+          apiCachedCount: 0,
+          hasCoreShell: false,
+          hasJszip: false
+        });
       }
     })();
   }
@@ -74,13 +92,13 @@ self.addEventListener("fetch", (event) => {
 
   // Non intercettare streaming TTS, wol.jw.org o schemi non HTTP(S)
   if (!url.protocol.startsWith("http")) return;
-  if (url.hostname.includes("wol.jw.org") || url.hostname.includes("translate.googleapis.com")) return;
+  if (isExactOrSubHost(url.hostname, "wol.jw.org") || isExactOrSubHost(url.hostname, "translate.googleapis.com")) return;
 
-  // 1. API Bibbie online (GetBible / HelloAO): Network-First con fallback Cache
-  if (url.hostname.includes("api.getbible.net") || url.hostname.includes("bible.helloao.org")) {
+  // 1. API Bibbie online (GetBible / HelloAO): Network-First con cache API separata e persistente
+  if (isExactOrSubHost(url.hostname, "api.getbible.net") || isExactOrSubHost(url.hostname, "bible.helloao.org")) {
     let bgWork = Promise.resolve();
     const resPromise = (async () => {
-      const cache = await caches.open(BM_SW_VERSION);
+      const cache = await caches.open(BM_API_CACHE);
       try {
         const net = await fetch(req);
         if (net && net.ok) bgWork = safeCachePut(cache, req, net.clone());
