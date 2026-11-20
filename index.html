@@ -12,7 +12,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
   <link rel="apple-touch-icon" href="./icon-512.png">
   <link rel="manifest" href="./manifest.json">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="./jszip.min.js"></script>
   <style>
     /* MODALITÀ CHIARA SOLARE: Scala di Blu "Mia Lettura" (Zero Bianco Accecante) */
     :root {
@@ -6648,7 +6648,7 @@ function showSearchView(fromBack = false) {
     <div class="search-box">
       <input type="text" id="searchInput" class="search-input" placeholder="Parola, frase o versetto (tieni premuto 🔍 Cerca per Salto Rapido)..." onkeydown="if(event.key==='Enter') executeSearch(1)">
       <button class="search-btn" onclick="executeSearch(1)">🔍 Bibbia</button>
-      <button class="search-btn" style="background:linear-gradient(135deg, #00838f, #00acc1);" onclick="executeOmniSearch()" title="Cerca contemporaneamente in Perspicacia, Tutta la Scrittura, Cartine e Bibbia">🌐 4 Pilastri</button>
+      <button class="search-btn" style="background:linear-gradient(135deg, #00838f, #00acc1);" onclick="executeOmniSearch()" title="Cerca contemporaneamente in Perspicacia, Tutta la Scrittura, Cartine, Scrittura del Giorno e Bibbia">🌐 5 Pilastri</button>
       <button class="search-btn" style="background:linear-gradient(135deg, #1565c0, #0d47a1); border:1px solid #29b6f6;" onclick="openQuickJumpModal()" title="Salto Rapido al Passaggio (es. Gv 3 16)">⚡ Passo</button>
     </div>
     <div style="display:flex; gap:8px; flex-wrap:wrap; margin:0 0 10px 0;">
@@ -6669,7 +6669,7 @@ function showSearchView(fromBack = false) {
         <option value="gosp">Vangeli e Atti</option>
       </select>
     </div>
-    <div id="searchResults"><div class="loader">Inserisci una parola o frase e premi <b>🔍 Bibbia</b> (Concordanza) oppure <b>🌐 4 Pilastri</b> per cercare in tutta la Biblioteca (Perspicacia, Tutta la Scrittura, Cartine e Bibbia).</div></div>
+    <div id="searchResults"><div class="loader">Inserisci una parola o frase e premi <b>🔍 Bibbia</b> (Concordanza) oppure <b>🌐 5 Pilastri</b> per cercare in tutta la Biblioteca (Perspicacia, Tutta la Scrittura, Cartine, Scrittura del Giorno e Bibbia).</div></div>
   `;
 }
 const JW_TOWER_SVG = `<svg viewBox="0 0 1000 1000"><path d="M200 200H334V267H367V200H434V267H467V200H534V267H566V200H633V267H666V200H800V433H767V467H734V800H266V467H233V433H200Z"/></svg>`;
@@ -8468,7 +8468,7 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
   const setStatus = msg => { if (statusEl) statusEl.innerHTML = msg; };
   if (typeof JSZip === "undefined") {
     inputEl.value = "";
-    showBlueInfoModal("⚠️ Libreria Mancante", "Libreria JSZip non caricata. Verifica la connessione internet.");
+    showBlueInfoModal("⚠️ Modulo Mancante", "Modulo locale jszip.min.js non trovato nella cartella dell'app.");
     return;
   }
   try {
@@ -9137,7 +9137,7 @@ async function importDailyTextEpub(event) {
   const setStatus = msg => { if (statusEl) statusEl.innerHTML = msg; };
   if (typeof JSZip === "undefined") {
     inputEl.value = "";
-    showBlueInfoModal("⚠️ Libreria Mancante", "Libreria JSZip non caricata. Verifica la connessione internet.");
+    showBlueInfoModal("⚠️ Modulo Mancante", "Modulo locale jszip.min.js non trovato nella cartella dell'app.");
     return;
   }
   try {
@@ -9551,7 +9551,7 @@ async function importInsightFiles(event) {
   const setStatus = msg => { if (statusEl) statusEl.innerHTML = msg; };
   if (typeof JSZip === "undefined") {
     if (inputEl) inputEl.value = "";
-    showBlueInfoModal("⚠️ Libreria Mancante", "Libreria JSZip non caricata. Verifica la connessione internet.");
+    showBlueInfoModal("⚠️ Modulo Mancante", "Modulo locale jszip.min.js non trovato nella cartella dell'app.");
     return;
   }
   try {
@@ -11155,7 +11155,7 @@ function scrollRpToToday(smooth = false) {
 function exportBackupJson() {
   const data = {
     app: "BibbiaMultilingue_PRO",
-    version: "PRO_v13.6",
+    version: "PRO_v13.7",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
@@ -12019,7 +12019,7 @@ async function checkBmPwaUpdates() {
         reg.active.postMessage({ type: "GET_CACHE_STATUS" }, [ch.port2]);
       });
       if (info) {
-        statusLine = `✔ <b>App Shell 100% Offline Attiva</b><br>• Versione cache: <code>${escapeHtml(info.version)}</code><br>• Risorse in cache: <b>${info.cachedCount}</b><br>• Motore EPUB/ZIP offline (JSZip): <b>${info.hasJszip ? "Pronto anche in aereo ✔" : "In caricamento"}</b>`;
+        statusLine = `✔ <b>App Shell 100% Offline Attiva</b><br>• Versione cache: <code>${escapeHtml(info.version)}</code><br>• Risorse in cache: <b>${info.cachedCount}</b><br>• Motore EPUB/ZIP locale (jszip.min.js): <b>${info.hasJszip ? "Integrato & pronto anche in aereo ✔" : "In caricamento"}</b>`;
       } else {
         statusLine = "✔ Service Worker attivo e sincronizzato.";
       }

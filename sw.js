@@ -1,13 +1,13 @@
-// Service Worker — Bibbia Multilingue PRO (v13.6 Offline Shell)
-const BM_SW_VERSION = "bm-pro-shell-v13-6";
+// Service Worker — Bibbia Multilingue PRO (v13.7 — 100% Locale, Zero CDN)
+const BM_SW_VERSION = "bm-pro-shell-v13-7";
 const BM_APP_SHELL = [
   "./",
   "./index.html",
+  "./jszip.min.js",
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png"
 ];
-const BM_JSZIP_CDN = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
 
 function safeCachePut(cache, req, res) {
   return cache.put(req, res).catch(() => {});
@@ -19,16 +19,6 @@ self.addEventListener("install", (event) => {
     await Promise.allSettled(
       BM_APP_SHELL.map((url) => cache.add(new Request(url, { cache: "reload" })))
     );
-    // Pre-cache JSZip CDN così anche l'importazione EPUB/ZIP funziona offline in modalità aereo
-    try {
-      const resp = await fetch(BM_JSZIP_CDN, { mode: "cors", credentials: "omit" });
-      if (resp && resp.ok) await safeCachePut(cache, BM_JSZIP_CDN, resp.clone());
-    } catch (_e) {
-      try {
-        const opaque = await fetch(new Request(BM_JSZIP_CDN, { mode: "no-cors" }));
-        if (opaque) await safeCachePut(cache, BM_JSZIP_CDN, opaque);
-      } catch (_e2) { console.debug(_e2); }
-    }
     self.skipWaiting();
   })());
 });
@@ -52,7 +42,7 @@ self.addEventListener("message", (event) => {
       try {
         const cache = await caches.open(BM_SW_VERSION);
         const reqs = await cache.keys();
-        const hasJszip = reqs.some((r) => r.url.includes("jszip"));
+        const hasJszip = reqs.some((r) => r.url.includes("jszip.min.js"));
         event.ports[0].postMessage({
           version: BM_SW_VERSION,
           cachedCount: reqs.length,
@@ -74,23 +64,7 @@ self.addEventListener("fetch", (event) => {
   if (!url.protocol.startsWith("http")) return;
   if (url.hostname.includes("wol.jw.org") || url.hostname.includes("translate.googleapis.com")) return;
 
-  // 1. JSZip CDN: Cache-First (funziona istantaneamente anche offline)
-  if (url.href === BM_JSZIP_CDN || url.pathname.endsWith("jszip.min.js")) {
-    let bgWork = Promise.resolve();
-    const resPromise = (async () => {
-      const cache = await caches.open(BM_SW_VERSION);
-      const cached = await cache.match(req, { ignoreSearch: true }) || await cache.match(BM_JSZIP_CDN);
-      if (cached) return cached;
-      const net = await fetch(req);
-      if (net && (net.ok || net.type === "opaque")) bgWork = safeCachePut(cache, req, net.clone());
-      return net;
-    })();
-    event.respondWith(resPromise);
-    event.waitUntil(resPromise.then(() => bgWork).catch(() => {}));
-    return;
-  }
-
-  // 2. API Bibbie online (GetBible / HelloAO): Network-First con fallback Cache
+  // 1. API Bibbie online (GetBible / HelloAO): Network-First con fallback Cache
   if (url.hostname.includes("api.getbible.net") || url.hostname.includes("bible.helloao.org")) {
     let bgWork = Promise.resolve();
     const resPromise = (async () => {
@@ -110,7 +84,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 3. App Shell same-origin: Stale-While-Revalidate (event.waitUntil sincrono conforme W3C/Chromium)
+  // 2. App Shell same-origin (index.html, jszip.min.js, manifest.json, icone): Stale-While-Revalidate
   if (url.origin === self.location.origin) {
     let bgWork = Promise.resolve();
     const resPromise = (async () => {
