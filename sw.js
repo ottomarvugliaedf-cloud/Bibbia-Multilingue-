@@ -1,5 +1,5 @@
-// Service Worker — Bibbia Multilingue PRO (v13.4 Offline Shell)
-const BM_SW_VERSION = "bm-pro-shell-v13-4";
+// Service Worker — Bibbia Multilingue PRO (v13.5 Offline Shell)
+const BM_SW_VERSION = "bm-pro-shell-v13-5";
 const BM_APP_SHELL = [
   "./",
   "./index.html",

@@ -689,6 +689,60 @@
       text-underline-offset: 3px;
       cursor: pointer;
     }
+    .bm-ins-ref-badge {
+      display: inline-block;
+      background: rgba(46, 125, 50, 0.24);
+      color: #a5d6a7;
+      border: 1px solid #66bb6a;
+      padding: 1px 7px;
+      border-radius: 11px;
+      font-size: 0.88em;
+      font-weight: 800;
+      margin: 1px 2px;
+      cursor: pointer;
+    }
+    main.bm-paper-reading .bm-ins-ref-badge {
+      background: rgba(46, 125, 50, 0.12);
+      color: #1b5e20;
+      border-color: #4caf50;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .bm-si-mode-bar {
+      display: inline-flex;
+      background: #041a42;
+      border: 1px solid rgba(41, 182, 246, 0.55);
+      border-radius: 999px;
+      padding: 2px;
+      gap: 2px;
+    }
+    .bm-si-mode-btn {
+      background: transparent;
+      border: none;
+      color: #9ec9ff;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .bm-si-mode-btn.active {
+      background: #00e5ff;
+      color: #041a42;
+      box-shadow: 0 0 8px rgba(0, 229, 255, 0.55);
+    }
+    main.bm-paper-reading .bm-si-mode-bar {
+      background: #e8dec8;
+      border-color: #b59469;
+    }
+    main.bm-paper-reading .bm-si-mode-btn {
+      color: #5c3a10;
+    }
+    main.bm-paper-reading .bm-si-mode-btn.active {
+      background: #8c5818;
+      color: #fff8e8;
+      box-shadow: none;
+    }
     .bm-footnote-badge {
       display: inline-block;
       background: rgba(255, 213, 79, 0.16);
@@ -4032,10 +4086,9 @@ let catalogLoaded = false;
 const DEFAULT_ACTIVE_IDS = CORE_BIBLES.map(b => b.id);
 let navHistory = [];
 let isPersonalReadingMode = true;
-let currentChapterReqId = 0;
+let currentViewReqId = 0;
 let currentXRayReqId = 0;
 let bpLoadReqId = 0;
-let bmPaperBlocked = false;
 let currentInsightSpeechText = "";
 let currentDailySpeechText = "";
 let bmSwReg = null;
@@ -4278,7 +4331,6 @@ function onHeaderCenterPillClick() {
 
 function setActiveTab(tabId, quickPillId = null) {
   setHeaderCenterPill("");
-  bmPaperBlocked = (tabId === "tabBooks" || tabId === "tabCatalog" || quickPillId === "mapsTabBtn");
   const topMap = {
     tabBooks: "booksTabBtn",
     tabRead: "readTabBtn",
@@ -4312,10 +4364,12 @@ function getBook(id) {
   return BIBLE_BOOKS.find(b => b.id === Number(id)) || BIBLE_BOOKS[0];
 }
 function showBooksView() {
+  currentViewReqId++;
   saveCurrentPositionToHistory();
   closeActionBar();
   clearSpeechContext();
   setActiveTab("tabBooks");
+  currentViewContext = { type: "books" };
   const main = document.getElementById("mainContainer");
   const ot = BIBLE_BOOKS.filter(b => b.sec === "OT");
   const nt = BIBLE_BOOKS.filter(b => b.sec === "NT");
@@ -4329,11 +4383,13 @@ function showBooksView() {
 }
 let pendingGridBookId = 1;
 function showChaptersView(bookId) {
+  currentViewReqId++;
   clearSpeechContext();
-  document.getElementById("mainContainer")?.classList.remove("bm-paper-reading");
   pendingGridBookId = Number(bookId);
   const book = getBook(pendingGridBookId);
   if (book.ch === 1) { selectChapter(1); return; }
+  currentViewContext = { type: "chapters", bookId: pendingGridBookId };
+  syncBmPaperMode();
   const main = document.getElementById("mainContainer");
   let btns = "";
   for (let i = 1; i <= book.ch; i++) {
@@ -4533,15 +4589,23 @@ async function openBookOutlineModal() {
         ${itemsHtml}
       </div>`;
   }).join("");
+  const siData = await getSiData();
+  const siBookIdx = (siData && Array.isArray(siData.books))
+    ? siData.books.findIndex(b => Number(b.bookNumber) === Number(state.bookId))
+    : -1;
+  const siBridgeBtn = siBookIdx > -1
+    ? `<button type="button" class="myread-action-btn" style="background:#1565c0; margin-bottom:8px;" onclick="document.getElementById('myReadModal').style.display='none'; openSiBookRespectingMode(${siBookIdx});">📘 Studia ${escapeHtml(book.name)} in Tutta la Scrittura</button>`
+    : "";
   body.innerHTML = `
     <div style="text-align:center; padding:2px 0 10px 0;">
       <div style="font-size:22px; margin-bottom:2px;">📑</div>
       <div style="font-size:15.5px; font-weight:900; color:#ffd54f;">Sommario Ufficiale: ${escapeHtml(book.name)}</div>
       <div style="font-size:12px; color:#9ec9ff;">${chapters.length} ${chapters.length === 1 ? 'capitolo' : 'capitoli'} • Tocca un punto per saltare al passo</div>
     </div>
-    <div style="max-height:54vh; overflow-y:auto; margin-bottom:10px; padding-right:2px;">
+    <div style="max-height:50vh; overflow-y:auto; margin-bottom:10px; padding-right:2px;">
       ${chaptersHtml}
     </div>
+    ${siBridgeBtn}
     <button type="button" class="myread-action-btn" style="background:#062356;" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
   `;
   modal.style.display = "flex";
@@ -5022,7 +5086,7 @@ async function openNameLinkTarget(idx, kind, verseNum, bookNum) {
     const data = await getSiData();
     const bi = data && Array.isArray(data.books) ? data.books.findIndex(b => Number(b.bookNumber) === Number(bookNum)) : -1;
     state.selectedVerse = verseNum;
-    await (bi < 0 ? showSiView() : showSiBook(bi));
+    await (bi < 0 ? showSiView() : (siViewMode === "full" ? showSiReader("b", bi, "all") : showSiBook(bi)));
     return;
   }
   const target = await resolveInsightTarget(link.ins);
@@ -5090,7 +5154,7 @@ async function loadChapterView() {
   await evaluateMessianicBulbForCurrentView();
 }
 async function renderChapterView() {
-  const reqId = ++currentChapterReqId;
+  const reqId = ++currentViewReqId;
   closeActionBar();
   setActiveTab("tabRead");
   currentViewContext = { type: "bible" };
@@ -5108,7 +5172,7 @@ async function renderChapterView() {
   main.innerHTML = `<div class="loader">Caricamento di <b>${escapeHtml(book.name)} ${state.chapter}</b>...</div>`;
   try {
     const data1 = await fetchChapterData(state.trans1, state.bookId, state.chapter);
-    if (reqId !== currentChapterReqId) return;
+    if (reqId !== currentViewReqId) return;
     const footnotes1 = await fetchChapterFootnotes(state.trans1, state.bookId, state.chapter);
     const outline1 = (bmSettings.showOutlines !== false) ? await fetchChapterOutline(state.trans1, state.bookId, state.chapter) : [];
     let data2 = [], data3 = [];
@@ -5118,7 +5182,7 @@ async function renderChapterView() {
     if (state.parallelCount === 3) {
       try { data3 = await fetchChapterData(state.trans3, state.bookId, state.chapter); } catch(e) { data3 = []; }
     }
-    if (reqId !== currentChapterReqId) return;
+    if (reqId !== currentViewReqId) return;
     let versesHtml = "";
     if (state.parallelCount === 1) {
       versesHtml = data1.map(v => {
@@ -5194,7 +5258,7 @@ async function renderChapterView() {
     syncBmPaperMode();
     main.scrollTop = 0;
   } catch (err) {
-    if (reqId !== currentChapterReqId) return;
+    if (reqId !== currentViewReqId) return;
         if (err && err.message === "EPUB_NOT_IMPORTED") {
       const bMeta = CORE_BIBLES.find(b => b.id === state.trans1);
       const bTitle = bMeta ? bMeta.name : "Edizione EPUB Offline";
@@ -5321,7 +5385,7 @@ function syncBmPaperMode() {
   if (!main) return;
   const t = currentViewContext ? currentViewContext.type : "";
   const isGridView = Boolean(main.querySelector(".books-grid, .chapters-grid"));
-  const isReading = !bmPaperBlocked &&
+  const isReading =
     ["bible", "daily", "insight", "si", "notes", "saved", "search"].includes(t) &&
     !isGridView && main.children.length > 0;
   main.classList.toggle("bm-paper-reading", Boolean(bmSettings.paperMode && isReading));
@@ -6355,6 +6419,7 @@ function filterNotesByTag(tagVal) {
   showNotesView();
 }
 function showNotesView(fromBack = false) {
+  currentViewReqId++;
   if (!fromBack && currentViewContext.type !== "notes") saveCurrentPositionToHistory();
   closeActionBar();
   clearSpeechContext();
@@ -6450,12 +6515,15 @@ function searchWordInConcordance(word) {
   }
 }
 async function showCatalogView() {
+  const reqId = ++currentViewReqId;
   closeActionBar();
   clearSpeechContext();
   setActiveTab("tabCatalog");
+  currentViewContext = { type: "catalog" };
   const main = document.getElementById("mainContainer");
   main.innerHTML = `<div class="loader">Caricamento catalogo globale (oltre 1.350 versioni + edizioni Strong)...</div>`;
   await loadFullGlobalCatalog();
+  if (reqId !== currentViewReqId) return;
   const langs = ["Tutte le lingue", ...new Set(dynamicCatalog.map(b => b.lang))];
   main.innerHTML = `
     <div class="section-title"><span>Catalogo Globale Traduzioni & Strong</span><span>${dynamicCatalog.length} Edizioni</span></div>
@@ -6535,6 +6603,7 @@ async function toggleDownload(id) {
 }
 
 function showSearchView(fromBack = false) {
+  currentViewReqId++;
   if (!fromBack && currentViewContext.type !== "search") saveCurrentPositionToHistory();
   closeActionBar();
   clearSpeechContext();
@@ -7039,6 +7108,7 @@ async function copyFilteredHighlightsDossier(btnEl) {
 }
 
 async function showSavedView(fromBack = false) {
+  const reqId = ++currentViewReqId;
   if (!fromBack && currentViewContext.type !== "saved") saveCurrentPositionToHistory();
   closeActionBar();
   clearSpeechContext();
@@ -7069,6 +7139,7 @@ async function showSavedView(fromBack = false) {
 
   // Recupera il testo dei versetti evidenziati dalla Bibbia attiva in cache/DB
   const activeBible = await getOfflineBible(state.trans1);
+  if (reqId !== currentViewReqId) return;
   const getFastVerseText = (bId, chNum, vNum) => {
     try {
       if (activeBible && Array.isArray(activeBible.books)) {
@@ -9081,6 +9152,22 @@ async function importDailyTextEpub(event) {
   }
 }
 
+function onDailyPickMonthChange() {
+  const mSel = document.getElementById("dailyPickMonth");
+  const dSel = document.getElementById("dailyPickDay");
+  if (!mSel || !dSel) return;
+  const m = Math.min(12, Math.max(1, Number(mSel.value) || 1));
+  const curD = Number(dSel.value) || 1;
+  const maxDays = new Date(new Date().getFullYear(), m, 0).getDate();
+  const clampedD = Math.min(maxDays, Math.max(1, curD));
+  let dayOpts = "";
+  for (let d = 1; d <= maxDays; d++) {
+    dayOpts += `<option value="${d}" ${d === clampedD ? "selected" : ""}>Giorno ${d}</option>`;
+  }
+  dSel.innerHTML = dayOpts;
+  dSel.value = String(clampedD);
+}
+
 function openDailyCalendarPickerModal() {
   bmChimeHaptic();
   const modal = document.getElementById("myReadModal");
@@ -9091,11 +9178,12 @@ function openDailyCalendarPickerModal() {
   targetDate.setDate(targetDate.getDate() + currentDailyOffset);
   const curMonth = targetDate.getMonth() + 1;
   const curDay = targetDate.getDate();
+  const maxDays = new Date(targetDate.getFullYear(), curMonth, 0).getDate();
 
   const mesiNomi = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
   const monthOpts = mesiNomi.map((m, idx) => `<option value="${idx + 1}" ${idx + 1 === curMonth ? "selected" : ""}>${m}</option>`).join("");
   let dayOpts = "";
-  for (let d = 1; d <= 31; d++) {
+  for (let d = 1; d <= maxDays; d++) {
     dayOpts += `<option value="${d}" ${d === curDay ? "selected" : ""}>Giorno ${d}</option>`;
   }
 
@@ -9106,7 +9194,7 @@ function openDailyCalendarPickerModal() {
       <div style="font-size:13px; color:#9ec9ff;">Scegli il mese e il giorno della Scrittura del Giorno:</div>
     </div>
     <div style="display:flex; gap:8px; margin-bottom:14px;">
-      <select id="dailyPickMonth" class="trans-select" style="flex:1.3;">${monthOpts}</select>
+      <select id="dailyPickMonth" class="trans-select" style="flex:1.3;" onchange="onDailyPickMonthChange()">${monthOpts}</select>
       <select id="dailyPickDay" class="trans-select" style="flex:0.9;">${dayOpts}</select>
     </div>
     <div style="display:flex; gap:8px;">
@@ -9118,18 +9206,87 @@ function openDailyCalendarPickerModal() {
   modal.style.display = "flex";
 }
 
+function computeDailyOffsetForMonthDay(m, d) {
+  const now = new Date();
+  const maxDayInMonth = new Date(now.getFullYear(), m, 0).getDate();
+  const clampedD = Math.min(maxDayInMonth, Math.max(1, d));
+  const utcToday = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  const utcTarget = Date.UTC(now.getFullYear(), m - 1, clampedD);
+  return Math.round((utcTarget - utcToday) / 86400000);
+}
+
 function jumpToPickedDailyDate() {
   const m = Math.min(12, Math.max(1, Number(document.getElementById("dailyPickMonth")?.value) || 1));
   const rawD = Number(document.getElementById("dailyPickDay")?.value) || 1;
-  const now = new Date();
-  const maxDayInMonth = new Date(now.getFullYear(), m, 0).getDate();
-  const d = Math.min(maxDayInMonth, Math.max(1, rawD));
-  const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const targetMidnight = new Date(now.getFullYear(), m - 1, d);
-  const diffDays = Math.round((targetMidnight - todayMidnight) / 86400000);
+  const diffDays = computeDailyOffsetForMonthDay(m, rawD);
   const modal = document.getElementById("myReadModal");
   if (modal) modal.style.display = "none";
   showDailyTextView(diffDays, true);
+}
+
+let dailySearchTimer = null;
+async function openDailySearchModal() {
+  bmChimeHaptic();
+  const savedDaily = await getOfflineBible("bm:daily_text");
+  if (!savedDaily || !savedDaily.days) {
+    showBlueInfoModal("☀️ Scrittura del Giorno", "Importa prima il file EPUB della Scrittura del Giorno per cercare nei 365 commenti.");
+    return;
+  }
+  const totalDays = Object.keys(savedDaily.days).length;
+  bpModalOpen(`🔍 Cerca nei ${totalDays} Giorni`, `
+    <input type="search" id="dailySearchInput" class="bp-search" placeholder="🔍 Cerca parola, versetto o tema (es. fede, coraggio, Salmo)..." autocomplete="off" oninput="onDailySearchInput(this.value)">
+    <div id="dailySearchResults" style="max-height:58vh; overflow-y:auto;">
+      <div class="loader" style="padding:18px 8px;">Digita almeno 2 caratteri per cercare in tutti i <b>${totalDays}</b> giorni dell'anno.</div>
+    </div>
+  `);
+  setTimeout(() => document.getElementById("dailySearchInput")?.focus(), 80);
+}
+
+function onDailySearchInput(val) {
+  clearTimeout(dailySearchTimer);
+  dailySearchTimer = setTimeout(() => renderDailySearchResults(val), 130);
+}
+
+async function renderDailySearchResults(rawQ) {
+  const box = document.getElementById("dailySearchResults");
+  if (!box) return;
+  const q = normalizeForSearch((rawQ || "").trim());
+  if (q.length < 2) {
+    box.innerHTML = `<div class="loader" style="padding:16px 8px;">Digita almeno 2 caratteri per cercare nei commenti giornalieri.</div>`;
+    return;
+  }
+  const savedDaily = await getOfflineBible("bm:daily_text");
+  if (!savedDaily || !savedDaily.days) return;
+  const hits = [];
+  const keys = Object.keys(savedDaily.days).sort();
+  for (const k of keys) {
+    const entry = savedDaily.days[k];
+    if (!entry) continue;
+    const hayTheme = normalizeForSearch(entry.theme || "");
+    const hayBody = normalizeForSearch(`${entry.dateTitle || ""} ${entry.comment || ""}`);
+    const inTheme = hayTheme.includes(q);
+    const inBody = hayBody.includes(q);
+    if (inTheme || inBody) {
+      const [mm, dd] = k.split("-").map(Number);
+      hits.push({ mm, dd, entry, prio: inTheme ? 1 : 2 });
+    }
+  }
+  hits.sort((a, b) => a.prio - b.prio || a.mm - b.mm || a.dd - b.dd);
+  if (!hits.length) {
+    box.innerHTML = `<div class="loader">Nessun giorno trovato per "<b>${escapeHtml(rawQ.trim())}</b>".</div>`;
+    return;
+  }
+  const rgx = buildAccentInsensitiveRegex(rawQ.trim());
+  box.innerHTML = `<div style="font-size:12px; color:#9ec9ff; margin-bottom:8px;">Trovati <b>${hits.length}</b> giorni:</div>` +
+    hits.slice(0, 60).map(h => {
+      const offset = computeDailyOffsetForMonthDay(h.mm, h.dd);
+      const snippet = escapeHtml(`${h.entry.theme || ""}`).replace(rgx, '<mark style="background:#ffd54f; color:#111; font-weight:800; padding:0 2px; border-radius:3px;">$1</mark>');
+      return `
+        <div class="result-card" onclick="closeProModal(); showDailyTextView(${offset}, true);">
+          <div class="result-ref">☀️ ${escapeHtml(h.entry.dateTitle || `${h.dd}/${h.mm}`)}</div>
+          <div class="bm-justify-text" style="font-size:13px; color:#e3f2fd; line-height:1.45;">${snippet}</div>
+        </div>`;
+    }).join("");
 }
 
 // Scheda "carica il file" mostrata quando un modulo offline non è ancora stato importato
@@ -9157,6 +9314,7 @@ function renderImportCard({ title = "", text, gradient, label, accept, multiple 
 }
 
 async function showDailyTextView(dayOffset = 0, fromBack = false) {
+  const reqId = ++currentViewReqId;
   if (!fromBack && currentViewContext.type !== "daily") saveCurrentPositionToHistory();
   closeActionBar();
   stopAllAudio();
@@ -9175,7 +9333,11 @@ async function showDailyTextView(dayOffset = 0, fromBack = false) {
   });
   document.getElementById("currentRefLabel").textContent = "☀️ Scrittura del Giorno";
   const savedDaily = await getOfflineBible("bm:daily_text");
-  if (!savedDaily || !savedDaily.days || !savedDaily.days[dayKey]) {
+  if (reqId !== currentViewReqId) return;
+  const resolvedEntry = savedDaily && savedDaily.days
+    ? (savedDaily.days[dayKey] || (dayKey === "02-29" ? savedDaily.days["02-28"] : null))
+    : null;
+  if (!resolvedEntry) {
     main.innerHTML = `
       <div class="section-title"><span>☀️ Scrittura del Giorno (${escapeHtml(dateFormatted)})</span></div>
       ${renderImportCard({
@@ -9190,7 +9352,7 @@ async function showDailyTextView(dayOffset = 0, fromBack = false) {
     `;
     return;
   }
-  const entry = savedDaily.days[dayKey];
+  const entry = resolvedEntry;
   currentDailySpeechText = `${entry.dateTitle}. ${entry.theme}. ${entry.comment}`;
   const isToday = currentDailyOffset === 0;
   main.innerHTML = `
@@ -9202,6 +9364,7 @@ async function showDailyTextView(dayOffset = 0, fromBack = false) {
         <button class="nav-btn ${isToday ? 'bm-today-active' : ''}" onclick="showDailyTextView(0, true)">Oggi</button>
         <button class="nav-btn" onclick="showDailyTextView(${currentDailyOffset + 1}, true)">Domani ▶</button>
         <button class="nav-btn" onclick="openDailyCalendarPickerModal()" title="Scegli data">📅</button>
+        <button class="nav-btn" onclick="openDailySearchModal()" title="Cerca nei 365 giorni">🔍</button>
       </div>
     </div>
     <div class="result-card bm-justify-text" style="cursor:default; border-left:4px solid var(--primary-light); padding:14px; margin-bottom:12px; font-size:var(--font-size-verse); line-height:1.55;">
@@ -9314,8 +9477,9 @@ async function importInsightFiles(event) {
   const files = Array.from((inputEl && inputEl.files) || []);
   if (!files.length) return;
   const statusEl = getActiveEpubStatusEl();
-  const setStatus = msg => { if (statusEl) setStatus(msg); };
+  const setStatus = msg => { if (statusEl) statusEl.innerHTML = msg; };
   if (typeof JSZip === "undefined") {
+    if (inputEl) inputEl.value = "";
     showBlueInfoModal("⚠️ Libreria Mancante", "Libreria JSZip non caricata. Verifica la connessione internet.");
     return;
   }
@@ -9378,6 +9542,7 @@ async function importInsightFiles(event) {
     entries.sort((a, b) => a.title.localeCompare(b.title, "it"));
     const payload = { updated: Date.now(), count: entries.length, entries };
     insightMemCache = payload;
+    insightTitleIndexMap = null;
     bmInsightVerseCache.clear();
     bmDynamicCatalogEnriched = false;
     setStatus(`💾 Salvataggio di ${entries.length} voci nel database offline...`);
@@ -9394,11 +9559,75 @@ async function importInsightFiles(event) {
   }
 }
 
+let insightTitleIndexMap = null;
+
 async function getInsightData() {
   if (insightMemCache && Array.isArray(insightMemCache.entries)) return insightMemCache;
   const data = await idbGet("bm:insight_it");
-  if (data) insightMemCache = data;
+  if (data) {
+    insightMemCache = data;
+    insightTitleIndexMap = null;
+  }
   return data;
+}
+
+function getInsightTitleIndex(entries) {
+  if (insightTitleIndexMap) return insightTitleIndexMap;
+  const map = new Map();
+  (entries || []).forEach((e, idx) => {
+    const exact = normalizeForSearch(e.title || "").replace(/\s+/g, " ").trim();
+    if (exact && !map.has(exact)) map.set(exact, { idx, multi: false });
+    // Also index base title without trailing ", I" / ", II" for homonym detection
+    const base = exact.replace(/,\s*(?:i|ii|iii|iv|v|vi|vii|viii|ix|x|\d+)$/i, "").trim();
+    if (base && base !== exact) {
+      if (!map.has(base)) map.set(base, { idx, multi: false });
+      else map.get(base).multi = true;
+    }
+  });
+  insightTitleIndexMap = map;
+  return map;
+}
+
+function openInsightCrossRef(idx) {
+  bmHaptic(14);
+  insightSearchQuery = "";
+  showInsightView(idx);
+}
+
+function openInsightCrossRefQuery(term) {
+  bmHaptic(14);
+  insightActiveLetter = "TUTTE";
+  insightSearchQuery = term || "";
+  showInsightView(null);
+}
+
+function linkInsightSeeRefs(htmlStr, entries) {
+  if (!htmlStr || !Array.isArray(entries) || !entries.length) return htmlStr;
+  const titleMap = getInsightTitleIndex(entries);
+  const seeRe = /((?:Vedi|vedi)(?:\s+anche)?\s+)([A-ZÀ-Ý][A-ZÀ-Ý0-9\s,'’.-]*(?:;\s*[A-ZÀ-Ý][A-ZÀ-Ý0-9\s,'’.-]*)*)/g;
+  return htmlStr.split(/(<[^>]*>)/).map(part => {
+    if (part.startsWith("<")) return part;
+    return part.replace(seeRe, (full, prefix, listPart) => {
+      const segments = listPart.split(/(;\s*)/);
+      let anyLinked = false;
+      const rebuilt = segments.map(seg => {
+        if (/^;\s*$/.test(seg)) return seg;
+        const mTrim = seg.match(/^([A-ZÀ-Ý0-9\s,'’-]+?)([.\s]*)$/);
+        if (!mTrim) return seg;
+        const rawTerm = mTrim[1].replace(/,\s*$/, "").trim();
+        const trail = seg.slice(rawTerm.length);
+        const normKey = normalizeForSearch(rawTerm).replace(/\s+/g, " ").trim();
+        const hit = normKey.length >= 2 ? titleMap.get(normKey) : null;
+        if (!hit) return seg;
+        anyLinked = true;
+        if (hit.multi) {
+          return `<span class="bm-ins-ref-badge" onclick="event.stopPropagation(); openInsightCrossRefQuery('${escapeJsStr(rawTerm)}')" title="Apri voci correlate in Perspicacia">📚 ${rawTerm}</span>${trail}`;
+        }
+        return `<span class="bm-ins-ref-badge" onclick="event.stopPropagation(); openInsightCrossRef(${hit.idx})" title="Apri voce in Perspicacia">📚 ${rawTerm}</span>${trail}`;
+      }).join("");
+      return anyLinked ? (prefix + rebuilt) : full;
+    });
+  }).join("");
 }
 
 function normalizeForSearch(str) {
@@ -9461,6 +9690,7 @@ function onInsightSearchInput(val) {
 }
 
 async function showInsightView(selectedIndex = null, fromBack = false) {
+  const reqId = ++currentViewReqId;
   if (!fromBack && (currentViewContext.type !== "insight" || (selectedIndex !== null && currentViewContext.idx !== selectedIndex))) {
     saveCurrentPositionToHistory();
   }
@@ -9472,6 +9702,7 @@ async function showInsightView(selectedIndex = null, fromBack = false) {
   document.getElementById("currentRefLabel").textContent = "📚 Perspicacia (it)";
   const main = document.getElementById("mainContainer");
   const data = await getInsightData();
+  if (reqId !== currentViewReqId) return;
   if (!data || !Array.isArray(data.entries) || data.entries.length === 0) {
     main.innerHTML = `
       <div class="section-title"><span>📚 Perspicacia nello studio delle Scritture</span></div>
@@ -9494,7 +9725,7 @@ async function showInsightView(selectedIndex = null, fromBack = false) {
     setHeaderCenterPill(item.title, "insight");
     currentInsightSpeechText = `${item.title}. ${item.body}`;
 
-    const baseHtml = formatNoteLinks(item.body);
+    const baseHtml = linkInsightSeeRefs(formatNoteLinks(item.body), data.entries);
     const { html: highlightedBody, count: hitCount } = highlightHtmlSafe(baseHtml, insightSearchQuery);
     currentHitIdx = 0;
     const hitNavBar = hitCount > 0 ? `
@@ -9544,6 +9775,7 @@ async function showInsightView(selectedIndex = null, fromBack = false) {
     </div>
     <div class="search-box">
       <input type="text" id="insightSearchInput" class="search-input" value="${escapeHtml(insightSearchQuery)}" placeholder="🔍 Cerca voce o parola nel testo (es. Incorruzione)..." oninput="onInsightSearchInput(this.value)">
+      ${insightSearchQuery ? `<button class="nav-btn" onclick="insightSearchQuery=''; showInsightView(null, true);" title="Pulisci ricerca">✕</button>` : ""}
     </div>
     <div style="display:flex; gap:8px; flex-wrap:wrap; margin:0 0 10px 0;">
       <button class="jw-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,176,255,0.6);" onclick="openJwLibrary('it', 'insightSearchInput')" title="Cerca nella Biblioteca Online Watchtower (italiano)"><span class="jw-circle">${JW_TOWER_SVG}</span>Biblioteca Online · Italiano</button>
@@ -9634,6 +9866,24 @@ async function renderInsightFilteredList() {
 // MODULO TUTTA LA SCRITTURA (si_I — JSON offline: 66 libri + introduzione e studi)
 // ============================================================================
 let siMemCache = null;
+let siViewMode = safeGetStorage("bm_si_view_mode") === "full" ? "full" : "sections";
+let siSearchQuery = "";
+let siSearchTimeout = null;
+
+function setSiViewMode(mode, refreshFn = null) {
+  bmHaptic(12);
+  siViewMode = mode === "full" ? "full" : "sections";
+  safeSaveStorage("bm_si_view_mode", siViewMode);
+  if (typeof refreshFn === "function") refreshFn();
+}
+
+function openSiBookRespectingMode(bi) {
+  if (siViewMode === "full") {
+    showSiReader("b", bi, "all");
+  } else {
+    showSiBook(bi);
+  }
+}
 
 function siSnippet(txt, len = 145) {
   const clean = String(txt || "").replace(/\[[a-z]{1,2}\]/g, "").replace(/\s+/g, " ").trim();
@@ -9668,11 +9918,12 @@ function siExtraItems(data) {
   return flatExtras;
 }
 
-function siRenderParas(text, defaultBookId = null) {
+function siRenderParas(text, defaultBookId = null, fnPrefix = "") {
+  const pfx = fnPrefix ? `${fnPrefix}_` : "";
   return String(text || "").split(/\n{2,}/).map(p => p.trim()).filter(Boolean).map(p => {
     const html = formatNoteLinks(p, defaultBookId).replace(
       /\[([a-z]{1,2})\]/g,
-      '<sup onclick="document.getElementById(\'si_fn_$1\')?.scrollIntoView({behavior:\'smooth\',block:\'center\'})" style="color:var(--primary-light); font-weight:800; cursor:pointer; padding:0 2px;">[$1]</sup>'
+      `<sup onclick="document.getElementById('si_fn_${pfx}$1')?.scrollIntoView({behavior:'smooth',block:'center'})" style="color:var(--primary-light); font-weight:800; cursor:pointer; padding:0 2px;">[$1]</sup>`
     );
     const isMeta = /^(?:Scrittore|Scrittori|Dove fu scritto|Quando fu completato|Tempo a cui si riferisce):/i.test(p);
     if (isMeta) {
@@ -9690,8 +9941,8 @@ async function importSiFile(event) {
   const file = inputEl && inputEl.files && inputEl.files[0];
   if (!file) return;
   const statusEl = getActiveEpubStatusEl();
-  const setStatus = html => {
-    if (statusEl) statusEl.innerHTML = html;
+  const setStatus = msg => {
+    if (statusEl) statusEl.innerHTML = msg;
   };
   try {
     setStatus(`⏳ Analisi di <b>${escapeHtml(file.name)}</b> in corso...`);
@@ -9735,7 +9986,118 @@ async function getSiData() {
   return data;
 }
 
+function onSiSearchInput(val) {
+  siSearchQuery = val || "";
+  clearTimeout(siSearchTimeout);
+  siSearchTimeout = setTimeout(() => renderSiIndexContent(), 140);
+}
+
+async function renderSiIndexContent() {
+  const container = document.getElementById("siContentContainer");
+  if (!container) return;
+  const data = await getSiData();
+  if (!data || !Array.isArray(data.books)) return;
+  const rawQ = siSearchQuery.trim();
+  const q = normalizeForSearch(rawQ);
+  const extras = siExtraItems(data);
+
+  if (q.length >= 2) {
+    const hits = [];
+    data.books.forEach((b, bi) => {
+      const bTitle = siBookLabel(b);
+      (b.chapters || []).forEach((c, ci) => {
+        const titleHay = normalizeForSearch(`${bTitle} ${c.title || ""}`);
+        const contentRaw = String(c.content || "");
+        const contentHay = normalizeForSearch(contentRaw);
+        const inTitle = titleHay.includes(q);
+        const pos = contentHay.indexOf(q);
+        if (inTitle || pos !== -1) {
+          let rawSnip = "";
+          if (pos > 40) {
+            const s = Math.max(0, pos - 45);
+            const e = Math.min(contentRaw.length, pos + 115);
+            rawSnip = (s > 0 ? "…" : "") + contentRaw.slice(s, e).replace(/\[[a-z]{1,2}\]/g, "").replace(/\s+/g, " ") + (e < contentRaw.length ? "…" : "");
+          } else {
+            rawSnip = siSnippet(contentRaw, 150);
+          }
+          hits.push({
+            prio: inTitle ? 1 : 2,
+            kind: "b",
+            i: bi,
+            ci: siViewMode === "full" ? "all" : ci,
+            sectionAnchor: ci,
+            title: `${bTitle} — ${c.title}`,
+            page: c.printPage,
+            snippet: rawSnip
+          });
+        }
+      });
+    });
+    extras.forEach((x, xi) => {
+      const c = x.chapters[0];
+      if (!c) return;
+      const titleHay = normalizeForSearch(x.title || "");
+      const contentRaw = String(c.content || "");
+      const contentHay = normalizeForSearch(contentRaw);
+      const inTitle = titleHay.includes(q);
+      const pos = contentHay.indexOf(q);
+      if (inTitle || pos !== -1) {
+        let rawSnip = "";
+        if (pos > 40) {
+          const s = Math.max(0, pos - 45);
+          const e = Math.min(contentRaw.length, pos + 115);
+          rawSnip = (s > 0 ? "…" : "") + contentRaw.slice(s, e).replace(/\[[a-z]{1,2}\]/g, "").replace(/\s+/g, " ") + (e < contentRaw.length ? "…" : "");
+        } else {
+          rawSnip = siSnippet(contentRaw, 150);
+        }
+        hits.push({ prio: inTitle ? 1 : 2, kind: "x", i: xi, ci: 0, sectionAnchor: 0, title: x.title, page: c.printPage, snippet: rawSnip });
+      }
+    });
+    hits.sort((a, b) => a.prio - b.prio);
+    if (!hits.length) {
+      container.innerHTML = `<div class="loader">Nessun risultato in Tutta la Scrittura per "<b>${escapeHtml(rawQ)}</b>".</div>`;
+      return;
+    }
+    const rgx = buildAccentInsensitiveRegex(rawQ);
+    container.innerHTML = `<div style="font-size:12.5px; color:var(--text-muted); margin-bottom:8px;">Trovati <b>${hits.length}</b> risultati in Tutta la Scrittura:</div>` +
+      hits.slice(0, 80).map(h => {
+        const snipHtml = escapeHtml(h.snippet).replace(rgx, '<mark style="background:#ffd54f; color:#111; font-weight:700; padding:0 3px; border-radius:3px;">$1</mark>');
+        const ciArg = h.ci === "all" ? "'all'" : h.ci;
+        return `
+          <div class="result-card" onclick="showSiReader('${h.kind}', ${h.i}, ${ciArg}, false, ${h.sectionAnchor})">
+            <div class="result-ref">📘 ${escapeHtml(h.title)} ${siPageBadge(h.page)}</div>
+            <div class="bm-justify-text" style="font-size:13.5px; color:var(--text-muted); line-height:1.45;">${snipHtml}</div>
+          </div>`;
+      }).join("");
+    return;
+  }
+
+  const idxByNum = new Map(data.books.map((b, i) => [Number(b.bookNumber), i]));
+  const tiles = list => list.map(b => {
+    const bi = idxByNum.get(b.id);
+    return bi === undefined
+      ? `<button class="book-tile cat-${b.cat}" style="opacity:0.35;" disabled>${escapeHtml(b.abbr)}</button>`
+      : `<button class="book-tile cat-${b.cat}" onclick="openSiBookRespectingMode(${bi})">${escapeHtml(b.abbr)}</button>`;
+  }).join("");
+  const ot = BIBLE_BOOKS.filter(b => b.sec === "OT");
+  const nt = BIBLE_BOOKS.filter(b => b.sec === "NT");
+  const extraCards = extras.map((x, i) => `
+    <div class="result-card" onclick="showSiReader('x', ${i}, 0)">
+      <div class="result-ref">📘 ${escapeHtml(x.title)} ${siPageBadge(x.chapters[0].printPage)}</div>
+      <div class="bm-justify-text" style="font-size:13.5px; color:var(--text-muted); line-height:1.45;">${escapeHtml(siSnippet(x.chapters[0].content))}</div>
+    </div>
+  `).join("");
+  container.innerHTML = `
+    <div class="section-title"><span>Scritture Ebraico-Aramaiche</span><span>39 Libri</span></div>
+    <div class="books-grid">${tiles(ot)}</div>
+    <div class="section-title"><span>Scritture Greche Cristiane</span><span>27 Libri</span></div>
+    <div class="books-grid">${tiles(nt)}</div>
+    ${extras.length ? `<div class="section-title"><span>Introduzione e Studi</span><span>${extras.length}</span></div>${extraCards}` : ""}
+  `;
+}
+
 async function showSiView(fromBack = false) {
+  const reqId = ++currentViewReqId;
   if (!fromBack && currentViewContext.type !== "si") {
     saveCurrentPositionToHistory();
   }
@@ -9747,6 +10109,7 @@ async function showSiView(fromBack = false) {
   document.getElementById("currentRefLabel").textContent = "📘 Tutta la Scrittura";
   const main = document.getElementById("mainContainer");
   const data = await getSiData();
+  if (reqId !== currentViewReqId) return;
   if (!data || !Array.isArray(data.books) || data.books.length === 0) {
     main.innerHTML = `
       <div class="section-title">
@@ -9765,37 +10128,28 @@ async function showSiView(fromBack = false) {
     `;
     return;
   }
-  const idxByNum = new Map(data.books.map((b, i) => [Number(b.bookNumber), i]));
-  const tiles = list => list.map(b => {
-    const bi = idxByNum.get(b.id);
-    return bi === undefined
-      ? `<button class="book-tile cat-${b.cat}" style="opacity:0.35;" disabled>${escapeHtml(b.abbr)}</button>`
-      : `<button class="book-tile cat-${b.cat}" onclick="showSiBook(${bi})">${escapeHtml(b.abbr)}</button>`;
-  }).join("");
-  const ot = BIBLE_BOOKS.filter(b => b.sec === "OT");
-  const nt = BIBLE_BOOKS.filter(b => b.sec === "NT");
-  const extras = siExtraItems(data);
-  const extraCards = extras.map((x, i) => `
-    <div class="result-card" onclick="showSiReader('x', ${i}, 0)">
-      <div class="result-ref">📘 ${escapeHtml(x.title)} ${siPageBadge(x.chapters[0].printPage)}</div>
-      <div class="bm-justify-text" style="font-size:13.5px; color:var(--text-muted); line-height:1.45;">${escapeHtml(siSnippet(x.chapters[0].content))}</div>
-    </div>
-  `).join("");
   main.innerHTML = `
-    <div class="section-title">
-      <span>📘 Tutta la Scrittura è ispirata da Dio e utile</span>
-      <span>${getBackBtnHtml()}</span>
+    <div class="section-title" style="flex-wrap:wrap; gap:6px;">
+      <span>📘 Tutta la Scrittura</span>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <div class="bm-si-mode-bar" title="Scegli se aprire i libri divisi in 3 sezioni oppure per intero">
+          <button type="button" class="bm-si-mode-btn ${siViewMode === 'sections' ? 'active' : ''}" onclick="setSiViewMode('sections', () => showSiView(true))">📑 3 Sezioni</button>
+          <button type="button" class="bm-si-mode-btn ${siViewMode === 'full' ? 'active' : ''}" onclick="setSiViewMode('full', () => showSiView(true))">📄 Libro intero</button>
+        </div>
+        ${getBackBtnHtml()}
+      </div>
     </div>
-    <div style="display:flex; gap:8px; flex-wrap:wrap; margin:10px 0;">
-      <button class="jw-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,176,255,0.6);" onclick="openJwLibrary('it')" title="Cerca nella Biblioteca Online Watchtower (italiano)"><span class="jw-circle">${JW_TOWER_SVG}</span>Biblioteca Online · Italiano</button>
-      <button class="jw-btn btn-color-anim" style="--btn-bg:#2962ff; --btn-glow:rgba(41,98,255,0.6);" onclick="openJwLibrary('en')" title="Search the Watchtower Online Library (English)"><span class="jw-circle">${JW_TOWER_SVG}</span>Online Library · English</button>
+    <div class="search-box">
+      <input type="text" id="siSearchInput" class="search-input" value="${escapeHtml(siSearchQuery)}" placeholder="🔍 Cerca nei 66 libri, introduzione e studi..." oninput="onSiSearchInput(this.value)">
+      ${siSearchQuery ? `<button class="nav-btn" onclick="siSearchQuery=''; showSiView(true);" title="Pulisci ricerca">✕</button>` : ""}
     </div>
-    <div class="section-title"><span>Scritture Ebraico-Aramaiche</span><span>39 Libri</span></div>
-    <div class="books-grid">${tiles(ot)}</div>
-    <div class="section-title"><span>Scritture Greche Cristiane</span><span>27 Libri</span></div>
-    <div class="books-grid">${tiles(nt)}</div>
-    ${extras.length ? `<div class="section-title"><span>Introduzione e Studi</span><span>${extras.length}</span></div>${extraCards}` : ""}
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin:0 0 10px 0;">
+      <button class="jw-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,176,255,0.6);" onclick="openJwLibrary('it', 'siSearchInput')" title="Cerca nella Biblioteca Online Watchtower (italiano)"><span class="jw-circle">${JW_TOWER_SVG}</span>Biblioteca Online · Italiano</button>
+      <button class="jw-btn btn-color-anim" style="--btn-bg:#2962ff; --btn-glow:rgba(41,98,255,0.6);" onclick="openJwLibrary('en', 'siSearchInput')" title="Search the Watchtower Online Library (English)"><span class="jw-circle">${JW_TOWER_SVG}</span>Online Library · English</button>
+    </div>
+    <div id="siContentContainer"></div>
   `;
+  renderSiIndexContent();
   main.scrollTop = 0;
 }
 
@@ -9812,6 +10166,7 @@ function extractSiPillLabel(kind, item, ch) {
 }
 
 async function showSiBook(bi, fromBack = false) {
+  const reqId = ++currentViewReqId;
   if (!fromBack) {
     saveCurrentPositionToHistory();
   }
@@ -9823,12 +10178,16 @@ async function showSiBook(bi, fromBack = false) {
   document.getElementById("currentRefLabel").textContent = "📘 Tutta la Scrittura";
   const main = document.getElementById("mainContainer");
   const data = await getSiData();
+  if (reqId !== currentViewReqId) return;
   const book = data && data.books ? data.books[bi] : null;
   if (!book) {
     showSiView(true);
     return;
   }
-  setHeaderCenterPill(siBookLabel(book), "si_index");
+  const bookName = siBookLabel(book);
+  const bNum = Number(book.bookNumber) || 1;
+  currentViewContext.label = `📘 ${bookName}`;
+  setHeaderCenterPill(bookName, "si_index");
   const cards = book.chapters.map((c, ci) => `
     <div class="result-card" onclick="showSiReader('b', ${bi}, ${ci})">
       <div class="result-ref">📘 ${escapeHtml(c.title)} ${siPageBadge(c.printPage)}</div>
@@ -9836,52 +10195,171 @@ async function showSiBook(bi, fromBack = false) {
     </div>
   `).join("");
   main.innerHTML = `
-    <div class="chapter-header">
-      <div class="chapter-title">📘 ${escapeHtml(siBookLabel(book))}</div>
+    <div class="chapter-header" style="flex-wrap:wrap; gap:8px;">
+      <div class="chapter-title">📘 ${escapeHtml(bookName)}</div>
       <div class="chapter-nav-btns">
         ${getBackBtnHtml()}
         <button class="nav-btn" onclick="showSiView(true)">← Tutti i Libri</button>
       </div>
+    </div>
+    <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
+      ${book.chapters.length > 1 ? `<button class="search-btn" style="flex:1.3;" onclick="showSiReader('b', ${bi}, 'all')">📄 Leggi tutto ${escapeHtml(bookName)} per intero</button>` : ""}
+      <button class="nav-btn" style="flex:1;" onclick="openRef(${bNum}, 1)">📖 Apri ${escapeHtml(bookName)} 1 nella Bibbia</button>
     </div>
     ${cards}
   `;
   main.scrollTop = 0;
 }
 
-async function showSiReader(kind, i, ci, fromBack = false) {
-  if (!fromBack && currentViewContext.type === "si" && (currentViewContext.mode !== "reader" || currentViewContext.i !== i || currentViewContext.ci !== ci)) {
+async function showSiReader(kind, i, ci, fromBack = false, scrollToSectionIdx = null) {
+  const reqId = ++currentViewReqId;
+  if (!fromBack && (currentViewContext.type !== "si" || currentViewContext.mode !== "reader" || currentViewContext.kind !== kind || currentViewContext.i !== i || currentViewContext.ci !== ci)) {
     saveCurrentPositionToHistory();
   }
   closeActionBar();
   stopAllAudio();
+  clearSpeechContext();
   setActiveTab("", "siTabBtn");
   currentViewContext = { type: "si", mode: "reader", kind, i, ci, label: "📘 Tutta la Scrittura" };
   document.getElementById("currentRefLabel").textContent = "📘 Tutta la Scrittura";
   const main = document.getElementById("mainContainer");
   const data = await getSiData();
+  if (reqId !== currentViewReqId) return;
   if (!data) {
     showSiView();
     return;
   }
   const list = kind === "x" ? siExtraItems(data) : data.books;
   const item = list[i];
-  const ch = item && item.chapters ? item.chapters[ci] : null;
+  if (!item || !Array.isArray(item.chapters) || item.chapters.length === 0) {
+    showSiView();
+    return;
+  }
+
+  const isFullBook = (kind === "b" && ci === "all" && item.chapters.length > 1);
+  const itemName = kind === "x" ? item.title : siBookLabel(item);
+  const defaultBookId = kind === "b" ? Number(item.bookNumber) : null;
+  currentViewContext.label = `📘 ${itemName.slice(0, 14)}`;
+
+  if (isFullBook) {
+    const title = `${itemName} — Libro intero`;
+    setHeaderCenterPill(itemName, "si_book");
+    currentInsightSpeechText = `${itemName}. ` + item.chapters.map(c =>
+      `${c.title}. ${String(c.content || "").replace(/\[[a-z]{1,2}\]/g, "").replace(/[ \t]+/g, " ").trim()}`
+    ).join(" ");
+
+    const prevBtn = i > 0
+      ? `<button class="nav-btn" onclick="showSiReader('b', ${i - 1}, 'all')">◀ ${escapeHtml(siBookLabel(list[i - 1]))}</button>`
+      : `<button class="nav-btn" disabled style="opacity:0.4">◀ Prec.</button>`;
+    const nextBtn = i < list.length - 1
+      ? `<button class="nav-btn" onclick="showSiReader('b', ${i + 1}, 'all')">${escapeHtml(siBookLabel(list[i + 1]))} ▶</button>`
+      : `<button class="nav-btn" disabled style="opacity:0.4">Succ. ▶</button>`;
+
+    const firstPage = item.chapters[0]?.printPage;
+    const lastPage = item.chapters[item.chapters.length - 1]?.printPage;
+    const pageRange = firstPage
+      ? `<div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">Edizione stampata: ${lastPage && lastPage !== firstPage ? `pp. ${escapeHtml(String(firstPage))}–${escapeHtml(String(lastPage))}` : `p. ${escapeHtml(String(firstPage))}`} • Vista continua (${item.chapters.length} sezioni)</div>`
+      : "";
+
+    const jumpPillsHtml = `
+      <div style="display:flex; gap:5px; flex-wrap:wrap; margin-bottom:10px;">
+        ${item.chapters.map((c, secIdx) => `
+          <span class="tag-badge" style="padding:4px 9px; font-size:11.5px;" onclick="document.getElementById('si_sec_${secIdx}')?.scrollIntoView({behavior:'smooth', block:'start'})">
+            ${secIdx + 1}. ${escapeHtml(c.title)}
+          </span>
+        `).join("")}
+      </div>
+    `;
+
+    const sectionsHtml = item.chapters.map((sec, secIdx) => {
+      const notes = Array.isArray(sec.footnotes) ? sec.footnotes : [];
+      const secNotesHtml = notes.length ? `
+        <div style="margin-top:10px; padding-top:8px; border-top:1px dashed var(--border-color); font-size:13px; line-height:1.5; color:var(--text-muted);">
+          ${notes.map(n => `
+            <div id="si_fn_${secIdx}_${escapeHtml(n.label)}" style="margin-bottom:5px;">
+              <sup style="color:var(--primary-light); font-weight:800;">[${escapeHtml(n.label)}]</sup> ${formatNoteLinks(n.text, defaultBookId)}
+            </div>
+          `).join("")}
+        </div>
+      ` : "";
+      return `
+        <div id="si_sec_${secIdx}" style="margin-bottom:14px;">
+          <div class="section-title" style="margin-top:${secIdx === 0 ? '2px' : '14px'};">
+            <span>${secIdx + 1}. ${escapeHtml(sec.title)}</span>
+            ${sec.printPage ? `<span>p. ${escapeHtml(String(sec.printPage))}</span>` : ""}
+          </div>
+          <div class="result-card bm-justify-text" style="cursor:default; padding:15px; font-size:var(--font-size-verse); line-height:1.64;">
+            ${siRenderParas(sec.content, defaultBookId, String(secIdx))}
+            ${secNotesHtml}
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    const { html: finalBodyHtml, count: hitCount } = highlightHtmlSafe(sectionsHtml, siSearchQuery);
+    currentHitIdx = 0;
+    const hitNavBar = hitCount > 0 ? `
+      <div style="display:flex; align-items:center; justify-content:space-between; background:var(--bg-card); border:1px solid var(--primary-light); padding:8px 12px; border-radius:10px; margin-bottom:10px; position:sticky; top:0; z-index:15;">
+        <span style="font-size:13px; font-weight:700; color:var(--primary-light);">
+          🔍 "${escapeHtml(siSearchQuery.trim())}": <b id="insightHitCounter">1 / ${hitCount}</b>
+        </span>
+        <div style="display:flex; gap:6px;">
+          <button class="nav-btn" style="padding:4px 10px;" onclick="jumpToInsightHit(-1)">▲ Prec</button>
+          <button class="nav-btn" style="padding:4px 10px;" onclick="jumpToInsightHit(1)">▼ Succ</button>
+        </div>
+      </div>
+    ` : "";
+
+    main.innerHTML = `
+      <div class="chapter-header" style="flex-wrap:wrap; gap:8px;">
+        <div class="chapter-title">📘 ${escapeHtml(title)}</div>
+        <div class="chapter-nav-btns" style="flex-wrap:wrap;">
+          ${getBackBtnHtml()}
+          <button class="nav-btn" onclick="showSiBook(${i})" title="Mostra le 3 sezioni separate">📑 Per sezioni</button>
+          <button class="nav-btn" onclick="openRef(${defaultBookId || 1}, 1)" title="Apri il libro nella Bibbia">📖 Bibbia</button>
+          <button class="nav-btn" onclick="toggleChapterTTS()">🔊 Ascolta</button>
+        </div>
+      </div>
+      ${pageRange}
+      ${jumpPillsHtml}
+      ${hitNavBar}
+      ${finalBodyHtml}
+      <div style="display:flex; justify-content:space-between; margin-top:14px; gap:8px;">
+        ${prevBtn}
+        <button class="search-btn" onclick="showSiView(true)">📘 Tutti i Libri</button>
+        ${nextBtn}
+      </div>
+    `;
+    if (hitCount > 0) {
+      setTimeout(() => jumpToInsightHit(0), 80);
+    } else if (typeof scrollToSectionIdx === "number" && scrollToSectionIdx > 0) {
+      setTimeout(() => document.getElementById(`si_sec_${scrollToSectionIdx}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+    } else {
+      main.scrollTop = 0;
+    }
+    return;
+  }
+
+  const ch = item.chapters[Number(ci) || 0];
   if (!ch) {
     showSiView();
     return;
   }
-  const itemName = kind === "x" ? item.title : siBookLabel(item);
+  const numCi = Number(ci) || 0;
   const title = item.chapters.length > 1 ? `${itemName} — ${ch.title}` : itemName;
   setHeaderCenterPill(extractSiPillLabel(kind, item, ch), kind === "x" ? "si_index" : "si_book");
   currentInsightSpeechText = `${title}. ${String(ch.content || "").replace(/\[[a-z]{1,2}\]/g, "").replace(/[ \t]+/g, " ").trim()}`;
   let prev = null, next = null;
-  if (ci > 0) prev = [i, ci - 1];
+  if (numCi > 0) prev = [i, numCi - 1];
   else if (i > 0) prev = [i - 1, list[i - 1].chapters.length - 1];
-  if (ci < item.chapters.length - 1) next = [i, ci + 1];
+  if (numCi < item.chapters.length - 1) next = [i, numCi + 1];
   else if (i < list.length - 1) next = [i + 1, 0];
   const backBtn = kind === "x"
     ? `<button class="nav-btn" onclick="showSiView()">← Indice</button>`
-    : `<button class="nav-btn" onclick="showSiBook(${i})">← Libro</button>`;
+    : `<button class="nav-btn" onclick="showSiBook(${i})">← Sezioni</button>`;
+  const fullToggleBtn = (kind === "b" && item.chapters.length > 1)
+    ? `<button class="nav-btn" onclick="showSiReader('b', ${i}, 'all', false, ${numCi})" title="Visualizza tutto il libro in una sola pagina continua">📄 Tutto il libro</button>`
+    : "";
   const centerBtn = kind === "x"
     ? `<button class="search-btn" onclick="showSiView()">📘 Torna all'Indice</button>`
     : `<button class="search-btn" onclick="showSiBook(${i})">📘 Torna al Libro</button>`;
@@ -9897,7 +10375,7 @@ async function showSiReader(kind, i, ci, fromBack = false) {
     <div class="result-card bm-justify-text" style="cursor:default; padding:12px; font-size:13.5px; line-height:1.5; color:var(--text-muted);">
       ${notes.map(n => `
         <div id="si_fn_${escapeHtml(n.label)}" style="margin-bottom:6px;">
-          <sup style="color:var(--primary-light); font-weight:800;">[${escapeHtml(n.label)}]</sup> ${formatNoteLinks(n.text, kind === 'b' ? Number(item.bookNumber) : null)}
+          <sup style="color:var(--primary-light); font-weight:800;">[${escapeHtml(n.label)}]</sup> ${formatNoteLinks(n.text, defaultBookId)}
         </div>
       `).join("")}
     </div>
@@ -9905,17 +10383,33 @@ async function showSiReader(kind, i, ci, fromBack = false) {
   const pageInfo = ch.printPage
     ? `<div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">Edizione stampata: p. ${escapeHtml(String(ch.printPage))}</div>`
     : "";
+  const renderedContent = siRenderParas(ch.content, defaultBookId);
+  const { html: highlightedContent, count: hitCount } = highlightHtmlSafe(renderedContent, siSearchQuery);
+  currentHitIdx = 0;
+  const hitNavBar = hitCount > 0 ? `
+    <div style="display:flex; align-items:center; justify-content:space-between; background:var(--bg-card); border:1px solid var(--primary-light); padding:8px 12px; border-radius:10px; margin-bottom:10px; position:sticky; top:0; z-index:15;">
+      <span style="font-size:13px; font-weight:700; color:var(--primary-light);">
+        🔍 "${escapeHtml(siSearchQuery.trim())}": <b id="insightHitCounter">1 / ${hitCount}</b>
+      </span>
+      <div style="display:flex; gap:6px;">
+        <button class="nav-btn" style="padding:4px 10px;" onclick="jumpToInsightHit(-1)">▲ Prec</button>
+        <button class="nav-btn" style="padding:4px 10px;" onclick="jumpToInsightHit(1)">▼ Succ</button>
+      </div>
+    </div>
+  ` : "";
   main.innerHTML = `
     <div class="chapter-header" style="flex-wrap:wrap; gap:8px;">
       <div class="chapter-title">📘 ${escapeHtml(title)}</div>
-      <div class="chapter-nav-btns">
+      <div class="chapter-nav-btns" style="flex-wrap:wrap;">
         ${getBackBtnHtml()}
         ${backBtn}
+        ${fullToggleBtn}
         <button class="nav-btn" onclick="toggleChapterTTS()">🔊 Ascolta</button>
       </div>
     </div>
     ${pageInfo}
-    <div class="result-card bm-justify-text" style="cursor:default; padding:15px; font-size:var(--font-size-verse); line-height:1.64;">${siRenderParas(ch.content, kind === 'b' ? Number(item.bookNumber) : null)}</div>
+    ${hitNavBar}
+    <div class="result-card bm-justify-text" style="cursor:default; padding:15px; font-size:var(--font-size-verse); line-height:1.64;">${highlightedContent}</div>
     ${notesHtml}
     <div style="display:flex; justify-content:space-between; margin-top:14px; gap:8px;">
       ${prevBtn}
@@ -9923,7 +10417,11 @@ async function showSiReader(kind, i, ci, fromBack = false) {
       ${nextBtn}
     </div>
   `;
-  main.scrollTop = 0;
+  if (hitCount > 0) {
+    setTimeout(() => jumpToInsightHit(0), 80);
+  } else {
+    main.scrollTop = 0;
+  }
 }
 
 // ============================================================================
@@ -10023,6 +10521,7 @@ function onMapsSearchInput(val) {
   mapsSearchTimeout = setTimeout(renderMapsGridList, 140);
 }
 async function showMapsView(selectedIdx = null, fromBack = false) {
+  const reqId = ++currentViewReqId;
   if (!fromBack && currentViewContext.type !== "maps") saveCurrentPositionToHistory();
   closeActionBar();
   stopAllAudio();
@@ -10032,6 +10531,7 @@ async function showMapsView(selectedIdx = null, fromBack = false) {
   document.getElementById("currentRefLabel").textContent = "🗺️ Cartine Bibliche";
   const main = document.getElementById("mainContainer");
   const meta = await bpGetMeta();
+  if (reqId !== currentViewReqId) return;
   if (!meta) {
     clearSpeechContext();
     main.innerHTML = `
@@ -10304,13 +10804,15 @@ function bpSheetHtml(map) {
   if (map.altitudeScale) {
     h += `<div class="bp-gt">Altitudine</div>` + map.altitudeScale.rows.map(r => `<div class="bp-it"><span class="bp-g">${r.meters} m</span><span>${r.feet} piedi${r.note ? " — " + escapeHtml(r.note) : ""}</span></div>`).join("");
   }
-  (map.groups || []).forEach(g => {
+  (map.groups || []).forEach((g, gi) => {
+    h += `<div class="bp-group-wrap" data-g="${gi}">`;
     if (g.title) h += `<div class="bp-gt">${escapeHtml(g.title)}${g.titleGrid ? " · " + g.titleGrid : ""}</div>`;
     (g.items || []).forEach(it => {
       const cells = it.grid || [];
-      const click = cells.length ? ` onclick="bpFocusCell('${cells[0]}')"` : "";
+      const click = cells.length ? ` onclick="bpFocusCell('${escapeJsStr(cells.join(","))}', '${escapeJsStr(it.name || "")}')"` : "";
       h += `<div class="bp-it${cells.length ? " click" : ""}" data-n="${escapeHtml(bpKeyOf(it.name))}"${click}><span class="bp-g">${escapeHtml(cells.join("/") || (it.n ? it.n + "." : "·"))}</span><span>${it.symbol ? escapeHtml(it.symbol) + " " : ""}${it.italic ? "<i>" + escapeHtml(it.name) + "</i>" : escapeHtml(it.name)}</span></div>`;
     });
+    h += `</div>`;
   });
   return h;
 }
@@ -10319,14 +10821,20 @@ function bpSheetFilter(v) {
   document.querySelectorAll("#bpSheet .bp-it").forEach(el => {
     el.style.display = !k || (el.getAttribute("data-n") || "").includes(k) ? "" : "none";
   });
+  document.querySelectorAll("#bpSheet .bp-group-wrap").forEach(grp => {
+    const anyVisible = Array.from(grp.querySelectorAll(".bp-it")).some(el => el.style.display !== "none");
+    grp.style.display = (!k || anyVisible) ? "" : "none";
+  });
 }
-function bpFocusCell(cell) {
-  bpV.cells = [cell];
-  bpV.label = "";
+function bpFocusCell(cellsCsv, placeLabel = "") {
+  const arr = String(cellsCsv || "").split(",").map(s => s.trim()).filter(Boolean);
+  if (!arr.length) return;
+  bpV.cells = arr;
+  bpV.label = placeLabel || "";
   bpDrawHighlights();
   bpRenderChips();
   document.getElementById("bpSheet").classList.remove("open");
-  bpZoomToCell(cell);
+  bpZoomToCell(arr[0]);
 }
 // ============================================================================
 // MODULO LETTURA QUOTIDIANA (4 Piani Annuali 365 Giorni, Finestra 3 Righe, Flag Verde)
@@ -10578,6 +11086,7 @@ function exportBackupJson() {
     fontSize: state.fontSize,
     themeMode: state.themeMode,
     bmSettings: bmSettings,
+    siViewMode: siViewMode,
     ttsRate: bmTtsRate,
     ttsAutoNext: bmTtsAutoNextPref,
     personalReading: {
@@ -10668,6 +11177,10 @@ function confirmImportBackupNow() {
     if (parsed.bmSettings && typeof parsed.bmSettings === "object") {
       bmSettings = { ...bmSettings, ...parsed.bmSettings };
       saveBmSettings();
+    }
+    if (parsed.siViewMode === "full" || parsed.siViewMode === "sections") {
+      siViewMode = parsed.siViewMode;
+      safeSaveStorage("bm_si_view_mode", siViewMode);
     }
     if (parsed.ttsRate) {
       bmTtsRate = Math.min(1.5, Math.max(0.75, Number(parsed.ttsRate) || 1.0));
@@ -11348,7 +11861,7 @@ function handlePortionTextSelection() {
   const sel = window.getSelection ? window.getSelection() : null;
   if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
   const anchor = sel.anchorNode ? (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement) : null;
-  if (anchor && (anchor.closest("#proModal") || anchor.closest("#noteModal") || anchor.closest("#myReadModal") || anchor.closest("#bmSelectModal") || anchor.closest("#mapsViewer"))) return;
+  if (anchor && anchor.closest("#proModal, #noteModal, #myReadModal, #bmSelectModal, #mapsViewer, #bmSettingsDrawer, #bmProphecyWidget")) return;
   const txt = extractCleanSelectedText();
   if (txt.length >= 4) {
     const vRow = anchor ? anchor.closest(".verse-row, .parallel-row, .parallel-row-3") : null;
@@ -11368,7 +11881,6 @@ document.addEventListener("touchend", () => setTimeout(handlePortionTextSelectio
 // ============================================================================
 // MODULO PWA 100% OFFLINE (Service Worker Registration & Verifica Aggiornamenti)
 // ============================================================================
-bmSwReg = null;
 function initBmServiceWorker() {
   if (!("serviceWorker" in navigator) || !/^https?:$/i.test(window.location.protocol)) return;
   navigator.serviceWorker.register("./sw.js").then(reg => {
@@ -11846,6 +12358,11 @@ document.getElementById("mainContainer")?.addEventListener("touchend", function(
     const ci = currentViewContext.ci;
     const item = list[i];
     if (!item) return;
+    if (ci === "all") {
+      if (isNext && i < list.length - 1) showSiReader("b", i + 1, "all");
+      else if (!isNext && i > 0) showSiReader("b", i - 1, "all");
+      return;
+    }
     if (isNext) {
       if (ci < item.chapters.length - 1) showSiReader(currentViewContext.kind, i, ci + 1);
       else if (i < list.length - 1) showSiReader(currentViewContext.kind, i + 1, 0);
@@ -12861,6 +13378,7 @@ function getFirstVerseNumFromSpec(vSpec) {
 async function enrichMessianicPropheciesFromOfflineDB() {
   if (bmDynamicCatalogEnriched) return bmProphecyList;
   bmDynamicCatalogEnriched = true;
+  bmProphecyList = [...CORE_MESSIANIC_PROPHECIES];
 
   const seenKeys = new Set(bmProphecyList.map(p => `${p.b}_${p.c}_${getFirstVerseNumFromSpec(p.v)}`));
 
@@ -13495,6 +14013,10 @@ document.documentElement.style.setProperty("--font-size-verse", state.fontSize +
 applySavedTheme();
 updateReadingPlanHeaderBtn();
 updateMyReadingLabel();
+if (bmTtsRate !== 1) {
+  const ttsBootBtn = document.getElementById("ttsChapterBtn");
+  if (ttsBootBtn) ttsBootBtn.innerHTML = `<span class="tab-icon">🔊</span><span>Ascolta ${bmTtsRate}x</span>`;
+}
 try { loadExternalExegeticalModules(); } catch (e) { console.debug(e); }
 try { initBmServiceWorker(); } catch (e) { console.debug(e); }
 populateSelects()
