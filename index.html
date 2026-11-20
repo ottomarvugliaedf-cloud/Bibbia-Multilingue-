@@ -4089,6 +4089,22 @@ let isPersonalReadingMode = true;
 let currentViewReqId = 0;
 let currentXRayReqId = 0;
 let bpLoadReqId = 0;
+let searchReqId = 0;
+let omniReqId = 0;
+let peekReqId = 0;
+let deepenReqId = 0;
+let insightSearchReqId = 0;
+let siSearchReqId = 0;
+let mapsSearchReqId = 0;
+let dailySearchReqId = 0;
+let bmScrollHighlightTimer = null;
+
+function getLocalIsoDateStr(d = new Date()) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
 let currentInsightSpeechText = "";
 let currentDailySpeechText = "";
 let bmSwReg = null;
@@ -4594,7 +4610,7 @@ async function openBookOutlineModal() {
     ? siData.books.findIndex(b => Number(b.bookNumber) === Number(state.bookId))
     : -1;
   const siBridgeBtn = siBookIdx > -1
-    ? `<button type="button" class="myread-action-btn" style="background:#1565c0; margin-bottom:8px;" onclick="document.getElementById('myReadModal').style.display='none'; openSiBookRespectingMode(${siBookIdx});">📘 Studia ${escapeHtml(book.name)} in Tutta la Scrittura</button>`
+    ? `<button type="button" class="myread-action-btn" style="background:#1565c0; margin-bottom:8px;" onclick="document.getElementById('myReadModal').style.display='none'; siSearchQuery=''; openSiBookRespectingMode(${siBookIdx});">📘 Studia ${escapeHtml(book.name)} in Tutta la Scrittura</button>`
     : "";
   body.innerHTML = `
     <div style="text-align:center; padding:2px 0 10px 0;">
@@ -5085,6 +5101,7 @@ async function openNameLinkTarget(idx, kind, verseNum, bookNum) {
   if (kind === "si") {
     const data = await getSiData();
     const bi = data && Array.isArray(data.books) ? data.books.findIndex(b => Number(b.bookNumber) === Number(bookNum)) : -1;
+    siSearchQuery = "";
     state.selectedVerse = verseNum;
     await (bi < 0 ? showSiView() : (siViewMode === "full" ? showSiReader("b", bi, "all") : showSiBook(bi)));
     return;
@@ -6134,18 +6151,22 @@ function formatNoteLinks(txt, defaultBookId = null) {
       firstVList = vListImplicit;
     }
 
-    const bookName = getBook(bId).name;
-    let curCh = firstCh;
+    const bookObj = getBook(bId);
+    const bookName = bookObj.name;
+    const isSingleChBook = bookObj.ch === 1;
+    let curCh = isSingleChBook ? "1" : firstCh;
 
     const headEndIdx = fullMatch.length - (tailPart ? tailPart.length : 0);
     const firstToken = fullMatch.slice(0, headEndIdx);
-    const firstRef = `${bookName} ${curCh}${firstVList ? ":" + firstVList : ""}`;
+    const firstRef = isSingleChBook
+      ? `${bookName} 1:${firstVList || firstCh}`
+      : `${bookName} ${curCh}${firstVList ? ":" + firstVList : ""}`;
 
     let outSeg = `<span class="tag-badge" onclick="event.stopPropagation(); jumpToRefString('${escapeJsStr(firstRef)}')">📖 ${firstToken}</span>`;
     if (!tailPart) return outSeg;
     const crossChMatch = firstToken.match(/[–-]\s*(\d{1,3}):\d{1,3}/);
     if (crossChMatch) curCh = crossChMatch[1];
-    let hasColons = Boolean(firstVList);
+    let hasColons = Boolean(firstVList) || isSingleChBook;
 
     const segRegex = /(\s*([;,])\s*)(\d{1,3}[a-z]?)(?::(\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?(?:\s*,\s*(?!\d{1,3}\s*:)\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?)*))?(?:\s*[–-]\s*(\d{1,3}[a-z]?))?/g;
 
@@ -6153,9 +6174,9 @@ function formatNoteLinks(txt, defaultBookId = null) {
       const cleanN1 = n1.replace(/\D/g, "");
       let targetRef = "";
       if (vListAfterColon) {
-        curCh = cleanN1; hasColons = true;
+        curCh = isSingleChBook ? "1" : cleanN1; hasColons = true;
         targetRef = `${bookName} ${curCh}:${vListAfterColon}`;
-      } else if (sepChar === "," && hasColons) {
+      } else if (isSingleChBook || (sepChar === "," && hasColons)) {
         const vRange = rangeEndNoColon ? `${cleanN1}-${rangeEndNoColon.replace(/\D/g, "")}` : cleanN1;
         targetRef = `${bookName} ${curCh}:${vRange}`;
       } else {
@@ -6354,7 +6375,12 @@ async function openLocalPubBridge(code, rawRest, fullRef) {
         }
       });
       if (best) {
-        showSiReader(best.kind, best.i, best.ci);
+        siSearchQuery = "";
+        if (best.kind === "b" && siViewMode === "full") {
+          showSiReader("b", best.i, "all", false, best.ci);
+        } else {
+          showSiReader(best.kind, best.i, best.ci);
+        }
         return;
       }
     }
@@ -6383,8 +6409,11 @@ function showPubRefModal(fullRef) {
     ? `${escapeHtml(t.title)}${t.where ? "<br>" + escapeHtml(t.where) : ""}`
     : `${escapeHtml(t.title)}<br><span style="opacity:0.85;">Scegli poi l'articolo o il libro dall'elenco.</span>`;
 
+  const bridgeCodeJs = escapeJsStr(p.code || "it");
+  const bridgeRestJs = escapeJsStr(p.rest || "");
+  const bridgeRefJs = escapeJsStr(fullRef);
   const offlineBridgeBtn = (isSi || isIt) ? `
-    <button class="myread-action-btn btn-color-anim" style="--btn-bg:#00c853; --btn-glow:rgba(0,200,83,0.8); background:#2e7d32;" onclick="openLocalPubBridge('${escapeJsStr(p.code || "it")}', '${escapeJsStr(p.rest || "")}', '${escapeJsStr(fullRef)}')">
+    <button class="myread-action-btn btn-color-anim" style="--btn-bg:#00c853; --btn-glow:rgba(0,200,83,0.8); background:#2e7d32;" onclick="openLocalPubBridge('${bridgeCodeJs}', '${bridgeRestJs}', '${bridgeRefJs}')">
       ⚡ Apri subito nell'App (${isSi ? "Tutta la Scrittura Offline" : "Perspicacia Offline"})
     </button>
   ` : "";
@@ -6698,7 +6727,18 @@ let currentSearchPage = 1;
 const RESULTS_PER_PAGE = 250;
 let cachedSearchMatches = [];
 let cachedSearchMeta = { query: "", total: 0, transId: "", scope: "", mode: "", queryWords: [] };
+function openSearchResultRef(transId, bookId, ch, v) {
+  if (transId && state.downloadedBibles.includes(transId)) {
+    state.trans1 = transId;
+    safeSaveStorage("bm_trans1", transId);
+    const t1 = document.getElementById("trans1");
+    if (t1) t1.value = transId;
+  }
+  openRef(bookId, ch, v);
+}
+
 async function executeSearch(page = 1) {
+  const reqId = ++searchReqId;
   const inpEl = document.getElementById("searchInput");
   const rawQuery = inpEl ? inpEl.value.trim() : "";
   const scopeEl = document.getElementById("searchScope");
@@ -6745,6 +6785,7 @@ async function executeSearch(page = 1) {
       return (txt) => { const normTxt = normalizeForPhrase(txt); return queryWords.every(w => normTxt.includes(w)); };
     };
     await new Promise(r => setTimeout(r, 30));
+    if (reqId !== searchReqId) return;
     const matchLogic = buildMatcher(rawQuery);
     try {
       let fullBible = await getOfflineBible(searchTransId);
@@ -6757,6 +6798,7 @@ async function executeSearch(page = 1) {
           await saveOfflineBible(searchTransId, fullBible);
         }
       }
+      if (reqId !== searchReqId || currentViewContext.type !== "search") return;
       if (fullBible && fullBible.books && fullBible.books.some(b => b.chapters && b.chapters.length > 0)) {
         const allMatches = [];
         for (const b of fullBible.books) {
@@ -6844,7 +6886,7 @@ function renderSearchResultsPage() {
     </div>
     ${paginationBar}
     <div>` + pageItems.map(m => `
-      <div class="result-card" onclick="state.trans1='${escapeJsStr(searchTransId)}'; document.getElementById('trans1').value='${escapeJsStr(searchTransId)}'; openRef(${m.bookId}, ${m.ch}, ${m.v})">
+      <div class="result-card" onclick="openSearchResultRef('${escapeJsStr(searchTransId)}', ${m.bookId}, ${m.ch}, ${m.v})">
         <div class="result-ref">${escapeHtml(m.bookName)} ${m.ch}:${m.v}</div>
         <div>${highlightSearchMatches(m.text)}</div>
       </div>`).join("") + `</div>
@@ -7380,7 +7422,9 @@ function clearPersistentVerseHighlight() {
 function scrollToVerseAndHighlight(vSpec) {
   const verses = parseVerseSpecToArray(vSpec);
   if (!verses.length) return;
-  setTimeout(() => {
+  clearTimeout(bmScrollHighlightTimer);
+  bmScrollHighlightTimer = setTimeout(() => {
+    if (!currentViewContext || currentViewContext.type !== "bible") return;
     clearPersistentVerseHighlight();
     const firstEl = document.getElementById(`v_${verses[0]}`);
     if (firstEl) {
@@ -7520,11 +7564,12 @@ function runQuickJump() {
 
 function parseRefStringToTarget(str) {
   const cleanStr = String(str || "").trim().replace(/\s+/g, " ");
-  const m = cleanStr.match(/^([1-3]?\s*[a-zA-ZÀ-ÿ]+(?:\s+dei\s+[a-zA-ZÀ-ÿ]+)?)\.?\s*(\d{1,3})(?:[:.,\s]\s*(\d.*))?$/i);
+  const m = cleanStr.match(/^([1-3]?\s*[a-zA-ZÀ-ÿ]+(?:\s+dei\s+[a-zA-ZÀ-ÿ]+)?)\.?\s*(\d{1,3})(?:([:.,\s–-])\s*(\d.*))?$/i);
   if (!m) return null;
   const qBook = m[1].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
-  const ch = parseInt(m[2] || "1", 10);
-  const vSpec = (m[3] || "").trim();
+  const num1 = parseInt(m[2] || "1", 10);
+  const sep = m[3] || "";
+  const rest = (m[4] || "").trim();
   let found = null;
   if (SI_ABBR_MAP[qBook]) {
     found = getBook(SI_ABBR_MAP[qBook]);
@@ -7545,10 +7590,33 @@ function parseRefStringToTarget(str) {
     if (matchedId && matchedId > 0) found = getBook(matchedId);
   }
   if (!found) return null;
+
+  if (found.ch === 1) {
+    if (sep === ":" && num1 === 1 && rest) {
+      return { book: found, bookId: found.id, chapter: 1, vSpec: rest };
+    }
+    if (sep === "-" || sep === "–") {
+      return { book: found, bookId: found.id, chapter: 1, vSpec: `${num1}-${rest}` };
+    }
+    if (sep === "," && rest) {
+      return { book: found, bookId: found.id, chapter: 1, vSpec: `${num1}, ${rest}` };
+    }
+    if (rest) {
+      return { book: found, bookId: found.id, chapter: 1, vSpec: num1 === 1 ? rest : `${num1}, ${rest}` };
+    }
+    return { book: found, bookId: found.id, chapter: 1, vSpec: String(num1) };
+  }
+
+  let vSpec = "";
+  if (sep === ":" || sep === "." || sep === " ") {
+    vSpec = rest;
+  } else if (sep === "," && rest) {
+    vSpec = rest;
+  }
   return {
     book: found,
     bookId: found.id,
-    chapter: Math.min(found.ch, Math.max(1, ch)),
+    chapter: Math.min(found.ch, Math.max(1, num1)),
     vSpec
   };
 }
@@ -7577,6 +7645,7 @@ function executeDirectRefJump(bookId, targetCh, vSpec = "") {
   });
 }
 async function openVersePeekModal(bookId, chapter, vSpec = "") {
+  const reqId = ++peekReqId;
   const modal = document.getElementById("myReadModal");
   const body = document.getElementById("myReadModalBody");
   if (!modal || !body) {
@@ -7589,6 +7658,7 @@ async function openVersePeekModal(bookId, chapter, vSpec = "") {
   modal.style.display = "flex";
   try {
     const data = await fetchChapterData(state.trans1, bookId, chapter);
+    if (reqId !== peekReqId || modal.style.display !== "flex") return;
     const targetNums = parseVerseSpecToArray(vSpec);
     const filtered = targetNums.length > 0
       ? data.filter(v => targetNums.includes(Number(v.verse)))
@@ -9248,6 +9318,7 @@ function onDailySearchInput(val) {
 }
 
 async function renderDailySearchResults(rawQ) {
+  const reqId = ++dailySearchReqId;
   const box = document.getElementById("dailySearchResults");
   if (!box) return;
   const q = normalizeForSearch((rawQ || "").trim());
@@ -9256,7 +9327,7 @@ async function renderDailySearchResults(rawQ) {
     return;
   }
   const savedDaily = await getOfflineBible("bm:daily_text");
-  if (!savedDaily || !savedDaily.days) return;
+  if (reqId !== dailySearchReqId || !savedDaily || !savedDaily.days) return;
   const hits = [];
   const keys = Object.keys(savedDaily.days).sort();
   for (const k of keys) {
@@ -9683,6 +9754,8 @@ function filterInsightByLetter(letter) {
 
 function onInsightSearchInput(val) {
   insightSearchQuery = val || "";
+  const clrBtn = document.getElementById("insightClearBtn");
+  if (clrBtn) clrBtn.style.display = insightSearchQuery ? "" : "none";
   clearTimeout(searchTimeout);
   searchTimeout = setTimeout(() => {
     renderInsightFilteredList();
@@ -9775,7 +9848,7 @@ async function showInsightView(selectedIndex = null, fromBack = false) {
     </div>
     <div class="search-box">
       <input type="text" id="insightSearchInput" class="search-input" value="${escapeHtml(insightSearchQuery)}" placeholder="🔍 Cerca voce o parola nel testo (es. Incorruzione)..." oninput="onInsightSearchInput(this.value)">
-      ${insightSearchQuery ? `<button class="nav-btn" onclick="insightSearchQuery=''; showInsightView(null, true);" title="Pulisci ricerca">✕</button>` : ""}
+      <button id="insightClearBtn" class="nav-btn" style="${insightSearchQuery ? '' : 'display:none;'}" onclick="insightSearchQuery=''; showInsightView(null, true);" title="Pulisci ricerca">✕</button>
     </div>
     <div style="display:flex; gap:8px; flex-wrap:wrap; margin:0 0 10px 0;">
       <button class="jw-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,176,255,0.6);" onclick="openJwLibrary('it', 'insightSearchInput')" title="Cerca nella Biblioteca Online Watchtower (italiano)"><span class="jw-circle">${JW_TOWER_SVG}</span>Biblioteca Online · Italiano</button>
@@ -9789,10 +9862,11 @@ async function showInsightView(selectedIndex = null, fromBack = false) {
 }
 
 async function renderInsightFilteredList() {
+  const reqId = ++insightSearchReqId;
   const container = document.getElementById("insightListContainer");
   if (!container) return;
   const data = await getInsightData();
-  if (!data || !Array.isArray(data.entries)) return;
+  if (reqId !== insightSearchReqId || !data || !Array.isArray(data.entries)) return;
   const rawQ = insightSearchQuery.trim();
   const q = normalizeForSearch(rawQ);
   const entries = data.entries;
@@ -9988,15 +10062,18 @@ async function getSiData() {
 
 function onSiSearchInput(val) {
   siSearchQuery = val || "";
+  const clrBtn = document.getElementById("siClearBtn");
+  if (clrBtn) clrBtn.style.display = siSearchQuery ? "" : "none";
   clearTimeout(siSearchTimeout);
   siSearchTimeout = setTimeout(() => renderSiIndexContent(), 140);
 }
 
 async function renderSiIndexContent() {
+  const reqId = ++siSearchReqId;
   const container = document.getElementById("siContentContainer");
   if (!container) return;
   const data = await getSiData();
-  if (!data || !Array.isArray(data.books)) return;
+  if (reqId !== siSearchReqId || !data || !Array.isArray(data.books)) return;
   const rawQ = siSearchQuery.trim();
   const q = normalizeForSearch(rawQ);
   const extras = siExtraItems(data);
@@ -10141,7 +10218,7 @@ async function showSiView(fromBack = false) {
     </div>
     <div class="search-box">
       <input type="text" id="siSearchInput" class="search-input" value="${escapeHtml(siSearchQuery)}" placeholder="🔍 Cerca nei 66 libri, introduzione e studi..." oninput="onSiSearchInput(this.value)">
-      ${siSearchQuery ? `<button class="nav-btn" onclick="siSearchQuery=''; showSiView(true);" title="Pulisci ricerca">✕</button>` : ""}
+      <button id="siClearBtn" class="nav-btn" style="${siSearchQuery ? '' : 'display:none;'}" onclick="siSearchQuery=''; showSiView(true);" title="Pulisci ricerca">✕</button>
     </div>
     <div style="display:flex; gap:8px; flex-wrap:wrap; margin:0 0 10px 0;">
       <button class="jw-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,176,255,0.6);" onclick="openJwLibrary('it', 'siSearchInput')" title="Cerca nella Biblioteca Online Watchtower (italiano)"><span class="jw-circle">${JW_TOWER_SVG}</span>Biblioteca Online · Italiano</button>
@@ -10563,10 +10640,11 @@ async function showMapsView(selectedIdx = null, fromBack = false) {
   if (selectedIdx !== null && meta.maps[selectedIdx]) openMapViewer(meta.maps[selectedIdx].id, [], "");
 }
 async function renderMapsGridList() {
+  const reqId = ++mapsSearchReqId;
   const container = document.getElementById("mapsGridContainer");
   if (!container) return;
   const meta = await bpGetMeta();
-  if (!meta) return;
+  if (reqId !== mapsSearchReqId || !meta) return;
   bpUi.mapScore = new Map(); bpUi.mapBest = 0;
   const q = normalizeForSearch((mapsSearchQuery || "").trim());
   const filtered = meta.maps.filter(m => !q || normalizeForSearch(`${m.title} ${m.chapterTitle}`).includes(q));
@@ -10809,7 +10887,9 @@ function bpSheetHtml(map) {
     if (g.title) h += `<div class="bp-gt">${escapeHtml(g.title)}${g.titleGrid ? " · " + g.titleGrid : ""}</div>`;
     (g.items || []).forEach(it => {
       const cells = it.grid || [];
-      const click = cells.length ? ` onclick="bpFocusCell('${escapeJsStr(cells.join(","))}', '${escapeJsStr(it.name || "")}')"` : "";
+      const cellsArg = escapeJsStr(cells.join(","));
+      const nameArg = escapeJsStr(it.name || "");
+      const click = cells.length ? ` onclick="bpFocusCell('${cellsArg}', '${nameArg}')"` : "";
       h += `<div class="bp-it${cells.length ? " click" : ""}" data-n="${escapeHtml(bpKeyOf(it.name))}"${click}><span class="bp-g">${escapeHtml(cells.join("/") || (it.n ? it.n + "." : "·"))}</span><span>${it.symbol ? escapeHtml(it.symbol) + " " : ""}${it.italic ? "<i>" + escapeHtml(it.name) + "</i>" : escapeHtml(it.name)}</span></div>`;
     });
     h += `</div>`;
@@ -11075,7 +11155,7 @@ function scrollRpToToday(smooth = false) {
 function exportBackupJson() {
   const data = {
     app: "BibbiaMultilingue_PRO",
-    version: "PRO_v13",
+    version: "PRO_v13.6",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
@@ -11102,7 +11182,7 @@ function exportBackupJson() {
     readingPlan: rpState
   };
   const jsonStr = JSON.stringify(data, null, 2);
-  const fileName = `BM_PRO_Backup_${new Date().toISOString().slice(0,10)}.json`;
+  const fileName = `BM_PRO_Backup_${getLocalIsoDateStr()}.json`;
   const blob = new Blob([jsonStr], { type: "application/json" });
   if (navigator.canShare) {
     try {
@@ -11195,42 +11275,54 @@ function confirmImportBackupNow() {
       safeSaveStorage("bm_tts_autonext", bmTtsAutoNextPref ? "1" : "0");
     }
     if (parsed.personalReading && typeof parsed.personalReading === "object") {
-      if (parsed.personalReading.book && parsed.personalReading.ch) {
-        safeSaveStorage("bm_pers_book", String(parsed.personalReading.book));
-        safeSaveStorage("bm_pers_ch", String(parsed.personalReading.ch));
-        safeSaveStorage("bm_pers_scroll", String(parsed.personalReading.scroll || "0"));
+      const pBook = Math.min(66, Math.max(1, Number(parsed.personalReading.book) || 0));
+      const pChRaw = Number(parsed.personalReading.ch) || 0;
+      if (pBook >= 1 && pChRaw >= 1) {
+        const pCh = Math.min(getBook(pBook).ch, pChRaw);
+        safeSaveStorage("bm_pers_book", String(pBook));
+        safeSaveStorage("bm_pers_ch", String(pCh));
+        safeSaveStorage("bm_pers_scroll", String(Math.max(0, Number(parsed.personalReading.scroll) || 0)));
       }
       updateMyReadingLabel();
     }
     if (typeof parsed.studyMinutes === "number" && parsed.studyMinutes > 0) {
       const curMins = Number(safeGetStorage("bm_study_minutes_v1")) || 0;
-      safeSaveStorage("bm_study_minutes_v1", String(Math.max(curMins, parsed.studyMinutes)));
+      safeSaveStorage("bm_study_minutes_v1", String(Math.max(curMins, Math.round(parsed.studyMinutes))));
     }
-    if (parsed.highlights && typeof parsed.highlights === "object") {
+    if (parsed.highlights && typeof parsed.highlights === "object" && !Array.isArray(parsed.highlights)) {
       state.highlights = parsed.highlights;
       safeSaveStorage("bm_hl", JSON.stringify(state.highlights));
     }
     if (Array.isArray(parsed.bookmarks)) {
-      state.bookmarks = parsed.bookmarks;
+      state.bookmarks = parsed.bookmarks.filter(b => b && typeof b === "object");
       safeSaveStorage("bm_bm", JSON.stringify(state.bookmarks));
     }
     if (Array.isArray(parsed.notes)) {
-      state.notes = parsed.notes.map((n, idx) => ({ ...n, id: n.id || (Date.now() + idx) }));
+      state.notes = parsed.notes
+        .filter(n => n && typeof n === "object")
+        .map((n, idx) => ({ ...n, id: n.id || (Date.now() + idx) }));
       safeSaveStorage("bm_notes", JSON.stringify(state.notes));
     }
     if (Array.isArray(parsed.downloadedBibles) && parsed.downloadedBibles.length > 0) {
-      state.downloadedBibles = parsed.downloadedBibles;
+      state.downloadedBibles = parsed.downloadedBibles.filter(x => typeof x === "string" && x.trim());
+      if (!state.downloadedBibles.length) state.downloadedBibles = [...DEFAULT_ACTIVE_IDS];
       safeSaveStorage("bm_v10_pro_bibles", JSON.stringify(state.downloadedBibles));
     }
-    if (parsed.trans1) { state.trans1 = parsed.trans1; safeSaveStorage("bm_trans1", state.trans1); }
-    if (parsed.trans2) { state.trans2 = parsed.trans2; safeSaveStorage("bm_trans2", state.trans2); }
-    if (parsed.trans3) { state.trans3 = parsed.trans3; safeSaveStorage("bm_trans3", state.trans3); }
-    if (parsed.bulbPosition && typeof parsed.bulbPosition === "object") {
+    if (parsed.trans1) { state.trans1 = String(parsed.trans1); safeSaveStorage("bm_trans1", state.trans1); }
+    if (parsed.trans2) { state.trans2 = String(parsed.trans2); safeSaveStorage("bm_trans2", state.trans2); }
+    if (parsed.trans3) { state.trans3 = String(parsed.trans3); safeSaveStorage("bm_trans3", state.trans3); }
+    if (parsed.bulbPosition && typeof parsed.bulbPosition === "object" && !Array.isArray(parsed.bulbPosition)) {
       safeSaveStorage("bm_bulb_pos_v1", JSON.stringify(parsed.bulbPosition));
       applySavedBulbPosition();
     }
-    if (parsed.readingPlan && typeof parsed.readingPlan === "object") {
-      rpState = parsed.readingPlan;
+    if (parsed.readingPlan && typeof parsed.readingPlan === "object" && !Array.isArray(parsed.readingPlan)) {
+      const validPlanId = READING_PLAN_TYPES.some(p => p.id === parsed.readingPlan.planId)
+        ? parsed.readingPlan.planId
+        : "chronological";
+      const validChecked = (parsed.readingPlan.checked && typeof parsed.readingPlan.checked === "object" && !Array.isArray(parsed.readingPlan.checked))
+        ? parsed.readingPlan.checked
+        : {};
+      rpState = { planId: validPlanId, checked: validChecked };
       safeSaveStorage("bm_reading_plan_v1", JSON.stringify(rpState));
       updateReadingPlanHeaderBtn();
     }
@@ -11687,13 +11779,17 @@ function searchWordInInsight(word) {
   return showInsightView(null);
 }
 async function openDeepenDailyModal() {
+  const reqId = ++deepenReqId;
   const savedDaily = await getOfflineBible("bm:daily_text");
+  if (reqId !== deepenReqId) return;
   const targetDate = new Date();
   targetDate.setDate(targetDate.getDate() + currentDailyOffset);
   const mm = String(targetDate.getMonth() + 1).padStart(2, "0");
   const dd = String(targetDate.getDate()).padStart(2, "0");
   const dayKey = `${mm}-${dd}`;
-  const entry = (savedDaily && savedDaily.days && savedDaily.days[dayKey]) ? savedDaily.days[dayKey] : null;
+  const entry = (savedDaily && savedDaily.days)
+    ? (savedDaily.days[dayKey] || (dayKey === "02-29" ? savedDaily.days["02-28"] : null))
+    : null;
   const rawTheme = entry ? (entry.theme || "") : extractActiveViewTextForAnalysis().slice(0, 220);
   const rawComment = entry ? (entry.comment || "") : extractActiveViewTextForAnalysis();
   const bookStopNames = BIBLE_BOOKS.flatMap(b => [normalizeForSearch(b.name), normalizeForSearch(b.abbr)]);
@@ -11763,6 +11859,7 @@ async function openDeepenDailyModal() {
   // luoghi citati, con rimando alla cartina (solo se le cartine sono state caricate)
   let placesHtml = "";
   const meta = await bpGetMeta();
+  if (reqId !== deepenReqId) return;
   if (meta) {
     const places = bpScanText(rawTheme + "\n" + rawComment);
     bpComputeMapScore(places);
@@ -11910,6 +12007,9 @@ async function checkBmPwaUpdates() {
   try {
     const reg = bmSwReg || await navigator.serviceWorker.getRegistration();
     let statusLine = "Service Worker non ancora attivo.";
+    if (reg && reg.waiting) {
+      try { reg.waiting.postMessage({ type: "SKIP_WAITING" }); } catch (e) { console.debug(e); }
+    }
     if (reg && reg.active) {
       try { await reg.update(); } catch (e) { console.debug(e); }
       const info = await new Promise(resolve => {
@@ -11945,10 +12045,9 @@ function hasSavedPersonalReading() {
 }
 
 function getPersonalReadingState() {
-  return {
-    bookId: Number(safeGetStorage("bm_pers_book")) || 1,
-    chapter: Number(safeGetStorage("bm_pers_ch")) || 1
-  };
+  const bookId = Math.min(66, Math.max(1, Number(safeGetStorage("bm_pers_book")) || 1));
+  const chapter = Math.min(getBook(bookId).ch, Math.max(1, Number(safeGetStorage("bm_pers_ch")) || 1));
+  return { bookId, chapter };
 }
 
 function updateMyReadingLabel() {
@@ -12084,7 +12183,11 @@ function goToMyPersonalReadingNow() {
     const main = document.getElementById("mainContainer");
     const savedScroll = Number(safeGetStorage("bm_pers_scroll")) || 0;
     if (main && savedScroll > 0) {
-      setTimeout(() => { main.scrollTop = savedScroll; }, 80);
+      setTimeout(() => {
+        if (currentViewContext.type === "bible" && state.bookId === pers.bookId && state.chapter === pers.chapter) {
+          main.scrollTop = savedScroll;
+        }
+      }, 80);
     }
   });
 }
@@ -12455,12 +12558,14 @@ function setBmTtsAutoNext(val, refreshTarget = "modal") {
 // 4. OMNISEARCH SUI 4 PILASTRI (Perspicacia, Tutta la Scrittura, Cartine, Bibbia)
 // ============================================================================
 async function executeOmniSearch() {
+  const reqId = ++omniReqId;
   const inpEl = document.getElementById("searchInput");
   const rawQuery = inpEl ? inpEl.value.trim() : "";
   const resDiv = document.getElementById("searchResults");
   if (!rawQuery || !resDiv) return;
-  resDiv.innerHTML = `<div class="loader">🌐 Ricerca globale sui 4 Pilastri per "<b>${escapeHtml(rawQuery)}</b>" in corso...</div>`;
+  resDiv.innerHTML = `<div class="loader">🌐 Ricerca globale in tutta la Biblioteca per "<b>${escapeHtml(rawQuery)}</b>" in corso...</div>`;
   await new Promise(r => setTimeout(r, 30));
+  if (reqId !== omniReqId || currentViewContext.type !== "search") return;
 
   const qNorm = normalizeForSearch(rawQuery);
   let html = "";
@@ -12526,18 +12631,48 @@ async function executeOmniSearch() {
     });
     html += `<div class="section-title"><span>📘 Tutta la Scrittura (${siHits.length} sezioni)</span></div>`;
     if (siHits.length) {
-      html += siHits.slice(0, 5).map(h => `
-        <div class="result-card" onclick="showSiReader('${h.kind}', ${h.i}, ${h.ci})">
+      html += siHits.slice(0, 5).map(h => {
+        const openCi = (h.kind === "b" && siViewMode === "full") ? "'all'" : h.ci;
+        return `
+        <div class="result-card" onclick="siSearchQuery='${escapeJsStr(rawQuery)}'; showSiReader('${h.kind}', ${h.i}, ${openCi}, false, ${h.ci})">
           <div class="result-ref">📘 ${escapeHtml(h.title)}</div>
           <div class="bm-justify-text" style="font-size:13px; color:var(--text-muted);">${escapeHtml(h.snippet)}</div>
-        </div>
-      `).join("");
+        </div>`;
+      }).join("");
     } else {
       html += `<div style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">Nessuna occorrenza in Tutta la Scrittura.</div>`;
     }
   }
 
-  // 4. RIMANDO IMMEDIATO CONCORDANZA BIBLICA
+  // 4. SCRITTURA DEL GIORNO (365 commenti giornalieri)
+  const dailyData = await getOfflineBible("bm:daily_text");
+  if (reqId !== omniReqId || currentViewContext.type !== "search") return;
+  if (dailyData && dailyData.days) {
+    const dailyHits = [];
+    Object.keys(dailyData.days).sort().forEach(k => {
+      const e = dailyData.days[k];
+      if (!e) return;
+      if (normalizeForSearch(`${e.dateTitle || ""} ${e.theme || ""} ${e.comment || ""}`).includes(qNorm)) {
+        const [mm, dd] = k.split("-").map(Number);
+        dailyHits.push({ mm, dd, e });
+      }
+    });
+    html += `<div class="section-title"><span>☀️ Scrittura del Giorno (${dailyHits.length} giorni)</span></div>`;
+    if (dailyHits.length) {
+      html += dailyHits.slice(0, 4).map(h => {
+        const off = computeDailyOffsetForMonthDay(h.mm, h.dd);
+        return `
+        <div class="result-card" onclick="showDailyTextView(${off})">
+          <div class="result-ref">☀️ ${escapeHtml(h.e.dateTitle || `${h.dd}/${h.mm}`)}</div>
+          <div class="bm-justify-text" style="font-size:13px; color:var(--text-muted);">${escapeHtml((h.e.theme || "").slice(0, 140))}</div>
+        </div>`;
+      }).join("");
+    } else {
+      html += `<div style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">Nessun commento giornaliero corrispondente.</div>`;
+    }
+  }
+
+  // 5. RIMANDO IMMEDIATO CONCORDANZA BIBLICA
   html += `
     <div class="section-title"><span>📖 Concordanza Biblica</span></div>
     <button class="search-btn" style="width:100%; padding:12px;" onclick="executeSearch(1)">
@@ -12907,11 +13042,13 @@ function saveXRayDossierAsNote(btnEl) {
 
   const noteTitle = `${d.ref} (Raggi X)`;
   const existingIdx = state.notes.findIndex(n => n.ref === noteTitle);
+  const curB = (lastXRayData && lastXRayData.bookId) || state.bookId;
+  const curC = (lastXRayData && lastXRayData.chapter) || state.chapter;
   const curV = (lastXRayData && lastXRayData.verse) || state.selectedVerse || 1;
   const noteObj = {
     id: (existingIdx > -1 && state.notes[existingIdx].id) ? state.notes[existingIdx].id : Date.now(),
-    bookId: state.bookId,
-    chapter: state.chapter,
+    bookId: curB,
+    chapter: curC,
     verse: curV,
     ref: noteTitle,
     verseText: rowsList[0] ? rowsList[0].text : "",
@@ -12994,15 +13131,17 @@ async function openVerseXRayModal(forcedVerseNum) {
   const stopSet = new Set(["della","delle","dello","degli","nella","nelle","nello","negli","sulla","sulle","dalla","dalle","alla","alle","questo","questa","questi","queste","quello","quella","quelli","quelle","essere","avere","tutto","tutti","tutte","altro","altri","anche","ancora","perche","quando","quindi","contro","sempre","prima","dopo","sopra","sotto","dentro","fuori","presso","verso","secondo","nostro","nostra","vostro","vostra","stesso","stessa","proprio","propria","quale","quali","quanto","molto","molti","ogni","alcuni","nessuno","mentre","invece","allora","insieme","attraverso","durante","mediante","coloro","colui","hanno","aveva","avevano","sara","saranno","fosse","sono","erano","stato","stata","disse","dice","detto","fece","fatto"]);
   const words = [...new Set(baseTextForDiff.replace(/[^a-zA-ZÀ-ÿ\s]/g, " ").split(/\s+/).filter(w => w.length >= 4 && !stopSet.has(w.toLowerCase())))].slice(0, 10);
 
-  const refs = buildUniversalRefsForVerse(state.bookId, state.chapter, vNum, baseTextForDiff);
-  const xrayFnMap = await fetchChapterFootnotes(state.trans1, state.bookId, state.chapter);
+  const refs = buildUniversalRefsForVerse(targetBookId, targetChapter, vNum, baseTextForDiff);
+  const xrayFnMap = await fetchChapterFootnotes(state.trans1, targetBookId, targetChapter);
+  if (reqId !== currentXRayReqId) return;
   const xrayFns = xrayFnMap[String(vNum)] || xrayFnMap[vNum] || [];
   const xrayFnHtml = xrayFns.length ? `
     <div class="section-title"><span>📌 Note in Calce Ufficiali (${xrayFns.length})</span></div>
     <div style="margin-bottom:12px;">
-      ${xrayFns.map((t, i) => `<div style="background:#062356; border-left:3px solid #ffd54f; border-radius:7px; padding:7px 10px; margin-bottom:6px; font-size:13px; line-height:1.5;"><b style="color:#ffd54f;">*${xrayFns.length > 1 ? i + 1 : ""}</b> ${formatNoteLinks(t, state.bookId)}</div>`).join("")}
+      ${xrayFns.map((t, i) => `<div style="background:#062356; border-left:3px solid #ffd54f; border-radius:7px; padding:7px 10px; margin-bottom:6px; font-size:13px; line-height:1.5;"><b style="color:#ffd54f;">*${xrayFns.length > 1 ? i + 1 : ""}</b> ${formatNoteLinks(t, targetBookId)}</div>`).join("")}
     </div>` : "";
-  const xrayInsRefs = await findInsightRefsForVerse(state.bookId, state.chapter, vNum, 10);
+  const xrayInsRefs = await findInsightRefsForVerse(targetBookId, targetChapter, vNum, 10);
+  if (reqId !== currentXRayReqId) return;
   const xrayInsHtml = xrayInsRefs.length ? `
     <div class="section-title"><span>📚 Citato in Perspicacia (${xrayInsRefs.length} voci)</span></div>
     <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
@@ -13023,7 +13162,7 @@ async function openVerseXRayModal(forcedVerseNum) {
   body.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:10px; background:#041a42; padding:7px 9px; border-radius:10px; border:1px solid rgba(41,182,246,0.45); flex-wrap:wrap;">
       <button type="button" class="nav-btn" style="padding:5px 10px;" onclick="stepXRayVerse(-1)">◀ Vers. Prec.</button>
-      <span style="font-size:13.5px; font-weight:900; color:#00e5ff;">📖 ${escapeHtml(book.abbr)} ${state.chapter}:${vNum}</span>
+      <span style="font-size:13.5px; font-weight:900; color:#00e5ff;">📖 ${escapeHtml(book.abbr)} ${targetChapter}:${vNum}</span>
       <button type="button" class="nav-btn" style="padding:5px 10px;" onclick="stepXRayVerse(1)">Vers. Succ. ▶</button>
     </div>
 
@@ -13489,7 +13628,7 @@ async function enrichMessianicPropheciesFromOfflineDB() {
 }
 
 function recordDailyStartingProphecyIfNeeded(prophecyIdx) {
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = getLocalIsoDateStr();
   if (!bmDailyStartProphecy || bmDailyStartProphecy.date !== todayStr || typeof bmDailyStartProphecy.idx !== "number") {
     const p = bmProphecyList[prophecyIdx];
     if (!p) return;
@@ -13743,8 +13882,14 @@ function openProphecySourceDocument(idx) {
   if (modal) modal.style.display = "none";
   closeProModal();
   if (p.sourceMeta.type === "si") {
-    showSiReader("b", p.sourceMeta.bi, p.sourceMeta.ci);
+    siSearchQuery = "";
+    if (siViewMode === "full") {
+      showSiReader("b", p.sourceMeta.bi, "all", false, p.sourceMeta.ci);
+    } else {
+      showSiReader("b", p.sourceMeta.bi, p.sourceMeta.ci);
+    }
   } else if (p.sourceMeta.type === "insight") {
+    insightSearchQuery = "";
     showInsightView(p.sourceMeta.idx);
   }
 }

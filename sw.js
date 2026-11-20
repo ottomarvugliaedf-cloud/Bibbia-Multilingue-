@@ -1,5 +1,5 @@
-// Service Worker — Bibbia Multilingue PRO (v13.5 Offline Shell)
-const BM_SW_VERSION = "bm-pro-shell-v13-5";
+// Service Worker — Bibbia Multilingue PRO (v13.6 Offline Shell)
+const BM_SW_VERSION = "bm-pro-shell-v13-6";
 const BM_APP_SHELL = [
   "./",
   "./index.html",
@@ -76,37 +76,44 @@ self.addEventListener("fetch", (event) => {
 
   // 1. JSZip CDN: Cache-First (funziona istantaneamente anche offline)
   if (url.href === BM_JSZIP_CDN || url.pathname.endsWith("jszip.min.js")) {
-    event.respondWith((async () => {
+    let bgWork = Promise.resolve();
+    const resPromise = (async () => {
       const cache = await caches.open(BM_SW_VERSION);
       const cached = await cache.match(req, { ignoreSearch: true }) || await cache.match(BM_JSZIP_CDN);
       if (cached) return cached;
       const net = await fetch(req);
-      if (net && (net.ok || net.type === "opaque")) event.waitUntil(safeCachePut(cache, req, net.clone()));
+      if (net && (net.ok || net.type === "opaque")) bgWork = safeCachePut(cache, req, net.clone());
       return net;
-    })());
+    })();
+    event.respondWith(resPromise);
+    event.waitUntil(resPromise.then(() => bgWork).catch(() => {}));
     return;
   }
 
   // 2. API Bibbie online (GetBible / HelloAO): Network-First con fallback Cache
   if (url.hostname.includes("api.getbible.net") || url.hostname.includes("bible.helloao.org")) {
-    event.respondWith((async () => {
+    let bgWork = Promise.resolve();
+    const resPromise = (async () => {
       const cache = await caches.open(BM_SW_VERSION);
       try {
         const net = await fetch(req);
-        if (net && net.ok) event.waitUntil(safeCachePut(cache, req, net.clone()));
+        if (net && net.ok) bgWork = safeCachePut(cache, req, net.clone());
         return net;
       } catch (_e) {
         const cached = await cache.match(req);
         if (cached) return cached;
         throw _e;
       }
-    })());
+    })();
+    event.respondWith(resPromise);
+    event.waitUntil(resPromise.then(() => bgWork).catch(() => {}));
     return;
   }
 
-  // 3. App Shell same-origin: Stale-While-Revalidate (avvio immediato offline + aggiornamento silente garantito)
+  // 3. App Shell same-origin: Stale-While-Revalidate (event.waitUntil sincrono conforme W3C/Chromium)
   if (url.origin === self.location.origin) {
-    event.respondWith((async () => {
+    let bgWork = Promise.resolve();
+    const resPromise = (async () => {
       const cache = await caches.open(BM_SW_VERSION);
       const cached = await cache.match(req, { ignoreSearch: true }) ||
         (req.mode === "navigate" ? await cache.match("./index.html") : null);
@@ -115,10 +122,12 @@ self.addEventListener("fetch", (event) => {
         return net;
       }).catch(() => null);
       if (cached) {
-        event.waitUntil(fetchPromise);
+        bgWork = fetchPromise;
         return cached;
       }
       return (await fetchPromise) || new Response("Offline", { status: 503 });
-    })());
+    })();
+    event.respondWith(resPromise);
+    event.waitUntil(resPromise.then(() => bgWork).catch(() => {}));
   }
 });
