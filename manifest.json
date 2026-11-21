@@ -1,11 +1,11 @@
 {
   "id": "./",
   "name": "Bibbia Multilingue PRO",
-  "short_name": "Bibbia Multilingue PRO",
+  "short_name": "BM PRO",
   "description": "Studio biblico multilingue 100% offline con Perspicacia, Tutta la Scrittura, Cartine HD, Lessico Strong, Note in Calce TNM, 66 Sommari Ufficiali e Profezie Messianiche.",
   "start_url": "./",
   "scope": "./",
-  "display": "fullscreen",
+  "display": "standalone",
   "orientation": "any",
   "background_color": "#041a42",
   "theme_color": "#041a42",
@@ -27,6 +27,18 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "./icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "./icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

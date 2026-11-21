@@ -1,5 +1,5 @@
-// Service Worker — Bibbia Multilingue PRO (v14.7 — Voci TTS per Lingua con Fallback a 3 Stadi, Fix 1-Cap & EPUB)
-const BM_SW_VERSION = "bm-pro-shell-v14-7";
+// Service Worker — Bibbia Multilingue PRO (v14.8.2 — SWR Istantaneo, Guardie Redirect & Bulk JSON, Icone Maskable)
+const BM_SW_VERSION = "bm-pro-shell-v14-8-2";
 const BM_API_CACHE = "bm-pro-api-v1";
 const BM_API_CACHE_MAX = 150;
 const BM_CRITICAL_SHELL = [
@@ -8,13 +8,19 @@ const BM_CRITICAL_SHELL = [
   "./manifest.json"
 ];
 const BM_OPTIONAL_SHELL = [
-  "./",
   "./icon-192.png",
-  "./icon-512.png"
+  "./icon-512.png",
+  "./icon-192-maskable.png",
+  "./icon-512-maskable.png"
 ];
 
 function safeCachePut(cache, req, res) {
+  if (!res || !res.ok || res.redirected) return Promise.resolve();
   return cache.put(req, res).catch(() => {});
+}
+
+function getCanonicalIndexUrl() {
+  return new URL("./index.html", self.registration.scope).href;
 }
 
 async function pruneApiCache(cache) {
@@ -33,10 +39,17 @@ function isExactOrSubHost(hostname, domain) {
   return h === d || h.endsWith("." + d);
 }
 
+// Esclude i download integrali GetBible (~5 MB: /v2/{code}.json) da BM_API_CACHE
+// perché vengono già salvati in IndexedDB dall'app (mantiene in cache solo translations.json e i singoli capitoli).
+function isBulkGetBibleJson(url) {
+  return isExactOrSubHost(url.hostname, "api.getbible.net")
+    && /^\/v2\/[^/]+\.json$/i.test(url.pathname)
+    && !/^\/v2\/translations\.json$/i.test(url.pathname);
+}
+
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(BM_SW_VERSION);
-    // File critici in modalità atomica: se uno manca o fallisce, resta attiva la versione precedente sana
     await Promise.all(
       BM_CRITICAL_SHELL.map((url) => cache.add(new Request(url, { cache: "reload" })))
     );
@@ -50,7 +63,6 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    // Elimina solo vecchie cache della shell preservando la cache persistente delle API bibliche
     await Promise.all(
       keys
         .filter((k) => k.startsWith("bm-pro-") && k !== BM_SW_VERSION && k !== BM_API_CACHE)
@@ -105,18 +117,18 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
 
-  // Non intercettare streaming TTS, wol.jw.org o schemi non HTTP(S)
   if (!url.protocol.startsWith("http")) return;
   if (isExactOrSubHost(url.hostname, "wol.jw.org") || isExactOrSubHost(url.hostname, "translate.googleapis.com")) return;
+  if (isBulkGetBibleJson(url)) return;
 
-  // 1. API Bibbie online (GetBible / HelloAO): Network-First con cache API separata e cap FIFO
+  // 1. API Bibbie online (GetBible capitoli/catalogo & HelloAO): Network-First con cache API separata e cap FIFO
   if (isExactOrSubHost(url.hostname, "api.getbible.net") || isExactOrSubHost(url.hostname, "bible.helloao.org")) {
     let bgWork = Promise.resolve();
     const resPromise = (async () => {
       const cache = await caches.open(BM_API_CACHE);
       try {
         const net = await fetch(req);
-        if (net && net.ok) {
+        if (net && net.ok && !net.redirected) {
           bgWork = safeCachePut(cache, req, net.clone()).then(() => pruneApiCache(cache));
         }
         return net;
@@ -131,17 +143,42 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 2. App Shell same-origin (index.html, jszip.min.js, manifest.json, icone): Stale-While-Revalidate con chiave canonica
-  if (url.origin === self.location.origin) {
+  // 2. Navigazione App Shell (HTML principale): Stale-While-Revalidate istantaneo (<50ms) con chiave canonica ./index.html
+  // Gli aggiornamenti di release attivano automaticamente il modale "Aggiornamento Pronto" in initBmServiceWorker().
+  if (url.origin === self.location.origin && req.mode === "navigate") {
+    const indexKey = getCanonicalIndexUrl();
     let bgWork = Promise.resolve();
-    const canonicalShellKey = url.origin + url.pathname;
     const resPromise = (async () => {
       const cache = await caches.open(BM_SW_VERSION);
-      const cached = await cache.match(canonicalShellKey) ||
-        await cache.match(req, { ignoreSearch: true }) ||
-        (req.mode === "navigate" ? await cache.match("./index.html") : null);
-      const fetchPromise = fetch(req.mode === "navigate" ? canonicalShellKey : req, { cache: "no-cache" }).then((net) => {
-        if (net && net.ok) return safeCachePut(cache, canonicalShellKey, net.clone()).then(() => net);
+      const cached = await cache.match(indexKey) || await cache.match("./index.html");
+      const fetchPromise = fetch(indexKey, { cache: "no-cache" }).then((net) => {
+        if (net && net.ok && !net.redirected) {
+          return safeCachePut(cache, indexKey, net.clone()).then(() => net);
+        }
+        return net;
+      }).catch(() => null);
+      if (cached) {
+        bgWork = fetchPromise;
+        return cached;
+      }
+      return (await fetchPromise) || new Response("Offline", { status: 503 });
+    })();
+    event.respondWith(resPromise);
+    event.waitUntil(resPromise.then(() => bgWork).catch(() => {}));
+    return;
+  }
+
+  // 3. Risorse statiche same-origin (jszip.min.js, manifest.json, icone): Stale-While-Revalidate con chiave canonica
+  if (url.origin === self.location.origin) {
+    let bgWork = Promise.resolve();
+    const canonicalShellKey = url.pathname.endsWith("/") ? getCanonicalIndexUrl() : (url.origin + url.pathname);
+    const resPromise = (async () => {
+      const cache = await caches.open(BM_SW_VERSION);
+      const cached = await cache.match(canonicalShellKey) || await cache.match(req, { ignoreSearch: true });
+      const fetchPromise = fetch(req, { cache: "no-cache" }).then((net) => {
+        if (net && net.ok && !net.redirected) {
+          return safeCachePut(cache, canonicalShellKey, net.clone()).then(() => net);
+        }
         return net;
       }).catch(() => null);
       if (cached) {
