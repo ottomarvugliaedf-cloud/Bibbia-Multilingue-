@@ -1,6 +1,7 @@
-// Service Worker — Bibbia Multilingue PRO (v14.3 — Parser EPUB Universale 4 Bibbie IT: NR, LND, CEI, TILC)
-const BM_SW_VERSION = "bm-pro-shell-v14-3";
+// Service Worker — Bibbia Multilingue PRO (v14.6 — Audit 100% Integrale Fritz-Proof & Pixel 10/11 Pro XL)
+const BM_SW_VERSION = "bm-pro-shell-v14-6";
 const BM_API_CACHE = "bm-pro-api-v1";
+const BM_API_CACHE_MAX = 150;
 const BM_CRITICAL_SHELL = [
   "./index.html",
   "./jszip.min.js",
@@ -14,6 +15,16 @@ const BM_OPTIONAL_SHELL = [
 
 function safeCachePut(cache, req, res) {
   return cache.put(req, res).catch(() => {});
+}
+
+async function pruneApiCache(cache) {
+  try {
+    const keys = await cache.keys();
+    if (keys.length > BM_API_CACHE_MAX) {
+      const excess = keys.length - BM_API_CACHE_MAX;
+      await Promise.all(keys.slice(0, excess).map((k) => cache.delete(k)));
+    }
+  } catch (_e) {}
 }
 
 function isExactOrSubHost(hostname, domain) {
@@ -45,6 +56,8 @@ self.addEventListener("activate", (event) => {
         .filter((k) => k.startsWith("bm-pro-") && k !== BM_SW_VERSION && k !== BM_API_CACHE)
         .map((k) => caches.delete(k))
     );
+    const apiCache = await caches.open(BM_API_CACHE);
+    await pruneApiCache(apiCache);
     await self.clients.claim();
   })());
 });
@@ -52,7 +65,8 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("message", (event) => {
   const data = event.data || {};
   if (data.type === "GET_CACHE_STATUS" && event.ports && event.ports[0]) {
-    (async () => {
+    const port = event.ports[0];
+    const task = (async () => {
       try {
         const [shellCache, apiCache] = await Promise.all([
           caches.open(BM_SW_VERSION),
@@ -65,7 +79,7 @@ self.addEventListener("message", (event) => {
         ]);
         const hasCoreShell = criticalChecks.every(Boolean);
         const hasJszip = shellReqs.some((r) => new URL(r.url).pathname.endsWith("/jszip.min.js") || r.url.endsWith("jszip.min.js"));
-        event.ports[0].postMessage({
+        port.postMessage({
           version: BM_SW_VERSION,
           cachedCount: shellReqs.length,
           apiCachedCount: apiReqs.length,
@@ -73,7 +87,7 @@ self.addEventListener("message", (event) => {
           hasJszip
         });
       } catch (_e) {
-        event.ports[0].postMessage({
+        port.postMessage({
           version: BM_SW_VERSION,
           cachedCount: 0,
           apiCachedCount: 0,
@@ -82,6 +96,7 @@ self.addEventListener("message", (event) => {
         });
       }
     })();
+    if (typeof event.waitUntil === "function") event.waitUntil(task);
   }
 });
 
@@ -94,14 +109,16 @@ self.addEventListener("fetch", (event) => {
   if (!url.protocol.startsWith("http")) return;
   if (isExactOrSubHost(url.hostname, "wol.jw.org") || isExactOrSubHost(url.hostname, "translate.googleapis.com")) return;
 
-  // 1. API Bibbie online (GetBible / HelloAO): Network-First con cache API separata e persistente
+  // 1. API Bibbie online (GetBible / HelloAO): Network-First con cache API separata e cap FIFO
   if (isExactOrSubHost(url.hostname, "api.getbible.net") || isExactOrSubHost(url.hostname, "bible.helloao.org")) {
     let bgWork = Promise.resolve();
     const resPromise = (async () => {
       const cache = await caches.open(BM_API_CACHE);
       try {
         const net = await fetch(req);
-        if (net && net.ok) bgWork = safeCachePut(cache, req, net.clone());
+        if (net && net.ok) {
+          bgWork = safeCachePut(cache, req, net.clone()).then(() => pruneApiCache(cache));
+        }
         return net;
       } catch (_e) {
         const cached = await cache.match(req);
@@ -114,15 +131,17 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 2. App Shell same-origin (index.html, jszip.min.js, manifest.json, icone): Stale-While-Revalidate
+  // 2. App Shell same-origin (index.html, jszip.min.js, manifest.json, icone): Stale-While-Revalidate con chiave canonica
   if (url.origin === self.location.origin) {
     let bgWork = Promise.resolve();
+    const canonicalShellKey = url.origin + url.pathname;
     const resPromise = (async () => {
       const cache = await caches.open(BM_SW_VERSION);
-      const cached = await cache.match(req, { ignoreSearch: true }) ||
+      const cached = await cache.match(canonicalShellKey) ||
+        await cache.match(req, { ignoreSearch: true }) ||
         (req.mode === "navigate" ? await cache.match("./index.html") : null);
-      const fetchPromise = fetch(req).then((net) => {
-        if (net && net.ok) return safeCachePut(cache, req, net.clone()).then(() => net);
+      const fetchPromise = fetch(req.mode === "navigate" ? canonicalShellKey : req, { cache: "no-cache" }).then((net) => {
+        if (net && net.ok) return safeCachePut(cache, canonicalShellKey, net.clone()).then(() => net);
         return net;
       }).catch(() => null);
       if (cached) {

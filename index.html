@@ -57,7 +57,7 @@
       --bg-card: #0a0a0a;
       --text-main: #f5f5f5;
       --text-muted: #888888;
-      --primary-dark: #061b3a;
+      --primary-dark: #000000;
       --primary-main: #0d3268;
       --primary-light: #38bdf8;
       --border-color: #1f1f1f;
@@ -72,16 +72,28 @@
     }
     html.dark-mode { background-color: #091526; }
     html.oled-mode { background-color: #000000; }
-    /* Tutti i sottomenù a tendina (Libri, Capitoli, Ricerca, Traduzioni) e campi su scala di Blu Mia Lettura */
+    /* Tutti i sottomenù a tendina (Libri, Capitoli, Ricerca, Traduzioni) e campi: rispettano i temi Zaffiro / Dark / OLED */
     select, .trans-select, select option, select optgroup,
     .search-input, .bp-search, .modal-textarea {
-      background-color: #062356 !important;
-      color: #ffffff !important;
-      border-color: #29b6f6 !important;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      border-color: var(--border-color);
     }
     .search-input::placeholder, .bp-search::placeholder, .modal-textarea::placeholder {
-      color: #9ec9ff !important;
-      opacity: 1;
+      color: var(--text-muted);
+      opacity: 0.9;
+    }
+    body.dark-mode select, body.dark-mode .trans-select, body.dark-mode select option, body.dark-mode select optgroup,
+    body.dark-mode .search-input, body.dark-mode .bp-search, body.dark-mode .modal-textarea {
+      background-color: #091526;
+      color: #e6f1ff;
+      border-color: #1f3758;
+    }
+    body.oled-mode select, body.oled-mode .trans-select, body.oled-mode select option, body.oled-mode select optgroup,
+    body.oled-mode .search-input, body.oled-mode .bp-search, body.oled-mode .modal-textarea {
+      background-color: #000000;
+      color: #f5f5f5;
+      border-color: #262626;
     }
     select, .trans-select {
       appearance: none;
@@ -133,6 +145,9 @@
       height: 100vh;
       height: 100dvh;
       overflow: hidden;
+      overscroll-behavior: none;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
     }
 /* SCHERMATA INIZIALE BLU PRO ANTI-SALTINO APPSGEYSER (COORDINATE HARDWARE CONGELATE) */
 .splash-box, .splash-sub { opacity: 0; will-change: transform, opacity; backface-visibility: hidden; }
@@ -146,11 +161,8 @@
 }
 #splashScreen {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: -240px;
-  min-height: calc(100lvh + 240px);
+  inset: 0;
+  height: 100dvh;
   background-color: #020b1c;
   background-image: radial-gradient(circle at 50% var(--splash-locked-top, 50vh), #1e88e5 0%, #0a367e 45%, #020b1c 88%);
   z-index: 9999;
@@ -213,7 +225,7 @@
       background: linear-gradient(270deg, var(--primary-dark) 0%, var(--primary-main) 50%, var(--primary-dark) 100%);
       color: #fff;
       padding: 10px 10px;
-      padding-top: max(36px, env(safe-area-inset-top, 36px));
+      padding-top: max(12px, env(safe-area-inset-top, 12px));
       display: grid;
       grid-template-columns: 1fr auto 1fr;
       align-items: center;
@@ -567,7 +579,8 @@
       flex: 1;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding: 12px 14px 45px 14px;
+      overscroll-behavior-y: contain;
+      padding: 12px 14px calc(52px + env(safe-area-inset-bottom, 0px)) 14px;
     }
     .section-title {
       font-size: 13px;
@@ -651,7 +664,7 @@
     .verse-row {
       padding: 8px 6px;
       border-radius: 6px;
-      line-height: 1.58;
+      line-height: var(--verse-line-height, 1.58);
       font-size: var(--font-size-verse);
       cursor: pointer;
       margin-bottom: 3px;
@@ -924,7 +937,7 @@
     .hl-purple { background-color: rgba(156, 39, 176, 0.28) !important; }
     .verse-action-bar {
       position: fixed;
-      bottom: 74px;
+      bottom: calc(74px + env(safe-area-inset-bottom, 0px));
       left: 50%;
       transform: translateX(-50%);
       background: var(--bg-card);
@@ -1048,18 +1061,23 @@
       transition: opacity 0.18s ease;
     }
     .modal-card {
-      background-color: #0a367e !important;
-      color: #ffffff !important;
-      border: 1px solid #29b6f6 !important;
+      background-color: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
       border-radius: 12px;
       width: 100%;
       max-width: 460px;
-      max-height: 86vh;
+      max-height: 86dvh;
       overflow-y: auto;
       padding: 16px;
-      box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.32), 0 18px 42px rgba(0, 0, 0, 0.72), 0 0 18px rgba(41, 182, 246, 0.28) !important;
+      box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.28), 0 18px 42px rgba(0, 0, 0, 0.72), 0 0 18px rgba(41, 182, 246, 0.24);
     }
-    .modal-title { font-size: 16px; font-weight: 800; color: #ffffff !important; margin-bottom: 8px; }
+    body.oled-mode .modal-card {
+      background-color: #080808;
+      border-color: #2b2b2b;
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.08);
+    }
+    .modal-title { font-size: 16px; font-weight: 800; color: var(--text-main); margin-bottom: 8px; }
     .modal-textarea {
       width: 100%;
       height: 110px;
@@ -1238,7 +1256,7 @@ body.oled-mode .pub-ref-badge {
   
     /* ===== DOVE? & CARTINE BIBLICHE HD (Manifattura Zaffiro PRO Nativa) ===== */
     .bp-viewer { position: fixed; inset: 0; z-index: 1100; display: none; flex-direction: column; background: #041a42; color: #ffffff; }
-    .bp-vhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; padding-top: max(36px, env(safe-area-inset-top, 36px)); background: linear-gradient(135deg, var(--primary-dark), var(--primary-main)); color: #fff; border-bottom: 1px solid rgba(41, 182, 246, 0.45); box-shadow: 0 2px 10px rgba(0,0,0,0.35); flex-shrink: 0; }
+    .bp-vhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; padding-top: max(12px, env(safe-area-inset-top, 12px)); background: linear-gradient(135deg, var(--primary-dark), var(--primary-main)); color: #fff; border-bottom: 1px solid rgba(41, 182, 246, 0.45); box-shadow: 0 2px 10px rgba(0,0,0,0.35); flex-shrink: 0; }
     .bp-vtitle { flex: 1; min-width: 0; }
     #bpVTitle { font-weight: 900; font-size: 15.5px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     #bpVSub { font-size: 11.5px; color: #9ec9ff; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1378,7 +1396,7 @@ body.oled-mode .pub-ref-badge {
     }
     /* ===== CASSETTO IMPOSTAZIONI LATERALE DESTRO (DRAWER PRO A FISARMONICA) ===== */
     .verse-row, .parallel-row, .parallel-row-3 {
-      line-height: var(--verse-line-height) !important;
+      line-height: var(--verse-line-height, 1.58);
       text-align: var(--verse-text-align);
       hyphens: var(--bm-text-hyphens, manual);
       -webkit-hyphens: var(--bm-text-hyphens, manual);
@@ -1412,7 +1430,7 @@ body.oled-mode .pub-ref-badge {
       box-shadow: -14px 0 42px rgba(0, 0, 0, 0.78), inset 1px 0 0 rgba(255, 255, 255, 0.28);
       display: flex;
       flex-direction: column;
-      padding-top: max(36px, env(safe-area-inset-top, 36px));
+      padding-top: max(12px, env(safe-area-inset-top, 12px));
       padding-bottom: max(16px, env(safe-area-inset-bottom, 16px));
       transform: translate3d(100%, 0, 0);
       transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
@@ -1745,10 +1763,63 @@ body.oled-mode .pub-ref-badge {
     body.bm-paper-on #mapsViewer .bp-g { color: #8c5818; }
 
   /* ===== Modulo Lampadina Profezie Messianiche ===== */
+  /* Dark & True-Black OLED (Pixel 10/11 Pro XL Super Actua OLED) */
+  body.dark-mode .bm-drawer-panel {
+    background: linear-gradient(180deg, #102138 0%, #091526 65%, #050d1a 100%);
+    border-left-color: #1f3758;
+  }
+  body.dark-mode .bm-acc-card,
+  body.dark-mode .rp-scroll-window,
+  body.dark-mode .bm-outline-box {
+    background: #0d1d33;
+    border-color: #1f3758;
+  }
+  body.dark-mode .bm-acc-content,
+  body.dark-mode .rp-row,
+  body.dark-mode .bm-outline-body {
+    background: #091526;
+    border-color: #1f3758;
+  }
+  body.dark-mode .modal-card .nav-btn,
+  body.dark-mode .chapter-nav-btns .nav-btn:not(.bm-back-history-btn) {
+    background-color: #0d1d33;
+    border-color: #1f3758;
+  }
+  body.oled-mode .bm-drawer-panel,
+  body.oled-mode .bm-drawer-head,
+  body.oled-mode .bm-acc-card,
+  body.oled-mode .bm-acc-content,
+  body.oled-mode .rp-scroll-window,
+  body.oled-mode .rp-row,
+  body.oled-mode .bm-outline-box,
+  body.oled-mode .bm-outline-body,
+  body.oled-mode .bm-prophecy-bubble,
+  body.oled-mode .bp-viewer,
+  body.oled-mode .bp-stage,
+  body.oled-mode .bp-sheet,
+  body.oled-mode .bp-card,
+  body.oled-mode .bm-select-opt,
+  body.oled-mode .modal-card .nav-btn,
+  body.oled-mode .chapter-nav-btns .nav-btn:not(.bm-back-history-btn) {
+    background: #000000;
+    border-color: #242424;
+  }
+  body.oled-mode .bm-acc-card.open {
+    border-color: #38bdf8;
+  }
+  body.oled-mode .bm-select-opt.selected {
+    background: #0d213f;
+    border-color: #38bdf8;
+  }
+  body.oled-mode nav.bottom-nav,
+  body.oled-mode header {
+    background: #000000;
+    border-color: #1f1f1f;
+  }
   #bmProphecyWidget {
     position: fixed;
     right: 14px;
-    bottom: 84px;
+    bottom: calc(84px + env(safe-area-inset-bottom, 0px));
     z-index: 950;
     display: none;
     align-items: flex-end;
@@ -2055,11 +2126,11 @@ body.oled-mode .pub-ref-badge {
   }
   function onResizeStabilize() {
     clearTimeout(timer);
-    timer = setTimeout(lockCenterAndReveal, 420);
+    timer = setTimeout(lockCenterAndReveal, 90);
   }
   window.addEventListener("resize", onResizeStabilize);
   onResizeStabilize();
-  setTimeout(lockCenterAndReveal, 1000);
+  setTimeout(lockCenterAndReveal, 320);
 })();
 </script>
   
@@ -2102,11 +2173,11 @@ body.oled-mode .pub-ref-badge {
   <main id="mainContainer"></main>
   <!-- Barra Azioni Versetto (Ordine Personalizzato PRO) -->
   <div id="verseActionBar" class="verse-action-bar">
-    <div class="color-dot" style="background:#ffeb3b;" onclick="applyHighlight('hl-yellow')"></div>
-    <div class="color-dot" style="background:#03a9f4;" onclick="applyHighlight('hl-blue')"></div>
-    <div class="color-dot" style="background:#4caf50;" onclick="applyHighlight('hl-green')"></div>
-    <div class="color-dot" style="background:#e91e63;" onclick="applyHighlight('hl-pink')"></div>
-    <div class="color-dot" style="background:#9c27b0;" onclick="applyHighlight('hl-purple')"></div>
+    <div class="color-dot" role="button" tabindex="0" title="Evidenzia Giallo" aria-label="Evidenzia in giallo" style="background:#ffeb3b;" onclick="applyHighlight('hl-yellow')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();applyHighlight('hl-yellow');}"></div>
+    <div class="color-dot" role="button" tabindex="0" title="Evidenzia Azzurro" aria-label="Evidenzia in azzurro" style="background:#03a9f4;" onclick="applyHighlight('hl-blue')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();applyHighlight('hl-blue');}"></div>
+    <div class="color-dot" role="button" tabindex="0" title="Evidenzia Verde" aria-label="Evidenzia in verde" style="background:#4caf50;" onclick="applyHighlight('hl-green')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();applyHighlight('hl-green');}"></div>
+    <div class="color-dot" role="button" tabindex="0" title="Evidenzia Rosa" aria-label="Evidenzia in rosa" style="background:#e91e63;" onclick="applyHighlight('hl-pink')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();applyHighlight('hl-pink');}"></div>
+    <div class="color-dot" role="button" tabindex="0" title="Evidenzia Viola" aria-label="Evidenzia in viola" style="background:#9c27b0;" onclick="applyHighlight('hl-purple')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();applyHighlight('hl-purple');}"></div>
     <button class="icon-btn" style="color:var(--text-main);" title="Rimuovi colore" onclick="applyHighlight('')">🚫</button>
     <button class="icon-btn" style="color:var(--primary-light);" title="Passi Paralleli" onclick="openCrossRefsModalForVerse()">🔗</button>
     <button class="icon-btn" style="color:var(--primary-light);" title="Lessico Strong" onclick="openStrongModalForVerse()">🏺</button>
@@ -2143,20 +2214,20 @@ body.oled-mode .pub-ref-badge {
   </div>
   <!-- Finestra Modale Personalizzata per Mia Lettura (Blu Scuro PRO) -->
   <div id="myReadModal" class="modal-overlay" onclick="if(event.target.id==='myReadModal') this.style.display='none'" style="display:none;">
-    <div class="modal-card" style="background:#0a367e; color:#ffffff; border:1px solid #29b6f6;">
+    <div class="modal-card">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-        <div class="modal-title" style="color:#ffffff; font-size:17px; margin:0;">Bibbia Multilingue PRO</div>
-        <button class="nav-btn" style="background:rgba(255,255,255,0.15); color:#fff; border:1px solid rgba(255,255,255,0.3); padding:3px 9px;" onclick="document.getElementById('myReadModal').style.display='none'">✕</button>
+        <div class="modal-title" style="font-size:17px; margin:0;">Bibbia Multilingue PRO</div>
+        <button class="nav-btn" style="padding:3px 9px;" onclick="document.getElementById('myReadModal').style.display='none'">✕</button>
       </div>
-      <div id="myReadModalBody" style="font-size:14.5px; line-height:1.55; color:#ffffff;"></div>
+      <div id="myReadModalBody" style="font-size:14.5px; line-height:1.55; color:var(--text-main);"></div>
     </div>
   </div>
   <!-- Sottomenù a Tendina Universale Blu Scuro PRO (Sostituisce tutti i menu bianchi nativi) -->
   <div id="bmSelectModal" class="modal-overlay" onclick="if(event.target.id==='bmSelectModal') closeBmSelectModal()" style="display:none; z-index:1200;">
-    <div class="modal-card" style="background:#0a367e; color:#ffffff; border:1px solid #29b6f6; max-width:420px;">
+    <div class="modal-card" style="max-width:420px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-        <div id="bmSelectModalTitle" class="modal-title" style="color:#ffffff; font-size:16px; margin:0;">Seleziona un'opzione</div>
-        <button class="nav-btn" style="background:#062356; color:#fff; border:1px solid #29b6f6; padding:3px 9px;" onclick="closeBmSelectModal()">✕</button>
+        <div id="bmSelectModalTitle" class="modal-title" style="font-size:16px; margin:0;">Seleziona un'opzione</div>
+        <button class="nav-btn" style="padding:3px 9px;" onclick="closeBmSelectModal()">✕</button>
       </div>
       <input type="search" id="bmSelectSearchInput" class="search-input" style="width:100%; margin-bottom:8px; display:none;" placeholder="🔍 Filtra rapidamente..." oninput="filterCustomSelectOptions(this.value)" autocomplete="off">
       <div id="bmSelectModalList" class="bm-select-list"></div>
@@ -2190,7 +2261,7 @@ body.oled-mode .pub-ref-badge {
     <div class="bm-drawer-panel">
       <div class="bm-drawer-head">
         <div class="bm-drawer-title"><span>⚙️</span><span>Impostazioni PRO</span></div>
-        <button class="nav-btn" style="background:#062356; color:#fff; border:1px solid #29b6f6; padding:4px 10px;" onclick="closeSettingsDrawer()">✕</button>
+        <button class="nav-btn" style="padding:4px 10px;" onclick="closeSettingsDrawer()">✕</button>
       </div>
       <div id="bmSettingsDrawerBody" class="bm-drawer-body"></div>
     </div>
@@ -2249,7 +2320,7 @@ body.oled-mode .pub-ref-badge {
 
       <button type="button" class="bm-pb-arrow" onclick="stepMessianicProphecy(1)" title="Vai alla profezia messianica successiva">▶</button>
     </div>
-    <span id="bmPbCategory" class="tag-badge" style="display:block; width:fit-content; margin:0 auto 6px auto; font-size:10.5px; background:#041a42; color:#84ffff; border-color:#29b6f6;">Origine</span>
+    <span id="bmPbCategory" class="tag-badge" style="display:block; width:fit-content; margin:0 auto 6px auto; font-size:10.5px; background:var(--primary-dark); color:#84ffff; border-color:#29b6f6;">Origine</span>
     <!-- Toccando il testo del fumetto si apre subito la Nota Integrale senza tagli -->
     <div id="bmPbDesc" class="bm-pb-desc bm-justify-text" onclick="openGreekFulfillmentAction()" title="Tocca per leggere la nota integrale e i riferimenti"></div>
     <div class="bm-pb-controls">
@@ -4016,19 +4087,37 @@ function getStrongDictKey(word) {
   }
   return null;
 }
+function sanitizeStrongMap(rawObj) {
+  const clean = {};
+  if (!rawObj || typeof rawObj !== "object" || Array.isArray(rawObj)) return clean;
+  Object.keys(rawObj).forEach(k => {
+    const key = String(k || "").trim();
+    const v = rawObj[k];
+    if (!key || !v || typeof v !== "object" || Array.isArray(v)) return;
+    const code = String(v.code || "").trim();
+    const orig = String(v.orig || "").trim();
+    const def = String(v.def || "").trim();
+    if (!code && !def) return;
+    clean[key] = { code: code || key.toUpperCase(), orig, def };
+  });
+  return clean;
+}
 async function loadExternalExegeticalModules() {
   try {
     const extStrong = await idbGet("bm:strong_ext");
     if (extStrong && typeof extStrong === "object") {
-      Object.assign(PRO_STRONG_DICT, extStrong);
-      rebuildStrongNormMap();
+      const safeStrong = sanitizeStrongMap(extStrong);
+      if (Object.keys(safeStrong).length > 0) {
+        Object.assign(PRO_STRONG_DICT, safeStrong);
+        rebuildStrongNormMap();
+      }
     }
     const extXrefs = await idbGet("bm:xrefs_ext");
     if (extXrefs && typeof extXrefs === "object") {
-      Object.keys(extXrefs).forEach(k => {
-        if (!Array.isArray(extXrefs[k])) return;
+      const safeXrefs = sanitizeXrefsMap(extXrefs);
+      Object.keys(safeXrefs).forEach(k => {
         const base = Array.isArray(PRO_CROSS_REFS[k]) ? PRO_CROSS_REFS[k] : [];
-        PRO_CROSS_REFS[k] = [...new Set([...extXrefs[k], ...base])];
+        PRO_CROSS_REFS[k] = [...new Set([...safeXrefs[k], ...base])];
       });
     }
   } catch (e) { console.debug(e); }
@@ -4040,19 +4129,33 @@ async function importStrongExtJson(event) {
   try {
     if (statusEl) statusEl.innerHTML = `⏳ Caricamento Lessico Strong esteso <b>${escapeHtml(file.name)}</b>...`;
     const parsed = JSON.parse(await file.text());
-    const mapObj = (parsed && typeof parsed === "object" && !Array.isArray(parsed)) ? (parsed.entries || parsed) : null;
-    if (!mapObj || typeof mapObj !== "object" || Object.keys(mapObj).length === 0) {
-      throw new Error("Formato JSON non valido. Atteso oggetto { termine: { code, orig, def } }.");
+    const rawMap = (parsed && typeof parsed === "object" && !Array.isArray(parsed)) ? (parsed.entries || parsed) : null;
+    const mapObj = sanitizeStrongMap(rawMap);
+    const validCount = Object.keys(mapObj).length;
+    if (validCount === 0) {
+      throw new Error("Formato JSON non valido. Atteso oggetto { termine: { code, orig, def } } con almeno una voce valida.");
     }
     await idbPut("bm:strong_ext", mapObj);
     Object.assign(PRO_STRONG_DICT, mapObj);
     rebuildStrongNormMap();
-    if (statusEl) statusEl.innerHTML = `✔ Lessico Strong esteso salvato (${Object.keys(mapObj).length} voci aggiunte)!`;
+    if (statusEl) statusEl.innerHTML = `✔ Lessico Strong esteso salvato (${validCount.toLocaleString("it-IT")} voci validate)!`;
   } catch (err) {
     if (statusEl) statusEl.innerHTML = `❌ Errore Strong JSON: ${escapeHtml(err.message)}`;
   } finally {
     event.target.value = "";
   }
+}
+function sanitizeXrefsMap(rawObj) {
+  const clean = {};
+  if (!rawObj || typeof rawObj !== "object" || Array.isArray(rawObj)) return clean;
+  Object.keys(rawObj).forEach(k => {
+    const key = String(k || "").trim();
+    const arr = rawObj[k];
+    if (!key || !Array.isArray(arr)) return;
+    const refs = [...new Set(arr.filter(r => typeof r === "string").map(r => r.trim()).filter(Boolean))];
+    if (refs.length > 0) clean[key] = refs;
+  });
+  return clean;
 }
 async function importXrefsExtJson(event) {
   const file = event.target.files?.[0];
@@ -4061,17 +4164,18 @@ async function importXrefsExtJson(event) {
   try {
     if (statusEl) statusEl.innerHTML = `⏳ Caricamento Riferimenti Incrociati <b>${escapeHtml(file.name)}</b>...`;
     const parsed = JSON.parse(await file.text());
-    const mapObj = (parsed && typeof parsed === "object" && !Array.isArray(parsed)) ? (parsed.refs || parsed) : null;
-    if (!mapObj || typeof mapObj !== "object" || Object.keys(mapObj).length === 0) {
-      throw new Error("Formato JSON non valido. Atteso oggetto { \"bookId_ch_v\": [\"Libro c:v\", ...] }.");
+    const rawMap = (parsed && typeof parsed === "object" && !Array.isArray(parsed)) ? (parsed.refs || parsed) : null;
+    const mapObj = sanitizeXrefsMap(rawMap);
+    const validCount = Object.keys(mapObj).length;
+    if (validCount === 0) {
+      throw new Error("Formato JSON non valido. Atteso oggetto { \"bookId_ch_v\": [\"Libro c:v\", ...] } con almeno un riferimento valido.");
     }
     await idbPut("bm:xrefs_ext", mapObj);
     Object.keys(mapObj).forEach(k => {
-      if (!Array.isArray(mapObj[k])) return;
       const base = Array.isArray(PRO_CROSS_REFS[k]) ? PRO_CROSS_REFS[k] : [];
       PRO_CROSS_REFS[k] = [...new Set([...mapObj[k], ...base])];
     });
-    if (statusEl) statusEl.innerHTML = `✔ Riferimenti Incrociati salvati (${Object.keys(mapObj).length} versetti)!`;
+    if (statusEl) statusEl.innerHTML = `✔ Riferimenti Incrociati salvati (${validCount.toLocaleString("it-IT")} versetti validati)!`;
   } catch (err) {
     if (statusEl) statusEl.innerHTML = `❌ Errore Riferimenti JSON: ${escapeHtml(err.message)}`;
   } finally {
@@ -4159,7 +4263,6 @@ let dynamicCatalog = [...CORE_BIBLES];
 let catalogLoaded = false;
 const DEFAULT_ACTIVE_IDS = CORE_BIBLES.map(b => b.id);
 let navHistory = [];
-let isPersonalReadingMode = true;
 let currentViewReqId = 0;
 let currentXRayReqId = 0;
 let bpLoadReqId = 0;
@@ -4482,6 +4585,7 @@ function showBooksView() {
     <div class="section-title"><span>Scritture Greche Cristiane</span><span>27 Libri</span></div>
     <div class="books-grid">${nt.map(b => `<button class="book-tile cat-${b.cat}" onclick="showChaptersView(${b.id})">${escapeHtml(b.abbr)}</button>`).join("")}</div>
   `;
+  syncBmPaperMode();
   main.scrollTop = 0;
 }
 let pendingGridBookId = 1;
@@ -4697,7 +4801,7 @@ async function openBookOutlineModal() {
       return `<div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px; padding:3px 4px 3px ${pad}px; font-size:13px; line-height:1.4; cursor:pointer; color:${it.lvl === 1 ? '#ffffff' : '#cfe3ff'}; font-weight:${it.lvl === 1 ? '700' : '500'};" onclick="document.getElementById('myReadModal').style.display='none'; openRef(${state.bookId}, ${chObj.chapter}, '${escapeJsStr(vSpec)}');"><span>${it.lvl >= 2 ? '• ' : ''}${escapeHtml(it.text)}</span>${vPill}</div>`;
     }).join("");
     return `
-      <div style="background:#062356; border:1px solid ${isCurr ? '#00e5ff' : 'rgba(41,182,246,0.4)'}; border-radius:9px; padding:8px 10px; margin-bottom:8px;">
+      <div style="background:var(--bg-main); border:1px solid ${isCurr ? '#00e5ff' : 'rgba(41,182,246,0.4)'}; border-radius:9px; padding:8px 10px; margin-bottom:8px;">
         <div style="font-size:13.5px; font-weight:900; color:${isCurr ? '#00e5ff' : '#84ffff'}; margin-bottom:4px; cursor:pointer;" onclick="document.getElementById('myReadModal').style.display='none'; openRef(${state.bookId}, ${chObj.chapter});">
           📖 ${escapeHtml(book.name)} ${chObj.chapter}${isCurr ? ' (attuale)' : ''}
         </div>
@@ -4721,7 +4825,7 @@ async function openBookOutlineModal() {
       ${chaptersHtml}
     </div>
     ${siBridgeBtn}
-    <button type="button" class="myread-action-btn" style="background:#062356;" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
+    <button type="button" class="myread-action-btn" style="background:var(--bg-main);" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
   `;
   modal.style.display = "flex";
 }
@@ -4737,7 +4841,7 @@ async function openVerseFootnotesModal(verseNum) {
   if (!modal || !body) return;
   const refStr = `${book.name} ${state.chapter}:${vNum}`;
   const notesHtml = notesArr.map((txt, i) => `
-    <div style="background:#062356; border:1px solid rgba(255,213,79,0.45); border-left:3.5px solid #ffd54f; border-radius:8px; padding:9px 11px; margin-bottom:8px; font-size:14px; line-height:1.52; color:#ffffff;">
+    <div style="background:var(--bg-main); border:1px solid rgba(255,213,79,0.45); border-left:3.5px solid #ffd54f; border-radius:8px; padding:9px 11px; margin-bottom:8px; font-size:14px; line-height:1.52; color:#ffffff;">
       <span style="color:#ffd54f; font-weight:900; margin-right:5px;">*${notesArr.length > 1 ? (i + 1) : ""}</span>${formatNoteLinks(txt, state.bookId)}
     </div>
   `).join("");
@@ -4751,7 +4855,7 @@ async function openVerseFootnotesModal(verseNum) {
     <div class="bm-justify-text" style="max-height:50vh; overflow-y:auto; margin-bottom:10px;">
       ${notesHtml}
     </div>
-    <button type="button" class="myread-action-btn" style="background:#062356;" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
+    <button type="button" class="myread-action-btn" style="background:var(--bg-main);" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
   `;
   modal.style.display = "flex";
 }
@@ -5145,7 +5249,8 @@ function getNameLinkMatcher() {
       .replace(/ /g, "[ \\u00A0]")
     )
     .join("|");
-  bmNameLinkMatcher = { rgx: new RegExp(`(?<![\\p{L}\\p{N}_])(?:${alternatives})(?![\\p{L}\\p{N}_])`, "gu"), lookup };
+  // Lookbehind-free per piena compatibilità anche su Safari/WebKit < 16.4
+  bmNameLinkMatcher = { rgx: new RegExp(`(^|[^\\p{L}\\p{N}_])(${alternatives})(?![\\p{L}\\p{N}_])`, "gu"), lookup };
   return bmNameLinkMatcher;
 }
 
@@ -5154,13 +5259,26 @@ function linkBiblicalNames(html, verseNum) {
   const { rgx, lookup } = getNameLinkMatcher();
   return html.split(/(<[^>]*>)/).map(part => {
     if (part.startsWith("<")) return part;
-    return part.replace(rgx, m => {
-      const idx = lookup.get(bmStripNameAccents(m.replace(/\u00A0/g, " ")));
-      if (idx === undefined) return m;
-      const books = BM_NAME_LINKS[idx].books;
-      if (books && !books.includes(Number(state.bookId))) return m;
-      return `<span class="bm-name-link" onclick="event.stopPropagation(); openNameLink(${idx}, ${verseNum}, this.textContent)">${m}</span>`;
-    });
+    let out = "";
+    let lastIdx = 0;
+    rgx.lastIndex = 0;
+    let match;
+    while ((match = rgx.exec(part)) !== null) {
+      const prefix = match[1] || "";
+      const nameStr = match[2] || "";
+      const nameStart = match.index + prefix.length;
+      const nameEnd = nameStart + nameStr.length;
+      const idx = lookup.get(bmStripNameAccents(nameStr.replace(/\u00A0/g, " ")));
+      const books = idx !== undefined ? BM_NAME_LINKS[idx].books : null;
+      if (idx !== undefined && (!books || books.includes(Number(state.bookId)))) {
+        out += part.slice(lastIdx, nameStart);
+        out += `<span class="bm-name-link" onclick="event.stopPropagation(); openNameLink(${idx}, ${verseNum}, this.textContent)">${nameStr}</span>`;
+        lastIdx = nameEnd;
+      }
+      // Riparte esattamente dalla fine del nome così due nomi separati da uno spazio (es. "Adamo Eva") matchano entrambi
+      rgx.lastIndex = nameEnd;
+    }
+    return out + part.slice(lastIdx);
   }).join("");
 }
 
@@ -5232,7 +5350,7 @@ function showNameLinkChooser(idx, verseNum, displayTitle) {
       <div style="font-size:13px; color:#e3f2fd; margin-top:6px;">Dove vuoi approfondire?</div>
     </div>
     <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;">${chooserBtns}</div>
-    <button type="button" class="myread-action-btn" style="background:#062356;" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
+    <button type="button" class="myread-action-btn" style="background:var(--bg-main);" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
   `;
   modal.style.display = "flex";
 }
@@ -5266,8 +5384,10 @@ function highlightDiffText(baseStr, targetStr, verseNum = 1, targetTransId = sta
   }).join("");
 }
 async function loadChapterView() {
-  await renderChapterView();
-  await evaluateMessianicBulbForCurrentView();
+  const rendered = await renderChapterView();
+  if (rendered) {
+    await evaluateMessianicBulbForCurrentView();
+  }
 }
 async function renderChapterView() {
   const reqId = ++currentViewReqId;
@@ -5285,19 +5405,22 @@ async function renderChapterView() {
   setHeaderCenterPill(`${book.abbr} ${state.chapter}`, "bible");
   const main = document.getElementById("mainContainer");
   main.innerHTML = `<div class="loader">Caricamento di <b>${escapeHtml(book.name)} ${state.chapter}</b>...</div>`;
+  syncBmPaperMode();
   try {
-    const data1 = await fetchChapterData(state.trans1, state.bookId, state.chapter);
-    if (reqId !== currentViewReqId) return;
-    const footnotes1 = await fetchChapterFootnotes(state.trans1, state.bookId, state.chapter);
-    const outline1 = (bmSettings.showOutlines !== false) ? await fetchChapterOutline(state.trans1, state.bookId, state.chapter) : [];
-    let data2 = [], data3 = [];
-    if (state.parallelCount >= 2) {
-      try { data2 = await fetchChapterData(state.trans2, state.bookId, state.chapter); } catch(e) { data2 = []; }
-    }
-    if (state.parallelCount === 3) {
-      try { data3 = await fetchChapterData(state.trans3, state.bookId, state.chapter); } catch(e) { data3 = []; }
-    }
-    if (reqId !== currentViewReqId) return;
+    const [data1, footnotes1, outline1, data2, data3] = await Promise.all([
+      fetchChapterData(state.trans1, state.bookId, state.chapter),
+      fetchChapterFootnotes(state.trans1, state.bookId, state.chapter).catch(() => ({})),
+      bmSettings.showOutlines !== false
+        ? fetchChapterOutline(state.trans1, state.bookId, state.chapter).catch(() => [])
+        : Promise.resolve([]),
+      state.parallelCount >= 2
+        ? fetchChapterData(state.trans2, state.bookId, state.chapter).catch(() => [])
+        : Promise.resolve([]),
+      state.parallelCount === 3
+        ? fetchChapterData(state.trans3, state.bookId, state.chapter).catch(() => [])
+        : Promise.resolve([])
+    ]);
+    if (reqId !== currentViewReqId) return false;
     const rtl1 = isRtlBible(state.trans1);
     const rtl2 = state.parallelCount >= 2 && isRtlBible(state.trans2);
     const rtl3 = state.parallelCount === 3 && isRtlBible(state.trans3);
@@ -5330,34 +5453,45 @@ async function renderChapterView() {
           </div>`;
       }).join("");
     } else if (state.parallelCount === 2) {
-      const map2 = {};
-      data2.forEach(v => map2[v.verse] = v.text);
-      versesHtml = data1.map(v => {
-        const key = `${state.bookId}_${state.chapter}_${v.verse}`;
+      const map1 = new Map(), map2 = new Map();
+      data1.forEach(v => map1.set(Number(v.verse), v.text));
+      data2.forEach(v => map2.set(Number(v.verse), v.text));
+      const allVNums = [...new Set([...map1.keys(), ...map2.keys()])].sort((a, b) => a - b);
+      versesHtml = allVNums.map(vNum => {
+        const t1 = map1.get(vNum) || "";
+        const t2 = map2.get(vNum) || "";
+        const key = `${state.bookId}_${state.chapter}_${vNum}`;
         const hlClass = state.highlights[key] || "";
-        const cleanText = escapeHtml(stripTagsToPlainText(v.text));
-        const text2 = highlightDiffText(v.text, map2[v.verse] || "—", v.verse, state.trans2);
+        const cleanText = escapeHtml(stripTagsToPlainText(t1 || t2));
+        const html1 = t1 ? formatInlineStrongs(t1, vNum) : '<span style="opacity:0.45;">—</span>';
+        const html2 = t2 ? highlightDiffText(t1, t2, vNum, state.trans2) : '<span style="opacity:0.45;">—</span>';
         return `
-          <div class="parallel-row ${hlClass}" id="v_${v.verse}" data-text="${cleanText}" onclick="onVerseClick(${v.verse}, this.getAttribute('data-text'))">
-            <div class="parallel-col${rtlCls1}"${rtlAttr1}><span class="verse-num">${v.verse}</span>${formatInlineStrongs(v.text, v.verse)}</div>
-            <div class="parallel-col${rtlCls2}"${rtlAttr2}><span class="verse-num">${v.verse}</span>${text2}</div>
+          <div class="parallel-row ${hlClass}" id="v_${vNum}" data-text="${cleanText}" onclick="onVerseClick(${vNum}, this.getAttribute('data-text'))">
+            <div class="parallel-col${rtlCls1}"${rtlAttr1}><span class="verse-num">${vNum}</span>${html1}</div>
+            <div class="parallel-col${rtlCls2}"${rtlAttr2}><span class="verse-num">${vNum}</span>${html2}</div>
           </div>`;
       }).join("");
     } else {
-      const map2 = {}, map3 = {};
-      data2.forEach(v => map2[v.verse] = v.text);
-      data3.forEach(v => map3[v.verse] = v.text);
-      versesHtml = data1.map(v => {
-        const key = `${state.bookId}_${state.chapter}_${v.verse}`;
+      const map1 = new Map(), map2 = new Map(), map3 = new Map();
+      data1.forEach(v => map1.set(Number(v.verse), v.text));
+      data2.forEach(v => map2.set(Number(v.verse), v.text));
+      data3.forEach(v => map3.set(Number(v.verse), v.text));
+      const allVNums = [...new Set([...map1.keys(), ...map2.keys(), ...map3.keys()])].sort((a, b) => a - b);
+      versesHtml = allVNums.map(vNum => {
+        const t1 = map1.get(vNum) || "";
+        const t2 = map2.get(vNum) || "";
+        const t3 = map3.get(vNum) || "";
+        const key = `${state.bookId}_${state.chapter}_${vNum}`;
         const hlClass = state.highlights[key] || "";
-        const cleanText = escapeHtml(stripTagsToPlainText(v.text));
-        const text2 = highlightDiffText(v.text, map2[v.verse] || "—", v.verse, state.trans2);
-        const text3 = highlightDiffText(v.text, map3[v.verse] || "—", v.verse, state.trans3);
+        const cleanText = escapeHtml(stripTagsToPlainText(t1 || t2 || t3));
+        const html1 = t1 ? formatInlineStrongs(t1, vNum) : '<span style="opacity:0.45;">—</span>';
+        const html2 = t2 ? highlightDiffText(t1, t2, vNum, state.trans2) : '<span style="opacity:0.45;">—</span>';
+        const html3 = t3 ? highlightDiffText(t1, t3, vNum, state.trans3) : '<span style="opacity:0.45;">—</span>';
         return `
-          <div class="parallel-row-3 ${hlClass}" id="v_${v.verse}" data-text="${cleanText}" onclick="onVerseClick(${v.verse}, this.getAttribute('data-text'))">
-            <div class="parallel-col${rtlCls1}"${rtlAttr1}><span class="verse-num">${v.verse}</span>${formatInlineStrongs(v.text, v.verse)}</div>
-            <div class="parallel-col${rtlCls2}"${rtlAttr2}><span class="verse-num">${v.verse}</span>${text2}</div>
-            <div class="parallel-col${rtlCls3}"${rtlAttr3}><span class="verse-num">${v.verse}</span>${text3}</div>
+          <div class="parallel-row-3 ${hlClass}" id="v_${vNum}" data-text="${cleanText}" onclick="onVerseClick(${vNum}, this.getAttribute('data-text'))">
+            <div class="parallel-col${rtlCls1}"${rtlAttr1}><span class="verse-num">${vNum}</span>${html1}</div>
+            <div class="parallel-col${rtlCls2}"${rtlAttr2}><span class="verse-num">${vNum}</span>${html2}</div>
+            <div class="parallel-col${rtlCls3}"${rtlAttr3}><span class="verse-num">${vNum}</span>${html3}</div>
           </div>`;
       }).join("");
     }
@@ -5382,9 +5516,10 @@ async function renderChapterView() {
     `;
     syncBmPaperMode();
     main.scrollTop = 0;
+    return true;
   } catch (err) {
-    if (reqId !== currentViewReqId) return;
-        if (err && err.message === "EPUB_NOT_IMPORTED") {
+    if (reqId !== currentViewReqId) return false;
+    if (err && err.message === "EPUB_NOT_IMPORTED") {
       const bMeta = CORE_BIBLES.find(b => b.id === state.trans1);
       const bTitle = bMeta ? bMeta.name : "Edizione EPUB Offline";
       main.innerHTML = `
@@ -5393,7 +5528,8 @@ async function renderChapterView() {
           Per leggere questo libro offline, importa una sola volta il relativo file <b>.epub</b> (VT e/o NT) dal telefono:<br><br>
           <button class="search-btn" onclick="openBackupModal()">📘 Apri Importazione EPUB</button>
         </div>`;
-      return;
+      syncBmPaperMode();
+      return false;
     }
     const isNT = state.bookId >= 40;
     main.innerHTML = `
@@ -5402,6 +5538,8 @@ async function renderChapterView() {
         <button class="search-btn" onclick="openRef(${isNT ? 1 : 40}, 1)">Vai a ${isNT ? 'Genesi 1 (AT)' : 'Matteo 1 (NT)'}</button>
         <button class="nav-btn" onclick="showBooksView()">Scegli Libro</button>
       </div>`;
+    syncBmPaperMode();
+    return false;
   }
 }
 function openBibleTabFromMenu() {
@@ -5708,7 +5846,7 @@ function renderSettingsDrawerContent() {
           <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#1e88e5; --btn-glow:rgba(30,136,229,0.75); background:#0a367e;" onclick="clearChapterCacheOnly(); showBlueInfoModal('🧹 Cache Capitoli Pulita', 'La cache temporanea dei capitoli online è stata svuotata (le tue Bibbie EPUB e le note sono intatte).');">
             🧹 Svuota Cache Capitoli Online
           </button>
-          <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#1565c0; --btn-glow:rgba(41,182,246,0.75); background:#041a42;" onclick="checkBmPwaUpdates()">
+          <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#1565c0; --btn-glow:rgba(41,182,246,0.75); background:var(--primary-dark);" onclick="checkBmPwaUpdates()">
             🔄 Stato Offline PWA & Aggiornamenti
           </button>
         </div>
@@ -6081,40 +6219,61 @@ function saveBookmark() {
   showSavedView();
 }
 
-function openNoteModalForVerse(customRef) {
+function openNoteModalForVerse(customRef, customNoteId = null) {
   const book = getBook(state.bookId);
-  let ref = customRef;
-  if (!ref) {
+  let existing = null;
+  if (customNoteId !== null && customNoteId !== undefined) {
+    existing = state.notes.find(n => Number(n.id) === Number(customNoteId)) || null;
+  }
+  if (!existing && customRef) {
+    existing = state.notes.find(n => n.ref === customRef) || null;
+  }
+  if (!customRef && !existing) {
     const vNum = state.selectedVerse || 1;
     if (!state.selectedVerseText) selectVerseDataFromDOM(vNum);
-    ref = `${book.name} ${state.chapter}:${vNum}`;
+    const ref = `${book.name} ${state.chapter}:${vNum}`;
+    existing = state.notes.find(n => n.ref === ref) || null;
     activeNoteTarget = {
+      id: existing ? existing.id : null,
       bookId: state.bookId,
       chapter: state.chapter,
       verse: vNum,
       ref: ref,
-      verseText: state.selectedVerseText || ""
+      verseText: state.selectedVerseText || (existing ? existing.verseText : "") || "",
+      isFreeNote: false
+    };
+  } else if (existing) {
+    const isFree = Boolean(existing.isFreeNote || (!existing.verseText && !parseRefStringToTarget(existing.ref)));
+    activeNoteTarget = {
+      id: existing.id,
+      bookId: existing.bookId || state.bookId,
+      chapter: existing.chapter || state.chapter,
+      verse: existing.verse || 1,
+      ref: existing.ref,
+      verseText: existing.verseText || "",
+      isFreeNote: isFree
     };
   } else {
-    const existingNote = state.notes.find(n => n.ref === customRef);
-    activeNoteTarget = existingNote ? {
-      id: existingNote.id,
-      bookId: existingNote.bookId || state.bookId,
-      chapter: existingNote.chapter || state.chapter,
-      verse: existingNote.verse || 1,
-      ref: existingNote.ref,
-      verseText: existingNote.verseText || ""
-    } : {
+    activeNoteTarget = {
+      id: null,
       bookId: state.bookId,
       chapter: state.chapter,
       verse: 1,
       ref: customRef,
-      verseText: ""
+      verseText: "",
+      isFreeNote: !parseRefStringToTarget(customRef)
     };
   }
-  const existing = state.notes.find(n => n.ref === activeNoteTarget.ref);
-  document.getElementById("noteModalTitle").textContent = `📝 Appunto e Note: ${activeNoteTarget.ref}`;
-  document.getElementById("noteModalVersePreview").textContent = activeNoteTarget.verseText ? `"${activeNoteTarget.verseText}"` : "Nota di studio personale";
+  const titleEl = document.getElementById("noteModalTitle");
+  const prevEl = document.getElementById("noteModalVersePreview");
+  if (activeNoteTarget.isFreeNote) {
+    const safeTitle = activeNoteTarget.ref || "Nota di Studio";
+    titleEl.textContent = "📝 Modifica Appunto Libero";
+    prevEl.innerHTML = `<input type="text" id="freeNoteTitleInput" class="search-input" style="width:100%; margin-top:4px; font-style:normal; font-weight:700;" value="${escapeHtml(safeTitle)}" placeholder="Titolo o tema dell'appunto..." oninput="if(activeNoteTarget) activeNoteTarget.ref = this.value.trim() || '${escapeJsStr(safeTitle)}'">`;
+  } else {
+    titleEl.textContent = `📝 Appunto e Note: ${activeNoteTarget.ref}`;
+    prevEl.textContent = activeNoteTarget.verseText ? `"${activeNoteTarget.verseText}"` : "Nota di studio personale";
+  }
   document.getElementById("noteModalInput").value = existing ? existing.text : "";
   document.getElementById("noteTagsInput").value = (existing && existing.tags) ? existing.tags.join(", ") : "";
   closeActionBar();
@@ -6127,18 +6286,20 @@ function openNoteModalForVerse(customRef) {
 function openNewFreeNoteModal() {
   const defaultTitle = "Nota di Studio " + (state.notes.length + 1);
   activeNoteTarget = {
+    id: null,
     bookId: state.bookId,
     chapter: state.chapter,
     verse: 1,
     ref: defaultTitle,
-    verseText: ""
+    verseText: "",
+    isFreeNote: true
   };
   document.getElementById("noteModalTitle").textContent = `📝 Nuovo Appunto Libero`;
   document.getElementById("noteModalVersePreview").innerHTML = `<input type="text" id="freeNoteTitleInput" class="search-input" style="width:100%; margin-top:4px; font-style:normal; font-weight:700;" value="${escapeHtml(defaultTitle)}" placeholder="Titolo o tema dell'appunto..." oninput="if(activeNoteTarget) activeNoteTarget.ref = this.value.trim() || '${escapeJsStr(defaultTitle)}'">`;
   document.getElementById("noteModalInput").value = "";
   document.getElementById("noteTagsInput").value = "studio";
   document.getElementById("noteModal").style.display = "flex";
-    }
+}
 function closeNoteModal() {
   document.getElementById("noteModal").style.display = "none";
 }
@@ -6149,27 +6310,37 @@ function saveNoteFromModal() {
   const text = textEl ? textEl.value.trim() : "";
   const rawTags = tagsEl ? tagsEl.value : "";
   const tags = rawTags.split(",").map(t => t.trim().replace(/^#/, "")).filter(Boolean);
+  if (!activeNoteTarget) {
+    const book = getBook(state.bookId);
+    const vNum = state.selectedVerse || 1;
+    activeNoteTarget = {
+      id: null,
+      bookId: state.bookId,
+      chapter: state.chapter,
+      verse: vNum,
+      ref: `${book.name} ${state.chapter}:${vNum}`,
+      verseText: state.selectedVerseText || "",
+      isFreeNote: false
+    };
+  }
+  let existingIdx = (activeNoteTarget.id !== null && activeNoteTarget.id !== undefined)
+    ? state.notes.findIndex(n => Number(n.id) === Number(activeNoteTarget.id))
+    : -1;
+  if (existingIdx === -1 && !activeNoteTarget.isFreeNote) {
+    existingIdx = state.notes.findIndex(n => n.ref === activeNoteTarget.ref);
+  }
   const freeTitleEl = document.getElementById("freeNoteTitleInput");
   if (freeTitleEl && activeNoteTarget) {
     const baseTitle = freeTitleEl.value.trim() || activeNoteTarget.ref;
     let uniqueRef = baseTitle;
     let dupN = 2;
-    while (state.notes.some(x => x.ref === uniqueRef)) uniqueRef = `${baseTitle} (${dupN++})`;
+    const selfId = existingIdx > -1 ? Number(state.notes[existingIdx].id) : null;
+    while (state.notes.some(x => x.ref === uniqueRef && (selfId === null || Number(x.id) !== selfId))) {
+      uniqueRef = `${baseTitle} (${dupN++})`;
+    }
     activeNoteTarget.ref = uniqueRef;
   }
-  if (!activeNoteTarget) {
-    const book = getBook(state.bookId);
-    const vNum = state.selectedVerse || 1;
-    activeNoteTarget = {
-      bookId: state.bookId,
-      chapter: state.chapter,
-      verse: vNum,
-      ref: `${book.name} ${state.chapter}:${vNum}`,
-      verseText: state.selectedVerseText || ""
-    };
-  }
   const finalNoteText = text || "📌 Versetto annotato per lo studio.";
-  const existingIdx = state.notes.findIndex(n => n.ref === activeNoteTarget.ref);
   const noteObj = {
     id: (existingIdx > -1 && state.notes[existingIdx].id) ? state.notes[existingIdx].id : Date.now(),
     bookId: activeNoteTarget.bookId,
@@ -6177,6 +6348,7 @@ function saveNoteFromModal() {
     verse: activeNoteTarget.verse,
     ref: activeNoteTarget.ref,
     verseText: activeNoteTarget.verseText,
+    isFreeNote: Boolean(activeNoteTarget.isFreeNote),
     text: finalNoteText,
     tags: tags.length ? tags : ["appunto"],
     date: new Date().toLocaleDateString("it-IT")
@@ -6232,13 +6404,15 @@ function formatNoteLinks(txt, defaultBookId = null) {
 
   const chainRegex = /\b(?:(?:([1-3]\s*)?([A-ZÀ-Ý][A-Za-zÀ-ÖØ-öø-ÿ]{1,18})\.?\s+(\d{1,3})(?::(\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?(?::\d{1,3}[a-z]?)?)?(?:\s*,\s*(?!\d{1,3}\s*:)\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?)*))?)|(?:(\d{1,3}):(\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?(?::\d{1,3}[a-z]?)?)?(?:\s*,\s*(?!\d{1,3}\s*:)\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?)*)))((?:\s*[;,]\s*(?![1-3]?\s*[A-Za-zÀ-ÖØ-öø-ÿ]{2})\d{1,3}[a-z]?(?::\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?(?::\d{1,3}[a-z]?)?)?(?:\s*,\s*(?!\d{1,3}\s*:)\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?)*)?(?:\s*[–-]\s*\d{1,3}[a-z]?(?::\d{1,3}[a-z]?)?)?)*)/g;
 
-  out = out.replace(chainRegex, (fullMatch, numPrefix, wordPart, chWithBook, vListWithBook, chImplicit, vListImplicit, tailPart) => {
+  const replaceBibleRefsInPlain = (segment) => segment.replace(chainRegex, (fullMatch, numPrefix, wordPart, chWithBook, vListWithBook, chImplicit, vListImplicit, tailPart) => {
     let bId = null;
     let firstCh = "";
     let firstVList = "";
 
     if (wordPart) {
       const key = normalizeForSearch((numPrefix || "") + wordPart).replace(/\s+/g, "");
+      // Evita falsi positivi italiani come "Es. 12" (= Esempio 12): accetta "es" solo con ":versetto" esplicito (es. "Es 12:1")
+      if (key === "es" && !vListWithBook) return fullMatch;
       bId = SI_ABBR_MAP[key] || (BIBLE_BOOKS.find(b => normalizeForSearch(b.name).replace(/\s+/g, "") === key)?.id);
       if (!bId) return fullMatch;
       firstCh = chWithBook;
@@ -6288,6 +6462,12 @@ function formatNoteLinks(txt, defaultBookId = null) {
 
       return outSeg;
     });
+
+  // Applica chainRegex SOLO sul testo esterno: mai dentro <span class="pub-ref-badge">...</span> o tag HTML
+  out = out.replace(/(<span class="pub-ref-badge"[^>]*>.*?<\/span>|<[^>]+>)|([^<]+)/g, (_m, protectedHtml, plainSeg) => {
+    if (protectedHtml) return protectedHtml;
+    return replaceBibleRefsInPlain(plainSeg);
+  });
 
     // Incolla qualsiasi parentesi di apertura "(", "[", "{" e di chiusura ")", "]", "}" (più eventuale punto/virgola)
     // direttamente alla pillola azzurra (.tag-badge) o viola (.pub-ref-badge) rendendole inseparabili a fine riga!
@@ -6424,28 +6604,19 @@ function pubRefTarget(ref) {
   return out;
 }
 
+// Apertura esterna unificata compatibile con PWA Chrome Android e browser desktop
 function pubRefOpenApp(url) {
-  const a = document.createElement("a");
-  a.href = url;
-  a.target = "_blank";
-  a.rel = "noopener noreferrer";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  const modal = document.getElementById("myReadModal");
-  if (modal) modal.style.display = "none";
-}
-
-// Prova ad aprire Chrome tramite un iframe invisibile: se l'app non gestisce gli intent
-// l'errore resta dentro l'iframe e la pagina dell'app NON viene mai sostituita.
-function pubRefOpenChrome(url) {
-  const intent = "intent://" + String(url).replace(/^https?:\/\//, "") + "#Intent;scheme=https;package=com.android.chrome;end";
   try {
-    const f = document.createElement("iframe");
-    f.style.cssText = "display:none; width:0; height:0; border:0;";
-    f.src = intent;
-    document.body.appendChild(f);
-    setTimeout(() => { try { f.remove(); } catch (e) { console.debug(e); } }, 2500);
+    const win = window.open(String(url), "_blank", "noopener,noreferrer");
+    if (!win) {
+      const a = document.createElement("a");
+      a.href = String(url);
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
   } catch (e) { console.debug(e); }
   const modal = document.getElementById("myReadModal");
   if (modal) modal.style.display = "none";
@@ -6531,8 +6702,7 @@ function showPubRefModal(fullRef) {
     </div>
     <div style="display:flex; flex-direction:column; gap:8px;">
       ${offlineBridgeBtn}
-      ${/android/i.test(navigator.userAgent || "") ? `<button class="myread-action-btn btn-color-anim" style="--btn-bg:#03a9f4; --btn-glow:rgba(3,169,244,0.75); background:#03a9f4;" onclick="pubRefOpenChrome('${u}')">${CHROME_LOGO_SVG}Apri in Chrome</button>` : ""}
-      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#1565c0; --btn-glow:rgba(41,182,246,0.75); background:#1565c0;" onclick="pubRefOpenApp('${u}')">📚 Apri nella Biblioteca Online (nell'app)</button>
+      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#03a9f4; --btn-glow:rgba(3,169,244,0.75); background:#1565c0;" onclick="pubRefOpenApp('${u}')">${CHROME_LOGO_SVG}Apri nella Biblioteca Online</button>
       
       ${t.safeUrl ? `<button class="myread-action-btn btn-color-anim" style="--btn-bg:#8e24aa; --btn-glow:rgba(186,104,200,0.75); background:#6a1b9a;" onclick="pubRefOpenApp('${escapeJsStr(t.safeUrl)}')">📅 Apri l'annata (elenco dei numeri)</button>` : ""}
       
@@ -6575,6 +6745,7 @@ function showNotesView(fromBack = false) {
         Nessun appunto ancora salvato.<br><br>
         • Premi <b>📝</b> su qualsiasi versetto (o il pulsante blu qui sopra) per scrivere e organizzare le tue note di studio con Tag e Link automatici!
       </div>`;
+    syncBmPaperMode();
     return;
   }
   const allTags = new Set();
@@ -6604,7 +6775,7 @@ function showNotesView(fromBack = false) {
           <span>📝 ${escapeHtml(n.ref)} <small style="color:var(--text-muted);font-weight:normal;">(${escapeHtml(n.date || '')})</small></span>
           <div style="display:flex;gap:10px;align-items:center;">
             <span onclick="event.stopPropagation();exportSingleNoteDossier(${Number(noteId)}, '${safeRefJs}')" style="color:#00e5ff;cursor:pointer;font-size:13px;font-weight:800;">📋 Dossier</span>
-            <span onclick="event.stopPropagation();openNoteModalForVerse('${safeRefJs}')" style="color:var(--primary-light);cursor:pointer;font-size:13px;">✏️ Modifica</span>
+            <span onclick="event.stopPropagation();openNoteModalForVerse('${safeRefJs}', ${Number(noteId)})" style="color:var(--primary-light);cursor:pointer;font-size:13px;">✏️ Modifica</span>
             <span onclick="event.stopPropagation();deleteNoteById(${Number(noteId)}, '${safeRefJs}')" style="color:var(--danger);cursor:pointer;font-size:13px;">🗑 Elimina</span>
           </div>
         </div>
@@ -6613,17 +6784,46 @@ function showNotesView(fromBack = false) {
         ${(n.tags && n.tags.length) ? `<div style="margin-top:8px;">${n.tags.map(t => `<span class="tag-badge" onclick="event.stopPropagation();filterNotesByTag('${escapeJsStr(t)}')">#${escapeHtml(t)}</span>`).join("")}</div>` : ""}
       </div>`;
     }).join("");
+  syncBmPaperMode();
+}
+function showBlueDeleteConfirmModal(titleTxt, msgHtml, onConfirm) {
+  const modal = document.getElementById("myReadModal");
+  const body = document.getElementById("myReadModalBody");
+  if (!modal || !body) { onConfirm(); return; }
+  window.__bmPendingDeleteFn = onConfirm;
+  body.innerHTML = `
+    <div style="text-align:center; padding:4px 0 14px 0;">
+      <div style="font-size:30px; margin-bottom:8px;">🗑️</div>
+      <div style="font-size:16px; font-weight:800; color:#ffffff; margin-bottom:8px;">${escapeHtml(titleTxt)}</div>
+      <div style="font-size:14px; color:#e3f2fd; line-height:1.5;">${msgHtml}</div>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#062356; --btn-glow:rgba(41,182,246,0.6); background:var(--bg-main); flex:1;" onclick="window.__bmPendingDeleteFn=null; document.getElementById('myReadModal').style.display='none'">Annulla</button>
+      <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#c62828; --btn-glow:rgba(239,83,80,0.75); background:#b71c1c; flex:1.2;" onclick="const fn=window.__bmPendingDeleteFn; window.__bmPendingDeleteFn=null; document.getElementById('myReadModal').style.display='none'; if(typeof fn==='function') fn();">🗑️ Elimina</button>
+    </div>
+  `;
+  modal.style.display = "flex";
 }
 function deleteNoteById(noteId, refFallback) {
   let idx = state.notes.findIndex(n => Number(n.id) === Number(noteId));
   if (idx === -1 && refFallback) {
     idx = state.notes.findIndex(n => n.ref === refFallback);
   }
-  if (idx > -1) {
-    state.notes.splice(idx, 1);
-    safeSaveStorage("bm_notes", JSON.stringify(state.notes));
-  }
-  showNotesView();
+  if (idx === -1) return;
+  const targetTitle = state.notes[idx].ref || "questo appunto";
+  showBlueDeleteConfirmModal(
+    "Elimina Appunto",
+    `Vuoi eliminare definitivamente l'appunto <b>${escapeHtml(targetTitle)}</b>?`,
+    () => {
+      let curIdx = state.notes.findIndex(n => Number(n.id) === Number(noteId));
+      if (curIdx === -1 && refFallback) curIdx = state.notes.findIndex(n => n.ref === refFallback);
+      if (curIdx > -1) {
+        state.notes.splice(curIdx, 1);
+        safeSaveStorage("bm_notes", JSON.stringify(state.notes));
+      }
+      showNotesView();
+    }
+  );
 }
 
 function searchWordInConcordance(word) {
@@ -6655,6 +6855,7 @@ async function showCatalogView() {
   currentViewContext = { type: "catalog" };
   const main = document.getElementById("mainContainer");
   main.innerHTML = `<div class="loader">Caricamento catalogo globale (oltre 1.350 versioni + edizioni Strong)...</div>`;
+  syncBmPaperMode();
   await loadFullGlobalCatalog();
   if (reqId !== currentViewReqId) return;
   const langs = ["Tutte le lingue", ...new Set(dynamicCatalog.map(b => b.lang))];
@@ -6669,6 +6870,7 @@ async function showCatalogView() {
     </div>
     <div id="catalogList"></div>
   `;
+  syncBmPaperMode();
   renderCatalogItems(dynamicCatalog);
 }
 function renderCatalogItems(list) {
@@ -6678,14 +6880,20 @@ function renderCatalogItems(list) {
     const isDown = state.downloadedBibles.includes(b.id);
     const safeId = b.id.replace(/[^a-zA-Z0-9_-]/g, "_");
     const codePart = b.id.includes(":") ? b.id.split(":")[1] : b.id;
+    const isHelloAo = b.id.startsWith("helloao:");
+    const isLocalEpub = LOCAL_EPUB_IDS.includes(b.id);
+    const btnLabel = isDown
+      ? (isHelloAo ? "✔ Online" : "✔ Attiva")
+      : (isHelloAo ? "🌐 Attiva" : (isLocalEpub ? "📘 Attiva" : "⬇ Scarica"));
+    const modeTag = isHelloAo ? " • Streaming Online" : (isLocalEpub ? " • EPUB Locale" : " • Offline JSON");
     return `
       <div class="result-card" style="display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:default;">
         <div>
           <div class="result-ref">${escapeHtml(b.name)}</div>
-          <div style="font-size:12px;color:var(--text-muted);">Lingua: ${escapeHtml(b.lang)} • Codice: <code>${escapeHtml(codePart)}</code></div>
+          <div style="font-size:12px;color:var(--text-muted);">Lingua: ${escapeHtml(b.lang)} • Codice: <code>${escapeHtml(codePart)}</code>${modeTag}</div>
         </div>
         <button id="btn_${safeId}" class="badge-btn ${isDown ? 'downloaded' : ''}" onclick="toggleDownload('${escapeJsStr(b.id)}')">
-          ${isDown ? '✔Attiva' : '⬇Scarica'}
+          ${btnLabel}
         </button>
       </div>`;
   }).join("");
@@ -6717,7 +6925,7 @@ async function toggleDownload(id) {
     await populateSelects();
     filterCatalogList();
   } else {
-    if (btn) { btn.textContent = "⏳Scarico..."; btn.classList.add("downloading"); }
+    if (btn) { btn.textContent = id.startsWith("helloao:") ? "⏳Attivo..." : "⏳Scarico..."; btn.classList.add("downloading"); }
     if (!state.downloadedBibles.includes(id)) state.downloadedBibles.push(id);
     safeSaveStorage("bm_v10_pro_bibles", JSON.stringify(state.downloadedBibles));
     if (!id.startsWith("helloao:") && !LOCAL_EPUB_IDS.includes(id)) {
@@ -6778,8 +6986,9 @@ function showSearchView(fromBack = false) {
         <option value="gosp">Vangeli e Atti</option>
       </select>
     </div>
-    <div id="searchResults"><div class="loader">Inserisci una parola o frase e premi <b>🔍 Bibbia</b> (Concordanza) oppure <b>🌐 5 Pilastri</b> per cercare in tutta la Biblioteca (Perspicacia, Tutta la Scrittura, Cartine, Scrittura del Giorno e Bibbia).</div></div>
+    <div id="searchResults"><div class="loader">Inserisci una parola o frase (supporta anche <b>AND</b>, <b>OR</b>, <b>NOT</b> combinabili, es. <code>fede AND amore NOT paura</code>) e premi <b>🔍 Bibbia</b> oppure <b>🌐 5 Pilastri</b>.</div></div>
   `;
+  syncBmPaperMode();
 }
 const JW_TOWER_SVG = `<svg viewBox="0 0 1000 1000"><path d="M200 200H334V267H367V200H434V267H467V200H534V267H566V200H633V267H666V200H800V433H767V467H734V800H266V467H233V433H200Z"/></svg>`;
 const CHROME_LOGO_SVG = `<svg viewBox="0 0 48 48" width="20" height="20" style="vertical-align:middle; margin-right:8px; flex-shrink:0;"><path fill="#EA4335" d="M24 24 4.95 13A22 22 0 0 1 43.05 13Z"/><path fill="#FBBC05" d="M24 24l19.05-11A22 22 0 0 1 24 46Z"/><path fill="#34A853" d="M24 24v22A22 22 0 0 1 4.95 13Z"/><circle cx="24" cy="24" r="11" fill="#4285F4"/><circle cx="24" cy="24" r="11" fill="none" stroke="#fff" stroke-width="2.5"/></svg>`;
@@ -6824,8 +7033,7 @@ function openJwLibrary(lang, searchInputId = "searchInput", directQuery) {
       <div style="font-size:14px; color:#e3f2fd; line-height:1.5;">${queryDisplay}</div>
     </div>
     <div style="display:flex; flex-direction:column; gap:8px;">
-      ${/android/i.test(navigator.userAgent || "") ? `<button class="myread-action-btn btn-color-anim" style="--btn-bg:#03a9f4; --btn-glow:rgba(3,169,244,0.6); background:#03a9f4;" onclick="pubRefOpenChrome('${safeUrl}')">${CHROME_LOGO_SVG}Apri in Chrome</button>` : ""}
-      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#1565c0; --btn-glow:rgba(21,101,192,0.6); background:#1565c0;" onclick="pubRefOpenApp('${safeUrl}')">📚 Apri nella Biblioteca Online (nell'app)</button>
+      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#03a9f4; --btn-glow:rgba(3,169,244,0.65); background:#1565c0;" onclick="pubRefOpenApp('${safeUrl}')">${CHROME_LOGO_SVG}Apri nella Biblioteca Online</button>
       <button class="myread-action-btn btn-color-anim" style="--btn-bg:#7b1fa2; --btn-glow:rgba(156,39,176,0.7); background:#1a0033; margin-top:6px;" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
     </div>
   `;
@@ -6875,19 +7083,25 @@ async function executeSearch(page = 1) {
     const queryWords = queryNorm.split(" ").filter(Boolean);
     const hasBoolOp = /\s+(?:AND|OR|NOT)\s+/.test(rawQuery);
     const buildMatcher = (qRaw) => {
-      if (/\s+NOT\s+/.test(qRaw)) {
-        const parts = qRaw.split(/\s+NOT\s+/);
-        const inc = normalizeForPhrase(parts[0] || "");
-        const exc = parts.slice(1).map(p => normalizeForPhrase(p)).filter(Boolean);
-        return (txt) => { const low = normalizeForPhrase(txt); return (!inc || low.includes(inc)) && exc.every(e => !low.includes(e)); };
-      }
-      if (/\s+AND\s+/.test(qRaw)) {
-        const all = qRaw.split(/\s+AND\s+/).map(p => normalizeForPhrase(p)).filter(Boolean);
-        return (txt) => { const low = normalizeForPhrase(txt); return all.every(p => low.includes(p)); };
-      }
-      if (/\s+OR\s+/.test(qRaw)) {
-        const any = qRaw.split(/\s+OR\s+/).map(p => normalizeForPhrase(p)).filter(Boolean);
-        return (txt) => { const low = normalizeForPhrase(txt); return any.some(p => low.includes(p)); };
+      if (hasBoolOp) {
+        // Supporto combinabile: OR di clausole AND con esclusioni NOT (es. "fede AND amore NOT paura", "grazia OR misericordia NOT giudizio")
+        const notSplit = qRaw.split(/\s+NOT\s+/);
+        const includeExpr = (notSplit[0] || "").trim();
+        const excludeTerms = notSplit.slice(1)
+          .flatMap(seg => seg.split(/\s+(?:AND|OR)\s+/))
+          .map(p => normalizeForPhrase(p))
+          .filter(Boolean);
+        const orBranches = includeExpr
+          ? includeExpr.split(/\s+OR\s+/).map(branch =>
+              branch.split(/\s+AND\s+/).map(p => normalizeForPhrase(p)).filter(Boolean)
+            ).filter(arr => arr.length > 0)
+          : [];
+        return (txt) => {
+          const low = normalizeForPhrase(txt);
+          const incOk = !orBranches.length || orBranches.some(andTerms => andTerms.every(t => low.includes(t)));
+          const excOk = excludeTerms.every(e => !low.includes(e));
+          return incOk && excOk;
+        };
       }
       if (!queryWords.length) return () => false;
       if (mode === "exact_phrase") return (txt) => normalizeForPhrase(txt).includes(queryNorm);
@@ -6926,7 +7140,9 @@ async function executeSearch(page = 1) {
           }
         }
         cachedSearchMatches = allMatches;
-        const hlWords = hasBoolOp ? queryWords.filter(w => !["and", "or", "not"].includes(w)) : queryWords;
+        const hlWords = hasBoolOp
+          ? normalizeForPhrase(rawQuery.split(/\s+NOT\s+/)[0] || "").split(" ").filter(w => w && !["and", "or", "not"].includes(w))
+          : queryWords;
         cachedSearchMeta = { query: rawQuery, total: allMatches.length, transId: searchTransId, scope, mode, queryWords: hlWords };
       } else {
         const selectedBibleObj = dynamicCatalog.find(b => b.id === searchTransId) || CORE_BIBLES.find(b => b.id === searchTransId);
@@ -6965,8 +7181,8 @@ function renderSearchResultsPage() {
     queryWords.forEach(w => {
       if (w.length < 2) return;
       const rgx = buildAccentInsensitiveRegex(w);
-      safeTxt = safeTxt.replace(/(<[^>]+>)|([^<]+)/g, (_m, tag, txtNode) => {
-        if (tag) return tag;
+      safeTxt = safeTxt.replace(/(<[^>]+>|&(?:[a-zA-Z][a-zA-Z0-9]*|#\d+|#x[0-9a-fA-F]+);)|([^<&]+)/g, (_m, tagOrEnt, txtNode) => {
+        if (tagOrEnt) return tagOrEnt;
         return txtNode.replace(rgx, '<span class="diff-word" style="font-weight:700;">$1</span>');
       });
     });
@@ -7147,8 +7363,10 @@ function filterStrongModalQuickSearch(queryStr) {
   const hits = [];
   Object.keys(PRO_STRONG_DICT).forEach(k => {
     const d = PRO_STRONG_DICT[k];
-    const hay = normalizeForSearch(`${k} ${d.code} ${d.orig} ${d.def}`);
-    if (hay.includes(q)) hits.push({ k, d, exact: normalizeForSearch(k) === q || normalizeForSearch(d.code).includes(q) });
+    if (!d || typeof d !== "object") return;
+    const codeStr = String(d.code || "");
+    const hay = normalizeForSearch(`${k} ${codeStr} ${d.orig || ""} ${d.def || ""}`);
+    if (hay.includes(q)) hits.push({ k, d, exact: normalizeForSearch(k) === q || normalizeForSearch(codeStr).includes(q) });
   });
   hits.sort((a, b) => (Number(b.exact) - Number(a.exact)) || a.k.localeCompare(b.k, "it"));
   if (!hits.length) {
@@ -7190,7 +7408,8 @@ function openStrongModalForVerse(clickedCode) {
   if (clickedCode) {
     const upCode = String(clickedCode).toUpperCase();
     Object.keys(PRO_STRONG_DICT).forEach(k => {
-      if (PRO_STRONG_DICT[k].code.toUpperCase().includes(upCode)) addStrongCard(k, true);
+      const entry = PRO_STRONG_DICT[k];
+      if (entry && String(entry.code || "").toUpperCase().includes(upCode)) addStrongCard(k, true);
     });
   }
   rawVerse.replace(/[A-Za-zÀ-ÖØ-öø-ÿ]{3,}/g, w => {
@@ -7233,7 +7452,7 @@ async function openCrossRefsModalForVerse() {
   const fnHtml = vFootnotes.length ? `
     <div class="section-title"><span>📌 Note in Calce Ufficiali (${vFootnotes.length})</span></div>
     <div style="margin-bottom:12px;">
-      ${vFootnotes.map((t, i) => `<div style="background:#062356; border-left:3px solid #ffd54f; border-radius:7px; padding:7px 10px; margin-bottom:6px; font-size:13.5px; line-height:1.5;"><b style="color:#ffd54f;">*${vFootnotes.length > 1 ? i + 1 : ""}</b> ${formatNoteLinks(t, state.bookId)}</div>`).join("")}
+      ${vFootnotes.map((t, i) => `<div style="background:var(--bg-main); border-left:3px solid #ffd54f; border-radius:7px; padding:7px 10px; margin-bottom:6px; font-size:13.5px; line-height:1.5;"><b style="color:#ffd54f;">*${vFootnotes.length > 1 ? i + 1 : ""}</b> ${formatNoteLinks(t, state.bookId)}</div>`).join("")}
     </div>` : "";
   const insRefs = await findInsightRefsForVerse(state.bookId, state.chapter, vNum, 12);
   const insHtml = insRefs.length ? `
@@ -7245,7 +7464,7 @@ async function openCrossRefsModalForVerse() {
   document.getElementById("proModalBody").innerHTML = `
     <div style="font-size:13px;color:var(--text-muted);font-style:italic;margin-bottom:10px;border-left:3px solid var(--primary-light);padding-left:8px;">"${escapeHtml(rawVerse)}"</div>
     ${fnHtml}
-    <div class="section-title"><span>Passi Paralleli Consigliati (Tocca per aprire)</span></div>
+    <div class="section-title"><span>${PRO_CROSS_REFS[`${state.bookId}_${state.chapter}_${vNum}`]?.length ? "Passi Paralleli Esegetici (Tocca per aprire)" : "Suggerimenti Tematici Automatici (Tocca per aprire)"}</span></div>
     <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
       ${refs.map(r => `<span class="tag-badge" style="font-size:14px; padding:7px 12px;" onclick="jumpToRefString('${escapeJsStr(r)}')">📖${escapeHtml(r)}</span>`).join("")}
     </div>
@@ -7346,7 +7565,7 @@ async function showSavedView(fromBack = false) {
         ${colorMeta.map(c => {
           const cnt = c.id === "ALL" ? hlEntries.length : hlEntries.filter(x => x.cls === c.id).length;
           const isAct = savedColorFilter === c.id;
-          return `<span class="tag-badge" style="display:inline-flex; align-items:center; gap:5px; padding:5px 10px; font-size:12px; ${isAct ? 'background:#00e5ff; color:#041a42; border-color:#84ffff; font-weight:900;' : 'background:#062356; color:#fff; border-color:#29b6f6;'}" onclick="filterSavedByColor('${c.id}')">
+          return `<span class="tag-badge" style="display:inline-flex; align-items:center; gap:5px; padding:5px 10px; font-size:12px; ${isAct ? 'background:#00e5ff; color:#041a42; border-color:#84ffff; font-weight:900;' : 'background:var(--bg-main); color:#fff; border-color:#29b6f6;'}" onclick="filterSavedByColor('${c.id}')">
             <span style="width:10px; height:10px; border-radius:50%; background:${c.dot}; display:inline-block;"></span>
             <span>${c.label} (${cnt})</span>
           </span>`;
@@ -7398,12 +7617,25 @@ async function showSavedView(fromBack = false) {
     ${colorPillsHtml}
     ${highlightsHtml}
   `;
+  syncBmPaperMode();
 }
 
 function deleteBookmark(idx) {
-  state.bookmarks.splice(idx, 1);
-  safeSaveStorage("bm_bm", JSON.stringify(state.bookmarks));
-  showSavedView(true);
+  const item = state.bookmarks[idx];
+  if (!item) return;
+  const targetRef = item.ref || "questo preferito";
+  showBlueDeleteConfirmModal(
+    "Elimina Preferito",
+    `Vuoi rimuovere <b>${escapeHtml(targetRef)}</b> dai tuoi Preferiti?`,
+    () => {
+      const curIdx = state.bookmarks.indexOf(item);
+      if (curIdx > -1) {
+        state.bookmarks.splice(curIdx, 1);
+        safeSaveStorage("bm_bm", JSON.stringify(state.bookmarks));
+      }
+      showSavedView(true);
+    }
+  );
 }
 // (currentViewContext dichiarata più in alto, prima di applyBmSettingsToDOM)
 let bmBackLongPressTimer = null;
@@ -7447,7 +7679,7 @@ function openResetHistoryModal() {
       </div>
     </div>
     <div style="display:flex; gap:10px;">
-      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#062356; --btn-glow:rgba(41,182,246,0.6); background:#062356; flex:1;" onclick="document.getElementById('myReadModal').style.display='none'">Annulla</button>
+      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#062356; --btn-glow:rgba(41,182,246,0.6); background:var(--bg-main); flex:1;" onclick="document.getElementById('myReadModal').style.display='none'">Annulla</button>
       <button class="myread-action-btn btn-color-anim" style="--btn-bg:#1565c0; --btn-glow:rgba(21,101,192,0.7); background:#1565c0; flex:1.3;" onclick="confirmResetNavHistory()">🗑️ Azzera memoria</button>
     </div>
   `;
@@ -7524,7 +7756,6 @@ function saveCurrentPositionToHistory(targetBookId = null, targetCh = null) {
         bookId: state.bookId,
         chapter: state.chapter,
         verse: vNum,
-        isPersonal: isPersonalReadingMode,
         scrollTop: scrollPos,
         label: label
       };
@@ -7610,7 +7841,6 @@ function goBackHistory() {
     if (main && prev.scrollTop) setTimeout(() => { main.scrollTop = prev.scrollTop; }, 60);
     return;
   }
-  isPersonalReadingMode = Boolean(prev.isPersonal);
   state.bookId = prev.bookId;
   state.chapter = prev.chapter;
   const targetVerse = prev.verse || null;
@@ -7619,9 +7849,8 @@ function goBackHistory() {
     else if (main && prev.scrollTop) main.scrollTop = prev.scrollTop;
   });
 }
-function openRef(bookId, chapter, verseSpec = 0, asPersonal = false) {
+function openRef(bookId, chapter, verseSpec = 0) {
   saveCurrentPositionToHistory(bookId, chapter);
-  isPersonalReadingMode = asPersonal;
   state.bookId = Number(bookId);
   state.chapter = Number(chapter);
   loadChapterView().then(() => {
@@ -7636,14 +7865,19 @@ function changeFontSize(delta) {
 function applySavedTheme() {
   document.documentElement.classList.remove("dark-mode", "oled-mode");
   document.body.classList.remove("dark-mode", "oled-mode");
+  let themeHex = "#041a42";
   if (state.themeMode === "dark") {
     document.documentElement.classList.add("dark-mode");
     document.body.classList.add("dark-mode");
+    themeHex = "#091526";
   }
   if (state.themeMode === "oled") {
     document.documentElement.classList.add("dark-mode", "oled-mode");
     document.body.classList.add("dark-mode", "oled-mode");
+    themeHex = "#000000";
   }
+  const metaTheme = document.querySelector('meta[name="theme-color"]');
+  if (metaTheme) metaTheme.setAttribute("content", themeHex);
 }
 function closeProModal() {
   document.getElementById("proModal").style.display = "none";
@@ -7693,7 +7927,7 @@ function openQuickJumpModal() {
     </div>
     <input type="text" id="quickJumpInput" class="search-input" style="width:100%; margin-bottom:12px; font-size:15px; font-weight:700; text-align:center;" placeholder="Es. Gv 3 16" onkeydown="if(event.key==='Enter') runQuickJump()">
     <div style="display:flex; gap:10px;" oncontextmenu="event.preventDefault()">
-      <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#062356; --btn-glow:rgba(41,182,246,0.6); background:#062356; flex:1;" oncontextmenu="event.preventDefault()" onclick="document.getElementById('myReadModal').style.display='none'">Annulla</button>
+      <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#062356; --btn-glow:rgba(41,182,246,0.6); background:var(--bg-main); flex:1;" oncontextmenu="event.preventDefault()" onclick="document.getElementById('myReadModal').style.display='none'">Annulla</button>
       <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,229,255,0.8); background:#1565c0; flex:1.3;" oncontextmenu="event.preventDefault()" onclick="runQuickJump()">🚀 Vai Subito</button>
     </div>
   `;
@@ -7784,7 +8018,6 @@ function executeDirectRefJump(bookId, targetCh, vSpec = "") {
   if (myReadModal) myReadModal.style.display = "none";
   closeProModal();
   saveCurrentPositionToHistory(bookId, targetCh);
-  isPersonalReadingMode = false;
   state.bookId = Number(bookId);
   state.chapter = Number(targetCh);
   loadChapterView().then(() => {
@@ -7824,7 +8057,7 @@ async function openVersePeekModal(bookId, chapter, vSpec = "") {
         ${versesHtml}
       </div>
       <div style="display:flex; gap:10px; margin-top:8px;">
-        <button class="myread-action-btn" style="background:#062356; flex:1;" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi (Resta qui)</button>
+        <button class="myread-action-btn" style="background:var(--bg-main); flex:1;" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi (Resta qui)</button>
         <button class="myread-action-btn" style="flex:1.25;" onclick="executeDirectRefJump(${bookId}, ${chapter}, '${escapeJsStr(vSpec)}')">📖 Apri nel Capitolo</button>
       </div>
     `;
@@ -8067,8 +8300,9 @@ function onSpeechFinishedSession(sessionId) {
       return;
     }
     loadChapterView().then(() => {
+      if (bmUserStopped || sessionId !== bmSessionId || currentViewContext.type !== "bible") return;
       setTimeout(() => {
-        if (!bmUserStopped) {
+        if (!bmUserStopped && sessionId === bmSessionId && currentViewContext.type === "bible") {
           startChapterKaraokeSpeech(1);
         }
       }, 350);
@@ -8179,7 +8413,21 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
         const u = new SpeechSynthesisUtterance(item.text);
         u.lang = getActiveTTSLangCode(true);
         u.rate = bmTtsRate;
-        u.onstart = () => { nativeOk = true; clearStallWatchdog(); };
+        const armEndWatchdog = () => {
+          clearStallWatchdog();
+          const estMs = Math.max(12000, Math.round((String(item.text || "").length / Math.max(0.5, bmTtsRate)) * 165) + 6000);
+          stallWatchdog = setTimeout(() => {
+            if (!bmUserStopped && bmAudioPlaying && mySession === bmSessionId) {
+              try { window.speechSynthesis.cancel(); } catch (e) { console.debug(e); }
+              idx++;
+              speakNextNative();
+            }
+          }, estMs);
+        };
+        u.onstart = () => {
+          nativeOk = true;
+          armEndWatchdog();
+        };
         u.onend = () => {
           clearStallWatchdog();
           if (!bmUserStopped && bmAudioPlaying && mySession === bmSessionId) {
@@ -8197,14 +8445,18 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
             speakNextNative();
           }
         };
-        if (!nativeOk) {
-          stallWatchdog = setTimeout(() => {
-            if (!nativeOk && !bmUserStopped && bmAudioPlaying && mySession === bmSessionId) {
-              try { window.speechSynthesis.cancel(); } catch (e) { console.debug(e); }
+        // Watchdog avvio per OGNI chunk (protegge dallo stallo Chrome/Android tra un'utterance e la successiva)
+        stallWatchdog = setTimeout(() => {
+          if (!bmUserStopped && bmAudioPlaying && mySession === bmSessionId) {
+            try { window.speechSynthesis.cancel(); } catch (e) { console.debug(e); }
+            if (!nativeOk) {
               playWebViewStreamQueue(activeTtsQueue, idx, mySession);
+            } else {
+              idx++;
+              speakNextNative();
             }
-          }, 2600);
-        }
+          }
+        }, nativeOk ? 3500 : 2600);
         window.speechSynthesis.speak(u);
       } catch (e) {
         clearStallWatchdog();
@@ -8221,7 +8473,14 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
 function startUniversalSpeech(rawText, updateMainBtn = true, autoNext = false) {
   const chunks = splitTextForAudio(rawText, 165).map(c => ({ text: c, verseNum: null }));
   const curBook = getBook(state.bookId);
-  const titleStr = currentViewContext.type === "insight" ? "Perspicacia (it)" : (currentViewContext.type === "daily" ? "Scrittura del Giorno" : `${curBook.name} ${state.chapter}`);
+  const ctxType = currentViewContext ? currentViewContext.type : "";
+  const titleStr = ctxType === "insight"
+    ? (currentViewContext.title ? `Perspicacia — ${currentViewContext.title}` : "Perspicacia (it)")
+    : (ctxType === "daily"
+      ? "Scrittura del Giorno"
+      : (ctxType === "si"
+        ? (currentViewContext.label ? String(currentViewContext.label).replace(/^📘\s*/, "") : "Tutta la Scrittura")
+        : (ctxType === "maps" ? "Cartine Bibliche" : `${curBook.name} ${state.chapter}`)));
   startQueueSpeech(chunks, updateMainBtn, autoNext, titleStr, "Bibbia Multilingue PRO", false);
 }
 
@@ -8311,7 +8570,9 @@ function toggleChapterTTS() {
   }
   if (typeof currentDailySpeechText === "string" && currentDailySpeechText.trim()) {
     startUniversalSpeech(currentDailySpeechText, true, false);
+    return;
   }
+  showBlueInfoModal("🔊 Lettura Vocale", "Apri un capitolo della <b>Bibbia</b>, la <b>Scrittura del Giorno</b>, una voce di <b>Perspicacia</b> o <b>Tutta la Scrittura</b> per avviare l'ascolto vocale.");
 }
 
 function speakSelectedVerse() {
@@ -8511,114 +8772,19 @@ function openBackupModal() {
 }
 function matchItalianBookNameToId(rawTitle, isStrictFromBody = false) {
   if (!rawTitle) return null;
-  const lower = normalizeForSearch(rawTitle)
-    .replace(/\([^)]*\)/g, " ") // Rimuove "(testo greco)" / "(testo ebraico)" in Ester CEI 2008
-    .replace(/^[a-z0-9]{1,4}\s*[–—-]\s*/i, "") // Rimuove prefissi tipo "Gs – Giosuè", "Gb – Giobbe", "Gl – Gioele" di NR
+  const s = String(rawTitle)
+    .replace(/\([^)]*\)/g, " ")
+    .replace(/^[a-z0-9]{1,4}\s*[–—-]\s*/i, "")
     .replace(/\s+/g, " ")
     .trim();
-
-  // 1. Sezioni/Intestazioni non-libro: ritornano null
-  if (/^(?:web\s*site|dedica|indice|sommario|prologo|vecchio\s+testamento|nuovo\s+testamento|antico\s+testamento|pentateuco|libri\s+storici|libri\s+sapienziali|libri\s+profetici|vangeli|lettere\s+paoline|lettere\s+cattoliche|appendice|note|prefazione|introduzione)\b/i.test(lower)) {
-    return null;
-  }
-
-  // 2. Libri deuterocanonici (inclusi "PRIMO MACCABEI" e "SECONDO MACCABEI" della CEI 2008): ritornano -1
-  if (/^(?:tobia|giuditta|(?:1|2|3|4|i+|primo|secondo)\s*(?:libro\s+dei\s+)?maccabei|sapienza|libro\s+della\s+sapienza|siracide|ecclesiastico|baruc|lettera\s+di\s+geremia)\b/i.test(lower)) {
-    return -1;
-  }
-
-  if (isStrictFromBody && /[.;:!?«»"“”]/.test(lower)) return null;
-
-  let step1 = lower
-    .replace(/^(?:primo|prima)\s+(?:libro\s+(?:di|dei|delle)\s+|lettera\s+(?:di\s+san\s+paolo\s+apostolo\s+|cattolica\s+di\s+san\s+)?(?:ai|agli|a|di)\s+)?/, "1 ")
-    .replace(/^(?:secondo|seconda)\s+(?:libro\s+(?:di|dei|delle)\s+|lettera\s+(?:di\s+san\s+paolo\s+apostolo\s+|cattolica\s+di\s+san\s+)?(?:ai|agli|a|di)\s+)?/, "2 ")
-    .replace(/^(?:terzo|terza)\s+(?:lettera\s+(?:di\s+san\s+giovanni\s+apostolo\s+)?(?:ai|agli|a|di)\s+)?/, "3 ")
-    .replace(/^iii\.?\s+/, "3 ")
-    .replace(/^ii\.?\s+/, "2 ")
-    .replace(/^i\.?\s+(?=[a-z])/, "1 ");
-
-  const clean = step1
-    .replace(/^(?:1|2|3)\s+(?:libro\s+(?:di|dei|delle)\s+|lettera\s+(?:di\s+san\s+paolo\s+apostolo\s+|cattolica\s+di\s+san\s+)?(?:ai|agli|a|di)\s+)/, m => m[0] + " ")
-    .replace(/^(?:il\s+|la\s+|le\s+|l\s*['’]\s*)?(?:santo\s+)?(?:vangelo\s+(?:secondo\s+|di\s+)?|lettera\s+(?:di\s+san\s+paolo\s+apostolo\s+|cattolica\s+di\s+san\s+|agli\s+|ai\s+|a\s+|di\s+)?|atti\s+degli\s+|libro\s+(?:del\s+profeta\s+|dell\s*['’]\s*|del\s+|della\s+|dei\s+|delle\s+|di\s+)?|profeta\s+|apocalisse\s+di\s+(?:san\s+)?)/g, "")
-    .replace(/\s+\d+\.?\s*$/, "")
-    .replace(/[^a-z0-9]/g, "")
-    .trim();
-
-  if (!clean) return null;
-
-  const exactBookMap = {
-    "genesi": 1, "gn": 1, "gen": 1,
-    "esodo": 2, "es": 2, "eso": 2,
-    "levitico": 3, "lv": 3, "lev": 3,
-    "numeri": 4, "nm": 4, "num": 4,
-    "deuteronomio": 5, "dt": 5, "deu": 5,
-    "giosue": 6, "gs": 6, "gios": 6,
-    "giudici": 7, "gdc": 7, "giud": 7,
-    "rut": 8, "rt": 8,
-    "1samuele": 9, "1sam": 9, "1sa": 9,
-    "2samuele": 10, "2sam": 10, "2sa": 10,
-    "1re": 11, "1librodeire": 11,
-    "2re": 12, "2librodeire": 12,
-    "1cronache": 13, "1cr": 13, "1cron": 13,
-    "2cronache": 14, "2cr": 14, "2cron": 14,
-    "esdra": 15, "esd": 15,
-    "neemia": 16, "ne": 16, "nee": 16,
-    "ester": 17, "est": 17,
-    "giobbe": 18, "gb": 18,
-    "salmi": 19, "salmo": 19, "sal": 19, "sl": 19, "librodeisalmi": 19,
-    "proverbi": 20, "pr": 20, "prv": 20, "pro": 20, "librodeiproverbi": 20,
-    "ecclesiaste": 21, "qoelet": 21, "qohelet": 21, "qo": 21, "ec": 21, "ecc": 21,
-    "canticodeicantici": 22, "cantici": 22, "cantico": 22, "ct": 22, "can": 22, "cnt": 22,
-    "isaia": 23, "is": 23, "isa": 23,
-    "geremia": 24, "ger": 24,
-    "lamentazioni": 25, "lamentazionidigeremia": 25, "lam": 25,
-    "ezechiele": 26, "ez": 26, "eze": 26,
-    "daniele": 27, "dn": 27, "dan": 27,
-    "osea": 28, "os": 28, "ose": 28,
-    "gioele": 29, "gl": 29, "gioe": 29,
-    "amos": 30, "am": 30, "amo": 30,
-    "abdia": 31, "abd": 31,
-    "giona": 32, "gion": 32, "gio": 32,
-    "michea": 33, "mi": 33, "mic": 33,
-    "naum": 34, "nahum": 34, "na": 34,
-    "abacuc": 35, "ab": 35, "aba": 35,
-    "sofonia": 36, "sof": 36, "sf": 36,
-    "aggeo": 37, "ag": 37, "agg": 37,
-    "zaccaria": 38, "zc": 38, "zac": 38,
-    "malachia": 39, "ml": 39, "mal": 39,
-    "matteo": 40, "mt": 40, "mat": 40,
-    "marco": 41, "mc": 41, "mar": 41,
-    "luca": 42, "lc": 42, "luc": 42,
-    "giovanni": 43, "gv": 43, "giov": 43,
-    "atti": 44, "attidegliapostoli": 44, "apostoli": 44, "at": 44,
-    "romani": 45, "rm": 45, "rom": 45,
-    "1corinzi": 46, "1corinti": 46, "1co": 46, "1cor": 46,
-    "2corinzi": 47, "2corinti": 47, "2co": 47, "2cor": 47,
-    "galati": 48, "gal": 48,
-    "efesini": 49, "ef": 49, "efe": 49,
-    "filippesi": 50, "fil": 50, "flp": 50,
-    "colossesi": 51, "col": 51,
-    "1tessalonicesi": 52, "1ts": 52, "1tess": 52,
-    "2tessalonicesi": 53, "2ts": 53, "2tess": 53,
-    "1timoteo": 54, "1tm": 54, "1tim": 54,
-    "2timoteo": 55, "2tm": 55, "2tim": 55,
-    "tito": 56, "tit": 56, "tt": 56,
-    "filemone": 57, "flm": 57, "fm": 57,
-    "ebrei": 58, "eb": 58, "ebr": 58,
-    "giacomo": 59, "gc": 59, "giac": 59,
-    "1pietro": 60, "1pt": 60, "1pi": 60,
-    "2pietro": 61, "2pt": 61, "2pi": 61,
-    "1giovanni": 62, "1gv": 62, "1giov": 62,
-    "2giovanni": 63, "2gv": 63, "2giov": 63,
-    "3giovanni": 64, "3gv": 64, "3giov": 64,
-    "giuda": 65, "gd": 65, "gda": 65,
-    "apocalisse": 66, "rivelazione": 66, "giovanniapocalisse": 66, "apocalissedigiovanni": 66, "ap": 66, "riv": 66
-  };
-
-  if (clean === "canticodisalomone") return 22;
-  if (isStrictFromBody && clean.length <= 3 && clean !== "rut") return null;
-  return exactBookMap[clean] || null;
-    }
+  if (!s) return null;
+  if (isStrictFromBody && /[.;:!?«»"“”]/.test(s)) return null;
+  const resolved = resolveEpubBookHeading(s);
+  if (resolved !== null) return resolved;
+  const compact = normalizeForSearch(s).replace(/[^a-z0-9]/g, "");
+  if (!compact || (isStrictFromBody && compact.length <= 3 && compact !== "rut")) return null;
+  return SI_ABBR_MAP[compact] || null;
+}
 function getActiveEpubStatusEl() {
   const proModal = document.getElementById("proModal");
   if (proModal && proModal.style.display === "flex") {
@@ -8997,8 +9163,10 @@ function parseJwEpubChapterXhtml(xhtml) {
       const versesMap = new Map();
       for (let i = 1; i < parts.length; i += 2) {
         const vNum = parseInt(parts[i], 10);
+        const leadVNumRe = new RegExp(`^[\\s\\u00A0]*${vNum}(?=[\\s\\u00A0.,;:]+|$)[\\s\\u00A0.,;:]*`);
         let cleanTxt = (parts[i + 1] || "")
-          .replace(/^[\s\d\u00A0.,;:]+/, "")
+          .replace(leadVNumRe, "")
+          .replace(/^[\s\u00A0]+/, "")
           .replace(/[\+\*]/g, "")
           .replace(/\s+/g, " ")
           .trim();
@@ -9033,8 +9201,10 @@ function parseJwEpubChapterXhtml(xhtml) {
   const fbVerses = [];
   for (let i = 1; i < fbParts.length; i += 2) {
     const vNum = parseInt(fbParts[i], 10);
+    const leadVNumRe = new RegExp(`^[\\s\\u00A0]*${vNum}(?=[\\s\\u00A0.,;:]+|$)[\\s\\u00A0.,;:]*`);
     let cleanTxt = (fbParts[i + 1] || "")
-      .replace(/^[\s\d\u00A0]+/, "")
+      .replace(leadVNumRe, "")
+      .replace(/^[\s\u00A0]+/, "")
       .replace(/[\+\*]/g, "")
       .replace(/\s+/g, " ")
       .trim();
@@ -9536,7 +9706,7 @@ async function importDailyTextEpub(event) {
         monthBasePrefixes.push(m[1]);
       }
     });
-    monthBasePrefixes.sort();
+    monthBasePrefixes.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 
     if (monthBasePrefixes.length < 12) {
       throw new Error("Struttura mensile non trovata nel file EPUB selezionato.");
@@ -9650,7 +9820,7 @@ function openDailyCalendarPickerModal() {
       <select id="dailyPickDay" class="trans-select" style="flex:0.9;">${dayOpts}</select>
     </div>
     <div style="display:flex; gap:8px;">
-      <button type="button" class="myread-action-btn" style="background:#062356; flex:1;" onclick="document.getElementById('myReadModal').style.display='none'">Annulla</button>
+      <button type="button" class="myread-action-btn" style="background:var(--bg-main); flex:1;" onclick="document.getElementById('myReadModal').style.display='none'">Annulla</button>
       <button type="button" class="myread-action-btn" style="background:#00e5ff; color:#041a42; border-color:#84ffff; flex:1;" onclick="document.getElementById('myReadModal').style.display='none'; showDailyTextView(0, true);">🎯 Oggi</button>
       <button type="button" class="myread-action-btn" style="flex:1.2;" onclick="jumpToPickedDailyDate()">🚀 Vai</button>
     </div>
@@ -9729,11 +9899,10 @@ async function renderDailySearchResults(rawQ) {
     box.innerHTML = `<div class="loader">Nessun giorno trovato per "<b>${escapeHtml(rawQ.trim())}</b>".</div>`;
     return;
   }
-  const rgx = buildAccentInsensitiveRegex(rawQ.trim());
   box.innerHTML = `<div style="font-size:12px; color:#9ec9ff; margin-bottom:8px;">Trovati <b>${hits.length}</b> giorni:</div>` +
     hits.slice(0, 60).map(h => {
       const offset = computeDailyOffsetForMonthDay(h.mm, h.dd);
-      const snippet = escapeHtml(`${h.entry.theme || ""}`).replace(rgx, '<mark style="background:#ffd54f; color:#111; font-weight:800; padding:0 2px; border-radius:3px;">$1</mark>');
+      const snippet = highlightSnippetSafe(`${h.entry.theme || ""}`, rawQ.trim());
       return `
         <div class="result-card" onclick="closeProModal(); showDailyTextView(${offset}, true);">
           <div class="result-ref">☀️ ${escapeHtml(h.entry.dateTitle || `${h.dd}/${h.mm}`)}</div>
@@ -9802,6 +9971,7 @@ async function showDailyTextView(dayOffset = 0, fromBack = false) {
         back: "📖 Vai direttamente alla Bibbia"
       })}
     `;
+    syncBmPaperMode();
     return;
   }
   const entry = resolvedEntry;
@@ -9834,6 +10004,7 @@ async function showDailyTextView(dayOffset = 0, fromBack = false) {
       </button>
     </div>
   `;
+  syncBmPaperMode();
   main.scrollTop = 0;
 }
 
@@ -9863,8 +10034,9 @@ function parseRtfToCleanText(rtfRaw) {
     if (c < 0) c += 65536;
     return String.fromCharCode(c);
   });
+  s = s.replace(/\\~/g, " ").replace(/\\_/g, "-");
   s = s.replace(/\\[a-zA-Z]+-?\d*[ \t]?/g, "");
-  s = s.replace(/\\['\+\*\~\-_\\/]/g, "");
+  s = s.replace(/\\['\+\*\-\\/]/g, "");
   s = s.replace(/[{}]/g, "");
   return s.replace(/\r/g, "").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
 }
@@ -10057,7 +10229,7 @@ function openInsightCrossRefQuery(term) {
 function linkInsightSeeRefs(htmlStr, entries) {
   if (!htmlStr || !Array.isArray(entries) || !entries.length) return htmlStr;
   const titleMap = getInsightTitleIndex(entries);
-  const seeRe = /((?:Vedi|vedi)(?:\s+anche)?\s+)([A-ZÀ-Ý][A-ZÀ-Ý0-9\s,'’.-]*(?:;\s*[A-ZÀ-Ý][A-ZÀ-Ý0-9\s,'’.-]*)*)/g;
+  const seeRe = /\b((?:Vedi|vedi)(?:\s+anche)?\s+)([A-ZÀ-Ý][A-ZÀ-Ý0-9\s,'’.-]*(?:;\s*[A-ZÀ-Ý][A-ZÀ-Ý0-9\s,'’.-]*)*)/g;
   return htmlStr.split(/(<[^>]*>)/).map(part => {
     if (part.startsWith("<")) return part;
     return part.replace(seeRe, (full, prefix, listPart) => {
@@ -10096,16 +10268,27 @@ function buildAccentInsensitiveRegex(term) {
   return new RegExp(`(${pattern})`, "gi");
 }
 
+function highlightTextNodesSafe(htmlStr, term, makeMark) {
+  if (!htmlStr || !term || term.trim().length < 2) return htmlStr || "";
+  const rgx = buildAccentInsensitiveRegex(term);
+  return htmlStr.replace(/(<[^>]+>|&(?:[a-zA-Z][a-zA-Z0-9]*|#\d+|#x[0-9a-fA-F]+);)|([^<&]+)/g, (_match, tagOrEnt, textNode) => {
+    if (tagOrEnt) return tagOrEnt;
+    return textNode.replace(rgx, makeMark);
+  });
+}
+
+function highlightSnippetSafe(plainText, term) {
+  const escaped = escapeHtml(plainText);
+  if (!term || term.trim().length < 2) return escaped;
+  return highlightTextNodesSafe(escaped, term, (m) => `<mark style="background:#ffd54f; color:#111; font-weight:700; padding:0 3px; border-radius:3px;">${m}</mark>`);
+}
+
 function highlightHtmlSafe(htmlStr, term) {
   if (!term || term.trim().length < 2) return { html: htmlStr, count: 0 };
-  const rgx = buildAccentInsensitiveRegex(term);
   let count = 0;
-  const safeHtml = htmlStr.replace(/(<[^>]+>)|([^<]+)/g, (_match, tag, textNode) => {
-    if (tag) return tag;
-    return textNode.replace(rgx, (m) => {
-      count++;
-      return `<mark class="insight-hit" id="insight-hit-${count - 1}" style="background:#ffd54f; color:#111; font-weight:800; padding:1px 4px; border-radius:4px; text-decoration:underline; text-decoration-thickness:2px;">${m}</mark>`;
-    });
+  const safeHtml = highlightTextNodesSafe(htmlStr, term, (m) => {
+    count++;
+    return `<mark class="insight-hit" id="insight-hit-${count - 1}" style="background:#ffd54f; color:#111; font-weight:800; padding:1px 4px; border-radius:4px; text-decoration:underline; text-decoration-thickness:2px;">${m}</mark>`;
   });
   return { html: safeHtml, count };
 }
@@ -10167,6 +10350,7 @@ async function showInsightView(selectedIndex = null, fromBack = false) {
         back: "📖 Torna alla Bibbia"
       })}
     `;
+    syncBmPaperMode();
     return;
   }
   if (selectedIndex !== null && data.entries[selectedIndex]) {
@@ -10206,6 +10390,7 @@ async function showInsightView(selectedIndex = null, fromBack = false) {
         <button class="nav-btn" ${selectedIndex >= data.entries.length - 1 ? 'disabled style="opacity:0.4"' : ''} onclick="showInsightView(${selectedIndex + 1})">Voce Succ. ▶</button>
       </div>
     `;
+    syncBmPaperMode();
     if (hitCount > 0) {
       setTimeout(() => jumpToInsightHit(0), 80);
     } else {
@@ -10234,6 +10419,7 @@ async function showInsightView(selectedIndex = null, fromBack = false) {
     <div style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:12px;">${letterPills}</div>
     <div id="insightListContainer"></div>
   `;
+  syncBmPaperMode();
   renderInsightFilteredList();
   main.scrollTop = 0;
 }
@@ -10285,7 +10471,6 @@ async function renderInsightFilteredList() {
     container.innerHTML = `<div class="loader">Nessun risultato trovato per "<b>${escapeHtml(rawQ)}</b>".</div>`;
     return;
   }
-  const snippetRgx = q.length >= 2 ? buildAccentInsensitiveRegex(rawQ) : null;
   container.innerHTML = combined.map(({ idx, entry, matchType, pos }) => {
     let rawSnippet = "";
     if (matchType === "body" && pos > 40) {
@@ -10295,10 +10480,7 @@ async function renderInsightFilteredList() {
     } else {
       rawSnippet = entry.body.slice(0, 145).replace(/\s+/g, " ") + (entry.body.length > 145 ? "…" : "");
     }
-    let snippetHtml = escapeHtml(rawSnippet);
-    if (snippetRgx) {
-      snippetHtml = snippetHtml.replace(snippetRgx, '<mark style="background:#ffd54f; color:#111; font-weight:700; padding:0 3px; border-radius:3px;">$1</mark>');
-    }
+    const snippetHtml = q.length >= 2 ? highlightSnippetSafe(rawSnippet, rawQ) : escapeHtml(rawSnippet);
     const badge = matchType === "exact"
       ? `<span class="tag-badge" style="background:#2e7d32; color:#fff; font-size:11px; margin-left:6px;">★ Esponente Principale</span>`
       : (matchType === "starts" || matchType === "title")
@@ -10512,10 +10694,9 @@ async function renderSiIndexContent() {
       container.innerHTML = `<div class="loader">Nessun risultato in Tutta la Scrittura per "<b>${escapeHtml(rawQ)}</b>".</div>`;
       return;
     }
-    const rgx = buildAccentInsensitiveRegex(rawQ);
     container.innerHTML = `<div style="font-size:12.5px; color:var(--text-muted); margin-bottom:8px;">Trovati <b>${hits.length}</b> risultati in Tutta la Scrittura:</div>` +
       hits.slice(0, 80).map(h => {
-        const snipHtml = escapeHtml(h.snippet).replace(rgx, '<mark style="background:#ffd54f; color:#111; font-weight:700; padding:0 3px; border-radius:3px;">$1</mark>');
+        const snipHtml = highlightSnippetSafe(h.snippet, rawQ);
         const ciArg = h.ci === "all" ? "'all'" : h.ci;
         return `
           <div class="result-card" onclick="showSiReader('${h.kind}', ${h.i}, ${ciArg}, false, ${h.sectionAnchor})">
@@ -10579,6 +10760,7 @@ async function showSiView(fromBack = false) {
         back: "📖 Torna alla Bibbia"
       })}
     `;
+    syncBmPaperMode();
     return;
   }
   main.innerHTML = `
@@ -10602,6 +10784,7 @@ async function showSiView(fromBack = false) {
     </div>
     <div id="siContentContainer"></div>
   `;
+  syncBmPaperMode();
   renderSiIndexContent();
   main.scrollTop = 0;
 }
@@ -10660,6 +10843,7 @@ async function showSiBook(bi, fromBack = false) {
     </div>
     ${cards}
   `;
+  syncBmPaperMode();
   main.scrollTop = 0;
 }
 
@@ -10781,6 +10965,7 @@ async function showSiReader(kind, i, ci, fromBack = false, scrollToSectionIdx = 
         ${nextBtn}
       </div>
     `;
+    syncBmPaperMode();
     if (hitCount > 0) {
       setTimeout(() => jumpToInsightHit(0), 80);
     } else if (typeof scrollToSectionIdx === "number" && scrollToSectionIdx > 0) {
@@ -10868,6 +11053,7 @@ async function showSiReader(kind, i, ci, fromBack = false, scrollToSectionIdx = 
       ${nextBtn}
     </div>
   `;
+  syncBmPaperMode();
   if (hitCount > 0) {
     setTimeout(() => jumpToInsightHit(0), 80);
   } else {
@@ -10996,6 +11182,7 @@ async function showMapsView(selectedIdx = null, fromBack = false) {
         maxWidth: 340,
         padding: 12
       })}`;
+    syncBmPaperMode();
     return;
   }
   currentInsightSpeechText = `Cartine bibliche. ${meta.maps.map(m => m.title).join(". ")}.`;
@@ -11008,6 +11195,7 @@ async function showMapsView(selectedIdx = null, fromBack = false) {
       <input type="text" class="search-input" value="${escapeHtml(mapsSearchQuery)}" placeholder="🔍 Cerca una cartina o un luogo (es. Esodo, Betania, Paolo)..." oninput="onMapsSearchInput(this.value)">
     </div>
     <div id="mapsGridContainer"></div>`;
+  syncBmPaperMode();
   renderMapsGridList();
   main.scrollTop = 0;
   if (selectedIdx !== null && meta.maps[selectedIdx]) openMapViewer(meta.maps[selectedIdx].id, [], "");
@@ -11042,7 +11230,7 @@ async function renderMapsGridList() {
 }
 
 // ---------- Visualizzatore cartina (zoom, trascinamento, quadrato evidenziato) ----------
-const bpV = { map: null, cells: [], label: "", s: 1, x: 0, y: 0, fit: 1, minS: 0.5, maxS: 8, w: 0, h: 0, ptrs: new Map(), d0: 0, s0: 1, ax: 0, ay: 0, lastTap: 0, lastTapX: 0, lastTapY: 0, bound: false };
+const bpV = { map: null, cells: [], label: "", s: 1, x: 0, y: 0, fit: 1, minS: 0.5, maxS: 8, w: 0, h: 0, ptrs: new Map(), d0: 0, s0: 1, ax: 0, ay: 0, lastTap: 0, lastTapX: 0, lastTapY: 0, bound: false, pushedHistory: false };
 function bpMapById(id) { return (bpMeta && bpMeta.maps || []).find(m => m.id === id); }
 function bpPages(pages) { return pages && pages.length ? (pages.length > 1 ? "pp. " : "p. ") + pages.join("–") : ""; }
 
@@ -11060,13 +11248,19 @@ async function openMapViewer(mapId, cells, label, fromBack = false) {
   if (!meta || reqId !== bpLoadReqId) return;
   const map = bpMapById(mapId);
   if (!map) return;
-  if (!fromBack && document.getElementById("mapsViewer").style.display !== "flex") {
+  const wasOpen = document.getElementById("mapsViewer").style.display === "flex";
+  if (!fromBack && !wasOpen) {
+    const prevLen = navHistory.length;
     saveCurrentPositionToHistory();
+    bpV.pushedHistory = navHistory.length > prevLen;
+  } else if (!wasOpen) {
+    bpV.pushedHistory = false;
   }
   bpV.map = map;
   bpV.cells = (cells || []).slice();
   bpV.label = label || "";
-  bpV.w = map.image.width; bpV.h = map.image.height;
+  bpV.w = Number(map.image?.width) || 0;
+  bpV.h = Number(map.image?.height) || 0;
   document.getElementById("mapsViewer").style.display = "flex";
   document.getElementById("bpVTitle").textContent = map.title;
   document.getElementById("bpVSub").textContent = `${map.chapterTitle} · ${bpPages(map.pages)}`;
@@ -11084,6 +11278,10 @@ async function openMapViewer(mapId, cells, label, fromBack = false) {
   if (!uri) { msg.textContent = "Immagine non trovata. Ricarica il file JSON dal Backup."; return; }
   img.onload = () => {
     if (reqId !== bpLoadReqId) return;
+    if (!bpV.w || !bpV.h) {
+      bpV.w = img.naturalWidth || 1000;
+      bpV.h = img.naturalHeight || 1000;
+    }
     msg.style.display = "none";
     wrap.style.width = bpV.w + "px"; wrap.style.height = bpV.h + "px";
     img.style.width = bpV.w + "px"; img.style.height = bpV.h + "px";
@@ -11094,11 +11292,32 @@ async function openMapViewer(mapId, cells, label, fromBack = false) {
     if (bpV.cells.length) bpZoomToCell(bpV.cells[0]);
     bpRenderChips();
   };
+  img.onerror = () => {
+    if (reqId !== bpLoadReqId) return;
+    wrap.style.visibility = "hidden";
+    msg.textContent = "Immagine corrotta o non leggibile. Ricarica vedete_il_buon_paese.json dal Backup.";
+    msg.style.display = "block";
+  };
   img.src = uri;
 }
 function closeMapViewer() {
-  document.getElementById("mapsViewer").style.display = "none";
-  document.getElementById("bpImg").removeAttribute("src");
+  const viewer = document.getElementById("mapsViewer");
+  const wasOpen = viewer && viewer.style.display === "flex";
+  if (viewer) viewer.style.display = "none";
+  const img = document.getElementById("bpImg");
+  if (img) {
+    img.onload = null;
+    img.onerror = null;
+    img.removeAttribute("src");
+  }
+  bpV.ptrs.clear();
+  if (wasOpen && bpV.pushedHistory && navHistory.length > 0) {
+    const top = navHistory[navHistory.length - 1];
+    if (top && top.type === currentViewContext.type) {
+      navHistory.pop();
+    }
+  }
+  bpV.pushedHistory = false;
 }
 function bpStepAdjacentMap(delta) {
   if (!bpMeta || !Array.isArray(bpMeta.maps) || !bpV.map) return;
@@ -11451,7 +11670,7 @@ function renderReadingPlanModalContent(scrollToToday = true) {
   const pickerHtml = rpPickerOpen ? `
     <div style="margin-bottom:10px; display:flex; flex-direction:column; gap:6px;">
       ${READING_PLAN_TYPES.map(p => `
-        <button class="nav-btn" style="text-align:left; padding:9px 12px; ${p.id === curPlan.id ? 'background:var(--primary-main);color:#fff;border-color:var(--primary-light);' : 'background:#062356;color:#fff;border-color:#29b6f6;'}" onclick="selectReadingPlanType('${p.id}')">
+        <button class="nav-btn" style="text-align:left; padding:9px 12px; ${p.id === curPlan.id ? 'background:var(--primary-main);color:#fff;border-color:var(--primary-light);' : 'background:var(--bg-main);color:#fff;border-color:#29b6f6;'}" onclick="selectReadingPlanType('${p.id}')">
           ${p.id === curPlan.id ? '★ ' : '• '}${escapeHtml(p.name)}
         </button>
       `).join("")}
@@ -11465,7 +11684,7 @@ function renderReadingPlanModalContent(scrollToToday = true) {
     return `
       <div id="rp_row_${idx}" class="rp-row ${isToday ? 'rp-today' : ''} ${isDone ? 'rp-done' : ''}">
         <div style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1;" onclick="closeProModal(); openRef(${item.firstBookId}, ${item.firstCh});">
-          <span class="tag-badge" style="min-width:64px; text-align:center; ${isToday ? 'background:#00e5ff;color:#041a42;border-color:#84ffff;font-weight:900;' : 'background:#062356;color:#ffffff;border-color:#29b6f6;'}">${escapeHtml(dayTag)}</span>
+          <span class="tag-badge" style="min-width:64px; text-align:center; ${isToday ? 'background:#00e5ff;color:#041a42;border-color:#84ffff;font-weight:900;' : 'background:var(--bg-main);color:#ffffff;border-color:#29b6f6;'}">${escapeHtml(dayTag)}</span>
           <span>📖 ${escapeHtml(item.label)}</span>
         </div>
         <input type="checkbox" class="rp-check" ${isDone ? "checked" : ""} onchange="toggleReadingPlanDay(${idx})" title="Segna come letto">
@@ -11481,12 +11700,12 @@ function renderReadingPlanModalContent(scrollToToday = true) {
       <span>▾</span>
     </div>
     ${pickerHtml}
-    <div style="background:#041a42; border:1px solid rgba(41,182,246,0.4); border-radius:8px; padding:7px 10px; margin-bottom:8px;">
+    <div style="background:var(--primary-dark); border:1px solid rgba(41,182,246,0.4); border-radius:8px; padding:7px 10px; margin-bottom:8px;">
       <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:#cfe3ff; margin-bottom:5px;">
         <span>✔ <b>${doneCount}/365</b> gg (${pct}% • ~${estChaptersDone} cap.)</span>
         ${paceHtml}
       </div>
-      <div style="width:100%; height:5px; background:#062356; border-radius:999px; overflow:hidden;">
+      <div style="width:100%; height:5px; background:var(--bg-main); border-radius:999px; overflow:hidden;">
         <div style="width:${Math.max(pct, doneCount > 0 ? 2 : 0)}%; height:100%; background:linear-gradient(90deg, #00b0ff, #00e5ff, #ccff00); border-radius:999px; transition:width 0.3s ease;"></div>
       </div>
       <div style="display:flex; justify-content:flex-end; gap:12px; align-items:center; font-size:12px; margin-top:6px;">
@@ -11528,7 +11747,7 @@ function scrollRpToToday(smooth = false) {
 function buildStudioBackupObject() {
   return {
     app: "BibbiaMultilingue_PRO",
-    version: "PRO_v14.3",
+    version: "PRO_v14.6",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
@@ -11700,7 +11919,7 @@ async function importBackupJson(e) {
         </div>
       </div>
       <div style="display:flex; gap:10px;">
-        <button class="myread-action-btn" style="background:#062356; flex:1;" onclick="pendingBackupRawText=null; document.getElementById('myReadModal').style.display='none'">Annulla</button>
+        <button class="myread-action-btn" style="background:var(--bg-main); flex:1;" onclick="pendingBackupRawText=null; document.getElementById('myReadModal').style.display='none'">Annulla</button>
         <button class="myread-action-btn" style="flex:1.3;" onclick="confirmImportBackupNow()">✔ Importa ora</button>
       </div>
     `;
@@ -11796,7 +12015,7 @@ async function openLibraryMigrationModal() {
     <div style="font-size:12.5px; color:#cfe3ff; line-height:1.45; margin-bottom:10px;">
       Trasferisci <b>tutto</b> (Bibbie EPUB, Tutta la Scrittura, Perspicacia, Giorno, Cartine HD e Dati Studio) da AppsGeyser alla PWA di Chrome senza riconvertire nessun file.
     </div>
-    <div id="bmMigrationStatus" style="display:none; font-size:13px; font-weight:800; color:#84ffff; background:#062356; border:1px solid #00e5ff; border-radius:8px; padding:8px 10px; margin-bottom:10px; text-align:center;"></div>
+    <div id="bmMigrationStatus" style="display:none; font-size:13px; font-weight:800; color:#84ffff; background:var(--bg-main); border:1px solid #00e5ff; border-radius:8px; padding:8px 10px; margin-bottom:10px; text-align:center;"></div>
     <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
       <label class="myread-action-btn btn-color-anim" style="--btn-bg:#00c853; --btn-glow:rgba(0,229,255,0.8); background:linear-gradient(135deg, #1b5e20, #2e7d32); text-align:center; display:block;">
         📥 Importa File di Migrazione (1 o più .json)
@@ -11827,7 +12046,7 @@ function setMigrationStatus(htmlMsg) {
 
 async function buildAndDeliverLibraryBundle(keysList, includeStudio, fileName, shareTitle) {
   const parts = [
-    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v14.3","date":',
+    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v14.6","date":',
     JSON.stringify(new Date().toISOString())
   ];
   if (includeStudio) {
@@ -11887,6 +12106,8 @@ async function importLibraryMigrationFiles(event) {
   if (!files.length) return;
   let importedBlocks = 0;
   let restoredStudio = false;
+  const importedBibleIds = [];
+  const preExistingBibles = [...state.downloadedBibles];
   try {
     for (let fIdx = 0; fIdx < files.length; fIdx++) {
       const file = files[fIdx];
@@ -11902,8 +12123,8 @@ async function importLibraryMigrationFiles(event) {
           setMigrationStatus(`💾 Salvataggio offline (${fIdx + 1}/${files.length}) · blocco ${eIdx + 1}/${parsed.entries.length}...`);
           await idbPut(k, item.value);
           importedBlocks++;
-          if ((k.startsWith("gb:") || k.startsWith("epub:") || k.startsWith("helloao:")) && !state.downloadedBibles.includes(k)) {
-            state.downloadedBibles.unshift(k);
+          if (k.startsWith("gb:") || k.startsWith("epub:") || k.startsWith("helloao:")) {
+            importedBibleIds.push(k);
           }
         }
         if (parsed.studioBackup && typeof parsed.studioBackup === "object") {
@@ -11930,6 +12151,7 @@ async function importLibraryMigrationFiles(event) {
       }
     }
 
+    state.downloadedBibles = [...new Set([...importedBibleIds, ...state.downloadedBibles, ...preExistingBibles])];
     safeSaveStorage("bm_v10_pro_bibles", JSON.stringify(state.downloadedBibles));
     memoryBibleCache.clear();
     insightMemCache = null;
@@ -12309,10 +12531,10 @@ async function openWhereIsItModal() {
     <input type="search" id="bpQuery" class="bp-search" placeholder="🔍 Cerca fra i ${meta.places.length} luoghi biblici (es. Betania, Ur, Gerico)..." autocomplete="off" oninput="bpOnQuery(this.value)">
     ${totalPlaces > 0 ? `
       <div style="display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
-        <button type="button" class="nav-btn" style="flex:1; font-size:12px; padding:6px 8px; background:#062356; border-color:#29b6f6; color:#84ffff;" onclick="bpToggleDomHighlights(this)">
+        <button type="button" class="nav-btn" style="flex:1; font-size:12px; padding:6px 8px; background:var(--bg-main); border-color:#29b6f6; color:#84ffff;" onclick="bpToggleDomHighlights(this)">
           ✨ Sottolinea nel testo: ON
         </button>
-        <button type="button" class="nav-btn" style="flex:1; font-size:12px; padding:6px 8px; background:#062356; border-color:#29b6f6; color:#ffffff;" onclick="bpCopyGeoDossier(this)">
+        <button type="button" class="nav-btn" style="flex:1; font-size:12px; padding:6px 8px; background:var(--bg-main); border-color:#29b6f6; color:#ffffff;" onclick="bpCopyGeoDossier(this)">
           📋 Copia Dossier (${totalPlaces} luoghi)
         </button>
       </div>
@@ -12554,17 +12776,17 @@ function dismissSplashScreen() {
   if (!splash) return;
   if (!window.__splashShownAt) { setTimeout(dismissSplashScreen, 80); return; }
   splashDismissed = true;
-  // Garantisce esattamente 2200ms di animazione visibile dal momento in cui il logo appare
+  // Transizione rapida e fluida PWA (700ms minimi per l'animazione del logo)
   const elapsed = Date.now() - window.__splashShownAt;
-  const wait = Math.max(0, 2200 - elapsed);
+  const wait = Math.max(0, 700 - elapsed);
   setTimeout(() => {
     splash.style.pointerEvents = "none";
     splash.style.opacity = "0";
-    setTimeout(() => splash.remove(), 580);
+    setTimeout(() => splash.remove(), 420);
   }, wait);
 }
 // Fallback di sicurezza nel caso la rete o il DB tardino
-setTimeout(dismissSplashScreen, 4000);
+setTimeout(dismissSplashScreen, 2500);
 let lastScrollSaveTimer = null;
 document.getElementById("mainContainer")?.addEventListener("scroll", function() {
   const el = this;
@@ -12584,6 +12806,13 @@ function handlePortionTextSelection() {
   if (anchor && anchor.closest("#proModal, #noteModal, #myReadModal, #bmSelectModal, #mapsViewer, #bmSettingsDrawer, #bmProphecyWidget")) return;
   const txt = extractCleanSelectedText();
   if (txt.length >= 4) {
+    selectedVersesMap.clear();
+    spokenVersesSet.clear();
+    pendingOrangeVersesSet.clear();
+    pendingOrangeOrder = [];
+    document.querySelectorAll(".bm-verse-selected, .bm-verse-queued-orange").forEach(el => {
+      el.classList.remove("bm-verse-selected", "bm-verse-queued-orange");
+    });
     const vRow = anchor ? anchor.closest(".verse-row, .parallel-row, .parallel-row-3") : null;
     if (vRow && vRow.id && vRow.id.startsWith("v_")) {
       state.selectedVerse = parseInt(vRow.id.slice(2), 10) || 1;
@@ -12729,7 +12958,7 @@ function openResetMyReadingModal() {
       </div>
     </div>
     <div style="display:flex; gap:10px;" oncontextmenu="event.preventDefault()">
-      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#062356; --btn-glow:rgba(41,182,246,0.6); background:#062356; flex:1;" oncontextmenu="event.preventDefault()" onclick="document.getElementById('myReadModal').style.display='none'">Annulla</button>
+      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#062356; --btn-glow:rgba(41,182,246,0.6); background:var(--bg-main); flex:1;" oncontextmenu="event.preventDefault()" onclick="document.getElementById('myReadModal').style.display='none'">Annulla</button>
       <button class="myread-action-btn btn-color-anim" style="--btn-bg:#1565c0; --btn-glow:rgba(21,101,192,0.7); background:#1565c0; flex:1.3;" oncontextmenu="event.preventDefault()" onclick="confirmResetMyReading()">🗑️ Azzera memoria</button>
     </div>
   `;
@@ -12799,7 +13028,6 @@ function goToMyPersonalReadingNow() {
   if (modal) modal.style.display = "none";
   const pers = getPersonalReadingState();
   saveCurrentPositionToHistory(pers.bookId, pers.chapter);
-  isPersonalReadingMode = true;
   state.bookId = pers.bookId;
   state.chapter = pers.chapter;
   loadChapterView().then(() => {
@@ -12851,8 +13079,8 @@ function openMyReading() {
       Imposta o aggiorna il capitolo del tuo segnalibro personale:
     </div>
     <div style="display:flex; gap:6px; margin-bottom:12px;">
-      <select id="myReadBookSel" class="trans-select" style="flex:1.4; background:#062356; color:#fff; border-color:#29b6f6;" onchange="onMyReadBookSelectChange()">${bookOptions}</select>
-      <select id="myReadChSel" class="trans-select" style="flex:0.8; background:#062356; color:#fff; border-color:#29b6f6;">${chOptions}</select>
+      <select id="myReadBookSel" class="trans-select" style="flex:1.4;" onchange="onMyReadBookSelectChange()">${bookOptions}</select>
+      <select id="myReadChSel" class="trans-select" style="flex:0.8;">${chOptions}</select>
     </div>
     <button class="myread-action-btn" onclick="confirmMyReadingSelection()">
       📌 Conferma
@@ -13137,7 +13365,7 @@ function openTtsSettingsModal() {
   const rates = [0.85, 1.0, 1.15, 1.3];
   const rateBtns = rates.map(r => {
     const isSel = Math.abs(bmTtsRate - r) < 0.03;
-    return `<button type="button" class="myread-action-btn" style="flex:1; padding:10px 6px; background:${isSel ? '#00e5ff' : '#062356'}; color:${isSel ? '#041a42' : '#ffffff'}; border-color:${isSel ? '#84ffff' : '#29b6f6'};" onclick="setBmTtsRate(${r})">${r}x</button>`;
+    return `<button type="button" class="myread-action-btn" style="flex:1; padding:10px 6px; background:${isSel ? '#00e5ff' : 'var(--bg-main)'}; color:${isSel ? '#041a42' : '#ffffff'}; border-color:${isSel ? '#84ffff' : '#29b6f6'};" onclick="setBmTtsRate(${r})">${r}x</button>`;
   }).join("");
 
   body.innerHTML = `
@@ -13150,8 +13378,8 @@ function openTtsSettingsModal() {
     <div style="display:flex; gap:6px; margin-bottom:14px;">${rateBtns}</div>
     <div style="font-size:13px; font-weight:800; color:#e3f2fd; margin-bottom:6px;">A fine capitolo biblico:</div>
     <div style="display:flex; gap:8px; margin-bottom:14px;">
-      <button type="button" class="myread-action-btn" style="flex:1; background:${bmTtsAutoNextPref ? '#00e5ff' : '#062356'}; color:${bmTtsAutoNextPref ? '#041a42' : '#ffffff'};" onclick="setBmTtsAutoNext(true)">▶ Continua al Succ.</button>
-      <button type="button" class="myread-action-btn" style="flex:1; background:${!bmTtsAutoNextPref ? '#00e5ff' : '#062356'}; color:${!bmTtsAutoNextPref ? '#041a42' : '#ffffff'};" onclick="setBmTtsAutoNext(false)">⏹️ Ferma a fine cap.</button>
+      <button type="button" class="myread-action-btn" style="flex:1; background:${bmTtsAutoNextPref ? '#00e5ff' : 'var(--bg-main)'}; color:${bmTtsAutoNextPref ? '#041a42' : '#ffffff'};" onclick="setBmTtsAutoNext(true)">▶ Continua al Succ.</button>
+      <button type="button" class="myread-action-btn" style="flex:1; background:${!bmTtsAutoNextPref ? '#00e5ff' : 'var(--bg-main)'}; color:${!bmTtsAutoNextPref ? '#041a42' : '#ffffff'};" onclick="setBmTtsAutoNext(false)">⏹️ Ferma a fine cap.</button>
     </div>
     <button type="button" class="myread-action-btn" onclick="document.getElementById('myReadModal').style.display='none'">✔ Chiudi</button>
   `;
@@ -13195,6 +13423,7 @@ async function executeOmniSearch() {
 
   // 1. PERSPICACIA
   const insData = await getInsightData();
+  if (reqId !== omniReqId || currentViewContext.type !== "search") return;
   if (insData && Array.isArray(insData.entries)) {
     const insHits = [];
     for (let i = 0; i < insData.entries.length; i++) {
@@ -13221,6 +13450,7 @@ async function executeOmniSearch() {
 
   // 2. CARTINE BIBLICHE HD
   const mapsMeta = await bpGetMeta();
+  if (reqId !== omniReqId || currentViewContext.type !== "search") return;
   if (mapsMeta) {
     const placeIdxs = bpSearchPlaces(rawQuery).slice(0, 5);
     html += `<div class="section-title"><span>🗺️ Cartine & Luoghi (${placeIdxs.length})</span></div>`;
@@ -13233,6 +13463,7 @@ async function executeOmniSearch() {
 
   // 3. TUTTA LA SCRITTURA
   const siData = await getSiData();
+  if (reqId !== omniReqId || currentViewContext.type !== "search") return;
   if (siData && Array.isArray(siData.books)) {
     const siHits = [];
     siData.books.forEach((b, bi) => {
@@ -13438,14 +13669,14 @@ function injectXRayReturnBanner() {
 
     const banner = document.createElement("div");
     banner.id = "bmXRayReturnBar";
-    banner.style.cssText = "display:flex; gap:8px; align-items:center; justify-content:space-between; background:linear-gradient(135deg, #041a42, #0d47a1); border:1.5px solid #00e5ff; border-radius:10px; padding:8px 10px; margin-bottom:12px; box-shadow:0 0 14px rgba(0,229,255,0.35); flex-wrap:wrap;";
+    banner.style.cssText = "display:flex; gap:8px; align-items:center; justify-content:space-between; background:linear-gradient(135deg, var(--primary-dark), var(--primary-main)); border:1.5px solid #00e5ff; border-radius:10px; padding:8px 10px; margin-bottom:12px; box-shadow:0 0 14px rgba(0,229,255,0.35); flex-wrap:wrap;";
     banner.innerHTML = `
       <span style="font-size:12.5px; font-weight:800; color:#84ffff;">🔬 Partito da <b>${escapeHtml(shortRef)}</b>:</span>
       <div style="display:flex; gap:6px; flex-wrap:wrap;">
         <button type="button" class="nav-btn" style="background:#00e5ff; color:#041a42; border-color:#84ffff; font-weight:900; padding:5px 10px;" onclick="returnToXRayModalNow()">
           🔬 Torna a Raggi X (${escapeHtml(shortRef)})
         </button>
-        <button type="button" class="nav-btn" style="background:#062356; color:#ffffff; border-color:#29b6f6; font-weight:800; padding:5px 10px;" onclick="returnToXRayChapterHighlighted()">
+        <button type="button" class="nav-btn" style="background:var(--bg-main); color:#ffffff; border-color:#29b6f6; font-weight:800; padding:5px 10px;" onclick="returnToXRayChapterHighlighted()">
           📖 Cap. ${escapeHtml(shortRef)}
         </button>
       </div>
@@ -13548,16 +13779,34 @@ async function stepXRayVerse(delta) {
   const d = lastXRayData;
   const curV = d && d.verse ? Number(d.verse) : (state.selectedVerse || 1);
 
-  // Tetto reale = numero più alto tra i versetti mostrati a schermo (vale per qualsiasi Bibbia, online o offline)
-  let maxV = 0;
+  // Raccoglie l'elenco ordinato dei versetti effettivamente presenti nel capitolo (salta eventuali versetti omessi es. Mt 17:21)
+  const presentVerses = [];
   document.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3").forEach(r => {
     const n = parseInt((r.id || "").replace("v_", ""), 10);
-    if (n > maxV) maxV = n;
+    if (n > 0 && !presentVerses.includes(n)) presentVerses.push(n);
   });
-  if (!maxV) maxV = 176;
+  presentVerses.sort((a, b) => a - b);
 
-  const targetV = Math.min(maxV, Math.max(1, curV + delta));
-  selectVerseDataFromDOM(targetV);
+  let targetV;
+  if (presentVerses.length > 0) {
+    let idx = presentVerses.indexOf(curV);
+    if (idx === -1) {
+      idx = delta > 0
+        ? presentVerses.findIndex(v => v > curV)
+        : (presentVerses.length - 1 - [...presentVerses].reverse().findIndex(v => v < curV));
+      if (idx < 0 || idx >= presentVerses.length) idx = delta > 0 ? presentVerses.length - 1 : 0;
+      targetV = presentVerses[idx];
+    } else {
+      targetV = presentVerses[Math.min(presentVerses.length - 1, Math.max(0, idx + delta))];
+    }
+  } else {
+    targetV = Math.min(176, Math.max(1, curV + delta));
+  }
+
+  // Aggiorna solo il riferimento X-Ray senza inquinare selectedVersesMap
+  const targetRow = document.getElementById(`v_${targetV}`);
+  state.selectedVerse = targetV;
+  state.selectedVerseText = targetRow ? (targetRow.getAttribute("data-text") || "") : "";
   await openVerseXRayModal(targetV);
 }
 
@@ -13594,7 +13843,7 @@ function showXRayRootPopup(dictKey, contextBookId = null) {
       <div style="font-size:28px; margin-bottom:4px;">🏛️📜</div>
       <div style="font-size:17px; font-weight:900; color:#ffd54f; letter-spacing:0.4px;">${escapeHtml(dictKey.toUpperCase())}</div>
       <div style="font-size:13px; font-weight:800; color:#00e5ff; margin:4px 0;">Codice Strong: ${escapeHtml(d.code)}</div>
-      <div style="font-size:16px; font-weight:800; color:#ffffff; background:#062356; border:1px solid #29b6f6; border-radius:8px; padding:8px; margin:8px 0;">
+      <div style="font-size:16px; font-weight:800; color:#ffffff; background:var(--bg-main); border:1px solid #29b6f6; border-radius:8px; padding:8px; margin:8px 0;">
         ${escapeHtml(d.orig)}
       </div>
       <div class="bm-justify-text" style="font-size:13.5px; color:#e3f2fd; line-height:1.5; padding:4px 2px;">
@@ -13606,7 +13855,7 @@ function showXRayRootPopup(dictKey, contextBookId = null) {
       <button type="button" class="myread-action-btn" style="flex:1 1 auto; width:auto; background:#0d47a1; font-size:12px; padding:9px 6px; white-space:nowrap;" onclick="document.getElementById('myReadModal').style.display='none'; openConcordanceFromXRay('${escapeJsStr(dictKey)}');">🔍 Concordanza</button>
       <button type="button" class="myread-action-btn" style="flex:1 1 auto; width:auto; background:#b45309; font-size:12px; padding:9px 6px; white-space:nowrap;" onclick="document.getElementById('myReadModal').style.display='none'; openStrongCodeFromXRay('${escapeJsStr(strongCode)}', '${escapeJsStr(dictKey)}');">🏺 Strong</button>
     </div>
-    <button type="button" class="myread-action-btn" style="background:#062356;" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
+    <button type="button" class="myread-action-btn" style="background:var(--bg-main);" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
   `;
   modal.style.display = "flex";
 }
@@ -13614,15 +13863,16 @@ function showXRayRootPopup(dictKey, contextBookId = null) {
 function decorateXRayInterlinearRoots(htmlText) {
   if (!bmXRayRootsActive || !htmlText) return htmlText;
   const seenInVerse = new Set();
-  return htmlText.replace(/(<[^>]+>)|([A-Za-zÀ-ÖØ-öø-ÿ]{3,})/g, (match, tag, word) => {
-    if (tag) return tag;
+  return htmlText.replace(/(<[^>]+>|&(?:[a-zA-Z][a-zA-Z0-9]*|#\d+|#x[0-9a-fA-F]+);)|([A-Za-zÀ-ÖØ-öø-ÿ]{3,})/g, (match, tagOrEnt, word) => {
+    if (tagOrEnt) return tagOrEnt;
     const dictKey = getStrongDictKey(word);
     if (!dictKey || seenInVerse.has(dictKey)) return match;
     const d = PRO_STRONG_DICT[dictKey];
+    if (!d || typeof d !== "object") return match;
     seenInVerse.add(dictKey);
     const isNT = (lastXRayData ? lastXRayData.bookId : state.bookId) >= 40;
-    const origParts = d.orig.split("/").map(s => s.replace(/\([^)]*\)/g, "").trim()).filter(Boolean);
-    const codeParts = d.code.split("/").map(s => s.trim()).filter(Boolean);
+    const origParts = String(d.orig || "").split("/").map(s => s.replace(/\([^)]*\)/g, "").trim()).filter(Boolean);
+    const codeParts = String(d.code || "").split("/").map(s => s.trim()).filter(Boolean);
     const prefIdx = codeParts.findIndex(c => c.toUpperCase().startsWith(isNT ? "G" : "H"));
     const shortCode = (prefIdx > -1 ? codeParts[prefIdx] : codeParts[0]) || d.code;
     const shortRoot = (prefIdx > -1 && origParts[prefIdx] ? origParts[prefIdx] : origParts[0]) || d.orig;
@@ -13769,7 +14019,7 @@ async function openVerseXRayModal(forcedVerseNum) {
   const xrayFnHtml = xrayFns.length ? `
     <div class="section-title"><span>📌 Note in Calce Ufficiali (${xrayFns.length})</span></div>
     <div style="margin-bottom:12px;">
-      ${xrayFns.map((t, i) => `<div style="background:#062356; border-left:3px solid #ffd54f; border-radius:7px; padding:7px 10px; margin-bottom:6px; font-size:13px; line-height:1.5;"><b style="color:#ffd54f;">*${xrayFns.length > 1 ? i + 1 : ""}</b> ${formatNoteLinks(t, targetBookId)}</div>`).join("")}
+      ${xrayFns.map((t, i) => `<div style="background:var(--bg-main); border-left:3px solid #ffd54f; border-radius:7px; padding:7px 10px; margin-bottom:6px; font-size:13px; line-height:1.5;"><b style="color:#ffd54f;">*${xrayFns.length > 1 ? i + 1 : ""}</b> ${formatNoteLinks(t, targetBookId)}</div>`).join("")}
     </div>` : "";
   const xrayInsRefs = await findInsightRefsForVerse(targetBookId, targetChapter, vNum, 10);
   if (reqId !== currentXRayReqId) return;
@@ -13791,17 +14041,17 @@ async function openVerseXRayModal(forcedVerseNum) {
   }
 
   body.innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:10px; background:#041a42; padding:7px 9px; border-radius:10px; border:1px solid rgba(41,182,246,0.45); flex-wrap:wrap;">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:10px; background:var(--primary-dark); padding:7px 9px; border-radius:10px; border:1px solid rgba(41,182,246,0.45); flex-wrap:wrap;">
       <button type="button" class="nav-btn" style="padding:5px 10px;" onclick="stepXRayVerse(-1)">◀ Vers. Prec.</button>
       <span style="font-size:13.5px; font-weight:900; color:#00e5ff;">📖 ${escapeHtml(book.abbr)} ${targetChapter}:${vNum}</span>
       <button type="button" class="nav-btn" style="padding:5px 10px;" onclick="stepXRayVerse(1)">Vers. Succ. ▶</button>
     </div>
 
     <div style="display:flex; gap:5px; margin-bottom:10px; flex-wrap:wrap;">
-      <button type="button" class="nav-btn" style="flex:1; font-size:11px; padding:5px 6px; background:${bmXRayRootsActive ? '#ffd54f' : '#062356'}; color:${bmXRayRootsActive ? '#041a42' : '#ffd54f'}; border-color:#ffd54f; font-weight:900;" onclick="toggleXRayRootsLens()">
+      <button type="button" class="nav-btn" style="flex:1; font-size:11px; padding:5px 6px; background:${bmXRayRootsActive ? '#ffd54f' : 'var(--bg-main)'}; color:${bmXRayRootsActive ? '#041a42' : '#ffd54f'}; border-color:#ffd54f; font-weight:900;" onclick="toggleXRayRootsLens()">
         🏛️ Radici: ${bmXRayRootsActive ? 'ON' : 'OFF'}
       </button>
-      <button type="button" class="nav-btn" style="flex:1; font-size:11px; padding:5px 6px; background:${bmXRayDiffActive ? '#00e5ff' : '#062356'}; color:${bmXRayDiffActive ? '#041a42' : '#84ffff'}; border-color:#00e5ff; font-weight:800;" onclick="toggleXRayDiffHighlight()">
+      <button type="button" class="nav-btn" style="flex:1; font-size:11px; padding:5px 6px; background:${bmXRayDiffActive ? '#00e5ff' : 'var(--bg-main)'}; color:${bmXRayDiffActive ? '#041a42' : '#84ffff'}; border-color:#00e5ff; font-weight:800;" onclick="toggleXRayDiffHighlight()">
         ✨ Diff: ${bmXRayDiffActive ? 'ON' : 'OFF'}
       </button>
       <button type="button" class="nav-btn" style="flex:1; font-size:11px; padding:5px 6px; border-color:#29b6f6; color:#ffffff; font-weight:800;" onclick="copyXRayComparisonDossier(this)">
@@ -13816,7 +14066,7 @@ async function openVerseXRayModal(forcedVerseNum) {
       <span>🌍 Confronto Versioni Pronte</span>
       <span>${sortedVersions.length} edizioni</span>
     </div>
-    <div style="background:#062356; border:1px solid rgba(41,182,246,0.45); border-radius:10px; padding:4px; margin-bottom:12px; max-height:38vh; overflow-y:auto;">
+    <div style="background:var(--bg-main); border:1px solid rgba(41,182,246,0.45); border-radius:10px; padding:4px; margin-bottom:12px; max-height:38vh; overflow-y:auto;">
       ${versionsHtml || `<div class="loader">Nessun testo offline trovato.</div>`}
     </div>
 
@@ -13824,7 +14074,7 @@ async function openVerseXRayModal(forcedVerseNum) {
     <div style="font-size:12px; color:#9ec9ff; margin-bottom:6px;">Tocca un termine per aprirlo in Perspicacia (📚) o nella Concordanza (🔍):</div>
     <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
       ${words.map(w => `
-        <span style="display:inline-flex; align-items:center; background:#062356; border:1px solid #29b6f6; border-radius:14px; overflow:hidden;">
+        <span style="display:inline-flex; align-items:center; background:var(--bg-main); border:1px solid #29b6f6; border-radius:14px; overflow:hidden;">
           <span style="padding:4px 8px; font-size:12.5px; font-weight:800; color:#fff; cursor:pointer;" onclick="openInsightFromXRay('${escapeJsStr(w)}')" title="Cerca in Perspicacia">📚 ${escapeHtml(w)}</span>
           <span style="padding:4px 7px; font-size:12px; background:#1565c0; color:#84ffff; font-weight:800; cursor:pointer; border-left:1px solid #29b6f6;" onclick="openConcordanceFromXRay('${escapeJsStr(w)}')" title="Cerca in Concordanza">🔍</span>
         </span>
@@ -13832,7 +14082,7 @@ async function openVerseXRayModal(forcedVerseNum) {
     </div>
 
     ${xrayFnHtml}
-    <div class="section-title"><span>🔗 Passi Paralleli Chiave</span></div>
+    <div class="section-title"><span>${PRO_CROSS_REFS[`${targetBookId}_${targetChapter}_${vNum}`]?.length ? "🔗 Passi Paralleli Esegetici" : "🔗 Suggerimenti Tematici Automatici"}</span></div>
     <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
       ${refs.map(r => `<span class="tag-badge" style="padding:6px 10px; font-size:13px;" onclick="closeProModal(); jumpToRefString('${escapeJsStr(r)}')">📖 ${escapeHtml(r)}</span>`).join("")}
     </div>
@@ -13894,7 +14144,7 @@ function openStudyAnalyticsModal() {
 
   const heatmapGrid = BIBLE_BOOKS.map(b => {
     const st = bookStats.get(b.id);
-    let bg = "#041a42";
+    let bg = "var(--primary-dark)";
     let border = "rgba(41,182,246,0.28)";
     let txtCol = "#8ca0ba";
     if (st.total >= 8) {
@@ -13917,24 +14167,24 @@ function openStudyAnalyticsModal() {
 
   document.getElementById("proModalTitle").textContent = "📊 Statistiche & Heatmap Studio PRO";
   document.getElementById("proModalBody").innerHTML = `
-    <div style="background:linear-gradient(135deg, #041a42, #062356); border:1px solid #00e5ff; border-radius:9px; padding:8px 12px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+    <div style="background:linear-gradient(135deg, var(--primary-dark), var(--bg-main)); border:1px solid #00e5ff; border-radius:9px; padding:8px 12px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
       <span style="font-size:12.5px; font-weight:800; color:#cfe3ff;">⏱️ Tempo di Studio Attivo:</span>
       <span style="font-size:14.5px; font-weight:900; color:#00e5ff;">${studyTimeFormatted}</span>
     </div>
     <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; margin-bottom:12px; text-align:center;">
-      <div style="background:#062356; border:1px solid #29b6f6; border-radius:8px; padding:8px 4px;">
+      <div style="background:var(--bg-main); border:1px solid #29b6f6; border-radius:8px; padding:8px 4px;">
         <div style="font-size:17px; font-weight:900; color:#00e5ff;">${touchedBooks}/66</div>
         <div style="font-size:10.5px; color:#9ec9ff; font-weight:700;">Libri Studiati</div>
       </div>
-      <div style="background:#062356; border:1px solid #29b6f6; border-radius:8px; padding:8px 4px; cursor:pointer;" onclick="closeProModal(); showSavedView();">
+      <div style="background:var(--bg-main); border:1px solid #29b6f6; border-radius:8px; padding:8px 4px; cursor:pointer;" onclick="closeProModal(); showSavedView();">
         <div style="font-size:17px; font-weight:900; color:#ffeb3b;">${totalHl}</div>
         <div style="font-size:10.5px; color:#9ec9ff; font-weight:700;">Evidenziati</div>
       </div>
-      <div style="background:#062356; border:1px solid #29b6f6; border-radius:8px; padding:8px 4px; cursor:pointer;" onclick="closeProModal(); showSavedView();">
+      <div style="background:var(--bg-main); border:1px solid #29b6f6; border-radius:8px; padding:8px 4px; cursor:pointer;" onclick="closeProModal(); showSavedView();">
         <div style="font-size:17px; font-weight:900; color:#4fc3f7;">${totalBm}</div>
         <div style="font-size:10.5px; color:#9ec9ff; font-weight:700;">Preferiti</div>
       </div>
-      <div style="background:#062356; border:1px solid #29b6f6; border-radius:8px; padding:8px 4px; cursor:pointer;" onclick="closeProModal(); showNotesView();">
+      <div style="background:var(--bg-main); border:1px solid #29b6f6; border-radius:8px; padding:8px 4px; cursor:pointer;" onclick="closeProModal(); showNotesView();">
         <div style="font-size:17px; font-weight:900; color:#ccff00;">${totalNotes}</div>
         <div style="font-size:10.5px; color:#9ec9ff; font-weight:700;">Appunti</div>
       </div>
@@ -14188,7 +14438,7 @@ async function enrichMessianicPropheciesFromOfflineDB() {
         if (!/^(?:MESSIA|GES[ÙU]\s+CRISTO|PROFEZIA|SEME|CRISTO|UNTO)\b/i.test(art.title || "")) return;
         const lines = String(art.body || "").split(/\n+/);
         lines.forEach(line => {
-          if (line.length < 15) return;
+          if (line.length < 15 || !/\d+:\d+/.test(line)) return;
           const refs = bpCitedRefs(line);
           if (refs.length >= 2) {
             const parsedRefs = refs.map(r => ({ raw: r, t: parseRefStringToTarget(r) })).filter(x => x.t);
@@ -14222,6 +14472,7 @@ async function enrichMessianicPropheciesFromOfflineDB() {
         (bObj.chapters || []).forEach((chObj, ci) => {
           const paras = String(chObj.content || "").split(/\n{2,}/);
           paras.forEach(p => {
+            if (!/\d+:\d+/.test(p)) return;
             if (!/(?:\bgesù|\b(?:messia\w*|ademp\w*|cristo|seme|unto|profetizz\w*)\b)/i.test(p)) return;
             const refs = bpCitedRefs(p);
             const parsedRefs = refs.map(r => ({ raw: r, t: parseRefStringToTarget(r) })).filter(x => x.t);
@@ -14547,7 +14798,7 @@ function openGreekFulfillmentAction() {
 
   const sourceBtnHtml = p.sourceMeta ? `
     <button type="button" class="myread-action-btn btn-color-anim"
-      style="background:#062356; border-color:#00e5ff; color:#84ffff; font-size:12.5px; padding:8px 10px; margin-bottom:10px;"
+      style="background:var(--bg-main); border-color:#00e5ff; color:#84ffff; font-size:12.5px; padding:8px 10px; margin-bottom:10px;"
       onclick="openProphecySourceDocument(${bmCurrentProphecyIdx})">
       ${escapeHtml(p.sourceMeta.label)} — Apri capitolo intero ▶
     </button>
@@ -14570,7 +14821,7 @@ function openGreekFulfillmentAction() {
       <div style="font-size:15px; font-weight:900; color:#ffd54f; margin-bottom:3px;">Adempimento nelle Scritture Greche Cristiane</div>
       <div style="font-size:13.5px; font-weight:800; color:#00e5ff;">Profezia: ${escapeHtml(otRef)}</div>
     </div>
-    <div class="bm-justify-text" style="background:#062356; border:1px solid rgba(41,182,246,0.55); border-radius:10px; padding:11px 12px; max-height:38vh; overflow-y:auto; font-size:13.5px; line-height:1.56; color:#ffffff; margin-bottom:10px;">
+    <div class="bm-justify-text" style="background:var(--bg-main); border:1px solid rgba(41,182,246,0.55); border-radius:10px; padding:11px 12px; max-height:38vh; overflow-y:auto; font-size:13.5px; line-height:1.56; color:#ffffff; margin-bottom:10px;">
       ${formattedFullNote}
     </div>
     ${sourceBtnHtml}
@@ -14579,7 +14830,7 @@ function openGreekFulfillmentAction() {
     </div>
     <hr style="border:none; border-top:1px solid rgba(41,182,246,0.35); margin:10px 0;">
     <div style="display:flex; gap:8px;">
-      <button type="button" class="myread-action-btn" style="background:#062356; flex:1;" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
+      <button type="button" class="myread-action-btn" style="background:var(--bg-main); flex:1;" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
       <button type="button" class="myread-action-btn" style="background:linear-gradient(135deg, #00838f, #00acc1); border-color:#84ffff; flex:1.5;" onclick="document.getElementById('myReadModal').style.display='none'; openMessianicCatalogModal(true);">
         📜 Tutte le Citate nel NT
       </button>
@@ -14601,7 +14852,7 @@ async function openMessianicCatalogModal(onlyNtCited = false) {
   const body = document.getElementById("proModalBody");
   if (!body) return;
   const originBanner = bmDailyStartProphecy ? `
-    <div style="display:flex; justify-content:space-between; align-items:center; background:#041a42; border:1px solid #ffd54f; border-radius:9px; padding:7px 11px; margin-bottom:10px; font-size:12.5px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; background:var(--primary-dark); border:1px solid #ffd54f; border-radius:9px; padding:7px 11px; margin-bottom:10px; font-size:12.5px;">
       <span>🕯️ 1ª Profezia letta oggi: <b style="color:#ffd54f;">${escapeHtml(bmDailyStartProphecy.label)}</b></span>
       <button type="button" class="tag-badge" style="background:#ffd54f; color:#041a42; border-color:#fff; font-weight:900;" onclick="returnToDailyOriginProphecy()">↩ Torna lì</button>
     </div>
@@ -14918,7 +15169,7 @@ async function openChapterDossierModal() {
   // Costruzione sezioni HTML pulite (omettendo solo quelle effettivamente vuote)
   const outlineHtml = outline.length ? `
     <div class="section-title"><span>📑 Sommario Ufficiale</span><span>${outline.filter(i => i.lvl > 0).length || outline.length} punti</span></div>
-    <div style="background:#062356; border:1px solid rgba(41,182,246,0.45); border-radius:9px; padding:8px 10px; margin-bottom:10px;">
+    <div style="background:var(--bg-main); border:1px solid rgba(41,182,246,0.45); border-radius:9px; padding:8px 10px; margin-bottom:10px;">
       ${outline.map(it => {
         if (it.lvl === 0) return `<div style="font-size:11px; font-weight:900; color:#ffd54f; text-transform:uppercase; margin:4px 0;">${escapeHtml(it.text)}</div>`;
         const pad = it.lvl === 1 ? 2 : (it.lvl === 2 ? 14 : 24);
@@ -14975,7 +15226,7 @@ async function openChapterDossierModal() {
   const personalHtml = (chapterNotes.length || chapterBookmarks.length || chapterHighlights.length) ? `
     <div class="section-title"><span>📝 Il tuo Studio in questo Capitolo</span><span>${chapterHighlights.length}🎨 · ${chapterBookmarks.length}🔖 · ${chapterNotes.length}📝</span></div>
     ${chapterNotes.length ? `<div style="display:flex; flex-direction:column; gap:6px; margin-bottom:10px;">
-      ${chapterNotes.map(n => `<div class="result-card" style="margin-bottom:0; padding:8px 10px;" onclick="closeProModal(); openNoteModalForVerse('${escapeJsStr(n.ref)}')">
+      ${chapterNotes.map(n => `<div class="result-card" style="margin-bottom:0; padding:8px 10px;" onclick="closeProModal(); openNoteModalForVerse('${escapeJsStr(n.ref)}', ${Number(n.id)})">
         <div style="font-size:12.5px; font-weight:800; color:#ffd54f;">📝 ${escapeHtml(n.ref)}</div>
         <div style="font-size:12.5px; color:#e3f2fd; margin-top:2px;">${escapeHtml((n.text || "").slice(0, 120))}${(n.text || "").length > 120 ? "…" : ""}</div>
       </div>`).join("")}
@@ -14987,15 +15238,15 @@ async function openChapterDossierModal() {
 
   body.innerHTML = `
     <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; margin-bottom:10px; text-align:center;">
-      <div style="background:#062356; border:1px solid #29b6f6; border-radius:8px; padding:7px 4px;">
+      <div style="background:var(--bg-main); border:1px solid #29b6f6; border-radius:8px; padding:7px 4px;">
         <div style="font-size:16px; font-weight:900; color:#00e5ff;">${verses.length}</div>
         <div style="font-size:10.5px; color:#9ec9ff; font-weight:700;">Versetti</div>
       </div>
-      <div style="background:#062356; border:1px solid #29b6f6; border-radius:8px; padding:7px 4px;">
+      <div style="background:var(--bg-main); border:1px solid #29b6f6; border-radius:8px; padding:7px 4px;">
         <div style="font-size:16px; font-weight:900; color:#ffd54f;">~${estMinutes} min</div>
         <div style="font-size:10.5px; color:#9ec9ff; font-weight:700;">Lettura (${wordCount} par.)</div>
       </div>
-      <div style="background:#062356; border:1px solid #29b6f6; border-radius:8px; padding:7px 4px;">
+      <div style="background:var(--bg-main); border:1px solid #29b6f6; border-radius:8px; padding:7px 4px;">
         <div style="font-size:16px; font-weight:900; color:#ccff00;">${totalFnCount + prophecies.length + places.length}</div>
         <div style="font-size:10.5px; color:#9ec9ff; font-weight:700;">Risorse Offline</div>
       </div>
