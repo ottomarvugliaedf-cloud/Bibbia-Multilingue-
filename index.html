@@ -2223,7 +2223,7 @@ body.oled-mode .pub-ref-badge {
     </div>
   </div>
   <!-- Sottomenù a Tendina Universale Blu Scuro PRO (Sostituisce tutti i menu bianchi nativi) -->
-  <div id="bmSelectModal" class="modal-overlay" onclick="if(event.target.id==='bmSelectModal') closeBmSelectModal()" style="display:none; z-index:1200;">
+  <div id="bmSelectModal" class="modal-overlay" onclick="if(event.target.id==='bmSelectModal') closeBmSelectModal()" style="display:none; z-index:1350;">
     <div class="modal-card" style="max-width:420px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
         <div id="bmSelectModalTitle" class="modal-title" style="font-size:16px; margin:0;">Seleziona un'opzione</div>
@@ -13146,7 +13146,9 @@ function openCustomSelectMenu(selectEl) {
     searchScope: "🔍 Ambito dei Libri",
     catLangFilter: "🌍 Filtra per Lingua",
     dailyPickMonth: "📅 Scegli Mese",
-    dailyPickDay: "📅 Scegli Giorno"
+    dailyPickDay: "📅 Scegli Giorno",
+    bmDrawerVoiceSelect: "🔊 Scegli Voce di Chrome",
+    bmTtsVoiceSelect: "🔊 Scegli Voce di Chrome"
   };
   if (titleEl) {
     titleEl.textContent = titleMap[selectEl.id] || "🔹 Seleziona dal menù";
@@ -13420,7 +13422,9 @@ let bmPreferredVoiceName = safeGetStorage("bm_tts_voice_name") || "";
 function getChromeSpeechVoices() {
   try {
     if (!("speechSynthesis" in window) || typeof window.speechSynthesis.getVoices !== "function") return [];
-    return window.speechSynthesis.getVoices() || [];
+    const v = window.speechSynthesis.getVoices() || [];
+    if (!v.length) { try { window.speechSynthesis.speak(new SpeechSynthesisUtterance("")); } catch (_e) {} }
+    return v;
   } catch (e) {
     console.debug(e);
     return [];
