@@ -5948,7 +5948,7 @@ function renderSettingsDrawerContent() {
           <span class="bm-acc-icon">🔊</span>
           <div>
             <div class="bm-acc-label">Lettura Vocale & Audio</div>
-            <div class="bm-acc-sub">Velocità voce (${bmTtsRate}x) e cambio capitolo</div>
+            <div class="bm-acc-sub">Velocità (${bmTtsRate}x), voce e cambio capitolo</div>
           </div>
         </div>
         <span class="bm-acc-chev">▾</span>
@@ -5961,10 +5961,8 @@ function renderSettingsDrawerContent() {
           </div>
         </div>
         <div class="bm-set-row" style="flex-direction:column; align-items:stretch; gap:6px;">
-          <span>Voce di Chrome</span>
-          <select id="bmDrawerVoiceSelect" class="trans-select" style="width:100%;" onchange="setBmTtsVoice(this.value, 'drawer')">
-            ${buildTtsVoiceOptionsHtml(getActiveTTSLangCode(true))}
-          </select>
+          <span>Voce Lettura (${escapeHtml(getActiveTTSLangCode(true))})</span>
+          ${buildTtsVoiceSelectorMarkup("bmDrawerVoiceSelect", "drawer")}
         </div>
         <div class="bm-set-row">
           <span>Passa al Capitolo Succ. a fine audio</span>
@@ -8090,6 +8088,189 @@ let bmSessionId = 0;
 let bmWakeLock = null;
 let bmTtsRate = Math.min(1.5, Math.max(0.75, Number(safeGetStorage("bm_tts_rate")) || 1.0));
 let bmTtsAutoNextPref = safeGetStorage("bm_tts_autonext") !== "0";
+let bmTtsVoiceMap = (() => {
+  const raw = safeJsonParse("bm_tts_voices_v1", {});
+  const clean = {};
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+    Object.keys(raw).forEach(k => {
+      if (typeof raw[k] === "string" && raw[k].trim()) clean[k.toLowerCase()] = raw[k].trim();
+    });
+  }
+  return clean;
+})();
+let bmTtsVoicesCache = [];
+
+function getTtsLangBase(locale) {
+  return String(locale || "it-IT").split(/[-_]/)[0].toLowerCase();
+}
+
+function refreshTtsVoicesCache() {
+  try {
+    if (!("speechSynthesis" in window) || typeof window.speechSynthesis.getVoices !== "function") {
+      bmTtsVoicesCache = [];
+      return bmTtsVoicesCache;
+    }
+    const raw = window.speechSynthesis.getVoices() || [];
+    const seen = new Set();
+    bmTtsVoicesCache = raw.filter(v => {
+      if (!v || !v.name) return false;
+      const key = `${v.voiceURI || v.name}|${v.lang || ""}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  } catch (e) {
+    console.debug(e);
+    bmTtsVoicesCache = [];
+  }
+  return bmTtsVoicesCache;
+}
+
+function getVoicesForLocale(locale) {
+  if (!bmTtsVoicesCache.length) refreshTtsVoicesCache();
+  const wantBase = getTtsLangBase(locale);
+  return bmTtsVoicesCache
+    .filter(v => getTtsLangBase(v.lang) === wantBase)
+    .sort((a, b) =>
+      (Number(Boolean(b.localService)) - Number(Boolean(a.localService))) ||
+      (Number(Boolean(b.default)) - Number(Boolean(a.default))) ||
+      String(a.name).localeCompare(String(b.name), "it")
+    );
+}
+
+function resolvePreferredTtsVoice(locale) {
+  const wantBase = getTtsLangBase(locale);
+  const savedUri = bmTtsVoiceMap[wantBase] || "";
+  if (!savedUri) return null;
+  const list = getVoicesForLocale(locale);
+  return list.find(v => (v.voiceURI && v.voiceURI === savedUri) || v.name === savedUri) || null;
+}
+
+function buildTtsVoiceOptionsHtml(locale) {
+  const voices = getVoicesForLocale(locale);
+  const wantBase = getTtsLangBase(locale);
+  const savedUri = bmTtsVoiceMap[wantBase] || "";
+  let opts = `<option value="">🔊 Predefinita di sistema (${escapeHtml(locale || "auto")})</option>`;
+  voices.forEach(v => {
+    const val = v.voiceURI || v.name;
+    const isSel = Boolean(savedUri && (val === savedUri || v.name === savedUri));
+    const tags = [v.lang || wantBase, v.localService ? "Offline" : "Rete"];
+    if (v.default) tags.push("Default");
+    opts += `<option value="${escapeHtml(val)}" ${isSel ? "selected" : ""}>${escapeHtml(v.name)} (${escapeHtml(tags.join(" · "))})</option>`;
+  });
+  return opts;
+}
+
+function buildTtsVoiceStatusText(locale) {
+  const count = getVoicesForLocale(locale).length;
+  if (count === 0) {
+    return `Chrome non espone voci aggiuntive per ${locale}: viene usata la voce di sistema.`;
+  }
+  if (count === 1) {
+    return `Chrome espone 1 sola voce per ${locale}. Per timbro maschile/femminile, cambialo in Android → Sintesi vocale → Servizi vocali di Google.`;
+  }
+  return `${count} voci disponibili per ${locale} (fallback automatico alla voce di sistema se non risponde).`;
+}
+
+function buildTtsVoiceSelectorMarkup(selectId, refreshTarget) {
+  const locale = getActiveTTSLangCode(true);
+  const statusId = `${selectId}Status`;
+  return `
+    <select id="${selectId}" class="trans-select" style="width:100%;" onchange="setBmTtsVoice(this.value, '${refreshTarget}')">
+      ${buildTtsVoiceOptionsHtml(locale)}
+    </select>
+    <div id="${statusId}" style="font-size:11.5px; color:#9ec9ff; line-height:1.38;">${escapeHtml(buildTtsVoiceStatusText(locale))}</div>
+    <div style="display:flex; gap:6px; margin-top:2px;">
+      <button type="button" class="nav-btn" style="flex:1; padding:6px 9px; font-size:12px;" onclick="previewSelectedTtsVoice()">▶ Prova voce</button>
+      <button type="button" class="nav-btn" style="padding:6px 10px; font-size:12px;" onclick="refreshTtsVoiceUi('${refreshTarget}')" title="Ricarica elenco voci da Chrome">🔄</button>
+    </div>
+  `;
+}
+
+function syncOpenTtsVoiceControls() {
+  const locale = getActiveTTSLangCode(true);
+  const optsHtml = buildTtsVoiceOptionsHtml(locale);
+  const statusText = buildTtsVoiceStatusText(locale);
+  ["bmTtsVoiceSelect", "bmDrawerVoiceSelect"].forEach(id => {
+    const sel = document.getElementById(id);
+    if (sel) sel.innerHTML = optsHtml;
+    const st = document.getElementById(`${id}Status`);
+    if (st) st.textContent = statusText;
+  });
+  const selectModal = document.getElementById("bmSelectModal");
+  if (selectModal && selectModal.style.display === "flex" && activeCustomSelectEl &&
+      (activeCustomSelectEl.id === "bmTtsVoiceSelect" || activeCustomSelectEl.id === "bmDrawerVoiceSelect")) {
+    openCustomSelectMenu(activeCustomSelectEl);
+  }
+}
+
+function initTtsVoicesWatcher() {
+  refreshTtsVoicesCache();
+  if (!("speechSynthesis" in window)) return;
+  const onVoicesChanged = () => {
+    refreshTtsVoicesCache();
+    syncOpenTtsVoiceControls();
+  };
+  if (typeof window.speechSynthesis.addEventListener === "function") {
+    window.speechSynthesis.addEventListener("voiceschanged", onVoicesChanged);
+  } else {
+    window.speechSynthesis.onvoiceschanged = onVoicesChanged;
+  }
+}
+
+function refreshTtsVoiceUi(refreshTarget = "modal") {
+  bmHaptic(12);
+  refreshTtsVoicesCache();
+  if (refreshTarget === "drawer") renderSettingsDrawerContent();
+  else openTtsSettingsModal();
+}
+
+function setBmTtsVoice(voiceUri, refreshTarget = "modal") {
+  const langBase = getTtsLangBase(getActiveTTSLangCode(true));
+  const cleanUri = String(voiceUri || "").trim();
+  if (cleanUri) bmTtsVoiceMap[langBase] = cleanUri;
+  else delete bmTtsVoiceMap[langBase];
+  safeSaveStorage("bm_tts_voices_v1", JSON.stringify(bmTtsVoiceMap));
+  if (refreshTarget === "drawer") renderSettingsDrawerContent();
+  else openTtsSettingsModal();
+}
+
+function previewSelectedTtsVoice() {
+  bmHaptic(12);
+  stopAllAudio();
+  if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
+    showBlueInfoModal("🔊 Sintesi Vocale", "Il browser non supporta l'anteprima vocale nativa.");
+    return;
+  }
+  const locale = getActiveTTSLangCode(true);
+  const base = getTtsLangBase(locale);
+  const sampleMap = {
+    it: "In principio Dio creò i cieli e la terra.",
+    es: "En el principio creó Dios los cielos y la tierra.",
+    pt: "No princípio Deus criou os céus e a terra.",
+    fr: "Au commencement Dieu créa les cieux et la terre.",
+    de: "Am Anfang schuf Gott die Himmel und die Erde."
+  };
+  const sample = sampleMap[base] || "In the beginning God created the heavens and the earth.";
+  const speakSample = (usePreferred) => {
+    try {
+      const u = new SpeechSynthesisUtterance(sample);
+      u.lang = locale;
+      u.rate = bmTtsRate;
+      const chosen = usePreferred ? resolvePreferredTtsVoice(locale) : null;
+      if (chosen) {
+        u.voice = chosen;
+        if (chosen.lang) u.lang = chosen.lang;
+      }
+      u.onerror = (ev) => {
+        if (ev && (ev.error === "canceled" || ev.error === "interrupted")) return;
+        if (usePreferred && chosen) speakSample(false);
+      };
+      window.speechSynthesis.speak(u);
+    } catch (e) { console.debug(e); }
+  };
+  speakSample(true);
+}
 async function requestAudioWakeLock() {
   if ("wakeLock" in navigator && navigator.wakeLock) {
     try {
@@ -8402,6 +8583,7 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
   if ("speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined") {
     let idx = 0;
     let nativeOk = false;
+    let forceSystemDefaultVoice = false;
     let stallWatchdog = null;
     const clearStallWatchdog = () => {
       if (stallWatchdog) { clearTimeout(stallWatchdog); stallWatchdog = null; }
@@ -8427,36 +8609,23 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
         const targetLang = getActiveTTSLangCode(true);
         u.lang = targetLang;
         u.rate = bmTtsRate;
-        const chosenVoice = resolvePreferredTtsVoice(targetLang);
+        const chosenVoice = forceSystemDefaultVoice ? null : resolvePreferredTtsVoice(targetLang);
         if (chosenVoice) {
           u.voice = chosenVoice;
           if (chosenVoice.lang) u.lang = chosenVoice.lang;
         }
-        const armEndWatchdog = () => {
-          clearStallWatchdog();
-          const estMs = Math.max(12000, Math.round((String(item.text || "").length / Math.max(0.5, bmTtsRate)) * 165) + 6000);
-          stallWatchdog = setTimeout(() => {
-            if (!bmUserStopped && bmAudioPlaying && mySession === bmSessionId) {
-              try { window.speechSynthesis.cancel(); } catch (e) { console.debug(e); }
-              idx++;
-              speakNextNative();
-            }
-          }, estMs);
-        };
-        u.onstart = () => {
-          nativeOk = true;
-          armEndWatchdog();
-        };
-        u.onend = () => {
-          clearStallWatchdog();
-          if (!bmUserStopped && bmAudioPlaying && mySession === bmSessionId) {
-            idx++;
+        let chunkSettled = false;
+        const handleStartFailure = () => {
+          if (chunkSettled || bmUserStopped || !bmAudioPlaying || mySession !== bmSessionId) return;
+          chunkSettled = true;
+          // Stadio 1 -> Stadio 2: se la voce personalizzata non parte, riprova subito con la voce predefinita di sistema
+          if (chosenVoice && !forceSystemDefaultVoice) {
+            forceSystemDefaultVoice = true;
+            try { window.speechSynthesis.cancel(); } catch (e) { console.debug(e); }
             speakNextNative();
+            return;
           }
-        };
-        u.onerror = (ev) => {
-          clearStallWatchdog();
-          if (bmUserStopped || mySession !== bmSessionId || ev.error === "canceled" || ev.error === "interrupted") return;
+          // Stadio 2 -> Stadio 3: se neppure la voce di sistema parte, usa lo stream di riserva
           if (!nativeOk) {
             playWebViewStreamQueue(activeTtsQueue, idx, mySession);
           } else {
@@ -8464,16 +8633,41 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
             speakNextNative();
           }
         };
-        // Watchdog avvio per OGNI chunk (protegge dallo stallo Chrome/Android tra un'utterance e la successiva)
-        stallWatchdog = setTimeout(() => {
-          if (!bmUserStopped && bmAudioPlaying && mySession === bmSessionId) {
-            try { window.speechSynthesis.cancel(); } catch (e) { console.debug(e); }
-            if (!nativeOk) {
-              playWebViewStreamQueue(activeTtsQueue, idx, mySession);
-            } else {
+        const armEndWatchdog = () => {
+          clearStallWatchdog();
+          const estMs = Math.max(12000, Math.round((String(item.text || "").length / Math.max(0.5, bmTtsRate)) * 165) + 6000);
+          stallWatchdog = setTimeout(() => {
+            if (!chunkSettled && !bmUserStopped && bmAudioPlaying && mySession === bmSessionId) {
+              chunkSettled = true;
+              try { window.speechSynthesis.cancel(); } catch (e) { console.debug(e); }
               idx++;
               speakNextNative();
             }
+          }, estMs);
+        };
+        u.onstart = () => {
+          if (chunkSettled || bmUserStopped || mySession !== bmSessionId) return;
+          nativeOk = true;
+          armEndWatchdog();
+        };
+        u.onend = () => {
+          clearStallWatchdog();
+          if (!chunkSettled && !bmUserStopped && bmAudioPlaying && mySession === bmSessionId) {
+            chunkSettled = true;
+            idx++;
+            speakNextNative();
+          }
+        };
+        u.onerror = (ev) => {
+          clearStallWatchdog();
+          if (chunkSettled || bmUserStopped || mySession !== bmSessionId || (ev && (ev.error === "canceled" || ev.error === "interrupted"))) return;
+          handleStartFailure();
+        };
+        // Watchdog avvio per OGNI chunk (protegge dallo stallo Chrome/Android tra un'utterance e la successiva)
+        stallWatchdog = setTimeout(() => {
+          if (!chunkSettled && !bmUserStopped && bmAudioPlaying && mySession === bmSessionId) {
+            try { window.speechSynthesis.cancel(); } catch (e) { console.debug(e); }
+            handleStartFailure();
           }
         }, nativeOk ? 3500 : 2600);
         window.speechSynthesis.speak(u);
@@ -9480,10 +9674,7 @@ async function extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, 
     for (const [bId, bObj] of parsedPdb.entries()) {
       bObj.chapters = normalizeBookChaptersForCanon(bId, bObj.chapters);
       if (bObj.chapters.length > 0) {
-        const prev = mergedBooksMap.get(bId);
-        if (!prev || bObj.chapters.length >= (prev.chapters || []).length) {
-          mergedBooksMap.set(bId, bObj);
-        }
+        mergedBooksMap.set(bId, bObj);
       }
     }
     return report;
@@ -9686,9 +9877,7 @@ async function extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, 
   // 4. Normalizzazione canonica (Gioele 4->3, Malachia 3->4, Daniele 14->12) e fusione sicura
   for (const [bId, bObj] of parsed.entries()) {
     bObj.chapters = normalizeBookChaptersForCanon(bId, bObj.chapters);
-    if (!bObj.chapters.length) continue;
-    const prev = mergedBooksMap.get(bId);
-    if (!prev || !Array.isArray(prev.chapters) || !prev.chapters.length || bObj.chapters.length > 0) {
+    if (bObj.chapters.length > 0) {
       mergedBooksMap.set(bId, bObj);
     }
   }
@@ -11766,7 +11955,7 @@ function scrollRpToToday(smooth = false) {
 function buildStudioBackupObject() {
   return {
     app: "BibbiaMultilingue_PRO",
-    version: "PRO_v14.8",
+    version: "PRO_v14.7",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
@@ -11780,6 +11969,7 @@ function buildStudioBackupObject() {
     siViewMode: siViewMode,
     ttsRate: bmTtsRate,
     ttsAutoNext: bmTtsAutoNextPref,
+    ttsVoices: bmTtsVoiceMap,
     personalReading: {
       book: safeGetStorage("bm_pers_book") || "",
       ch: safeGetStorage("bm_pers_ch") || "",
@@ -11831,6 +12021,16 @@ function applyStudioBackupObject(parsed) {
   if (parsed.ttsAutoNext !== undefined) {
     bmTtsAutoNextPref = Boolean(parsed.ttsAutoNext);
     safeSaveStorage("bm_tts_autonext", bmTtsAutoNextPref ? "1" : "0");
+  }
+  if (parsed.ttsVoices && typeof parsed.ttsVoices === "object" && !Array.isArray(parsed.ttsVoices)) {
+    const cleanVoices = {};
+    Object.keys(parsed.ttsVoices).forEach(k => {
+      if (typeof parsed.ttsVoices[k] === "string" && parsed.ttsVoices[k].trim()) {
+        cleanVoices[k.toLowerCase()] = parsed.ttsVoices[k].trim();
+      }
+    });
+    bmTtsVoiceMap = cleanVoices;
+    safeSaveStorage("bm_tts_voices_v1", JSON.stringify(bmTtsVoiceMap));
   }
   if (parsed.personalReading && typeof parsed.personalReading === "object") {
     const pBook = Math.min(66, Math.max(1, Number(parsed.personalReading.book) || 0));
@@ -12065,7 +12265,7 @@ function setMigrationStatus(htmlMsg) {
 
 async function buildAndDeliverLibraryBundle(keysList, includeStudio, fileName, shareTitle) {
   const parts = [
-    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v14.8","date":',
+    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v14.7","date":',
     JSON.stringify(new Date().toISOString())
   ];
   if (includeStudio) {
@@ -13147,8 +13347,8 @@ function openCustomSelectMenu(selectEl) {
     catLangFilter: "🌍 Filtra per Lingua",
     dailyPickMonth: "📅 Scegli Mese",
     dailyPickDay: "📅 Scegli Giorno",
-    bmDrawerVoiceSelect: "🔊 Scegli Voce di Chrome",
-    bmTtsVoiceSelect: "🔊 Scegli Voce di Chrome"
+    bmDrawerVoiceSelect: "🔊 Voce Lettura Vocale",
+    bmTtsVoiceSelect: "🔊 Voce Lettura Vocale"
   };
   if (titleEl) {
     titleEl.textContent = titleMap[selectEl.id] || "🔹 Seleziona dal menù";
@@ -13259,8 +13459,8 @@ document.addEventListener("keydown", function(e) {
     return;
   }
   if (e.key !== "Escape") return;
-  if (document.getElementById("bmSettingsDrawer")?.classList.contains("open")) { closeSettingsDrawer(); return; }
   if (document.getElementById("bmSelectModal")?.style.display === "flex") { closeBmSelectModal(); return; }
+  if (document.getElementById("bmSettingsDrawer")?.classList.contains("open")) { closeSettingsDrawer(); return; }
   if (document.getElementById("mapsViewer")?.style.display === "flex") { closeMapViewer(); return; }
   if (document.getElementById("myReadModal")?.style.display === "flex") { document.getElementById("myReadModal").style.display = "none"; return; }
   if (document.getElementById("proModal")?.style.display === "flex") { closeProModal(); return; }
@@ -13397,15 +13597,9 @@ function openTtsSettingsModal() {
     </div>
     <div style="font-size:13px; font-weight:800; color:#e3f2fd; margin-bottom:6px;">Velocità di lettura:</div>
     <div style="display:flex; gap:6px; margin-bottom:14px;">${rateBtns}</div>
-    <div style="font-size:13px; font-weight:800; color:#e3f2fd; margin-bottom:6px;">Voce di Chrome (${escapeHtml(getActiveTTSLangCode(true))}):</div>
-    <div style="margin-bottom:14px;">
-      <select id="bmTtsVoiceSelect" class="trans-select" style="width:100%;" onchange="setBmTtsVoice(this.value, 'modal')">
-        ${buildTtsVoiceOptionsHtml(getActiveTTSLangCode(true))}
-      </select>
-      <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:6px;">
-        <span style="font-size:11.5px; color:#9ec9ff;">Se la voce non risponde, usa automaticamente quella di sistema.</span>
-        <button type="button" class="nav-btn" style="padding:4px 9px; font-size:11.5px;" onclick="previewSelectedTtsVoice()">▶ Prova</button>
-      </div>
+    <div style="font-size:13px; font-weight:800; color:#e3f2fd; margin-bottom:6px;">Voce Lettura (${escapeHtml(getActiveTTSLangCode(true))}):</div>
+    <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:14px;">
+      ${buildTtsVoiceSelectorMarkup("bmTtsVoiceSelect", "modal")}
     </div>
     <div style="font-size:13px; font-weight:800; color:#e3f2fd; margin-bottom:6px;">A fine capitolo biblico:</div>
     <div style="display:flex; gap:8px; margin-bottom:14px;">
@@ -13415,90 +13609,6 @@ function openTtsSettingsModal() {
     <button type="button" class="myread-action-btn" onclick="document.getElementById('myReadModal').style.display='none'">✔ Chiudi</button>
   `;
   modal.style.display = "flex";
-}
-
-let bmPreferredVoiceName = safeGetStorage("bm_tts_voice_name") || "";
-
-function getChromeSpeechVoices() {
-  try {
-    if (!("speechSynthesis" in window) || typeof window.speechSynthesis.getVoices !== "function") return [];
-    const v = window.speechSynthesis.getVoices() || [];
-    if (!v.length) { try { window.speechSynthesis.speak(new SpeechSynthesisUtterance("")); } catch (_e) {} }
-    return v;
-  } catch (e) {
-    console.debug(e);
-    return [];
-  }
-}
-
-function resolvePreferredTtsVoice(targetLocale) {
-  const voices = getChromeSpeechVoices();
-  if (!voices.length || !bmPreferredVoiceName) return null;
-  const exact = voices.find(v => v && v.name === bmPreferredVoiceName);
-  if (!exact) return null;
-  const wantLang = String(targetLocale || "").split("-")[0].toLowerCase();
-  const voiceLang = String(exact.lang || "").split("-")[0].toLowerCase();
-  if (wantLang && voiceLang && wantLang !== voiceLang) {
-    // Se si cambia lingua di lettura, cerca prima una voce della nuova lingua o lascia la predefinita di lingua
-    const sameLangVoice = voices.find(v => String(v.lang || "").toLowerCase().startsWith(wantLang) && v.default);
-    return sameLangVoice || null;
-  }
-  return exact;
-}
-
-function buildTtsVoiceOptionsHtml(targetLocale) {
-  const voices = getChromeSpeechVoices();
-  const langPrefix = String(targetLocale || "").split("-")[0].toLowerCase();
-  const matching = voices.filter(v => String(v.lang || "").toLowerCase().startsWith(langPrefix));
-  const others = voices.filter(v => !String(v.lang || "").toLowerCase().startsWith(langPrefix));
-  const ordered = [...matching, ...others];
-
-  let opts = `<option value="">🔊 Predefinita di sistema (${escapeHtml(targetLocale || "auto")})</option>`;
-  ordered.forEach(v => {
-    const isSel = bmPreferredVoiceName && v.name === bmPreferredVoiceName;
-    const localTag = v.localService ? " · Locale" : " · Rete";
-    const defTag = v.default ? " · Default" : "";
-    opts += `<option value="${escapeHtml(v.name)}" ${isSel ? "selected" : ""}>${escapeHtml(v.name)} (${escapeHtml(v.lang || "")}${localTag}${defTag})</option>`;
-  });
-  return opts;
-}
-
-function setBmTtsVoice(voiceName, refreshTarget = "modal") {
-  bmPreferredVoiceName = String(voiceName || "");
-  safeSaveStorage("bm_tts_voice_name", bmPreferredVoiceName);
-  if (refreshTarget === "drawer") renderSettingsDrawerContent();
-  else openTtsSettingsModal();
-}
-
-function previewSelectedTtsVoice() {
-  if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") return;
-  try {
-    window.speechSynthesis.cancel();
-    const lang = getActiveTTSLangCode(true);
-    const sample = lang.startsWith("it")
-      ? "In principio Dio creò i cieli e la terra."
-      : (lang.startsWith("es") ? "En el principio creó Dios los cielos y la tierra."
-        : (lang.startsWith("pt") ? "No princípio Deus criou os céus e a terra."
-          : "In the beginning God created the heavens and the earth."));
-    const u = new SpeechSynthesisUtterance(sample);
-    u.lang = lang;
-    u.rate = bmTtsRate;
-    const v = resolvePreferredTtsVoice(lang);
-    if (v) {
-      u.voice = v;
-      if (v.lang) u.lang = v.lang;
-    }
-    window.speechSynthesis.speak(u);
-  } catch (e) { console.debug(e); }
-}
-
-if ("speechSynthesis" in window && typeof window.speechSynthesis.addEventListener === "function") {
-  window.speechSynthesis.addEventListener("voiceschanged", () => {
-    const sel = document.getElementById("bmTtsVoiceSelect");
-    if (sel) sel.innerHTML = buildTtsVoiceOptionsHtml(getActiveTTSLangCode(true));
-    const drawerSel = document.getElementById("bmDrawerVoiceSelect");
-    if (drawerSel) drawerSel.innerHTML = buildTtsVoiceOptionsHtml(getActiveTTSLangCode(true));
-  });
 }
 
 function setBmTtsRate(newRate, refreshTarget = "modal") {
@@ -15452,6 +15562,7 @@ if (bmTtsRate !== 1) {
   const ttsBootBtn = document.getElementById("ttsChapterBtn");
   if (ttsBootBtn) ttsBootBtn.innerHTML = `<span class="tab-icon">🔊</span><span>Ascolta ${bmTtsRate}x</span>`;
 }
+try { initTtsVoicesWatcher(); } catch (e) { console.debug(e); }
 try { loadExternalExegeticalModules(); } catch (e) { console.debug(e); }
 try { initBmServiceWorker(); } catch (e) { console.debug(e); }
 populateSelects()
