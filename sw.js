@@ -1,5 +1,5 @@
-// Service Worker — Bibbia Multilingue PRO (v14.7 — Fix Libri 1 Capitolo & Sovrascrittura EPUB Calibre)
-const BM_SW_VERSION = "bm-pro-shell-v14-7";
+// Service Worker — Bibbia Multilingue PRO (v14.8 — Selettore Voci TTS Chrome con Fallback Sicuro)
+const BM_SW_VERSION = "bm-pro-shell-v14-8";
 const BM_API_CACHE = "bm-pro-api-v1";
 const BM_API_CACHE_MAX = 150;
 const BM_CRITICAL_SHELL = [

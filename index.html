@@ -5960,6 +5960,12 @@ function renderSettingsDrawerContent() {
             ${rates.map(r => `<button type="button" class="bm-seg-btn ${Math.abs(bmTtsRate - r) < 0.03 ? 'active' : ''}" onclick="setBmTtsRate(${r}, 'drawer')">${r}x</button>`).join("")}
           </div>
         </div>
+        <div class="bm-set-row" style="flex-direction:column; align-items:stretch; gap:6px;">
+          <span>Voce di Chrome</span>
+          <select id="bmDrawerVoiceSelect" class="trans-select" style="width:100%;" onchange="setBmTtsVoice(this.value, 'drawer')">
+            ${buildTtsVoiceOptionsHtml(getActiveTTSLangCode(true))}
+          </select>
+        </div>
         <div class="bm-set-row">
           <span>Passa al Capitolo Succ. a fine audio</span>
           <label class="bm-switch">
@@ -8418,8 +8424,14 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
       }
       try {
         const u = new SpeechSynthesisUtterance(item.text);
-        u.lang = getActiveTTSLangCode(true);
+        const targetLang = getActiveTTSLangCode(true);
+        u.lang = targetLang;
         u.rate = bmTtsRate;
+        const chosenVoice = resolvePreferredTtsVoice(targetLang);
+        if (chosenVoice) {
+          u.voice = chosenVoice;
+          if (chosenVoice.lang) u.lang = chosenVoice.lang;
+        }
         const armEndWatchdog = () => {
           clearStallWatchdog();
           const estMs = Math.max(12000, Math.round((String(item.text || "").length / Math.max(0.5, bmTtsRate)) * 165) + 6000);
@@ -11754,7 +11766,7 @@ function scrollRpToToday(smooth = false) {
 function buildStudioBackupObject() {
   return {
     app: "BibbiaMultilingue_PRO",
-    version: "PRO_v14.7",
+    version: "PRO_v14.8",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
@@ -12053,7 +12065,7 @@ function setMigrationStatus(htmlMsg) {
 
 async function buildAndDeliverLibraryBundle(keysList, includeStudio, fileName, shareTitle) {
   const parts = [
-    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v14.7","date":',
+    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v14.8","date":',
     JSON.stringify(new Date().toISOString())
   ];
   if (includeStudio) {
@@ -13383,6 +13395,16 @@ function openTtsSettingsModal() {
     </div>
     <div style="font-size:13px; font-weight:800; color:#e3f2fd; margin-bottom:6px;">Velocità di lettura:</div>
     <div style="display:flex; gap:6px; margin-bottom:14px;">${rateBtns}</div>
+    <div style="font-size:13px; font-weight:800; color:#e3f2fd; margin-bottom:6px;">Voce di Chrome (${escapeHtml(getActiveTTSLangCode(true))}):</div>
+    <div style="margin-bottom:14px;">
+      <select id="bmTtsVoiceSelect" class="trans-select" style="width:100%;" onchange="setBmTtsVoice(this.value, 'modal')">
+        ${buildTtsVoiceOptionsHtml(getActiveTTSLangCode(true))}
+      </select>
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:6px;">
+        <span style="font-size:11.5px; color:#9ec9ff;">Se la voce non risponde, usa automaticamente quella di sistema.</span>
+        <button type="button" class="nav-btn" style="padding:4px 9px; font-size:11.5px;" onclick="previewSelectedTtsVoice()">▶ Prova</button>
+      </div>
+    </div>
     <div style="font-size:13px; font-weight:800; color:#e3f2fd; margin-bottom:6px;">A fine capitolo biblico:</div>
     <div style="display:flex; gap:8px; margin-bottom:14px;">
       <button type="button" class="myread-action-btn" style="flex:1; background:${bmTtsAutoNextPref ? '#00e5ff' : 'var(--bg-main)'}; color:${bmTtsAutoNextPref ? '#041a42' : '#ffffff'};" onclick="setBmTtsAutoNext(true)">▶ Continua al Succ.</button>
@@ -13391,6 +13413,88 @@ function openTtsSettingsModal() {
     <button type="button" class="myread-action-btn" onclick="document.getElementById('myReadModal').style.display='none'">✔ Chiudi</button>
   `;
   modal.style.display = "flex";
+}
+
+let bmPreferredVoiceName = safeGetStorage("bm_tts_voice_name") || "";
+
+function getChromeSpeechVoices() {
+  try {
+    if (!("speechSynthesis" in window) || typeof window.speechSynthesis.getVoices !== "function") return [];
+    return window.speechSynthesis.getVoices() || [];
+  } catch (e) {
+    console.debug(e);
+    return [];
+  }
+}
+
+function resolvePreferredTtsVoice(targetLocale) {
+  const voices = getChromeSpeechVoices();
+  if (!voices.length || !bmPreferredVoiceName) return null;
+  const exact = voices.find(v => v && v.name === bmPreferredVoiceName);
+  if (!exact) return null;
+  const wantLang = String(targetLocale || "").split("-")[0].toLowerCase();
+  const voiceLang = String(exact.lang || "").split("-")[0].toLowerCase();
+  if (wantLang && voiceLang && wantLang !== voiceLang) {
+    // Se si cambia lingua di lettura, cerca prima una voce della nuova lingua o lascia la predefinita di lingua
+    const sameLangVoice = voices.find(v => String(v.lang || "").toLowerCase().startsWith(wantLang) && v.default);
+    return sameLangVoice || null;
+  }
+  return exact;
+}
+
+function buildTtsVoiceOptionsHtml(targetLocale) {
+  const voices = getChromeSpeechVoices();
+  const langPrefix = String(targetLocale || "").split("-")[0].toLowerCase();
+  const matching = voices.filter(v => String(v.lang || "").toLowerCase().startsWith(langPrefix));
+  const others = voices.filter(v => !String(v.lang || "").toLowerCase().startsWith(langPrefix));
+  const ordered = [...matching, ...others];
+
+  let opts = `<option value="">🔊 Predefinita di sistema (${escapeHtml(targetLocale || "auto")})</option>`;
+  ordered.forEach(v => {
+    const isSel = bmPreferredVoiceName && v.name === bmPreferredVoiceName;
+    const localTag = v.localService ? " · Locale" : " · Rete";
+    const defTag = v.default ? " · Default" : "";
+    opts += `<option value="${escapeHtml(v.name)}" ${isSel ? "selected" : ""}>${escapeHtml(v.name)} (${escapeHtml(v.lang || "")}${localTag}${defTag})</option>`;
+  });
+  return opts;
+}
+
+function setBmTtsVoice(voiceName, refreshTarget = "modal") {
+  bmPreferredVoiceName = String(voiceName || "");
+  safeSaveStorage("bm_tts_voice_name", bmPreferredVoiceName);
+  if (refreshTarget === "drawer") renderSettingsDrawerContent();
+  else openTtsSettingsModal();
+}
+
+function previewSelectedTtsVoice() {
+  if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") return;
+  try {
+    window.speechSynthesis.cancel();
+    const lang = getActiveTTSLangCode(true);
+    const sample = lang.startsWith("it")
+      ? "In principio Dio creò i cieli e la terra."
+      : (lang.startsWith("es") ? "En el principio creó Dios los cielos y la tierra."
+        : (lang.startsWith("pt") ? "No princípio Deus criou os céus e a terra."
+          : "In the beginning God created the heavens and the earth."));
+    const u = new SpeechSynthesisUtterance(sample);
+    u.lang = lang;
+    u.rate = bmTtsRate;
+    const v = resolvePreferredTtsVoice(lang);
+    if (v) {
+      u.voice = v;
+      if (v.lang) u.lang = v.lang;
+    }
+    window.speechSynthesis.speak(u);
+  } catch (e) { console.debug(e); }
+}
+
+if ("speechSynthesis" in window && typeof window.speechSynthesis.addEventListener === "function") {
+  window.speechSynthesis.addEventListener("voiceschanged", () => {
+    const sel = document.getElementById("bmTtsVoiceSelect");
+    if (sel) sel.innerHTML = buildTtsVoiceOptionsHtml(getActiveTTSLangCode(true));
+    const drawerSel = document.getElementById("bmDrawerVoiceSelect");
+    if (drawerSel) drawerSel.innerHTML = buildTtsVoiceOptionsHtml(getActiveTTSLangCode(true));
+  });
 }
 
 function setBmTtsRate(newRate, refreshTarget = "modal") {
