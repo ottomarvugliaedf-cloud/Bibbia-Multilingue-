@@ -4594,7 +4594,14 @@ function showChaptersView(bookId) {
   clearSpeechContext();
   pendingGridBookId = Number(bookId);
   const book = getBook(pendingGridBookId);
-  if (book.ch === 1) { selectChapter(1); return; }
+  if (book.ch === 1) {
+    if (currentViewContext.type === "bible" && Number(state.bookId) === pendingGridBookId) {
+      showBooksView();
+      return;
+    }
+    selectChapter(1);
+    return;
+  }
   currentViewContext = { type: "chapters", bookId: pendingGridBookId };
   syncBmPaperMode();
   const main = document.getElementById("mainContainer");
@@ -9669,7 +9676,7 @@ async function extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, 
     bObj.chapters = normalizeBookChaptersForCanon(bId, bObj.chapters);
     if (!bObj.chapters.length) continue;
     const prev = mergedBooksMap.get(bId);
-    if (!prev || bObj.chapters.length >= (prev.chapters || []).length) {
+    if (!prev || !Array.isArray(prev.chapters) || !prev.chapters.length || bObj.chapters.length > 0) {
       mergedBooksMap.set(bId, bObj);
     }
   }
@@ -11747,7 +11754,7 @@ function scrollRpToToday(smooth = false) {
 function buildStudioBackupObject() {
   return {
     app: "BibbiaMultilingue_PRO",
-    version: "PRO_v14.6",
+    version: "PRO_v14.7",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
@@ -12046,7 +12053,7 @@ function setMigrationStatus(htmlMsg) {
 
 async function buildAndDeliverLibraryBundle(keysList, includeStudio, fileName, shareTitle) {
   const parts = [
-    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v14.6","date":',
+    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v14.7","date":',
     JSON.stringify(new Date().toISOString())
   ];
   if (includeStudio) {
