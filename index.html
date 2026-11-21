@@ -8740,11 +8740,11 @@ function openBackupModal() {
         <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'epub:nd', 'Nuova Diodati')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0277bd;">
-        📙 Carica Bibbia CEI 2008 (VT e/o NT .epub) <span data-epub-badge="epub:cei" style="font-size:11.5px; opacity:0.9;"></span>
+        📙 Carica Bibbia CEI 2008 (Seleziona VT e/o NT .epub)
         <input type="file" accept=".epub,application/epub+zip" multiple style="display:none;" onchange="importUniversalEpubFiles(event, 'epub:cei', 'CEI 2008')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#00838f;">
-        📕 Carica Parola del Signore TILC (VT e/o NT .epub) <span data-epub-badge="epub:tilc" style="font-size:11.5px; opacity:0.9;"></span>
+        📕 Carica Parola del Signore TILC (Seleziona VT e/o NT .epub)
         <input type="file" accept=".epub,application/epub+zip" multiple style="display:none;" onchange="importUniversalEpubFiles(event, 'epub:tilc', 'Parola del Signore (TILC)')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:linear-gradient(135deg, #6a1b9a, #8e24aa);">
@@ -8769,32 +8769,6 @@ function openBackupModal() {
     </div>
   `;
   document.getElementById("proModal").style.display = "flex";
-  refreshBackupEpubStatusBadges();
-}
-async function refreshBackupEpubStatusBadges() {
-  const badges = document.querySelectorAll('#proModal [data-epub-badge]');
-  for (const el of badges) {
-    const id = el.getAttribute("data-epub-badge");
-    if (!id) continue;
-    try {
-      const b = await getOfflineBible(id);
-      if (!b || !Array.isArray(b.books)) {
-        el.textContent = "· [Vuota]";
-        continue;
-      }
-      let ot = 0, nt = 0;
-      b.books.forEach(bk => {
-        if (bk && Array.isArray(bk.chapters) && bk.chapters.length > 0) {
-          if (Number(bk.nr) <= 39) ot++;
-          else if (Number(bk.nr) <= 66) nt++;
-        }
-      });
-      const tot = ot + nt;
-      el.textContent = tot === 66
-        ? "· [66/66 ✔]"
-        : (tot > 0 ? `· [VT ${ot}/39 · NT ${nt}/27]` : "· [Vuota]");
-    } catch (e) { console.debug(e); }
-  }
 }
 function matchItalianBookNameToId(rawTitle, isStrictFromBody = false) {
   if (!rawTitle) return null;
@@ -8842,38 +8816,20 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
       });
     }
     const safeStatusProxy = statusEl || { innerHTML: "" };
-    const newlyExtractedIds = new Set();
     for (const file of files) {
       setStatus(`⏳ Analisi di <b>${escapeHtml(file.name)}</b> in corso...`);
       const zip = await JSZip.loadAsync(file);
       const allFiles = Object.keys(zip.files);
       const isJwEpub = targetId.startsWith("gb:nwt") || targetId.startsWith("gb:bi12") ||
       allFiles.some(f => /_BI12_\.|\.GE-split|biblechapternav/i.test(f));
-      const fileBooksMap = new Map();
       if (!isJwEpub) {
-        await extractCalibreSplitEpub(zip, allFiles, fileBooksMap, safeStatusProxy, labelName, targetId);
+        await extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, safeStatusProxy, labelName, targetId);
       } else {
-        await extractJwFormatEpub(zip, allFiles, fileBooksMap, safeStatusProxy, labelName);
+        await extractJwFormatEpub(zip, allFiles, mergedBooksMap, safeStatusProxy, labelName);
       }
-      fileBooksMap.forEach((bObj, bId) => {
-        if (bObj && Array.isArray(bObj.chapters) && bObj.chapters.length > 0) {
-          mergedBooksMap.set(Number(bId), bObj);
-          newlyExtractedIds.add(Number(bId));
-        }
-      });
     }
-    if (newlyExtractedIds.size === 0) {
-      throw new Error("Nessun libro biblico riconosciuto nel file selezionato.");
-    }
-    let fileOtCount = 0, fileNtCount = 0;
-    newlyExtractedIds.forEach(id => {
-      if (id <= 39) fileOtCount++;
-      else if (id <= 66) fileNtCount++;
-    });
     const finalBooksData = [];
     let importedCount = 0;
-    let totalOtCount = 0;
-    let totalNtCount = 0;
     let totalFootnotes = 0;
     let booksWithOutlines = 0;
     for (let bId = 1; bId <= 66; bId++) {
@@ -8881,8 +8837,6 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
       const existing = mergedBooksMap.get(bId);
       if (existing && existing.chapters && existing.chapters.length > 0) {
         importedCount++;
-        if (bId <= 39) totalOtCount++;
-        else totalNtCount++;
         let hasOut = false;
         existing.chapters.forEach(c => {
           if (c.footnotes && typeof c.footnotes === "object") {
@@ -8907,29 +8861,17 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
     state.trans1 = targetId;
     document.getElementById("trans1").value = targetId;
     safeSaveStorage("bm_trans1", targetId);
-    refreshBackupEpubStatusBadges();
     const extras = [];
     if (totalFootnotes > 0) extras.push(`${totalFootnotes.toLocaleString("it-IT")} note`);
     if (booksWithOutlines > 0) extras.push(`${booksWithOutlines} sommari`);
     const missingNames = finalBooksData.filter(b => !b.chapters.length).map(b => b.name);
     if (missingNames.length > 0 && missingNames.length <= 6) extras.push(`mancano: ${missingNames.join(", ")}`);
     const extraSuffix = extras.length ? ` • ${extras.join(" • ")}` : "";
-    const fileBreakdown = (fileOtCount > 0 && fileNtCount > 0)
-      ? `VT ${fileOtCount} + NT ${fileNtCount}`
-      : (fileOtCount > 0 ? `solo VT: ${fileOtCount} libri` : `solo NT: ${fileNtCount} libri`);
-    const memBreakdown = `VT ${totalOtCount}/39 · NT ${totalNtCount}/27`;
-    const isPartialSplit = importedCount < 66 && (targetId === "epub:cei" || targetId === "epub:tilc");
-    setStatus(
-      `✔ <b>${escapeHtml(labelName)}</b>: estratti <b>${newlyExtractedIds.size} libri</b> dal file (${fileBreakdown})<br>` +
-      `📚 In memoria: <b>${importedCount}/66</b> (${memBreakdown}${extraSuffix})` +
-      (isPartialSplit ? `<br><span style="color:#ffd54f;">👉 Ora carica anche l'altro file (${totalOtCount < 39 ? "VT" : "NT"}) per completare 66/66.</span>` : "")
-    );
-    if (!isPartialSplit) {
-      setTimeout(() => {
-        closeProModal();
-        loadChapterView();
-      }, 2200);
-    }
+    setStatus(`✔ <b>${escapeHtml(labelName)}</b> salvata Offline (${importedCount}/66 libri${extraSuffix})!`);
+    setTimeout(() => {
+      closeProModal();
+      loadChapterView();
+    }, 1000);
   } catch (err) {
     console.error(err);
     setStatus(`❌ Errore durante l'importazione: ${escapeHtml(err.message)}`);
@@ -11805,7 +11747,7 @@ function scrollRpToToday(smooth = false) {
 function buildStudioBackupObject() {
   return {
     app: "BibbiaMultilingue_PRO",
-    version: "PRO_v14.7",
+    version: "PRO_v14.6",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
@@ -12104,7 +12046,7 @@ function setMigrationStatus(htmlMsg) {
 
 async function buildAndDeliverLibraryBundle(keysList, includeStudio, fileName, shareTitle) {
   const parts = [
-    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v14.7","date":',
+    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v14.6","date":',
     JSON.stringify(new Date().toISOString())
   ];
   if (includeStudio) {
