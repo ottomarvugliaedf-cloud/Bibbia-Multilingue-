@@ -222,6 +222,19 @@
       z-index: 100;
       flex-shrink: 0;
     }
+    /* Rifinitura dedicata PWA Chrome (standalone/fullscreen): elimina il doppio spazio superiore e fonde lo stacco della barra di stato */
+    @media (display-mode: standalone), (display-mode: fullscreen) {
+      header {
+        padding-top: max(10px, env(safe-area-inset-top, 10px));
+        background: linear-gradient(180deg, var(--primary-dark) 0%, transparent 45%), linear-gradient(270deg, var(--primary-dark) 0%, var(--primary-main) 50%, var(--primary-dark) 100%);
+      }
+      .bm-drawer-panel, .bp-vhead {
+        padding-top: max(12px, env(safe-area-inset-top, 12px));
+      }
+      nav.bottom-nav {
+        padding-bottom: max(8px, env(safe-area-inset-bottom, 8px));
+      }
+    }
     .header-left {
       display: flex;
       align-items: center;
@@ -2349,6 +2362,7 @@ const BIBLE_BOOKS = [
   { id: "gb:bi12_s", name: "🇪🇸 Español: Traducción del Nuevo Mundo (TNM 1987 - bi12)", lang: "Spanish" },
   { id: "gb:nwt_tpo", name: "🇵🇹🇧🇷 Português: Tradução do Novo Mundo (TNM)", lang: "Portuguese" },
   { id: "epub:nr", name: "🇮🇹 Italiano: Bibbia Nuova Riveduta (NR)", lang: "Italian" },
+  { id: "epub:nd", name: "🇮🇹 Italiano: Bibbia Nuova Diodati (LND)", lang: "Italian" },
   { id: "epub:cei", name: "🇮🇹 Italiano: Bibbia CEI (Ed. 2008)", lang: "Italian" },
   { id: "epub:tilc", name: "🇮🇹 Italiano: Parola del Signore (TILC)", lang: "Italian" },
   { id: "gb:riveduta", name: "🇮🇹 Italiano: Riveduta 1927 (Luzzi)", lang: "Italian" },
@@ -2412,7 +2426,7 @@ const LOCAL_EPUB_IDS = [
   "gb:nwt_e", "gb:bi12_e",
   "gb:nwt_s", "gb:bi12_s",
   "gb:nwt_tpo",
-  "epub:nr", "epub:cei", "epub:tilc"
+  "epub:nr", "epub:nd", "epub:cei", "epub:tilc"
 ];
 let PRO_STRONG_DICT = {
   "principio": {
@@ -4267,6 +4281,20 @@ async function idbDelete(key) {
     dbInstancePromise = null;
   }
 }
+async function idbGetAllKeys() {
+  try {
+    const db = await openDB();
+    return await new Promise(res => {
+      const req = db.transaction("bibles", "readonly").objectStore("bibles").getAllKeys();
+      req.onsuccess = () => res(Array.isArray(req.result) ? req.result.map(String) : []);
+      req.onerror = () => res([]);
+    });
+  } catch (e) {
+    console.debug(e);
+    dbInstancePromise = null;
+    return [];
+  }
+}
 function cacheBibleInMemory(id, data) {
   if (!memoryBibleCache.has(id) && memoryBibleCache.size >= 4) {
     memoryBibleCache.delete(memoryBibleCache.keys().next().value);
@@ -5667,17 +5695,20 @@ function renderSettingsDrawerContent() {
       </button>
       <div class="bm-acc-content">
         <div style="display:flex; flex-direction:column; gap:8px; padding-top:6px;">
-          <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,176,255,0.75); background:#1565c0;" onclick="closeSettingsDrawer(); exportBackupJson();">
-            📤 Esporta Backup Completo (.json)
+          <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00c853; --btn-glow:rgba(0,229,255,0.8); background:linear-gradient(135deg, #1b5e20, #2e7d32);" onclick="closeSettingsDrawer(); openLibraryMigrationModal();">
+            📦 Migra Libreria Offline (Esporta / Importa Tutto)
           </button>
-          <label class="myread-action-btn btn-color-anim" style="--btn-bg:#0288d1; --btn-glow:rgba(2,136,209,0.75); background:#0a367e; text-align:center; display:block;">
+          <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#4fc3f7; --btn-glow:rgba(79,195,247,0.75); background:#0288d1;" onclick="closeSettingsDrawer(); exportBackupJson();">
+            📤 Esporta Backup Dati Studio (.json)
+          </button>
+          <label class="myread-action-btn btn-color-anim" style="--btn-bg:#29b6f6; --btn-glow:rgba(41,182,246,0.75); background:#1565c0; text-align:center; display:block;">
             📥 Importa File di Backup (.json)
             <input type="file" accept=".json,application/json" style="display:none;" onchange="closeSettingsDrawer(); importBackupJson(event)">
           </label>
-          <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#5e35b1; --btn-glow:rgba(149,117,205,0.75); background:#062356;" onclick="clearChapterCacheOnly(); showBlueInfoModal('🧹 Cache Capitoli Pulita', 'La cache temporanea dei capitoli online è stata svuotata (le tue Bibbie EPUB e le note sono intatte).');">
+          <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#1e88e5; --btn-glow:rgba(30,136,229,0.75); background:#0a367e;" onclick="clearChapterCacheOnly(); showBlueInfoModal('🧹 Cache Capitoli Pulita', 'La cache temporanea dei capitoli online è stata svuotata (le tue Bibbie EPUB e le note sono intatte).');">
             🧹 Svuota Cache Capitoli Online
           </button>
-          <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00897b; --btn-glow:rgba(0,229,255,0.75); background:#004d40;" onclick="checkBmPwaUpdates()">
+          <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#1565c0; --btn-glow:rgba(41,182,246,0.75); background:#041a42;" onclick="checkBmPwaUpdates()">
             🔄 Stato Offline PWA & Aggiornamenti
           </button>
         </div>
@@ -5794,13 +5825,13 @@ function renderSettingsDrawerContent() {
       </div>
     </div>
 
-    <!-- SCHEDA 6: MODULI & +1397 BIBBIE -->
+    <!-- SCHEDA 6: MODULI & +1398 BIBBIE -->
     <div class="bm-acc-card ${openId === 'moduli' ? 'open' : ''}">
       <button type="button" class="bm-acc-head" onclick="toggleSettingsAccordion('moduli')">
         <div class="bm-acc-head-left">
           <span class="bm-acc-icon">📚</span>
           <div>
-            <div class="bm-acc-label">Moduli & +1397 Bibbie</div>
+            <div class="bm-acc-label">Moduli & +1398 Bibbie</div>
             <div class="bm-acc-sub">Catalogo globale, EPUB, Perspicacia, Cartine</div>
           </div>
         </div>
@@ -5809,7 +5840,7 @@ function renderSettingsDrawerContent() {
       <div class="bm-acc-content">
         <div style="display:flex; flex-direction:column; gap:8px; padding-top:6px;">
           <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,176,255,0.75); background:#1565c0;" onclick="closeSettingsDrawer(); showCatalogView();">
-            ⬇️ Catalogo +1397 Bibbie / Lingue (${state.downloadedBibles.length} attive)
+            ⬇️ Catalogo +1398 Bibbie / Lingue (${state.downloadedBibles.length} attive)
           </button>
           <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#2e7d32; --btn-glow:rgba(76,175,80,0.75); background:#2e7d32;" onclick="closeSettingsDrawer(); openBackupModal();">
             📗 Importa Moduli Offline (.epub / .zip / .json)
@@ -8440,8 +8471,12 @@ function openBackupModal() {
         <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:nwt_tpo', 'TNM (PT)')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0277bd;">
-        📗 Carica Nuova Riveduta (Seleziona VT e/o NT .epub)
-        <input type="file" accept=".epub,application/epub+zip" multiple style="display:none;" onchange="importUniversalEpubFiles(event, 'epub:nr', 'Nuova Riveduta')">
+        📗 Carica Nuova Riveduta (.epub completo)
+        <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'epub:nr', 'Nuova Riveduta')">
+      </label>
+      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0277bd;">
+        📘 Carica Nuova Diodati (.epub completo)
+        <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'epub:nd', 'Nuova Diodati')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0277bd;">
         📙 Carica Bibbia CEI 2008 (Seleziona VT e/o NT .epub)
@@ -8461,8 +8496,9 @@ function openBackupModal() {
       </label>
       <div class="epub-import-status" style="font-size:13px; font-weight:700; color:var(--primary-light); text-align:center; padding:4px;"></div>
     </div>
-     <div class="section-title"><span>💾 Backup & Ripristino Dati Studio</span></div>
+     <div class="section-title"><span>💾 Backup & Migrazione Completa</span></div>
     <div style="display:flex; flex-direction:column; gap:10px;">
+      <button class="search-btn" style="background:linear-gradient(135deg, #1b5e20, #2e7d32);" onclick="openLibraryMigrationModal()">📦 Migra Libreria Offline (Bibbie, Moduli & Studio)</button>
       <button class="search-btn" style="background:linear-gradient(135deg, #0a367e, #1565c0);" onclick="setAsMyReading()">🕯️ Fissa il capitolo attuale come "Mia lettura"</button>
       <button class="search-btn" onclick="exportBackupJson()">📤 Esporta / Condividi File di Backup (.json)</button>
       <label class="nav-btn" style="text-align:center; padding:10px; cursor:pointer;">
@@ -8579,6 +8615,7 @@ function matchItalianBookNameToId(rawTitle, isStrictFromBody = false) {
     "apocalisse": 66, "rivelazione": 66, "giovanniapocalisse": 66, "apocalissedigiovanni": 66, "ap": 66, "riv": 66
   };
 
+  if (clean === "canticodisalomone") return 22;
   if (isStrictFromBody && clean.length <= 3 && clean !== "rut") return null;
   return exactBookMap[clean] || null;
     }
@@ -8620,7 +8657,7 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
       const isJwEpub = targetId.startsWith("gb:nwt") || targetId.startsWith("gb:bi12") ||
       allFiles.some(f => /_BI12_\.|\.GE-split|biblechapternav/i.test(f));
       if (!isJwEpub) {
-        await extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, safeStatusProxy, labelName);
+        await extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, safeStatusProxy, labelName, targetId);
       } else {
         await extractJwFormatEpub(zip, allFiles, mergedBooksMap, safeStatusProxy, labelName);
       }
@@ -8661,6 +8698,8 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
     const extras = [];
     if (totalFootnotes > 0) extras.push(`${totalFootnotes.toLocaleString("it-IT")} note`);
     if (booksWithOutlines > 0) extras.push(`${booksWithOutlines} sommari`);
+    const missingNames = finalBooksData.filter(b => !b.chapters.length).map(b => b.name);
+    if (missingNames.length > 0 && missingNames.length <= 6) extras.push(`mancano: ${missingNames.join(", ")}`);
     const extraSuffix = extras.length ? ` • ${extras.join(" • ")}` : "";
     setStatus(`✔ <b>${escapeHtml(labelName)}</b> salvata Offline (${importedCount}/66 libri${extraSuffix})!`);
     setTimeout(() => {
@@ -9005,272 +9044,467 @@ function parseJwEpubChapterXhtml(xhtml) {
   }
   return { verses: fbVerses, footnotes };
 }
-  async function extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, labelName) {
-  const tocFile = allFiles.find(f => f.endsWith("toc.ncx"));
+// ============================================================================
+// RICONOSCIMENTO LIBRI E PARSER UNIVERSALE EPUB (LaParola/PDB: NR, LND | Calibre: CEI 2008, TILC)
+// Restituisce: numero libro 1-66 | -1 = deuterocanonico da saltare | null = non è un libro
+// ============================================================================
+const EPUB_STOP_WORDS = new Set([
+  "di", "del", "dei", "dello", "della", "delle", "dell", "degli", "dal", "dai",
+  "ai", "agli", "a", "al", "alla", "alle", "il", "lo", "la", "le", "l", "i", "gli", "un",
+  "san", "santo", "santa", "paolo", "apostolo", "vangelo", "lettera", "epistola",
+  "libro", "cattolica", "profeta", "secondo"
+]);
+const EPUB_ORDINALS = {
+  primo: 1, prima: 1, "1": 1, i: 1,
+  secondo: 2, seconda: 2, "2": 2, ii: 2,
+  terzo: 3, terza: 3, "3": 3, iii: 3
+};
+const EPUB_BOOK_CORES = {
+  genesi: 1, esodo: 2, levitico: 3, numeri: 4, deuteronomio: 5, giosue: 6, giudici: 7, rut: 8,
+  esdra: 15, neemia: 16, ester: 17, giobbe: 18, salmi: 19, salmo: 19, proverbi: 20,
+  ecclesiaste: 21, qoelet: 21, qohelet: 21, cantico: 22, canticocantici: 22, cantici: 22, canticosalomone: 22,
+  isaia: 23, geremia: 24, lamentazioni: 25, ezechiele: 26, daniele: 27, osea: 28, gioele: 29, amos: 30,
+  abdia: 31, giona: 32, michea: 33, naum: 34, abacuc: 35, sofonia: 36, aggeo: 37,
+  zaccaria: 38, malachia: 39,
+  matteo: 40, marco: 41, luca: 42, atti: 44, attiapostoli: 44, romani: 45, galati: 48, efesini: 49,
+  filippesi: 50, colossesi: 51, tito: 56, filemone: 57, ebrei: 58, giacomo: 59, giuda: 65,
+  apocalisse: 66, rivelazione: 66
+};
+const EPUB_NUMBERED_BOOKS = {
+  samuele: [0, 9, 10], re: [0, 11, 12], cronache: [0, 13, 14], paralipomeni: [0, 13, 14],
+  corinzi: [0, 46, 47], corinti: [0, 46, 47], tessalonicesi: [0, 52, 53], timoteo: [0, 54, 55],
+  pietro: [0, 60, 61], giovanni: [43, 62, 63, 64]
+};
+const EPUB_SKIPPED_BOOKS = new Set([
+  "tobia", "tobit", "giuditta", "maccabei", "sapienza", "siracide", "ecclesiastico", "baruc", "baruch"
+]);
+const EPUB_FRONT_MATTER_RE = /^(?:web ?site|dedica|indice|i n d i c e|sommario|prologo|prefazione|introduzione|appendice|note|copertina)\b/;
+
+function resolveEpubBookHeading(rawTitle) {
+  let s = String(rawTitle || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  s = s.replace(/[\u2019\u2018\u0060\u00b4']/g, " ").replace(/[^a-z0-9()\s]/g, " ").replace(/\s+/g, " ").trim();
+  if (!s || EPUB_FRONT_MATTER_RE.test(s)) return null;
+  if (/\bester\b/.test(s) && /\bgreco\b/.test(s)) return -1;
+  if (/\blettera di geremia\b/.test(s)) return -1;
+  s = s.replace(/\([^)]*\)/g, " ").replace(/\s+/g, " ").trim();
+  const tokens = s.split(" ");
+  let ord = 0;
+  if (tokens.length > 1 && EPUB_ORDINALS[tokens[0]]) ord = EPUB_ORDINALS[tokens.shift()];
+  const core = tokens.filter(t => !EPUB_STOP_WORDS.has(t)).join("");
+  if (!core) return null;
+  if (EPUB_SKIPPED_BOOKS.has(core)) return -1;
+  if (EPUB_NUMBERED_BOOKS[core]) return EPUB_NUMBERED_BOOKS[core][ord] || null;
+  return EPUB_BOOK_CORES[core] || null;
+}
+
+function parseSupToken(raw) {
+  const t = String(raw || "").replace(/\s+/g, " ").trim();
+  if (!t) return { type: "none" };
+  let m = t.match(/^(\d{1,3})\s*,\s*(\d{1,3})$/);
+  if (m) return { type: "verse", n: parseInt(m[2], 10), part: "" };
+  m = t.match(/^(\d{1,3})\s*[-–]\s*(\d{1,3})$/);
+  if (m) return { type: "verse", n: parseInt(m[1], 10), to: parseInt(m[2], 10), part: "" };
+  m = t.match(/^(\d{1,3})\s*([a-z])?\s*(?:\(([^)]*)\))?$/i);
+  if (m) return { type: "verse", n: parseInt(m[1], 10), part: (m[2] || "").toLowerCase() };
+  if (/^[a-z]$/i.test(t)) return { type: "cont" };
+  return { type: "none" };
+}
+
+function isPdbXrefLine(rawText) {
+  const t = String(rawText || "").replace(/\s+/g, " ").trim();
+  if (!t || !/\d/.test(t)) return false;
+  if (/[a-zàèéìòù]{5,}/.test(t)) return false;
+  const rem = t
+    .replace(/\b(?:ecc|cfr|vedi|ved|confr|ss|sg|sgg|vv?)\.?|\b[1-3]?[A-Z][a-z]{0,3}\b/g, "")
+    .replace(/[\d\s;:,.\-–—=\(\)\[\]\/]+/g, "");
+  return rem === "";
+}
+
+function normalizeBookChaptersForCanon(bookId, chaptersArr) {
+  if (!Array.isArray(chaptersArr) || !chaptersArr.length) return [];
+  const byNum = new Map();
+  chaptersArr.forEach(c => {
+    if (c && c.chapter > 0 && Array.isArray(c.verses) && c.verses.length) {
+      byNum.set(Number(c.chapter), {
+        chapter: Number(c.chapter),
+        verses: c.verses.map(v => ({ verse: Number(v.verse), text: v.text }))
+      });
+    }
+  });
+
+  // Daniele (27): rimuove eventuali capitoli deuterocanonici oltre il 12 (es. CEI 2008 cap. 13-14)
+  if (bookId === 27) {
+    for (const k of Array.from(byNum.keys())) {
+      if (k > 12) byNum.delete(k);
+    }
+  }
+
+  // Gioele (29): allinea divisione cattolico/ebraica (4 capitoli) a quella canonica di BM PRO (3 capitoli)
+  if (bookId === 29 && byNum.has(4) && byNum.has(3) && byNum.has(2)) {
+    const c2 = byNum.get(2);
+    const c3 = byNum.get(3);
+    const c4 = byNum.get(4);
+    const maxV2 = c2.verses.reduce((mx, v) => Math.max(mx, v.verse), 0);
+    if (maxV2 <= 27 && c3.verses.length <= 6) {
+      const mergedV2 = c2.verses.slice();
+      c3.verses.forEach(v => mergedV2.push({ verse: maxV2 + v.verse, text: v.text }));
+      byNum.set(2, { chapter: 2, verses: mergedV2 });
+      byNum.set(3, { chapter: 3, verses: c4.verses });
+      byNum.delete(4);
+    }
+  }
+
+  // Malachia (39): allinea divisione cattolico/ebraica (3 capitoli, vv. 19-24) a BM PRO (4 capitoli, vv. 1-6)
+  if (bookId === 39 && !byNum.has(4) && byNum.has(3)) {
+    const c3 = byNum.get(3);
+    const tail = c3.verses.filter(v => v.verse >= 19);
+    const head = c3.verses.filter(v => v.verse < 19);
+    if (tail.length > 0 && head.length > 0) {
+      byNum.set(3, { chapter: 3, verses: head });
+      byNum.set(4, { chapter: 4, verses: tail.map(v => ({ verse: v.verse - 18, text: v.text })) });
+    }
+  }
+
+  return Array.from(byNum.values()).sort((a, b) => a.chapter - b.chapter);
+}
+
+async function extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, labelName, targetId = "") {
+  const report = { warnings: [], skipped: [] };
+  const squash = s => String(s || "").replace(/\s+/g, " ").trim();
+
+  // 1. Ordine di lettura (spine di content.opf; ripiego: ordine numerico dei file)
   const opfFile = allFiles.find(f => f.endsWith("content.opf"));
   let orderedHtmlFiles = allFiles
     .filter(f => (f.endsWith(".html") || f.endsWith(".xhtml")) && !f.includes("titlepage"))
-    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }));
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+
   if (opfFile) {
     try {
-      const opfDir = opfFile.includes("/") ? opfFile.slice(0, opfFile.lastIndexOf("/") + 1) : "";
-      const opfTxt = await zip.files[opfFile].async("string");
-      const parser = new DOMParser();
-      const opfDoc = parser.parseFromString(opfTxt, "text/xml");
+      const opfDir = opfFile.includes("/") ? opfFile.substring(0, opfFile.lastIndexOf("/") + 1) : "";
+      const opfDoc = new DOMParser().parseFromString(await zip.files[opfFile].async("string"), "text/xml");
       const manifestMap = {};
-      opfDoc.querySelectorAll("manifest > item").forEach(it => {
-        manifestMap[it.getAttribute("id")] = it.getAttribute("href");
-      });
-      const resolveOpfPath = (rawHref) => {
-        if (!rawHref) return "";
-        const dec = decodeURIComponent(rawHref).replace(/^\.\//, "");
-        const candidates = [opfDir + dec, dec];
-        for (const c of candidates) {
+      opfDoc.querySelectorAll("manifest > item").forEach(it => { manifestMap[it.getAttribute("id")] = it.getAttribute("href"); });
+      const resolveOpfPath = rawHref => {
+        if (!rawHref) return null;
+        const dec = decodeURIComponent(rawHref.split("#")[0]);
+        for (const c of [opfDir + dec, dec]) {
           const parts = [];
-          c.split("/").forEach(seg => {
-            if (!seg || seg === ".") return;
-            if (seg === "..") parts.pop();
-            else parts.push(seg);
-          });
+          for (const seg of c.split("/")) {
+            if (!seg || seg === ".") continue;
+            if (seg === "..") parts.pop(); else parts.push(seg);
+          }
           const norm = parts.join("/");
           if (zip.files[norm]) return norm;
         }
-        return "";
+        return null;
       };
       const spineOrder = [];
       opfDoc.querySelectorAll("spine > itemref").forEach(ref => {
         const resolved = resolveOpfPath(manifestMap[ref.getAttribute("idref")]);
-        if (resolved && !resolved.includes("titlepage")) spineOrder.push(resolved);
+        if (resolved && !resolved.includes("titlepage") && /\.x?html$/i.test(resolved)) spineOrder.push(resolved);
       });
       if (spineOrder.length > 0) orderedHtmlFiles = spineOrder;
-    } catch (e) { console.debug(e); }
+    } catch (e) { console.warn("Errore lettura content.opf:", e); }
   }
 
-  const anchorMarkers = new Map();
-  if (tocFile) {
-    const tocTxt = await zip.files[tocFile].async("string");
-    const parser = new DOMParser();
-    const tocDoc = parser.parseFromString(tocTxt, "text/xml");
-    let currentBookId = null;
-
-    tocDoc.querySelectorAll("navPoint").forEach(np => {
-      const labelEl = np.querySelector("navLabel > text");
-      const contentEl = np.querySelector("content");
-      if (!labelEl || !contentEl) return;
-      const label = (labelEl.textContent || "").replace(/\s+/g, " ").trim();
-      const src = decodeURIComponent((contentEl.getAttribute("src") || "").trim());
-      if (!src) return;
-
-      // Se l'ancora contiene già #bm_book_X, estrae direttamente il numero del libro
-      const bmBookMatch = src.match(/#bm_book_(\d+)$/i);
-      if (bmBookMatch) {
-        currentBookId = parseInt(bmBookMatch[1], 10);
-        anchorMarkers.set(src, { bookId: currentBookId, chapter: 1 });
-        return;
+  // 1b. Rilevazione automatica EPUB strutturati per capitolo (LaParola / Palm PDB: b01c001.xhtml)
+  const pdbChapterFiles = orderedHtmlFiles.filter(f => /(?:^|\/)b(\d{2})c(\d{3})\.xhtml$/i.test(f));
+  if (pdbChapterFiles.length >= 100) {
+    const parsedPdb = new Map();
+    for (let i = 0; i < pdbChapterFiles.length; i++) {
+      const fPath = pdbChapterFiles[i];
+      if (i % 60 === 0 && statusEl) {
+        statusEl.innerHTML = `⏳ Estrazione <b>${escapeHtml(labelName)}</b> (${Math.round(((i + 1) / pdbChapterFiles.length) * 100)}%)...`;
       }
+      const fm = fPath.match(/(?:^|\/)b(\d{2})c(\d{3})\.xhtml$/i);
+      if (!fm) continue;
+      const bId = parseInt(fm[1], 10);
+      const chNum = parseInt(fm[2], 10);
+      if (bId < 1 || bId > 66 || chNum < 1) continue;
 
-      const chMatch = label.match(/^(?:capitolo|cap\.?|salmo)\s*(\d{1,3})\.?$|^(\d{1,3})\.?$/i);
-      if (chMatch) {
-        if (currentBookId && currentBookId > 0) {
-          const chNum = parseInt(chMatch[1] || chMatch[2], 10);
-          anchorMarkers.set(src, { bookId: currentBookId, chapter: chNum });
+      const rawHtml = await zip.files[fPath].async("string");
+      const doc = new DOMParser().parseFromString(rawHtml, "text/html");
+      const body = doc.body;
+      if (!body) continue;
+
+      const verseMap = new Map();
+      let curVerse = 0;
+      const addPdbText = s => {
+        if (!curVerse) return;
+        verseMap.set(curVerse, (verseMap.get(curVerse) || "") + s);
+      };
+      const walkPdbInline = node => {
+        for (const ch of node.childNodes) {
+          if (ch.nodeType === 3) {
+            addPdbText(ch.nodeValue);
+          } else if (ch.nodeType === 1) {
+            const tg = ch.tagName.toLowerCase();
+            if (tg === "sup") {
+              const ev = parseSupToken(ch.textContent);
+              if (ev.type === "verse") {
+                curVerse = ev.n;
+                verseMap.set(ev.n, verseMap.has(ev.n) ? verseMap.get(ev.n) + " " : "");
+              } else if (ev.type === "cont") {
+                addPdbText(" ");
+              }
+            } else if (tg === "br") {
+              addPdbText(" ");
+            } else {
+              walkPdbInline(ch);
+            }
+          }
         }
-        return;
+      };
+
+      const pEls = Array.from(body.querySelectorAll("p"));
+      for (const el of pEls) {
+        if (el.classList.contains("xref") || el.classList.contains("cap") || el.classList.contains("small")) continue;
+        if (el.querySelector("sup")) {
+          if (curVerse > 0) addPdbText(" ");
+          walkPdbInline(el);
+          continue;
+        }
+        const txt = squash(el.textContent);
+        if (!txt || curVerse <= 0) continue;
+        if (isPdbXrefLine(txt)) continue;
+        addPdbText(" ");
+        walkPdbInline(el);
       }
 
-      const matchedBId = matchItalianBookNameToId(label, false);
-      const bookAndChMatch = label.match(/^(.+?)\s+(\d{1,3})\.?$/);
-      if (matchedBId === -1) {
-        currentBookId = null;
-        anchorMarkers.set(src, { bookId: -1, chapter: 1 });
-      } else if (matchedBId && matchedBId > 0) {
-        currentBookId = matchedBId;
-        const chFromLabel = bookAndChMatch ? parseInt(bookAndChMatch[2], 10) : 1;
-        if (!anchorMarkers.has(src)) {
-          anchorMarkers.set(src, { bookId: currentBookId, chapter: chFromLabel });
+      const versesArr = Array.from(verseMap.entries())
+        .sort((a, b) => a[0] - b[0])
+        .map(([v, txt]) => ({ verse: v, text: txt.replace(/\s+/g, " ").trim() }))
+        .filter(v => v.text.length > 0);
+
+      if (versesArr.length > 0) {
+        if (!parsedPdb.has(bId)) parsedPdb.set(bId, { nr: bId, name: getBook(bId).name, chapters: [] });
+        const bObj = parsedPdb.get(bId);
+        const existingCh = bObj.chapters.find(c => c.chapter === chNum);
+        if (existingCh) {
+          if (versesArr.length >= existingCh.verses.length) existingCh.verses = versesArr;
+        } else {
+          bObj.chapters.push({ chapter: chNum, verses: versesArr });
         }
       }
-    });
+    }
+
+    for (const [bId, bObj] of parsedPdb.entries()) {
+      bObj.chapters = normalizeBookChaptersForCanon(bId, bObj.chapters);
+      if (bObj.chapters.length > 0) {
+        const prev = mergedBooksMap.get(bId);
+        if (!prev || bObj.chapters.length >= (prev.chapters || []).length) {
+          mergedBooksMap.set(bId, bObj);
+        }
+      }
+    }
+    return report;
   }
 
+  // 2. Macchina a stati per EPUB Calibre-split (CEI 2008, TILC): <h1> = libro, <h2> = capitolo, <p> con <sup> = versetti
+  const parsed = new Map();
   let activeBookId = null;
-  let activeChapter = 1;
-  let activeVersesMap = new Map();
+  let activeChapter = null;
+  let verseMap = new Map();
+  let curVerse = 0;
+  let lastEnd = 0;
+  let pTextSeen = false;
+  let pVerseSeen = false;
+  const joinsUnnumberedLines = targetId !== "epub:tilc";
 
-  const flushCurrentChapter = () => {
-    if (!activeBookId || activeBookId < 1 || activeVersesMap.size === 0) {
-      activeVersesMap = new Map();
-      return;
-    }
-    const bookMeta = getBook(activeBookId);
-    if (!mergedBooksMap.has(activeBookId)) {
-      mergedBooksMap.set(activeBookId, { nr: activeBookId, name: bookMeta.name, chapters: [] });
-    }
-    const bObj = mergedBooksMap.get(activeBookId);
-    const versesArr = Array.from(activeVersesMap.entries())
-      .map(([verse, text]) => ({ verse, text: text.replace(/\s+/g, " ").trim() }))
-      .filter(v => v.text.length > 0)
-      .sort((a, b) => a.verse - b.verse);
-    if (versesArr.length > 0) {
-      const existingChIdx = bObj.chapters.findIndex(c => Number(c.chapter) === Number(activeChapter));
-      if (existingChIdx > -1) {
-        if (versesArr.length >= bObj.chapters[existingChIdx].verses.length) {
-          bObj.chapters[existingChIdx].verses = versesArr;
+  const flushChapter = () => {
+    if (activeBookId && activeChapter && verseMap.size > 0) {
+      if (!parsed.has(activeBookId)) {
+        parsed.set(activeBookId, { nr: activeBookId, name: getBook(activeBookId).name, chapters: [] });
+      }
+      const bObj = parsed.get(activeBookId);
+      const versesArr = Array.from(verseMap.entries())
+        .sort((a, b) => a[0] - b[0])
+        .map(([v, txt]) => ({ verse: v, text: txt.replace(/\s+/g, " ").trim() }))
+        .filter(v => v.text.length > 0);
+      if (versesArr.length > 0) {
+        const prev = bObj.chapters.find(c => c.chapter === activeChapter);
+        if (prev) {
+          if (versesArr.length >= prev.verses.length) prev.verses = versesArr;
+        } else {
+          bObj.chapters.push({ chapter: activeChapter, verses: versesArr });
+          bObj.chapters.sort((a, b) => a.chapter - b.chapter);
         }
-      } else {
-        bObj.chapters.push({ chapter: activeChapter, verses: versesArr });
-        bObj.chapters.sort((a, b) => a.chapter - b.chapter);
       }
     }
-    activeVersesMap = new Map();
+    verseMap = new Map();
+    curVerse = 0;
+    lastEnd = 0;
   };
 
+  const startBook = (id, headingText) => {
+    flushChapter();
+    if (id > 0) {
+      activeBookId = id;
+      activeChapter = getBook(id).ch === 1 ? 1 : null;
+    } else {
+      activeBookId = null;
+      activeChapter = null;
+      if (id === -1) report.skipped.push(headingText);
+    }
+  };
+
+  const addText = s => {
+    if (!activeBookId || !curVerse) return;
+    verseMap.set(curVerse, (verseMap.get(curVerse) || "") + s);
+  };
+
+  const beginVerse = ev => {
+    if (!activeBookId) return;
+    if (!activeChapter) activeChapter = 1;
+    if (ev.part && ev.part !== "a" && ev.n === curVerse) { addText(" "); return; }
+    curVerse = ev.n;
+    lastEnd = (ev.to && ev.to > ev.n) ? ev.to : ev.n;
+    verseMap.set(ev.n, verseMap.has(ev.n) ? verseMap.get(ev.n) + " " : "");
+  };
+
+  const splitMergedRange = (digits, expected) => {
+    for (let k = 1; k < digits.length; k++) {
+      const a = parseInt(digits.slice(0, k), 10);
+      const b = parseInt(digits.slice(k), 10);
+      if (a === expected && digits[k] !== "0" && b > a && b <= a + 60) return { n: a, to: b };
+    }
+    return null;
+  };
+
+  const handleSup = raw => {
+    const ev = parseSupToken(raw);
+    if (ev.type === "verse") {
+      if (!joinsUnnumberedLines) {
+        if (pTextSeen || pVerseSeen) {
+          addText(" " + String(raw).trim() + " ");
+          return;
+        }
+        const expected = lastEnd + 1;
+        if (ev.n > expected && !ev.to && /^\d+$/.test(String(raw).trim())) {
+          const sp = splitMergedRange(String(raw).trim(), expected);
+          if (sp) { ev.n = sp.n; ev.to = sp.to; }
+        }
+      }
+      pVerseSeen = true;
+      beginVerse(ev);
+    }
+    else if (ev.type === "cont") addText(" ");
+  };
+
+  const walkInline = node => {
+    for (const ch of node.childNodes) {
+      if (ch.nodeType === 3) {
+        if (/\S/.test(ch.nodeValue)) pTextSeen = true;
+        addText(ch.nodeValue);
+      } else if (ch.nodeType === 1) {
+        const tg = ch.tagName.toLowerCase();
+        if (tg === "sup") handleSup(ch.textContent);
+        else if (tg === "br") addText(" ");
+        else walkInline(ch);
+      }
+    }
+  };
+
+  // 3. Scansione dei file HTML nell'ordine dello spine
   for (let fIdx = 0; fIdx < orderedHtmlFiles.length; fIdx++) {
     const fPath = orderedHtmlFiles[fIdx];
-    const fBase = fPath.split("/").pop();
-    statusEl.innerHTML = `⚙️ Lettura <b>${escapeHtml(labelName)}</b> (${fIdx + 1}/${orderedHtmlFiles.length})...`;
-
-    if (anchorMarkers.has(fPath) || anchorMarkers.has(fBase)) {
-      flushCurrentChapter();
-      const mk = anchorMarkers.get(fPath) || anchorMarkers.get(fBase);
-      activeBookId = mk.bookId > 0 ? mk.bookId : null;
-      activeChapter = mk.chapter || 1;
+    if (fIdx % 4 === 0 && statusEl) {
+      statusEl.innerHTML = `⏳ Estrazione <b>${escapeHtml(labelName)}</b> (${Math.round(((fIdx + 1) / orderedHtmlFiles.length) * 100)}%)...`;
     }
-
     const rawHtml = await zip.files[fPath].async("string");
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(rawHtml, "text/html");
-    const body = doc.body || doc.documentElement;
+    const doc = new DOMParser().parseFromString(rawHtml, "text/html");
+    const body = doc.body;
     if (!body) continue;
 
-    body.querySelectorAll('a[href*="index_split_000"], a[href*="index_split_001"], .footnote, .footnotes').forEach(a => {
-      if (/^(?:indice|sommario|\[)/i.test((a.textContent || "").trim())) {
-        if (!a.getAttribute("id")) a.remove();
-      }
-    });
-
-    // 1. Fonde i tag <sup> adiacenti tipici della CEI 2008 (es. <sup>1</sup><sup>7</sup> -> <sup>17</sup>)
-    body.querySelectorAll("sup").forEach(sp => {
+    // 3a. Ricompone intervalli di versetti divisi fra due <sup>: <sup>20</sup>-<sup>43</sup>
+    Array.from(body.querySelectorAll("sup")).forEach(sp => {
       if (!sp.parentNode) return;
-      let next = sp.nextSibling;
-      while (next && next.nodeType === 1 && next.tagName.toLowerCase() === "sup") {
-        sp.textContent = (sp.textContent || "").trim() + (next.textContent || "").trim();
-        const toRem = next;
-        next = next.nextSibling;
-        toRem.remove();
+      const dash = sp.previousSibling;
+      const before = dash ? dash.previousSibling : null;
+      const dashTxt = dash ? (dash.nodeType === 3 ? dash.nodeValue : dash.textContent) : "";
+      if (dash && /^\s*[-–]\s*$/.test(dashTxt) &&
+          before && before.nodeType === 1 && before.tagName.toLowerCase() === "sup") {
+        const bTxt = squash(before.textContent);
+        const sTxt = squash(sp.textContent);
+        if (/^\d{1,3}$/.test(bTxt) && /^\d{1,3}$/.test(sTxt)) {
+          before.textContent = bTxt + "-" + sTxt;
+          dash.remove();
+          sp.remove();
+        }
+      }
+    });
+    // 3b. Ricompone <sup> adiacenti: <sup>1</sup><sup>6</sup> -> <sup>16</sup>
+    Array.from(body.querySelectorAll("sup")).forEach(sp => {
+      if (!sp.parentNode) return;
+      const prev = sp.previousSibling;
+      if (prev && prev.nodeType === 1 && prev.tagName.toLowerCase() === "sup") {
+        prev.textContent += sp.textContent;
+        sp.remove();
       }
     });
 
-    // 2. Trasforma ogni <sup> numerico di versetto direttamente nel token " %%%V_num%%% " (risolve l'assenza di spazio in CEI 2008!)
-    body.querySelectorAll("sup, span.num, span.v, span.versetto").forEach(sp => {
-      const t = (sp.textContent || "").trim().replace(/\.$/, "");
-      if (/^\d{1,3}$/.test(t)) {
-        sp.textContent = ` %%%V_${t}%%% `;
-      }
-    });
-
-    // 3. Inietta i marker di cambio libro/capitolo (supporta anche <div id="bm_book_X"></div> vuoto!)
-    body.querySelectorAll("[id]").forEach(el => {
-      const idAttr = el.getAttribute("id");
-      if (!idAttr) return;
-      let mk = anchorMarkers.get(`${fPath}#${idAttr}`) || anchorMarkers.get(`${fBase}#${idAttr}`);
-      const bmDirect = idAttr.match(/^bm_book_(\d+)$/i);
-      if (bmDirect) {
-        mk = { bookId: parseInt(bmDirect[1], 10), chapter: 1 };
-      }
-      if (mk) {
-        const markerP = doc.createElement("p");
-        markerP.textContent = `%%%ANCHOR_${mk.bookId || -1}_${mk.chapter || 1}%%%`;
-        el.parentNode.insertBefore(markerP, el);
-      }
-    });
-
-    // 4. Scansiona tutti i blocchi testuali (incluso <blockquote> usato nei poetici di NR!)
-    const blocks = body.querySelectorAll("h1, h2, h3, h4, h5, h6, p, blockquote, div");
-    blocks.forEach(el => {
+    const elements = Array.from(body.querySelectorAll("h1, h2, h3, p"));
+    for (const el of elements) {
       const tag = el.tagName.toLowerCase();
-      if (tag === "div" && el.querySelector("p, h1, h2, h3, h4, blockquote, div")) return;
+      const txt = squash(el.textContent);
 
-      const rawBlockText = (el.textContent || "").replace(/\s+/g, " ").trim();
-      if (!rawBlockText) return;
-
-      const anchorParts = rawBlockText.split(/%%%ANCHOR_(-?\d+)_(\d+)%%%/);
-      for (let aIdx = 0; aIdx < anchorParts.length; aIdx += 3) {
-        if (aIdx > 0) {
-          const newBId = parseInt(anchorParts[aIdx - 2], 10);
-          const newCh = parseInt(anchorParts[aIdx - 1], 10);
-          flushCurrentChapter();
-          activeBookId = newBId > 0 ? newBId : null;
-          activeChapter = newCh > 0 ? newCh : 1;
-        }
-
-        let txt = (anchorParts[aIdx] || "").trim();
-        if (!txt) continue;
-
-        if (tag.startsWith("h") || (!txt.includes("%%%V_") && txt.length < 32)) {
-          const chOnly = txt.match(/^(?:capitolo|cap\.?|salmo)\s*(\d{1,3})\.?$|^(\d{1,3})\.?$/i);
-          if (chOnly && activeBookId) {
-            const parsedCh = parseInt(chOnly[1] || chOnly[2], 10);
-            if (parsedCh > 0 && parsedCh <= 150 && parsedCh !== activeChapter) {
-              flushCurrentChapter();
-              activeChapter = parsedCh;
-            }
-            continue;
-          }
-          if (tag.startsWith("h")) {
-            const maybeBId = matchItalianBookNameToId(txt, true);
-            if (maybeBId === -1) {
-              flushCurrentChapter();
-              activeBookId = null;
-              continue;
-            } else if (maybeBId && maybeBId > 0 && maybeBId !== activeBookId) {
-              flushCurrentChapter();
-              activeBookId = maybeBId;
-              const inlineCh = txt.match(/\s+(\d{1,3})\.?$/);
-              activeChapter = inlineCh ? parseInt(inlineCh[1], 10) : 1;
-              continue;
-            }
-          }
-        }
-
-        if (!activeBookId || activeBookId < 1) continue;
-
-        const normalizedTxt = txt.replace(/(?:^|\s)(\d{1,3})\.\s*(?=[A-Za-zÀ-ÿ«"“'‘(—–-])/g, " %%%V_$1%%% ");
-        if (normalizedTxt.includes("%%%V_")) {
-          const vParts = normalizedTxt.split(/%%%V_(\d{1,3})%%%/);
-          const leadingTxt = (vParts[0] || "").trim();
-          if (leadingTxt && activeVersesMap.size > 0) {
-            const lastKey = Array.from(activeVersesMap.keys()).pop();
-            activeVersesMap.set(lastKey, activeVersesMap.get(lastKey) + " " + leadingTxt);
-          }
-          for (let vIdx = 1; vIdx < vParts.length; vIdx += 2) {
-            const vNum = parseInt(vParts[vIdx], 10);
-            const vText = (vParts[vIdx + 1] || "").trim();
-            if (vNum > 0 && vNum <= 176 && vText.length > 0) {
-              const prev = activeVersesMap.get(vNum);
-              activeVersesMap.set(vNum, prev ? (prev + " " + vText) : vText);
-            }
-          }
+      if (tag === "h1") {
+        const id = resolveEpubBookHeading(txt);
+        if (id === null) {
+          const low = txt.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+          if (txt && !EPUB_FRONT_MATTER_RE.test(low)) report.warnings.push(`H1 non riconosciuto: "${txt}"`);
+          startBook(0, txt);
         } else {
-          const noDotMatch = txt.match(/^(\d{1,3})\s+([A-Za-zÀ-ÿ«"“'‘(—–-].*)$/);
-          if (noDotMatch) {
-            const vNum = parseInt(noDotMatch[1], 10);
-            const vText = noDotMatch[2].trim();
-            if (vNum > 0 && vNum <= 176 && vText.length > 0) {
-              const prev = activeVersesMap.get(vNum);
-              activeVersesMap.set(vNum, prev ? (prev + " " + vText) : vText);
-            }
-          } else if (activeVersesMap.size > 0) {
-            const lastKey = Array.from(activeVersesMap.keys()).pop();
-            if (lastKey && txt.length > 1 && !/^(?:capitolo|nota|sommario|indice)/i.test(txt)) {
-              activeVersesMap.set(lastKey, activeVersesMap.get(lastKey) + " " + txt);
-            }
-          }
+          startBook(id, txt);
+        }
+        continue;
+      }
+
+      if (tag === "h2") {
+        const norm = txt.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const chMatch = norm.match(/^(?:capitolo|cap\.?|salmo)\s*(\d{1,3})\b/);
+        if (chMatch && activeBookId) {
+          flushChapter();
+          activeChapter = parseInt(chMatch[1], 10);
+        }
+        continue;
+      }
+
+      if (tag === "h3") continue;
+
+      if (el.querySelector("sup")) {
+        pTextSeen = false;
+        pVerseSeen = false;
+        walkInline(el);
+        continue;
+      }
+
+      if (!txt) continue;
+
+      if (joinsUnnumberedLines && activeBookId && curVerse > 0) {
+        addText(" ");
+        walkInline(el);
+      } else if (!joinsUnnumberedLines && activeBookId && curVerse > 0 && el.classList.contains("block_12")) {
+        if (!txt.startsWith("(") && txt !== "*" && (/[.,;:!?»”"']$/.test(txt) || /^[«"'—–-]/.test(txt))) {
+          addText(" ");
+          walkInline(el);
         }
       }
-    });
+    }
   }
-  flushCurrentChapter();
+  flushChapter();
+
+  // 4. Normalizzazione canonica (Gioele 4->3, Malachia 3->4, Daniele 14->12) e fusione sicura
+  for (const [bId, bObj] of parsed.entries()) {
+    bObj.chapters = normalizeBookChaptersForCanon(bId, bObj.chapters);
+    if (!bObj.chapters.length) continue;
+    const prev = mergedBooksMap.get(bId);
+    if (!prev || bObj.chapters.length >= (prev.chapters || []).length) {
+      mergedBooksMap.set(bId, bObj);
+    }
+  }
+  if (report.warnings.length || report.skipped.length) console.info("[EPUB import]", labelName, report);
+  return report;
 }
 // ============================================================================
 // MODULO SCRITTURA DEL GIORNO (Importazione EPUB es27_I.epub & Dashboard Giornaliera)
@@ -11291,10 +11525,10 @@ function scrollRpToToday(smooth = false) {
   scrollRpToIndex(getDayOfYearIndex(), smooth);
 }
 
-function exportBackupJson() {
-  const data = {
+function buildStudioBackupObject() {
+  return {
     app: "BibbiaMultilingue_PRO",
-    version: "PRO_v14.0",
+    version: "PRO_v14.3",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
@@ -11320,15 +11554,111 @@ function exportBackupJson() {
     notes: state.notes,
     readingPlan: rpState
   };
-  const jsonStr = JSON.stringify(data, null, 2);
-  const fileName = `BM_PRO_Backup_${getLocalIsoDateStr()}.json`;
-  const blob = new Blob([jsonStr], { type: "application/json" });
-  if (navigator.canShare) {
+}
+
+function applyStudioBackupObject(parsed) {
+  if (!parsed || typeof parsed !== "object") return;
+  if (parsed.bookId) {
+    state.bookId = Math.min(66, Math.max(1, Number(parsed.bookId) || 1));
+    safeSaveStorage("bm_last_book", String(state.bookId));
+  }
+  if (parsed.chapter) {
+    state.chapter = Math.min(getBook(state.bookId).ch, Math.max(1, Number(parsed.chapter) || 1));
+    safeSaveStorage("bm_last_ch", String(state.chapter));
+  }
+  if (parsed.fontSize) {
+    changeFontSize(Number(parsed.fontSize) - state.fontSize);
+  }
+  if (parsed.themeMode && ["light", "dark", "oled"].includes(parsed.themeMode)) {
+    state.themeMode = parsed.themeMode;
+    safeSaveStorage("bm_theme", state.themeMode);
+    applySavedTheme();
+  }
+  if (parsed.bmSettings && typeof parsed.bmSettings === "object") {
+    bmSettings = { ...bmSettings, ...parsed.bmSettings };
+    saveBmSettings();
+  }
+  if (parsed.siViewMode === "full" || parsed.siViewMode === "sections") {
+    siViewMode = parsed.siViewMode;
+    safeSaveStorage("bm_si_view_mode", siViewMode);
+  }
+  if (parsed.ttsRate) {
+    bmTtsRate = Math.min(1.5, Math.max(0.75, Number(parsed.ttsRate) || 1.0));
+    safeSaveStorage("bm_tts_rate", String(bmTtsRate));
+    if (!bmAudioPlaying) {
+      const ttsBtn = document.getElementById("ttsChapterBtn");
+      if (ttsBtn) ttsBtn.innerHTML = `<span class="tab-icon">🔊</span><span>${bmTtsRate !== 1 ? "Ascolta " + bmTtsRate + "x" : "Ascolta"}</span>`;
+    }
+  }
+  if (parsed.ttsAutoNext !== undefined) {
+    bmTtsAutoNextPref = Boolean(parsed.ttsAutoNext);
+    safeSaveStorage("bm_tts_autonext", bmTtsAutoNextPref ? "1" : "0");
+  }
+  if (parsed.personalReading && typeof parsed.personalReading === "object") {
+    const pBook = Math.min(66, Math.max(1, Number(parsed.personalReading.book) || 0));
+    const pChRaw = Number(parsed.personalReading.ch) || 0;
+    if (pBook >= 1 && pChRaw >= 1) {
+      const pCh = Math.min(getBook(pBook).ch, pChRaw);
+      safeSaveStorage("bm_pers_book", String(pBook));
+      safeSaveStorage("bm_pers_ch", String(pCh));
+      safeSaveStorage("bm_pers_scroll", String(Math.max(0, Number(parsed.personalReading.scroll) || 0)));
+    }
+    updateMyReadingLabel();
+  }
+  if (typeof parsed.studyMinutes === "number" && parsed.studyMinutes > 0) {
+    const curMins = Number(safeGetStorage("bm_study_minutes_v1")) || 0;
+    safeSaveStorage("bm_study_minutes_v1", String(Math.max(curMins, Math.round(parsed.studyMinutes))));
+  }
+  if (parsed.highlights && typeof parsed.highlights === "object" && !Array.isArray(parsed.highlights)) {
+    state.highlights = parsed.highlights;
+    safeSaveStorage("bm_hl", JSON.stringify(state.highlights));
+  }
+  if (Array.isArray(parsed.bookmarks)) {
+    state.bookmarks = parsed.bookmarks.filter(b => b && typeof b === "object");
+    safeSaveStorage("bm_bm", JSON.stringify(state.bookmarks));
+  }
+  if (Array.isArray(parsed.notes)) {
+    state.notes = parsed.notes
+      .filter(n => n && typeof n === "object")
+      .map((n, idx) => ({ ...n, id: n.id || (Date.now() + idx) }));
+    safeSaveStorage("bm_notes", JSON.stringify(state.notes));
+  }
+  if (Array.isArray(parsed.downloadedBibles) && parsed.downloadedBibles.length > 0) {
+    state.downloadedBibles = parsed.downloadedBibles.filter(x => typeof x === "string" && x.trim());
+    if (!state.downloadedBibles.length) state.downloadedBibles = [...DEFAULT_ACTIVE_IDS];
+    safeSaveStorage("bm_v10_pro_bibles", JSON.stringify(state.downloadedBibles));
+  }
+  if (parsed.trans1) { state.trans1 = String(parsed.trans1); safeSaveStorage("bm_trans1", state.trans1); }
+  if (parsed.trans2) { state.trans2 = String(parsed.trans2); safeSaveStorage("bm_trans2", state.trans2); }
+  if (parsed.trans3) { state.trans3 = String(parsed.trans3); safeSaveStorage("bm_trans3", state.trans3); }
+  if (parsed.bulbPosition && typeof parsed.bulbPosition === "object" && !Array.isArray(parsed.bulbPosition)) {
+    safeSaveStorage("bm_bulb_pos_v1", JSON.stringify(parsed.bulbPosition));
+    applySavedBulbPosition();
+  }
+  if (parsed.readingPlan && typeof parsed.readingPlan === "object" && !Array.isArray(parsed.readingPlan)) {
+    const validPlanId = READING_PLAN_TYPES.some(p => p.id === parsed.readingPlan.planId)
+      ? parsed.readingPlan.planId
+      : "chronological";
+    const validChecked = (parsed.readingPlan.checked && typeof parsed.readingPlan.checked === "object" && !Array.isArray(parsed.readingPlan.checked))
+      ? parsed.readingPlan.checked
+      : {};
+    rpState = { planId: validPlanId, checked: validChecked };
+    safeSaveStorage("bm_reading_plan_v1", JSON.stringify(rpState));
+    updateReadingPlanHeaderBtn();
+  }
+}
+
+async function deliverJsonBlobFile(blob, fileName, shareTitle) {
+  if (navigator.canShare && typeof File !== "undefined") {
     try {
       const file = new File([blob], fileName, { type: "application/json" });
       if (navigator.canShare({ files: [file] })) {
-        navigator.share({ files: [file], title: "Backup Bibbia Multilingue PRO" }).catch(() => {});
-        return;
+        try {
+          await navigator.share({ files: [file], title: shareTitle });
+          return "shared";
+        } catch (err) {
+          if (err && err.name === "AbortError") return "cancelled";
+        }
       }
     } catch (e) { console.debug(e); }
   }
@@ -11336,8 +11666,18 @@ function exportBackupJson() {
   const objUrl = URL.createObjectURL(blob);
   a.href = objUrl;
   a.download = fileName;
+  document.body.appendChild(a);
   a.click();
-  setTimeout(() => URL.revokeObjectURL(objUrl), 15000);
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(objUrl), 60000);
+  return "downloaded";
+}
+
+function exportBackupJson() {
+  const jsonStr = JSON.stringify(buildStudioBackupObject(), null, 2);
+  const fileName = `BM_PRO_Backup_${getLocalIsoDateStr()}.json`;
+  const blob = new Blob([jsonStr], { type: "application/json" });
+  deliverJsonBlobFile(blob, fileName, "Backup Bibbia Multilingue PRO");
 }
 let pendingBackupRawText = null;
 
@@ -11377,99 +11717,243 @@ function confirmImportBackupNow() {
   try {
     const parsed = JSON.parse(pendingBackupRawText);
     pendingBackupRawText = null;
-    if (parsed.bookId) {
-      state.bookId = Math.min(66, Math.max(1, Number(parsed.bookId) || 1));
-      safeSaveStorage("bm_last_book", String(state.bookId));
-    }
-    if (parsed.chapter) {
-      state.chapter = Math.min(getBook(state.bookId).ch, Math.max(1, Number(parsed.chapter) || 1));
-      safeSaveStorage("bm_last_ch", String(state.chapter));
-    }
-    if (parsed.fontSize) {
-      changeFontSize(Number(parsed.fontSize) - state.fontSize);
-    }
-    if (parsed.themeMode && ["light", "dark", "oled"].includes(parsed.themeMode)) {
-      state.themeMode = parsed.themeMode;
-      safeSaveStorage("bm_theme", state.themeMode);
-      applySavedTheme();
-    }
-    if (parsed.bmSettings && typeof parsed.bmSettings === "object") {
-      bmSettings = { ...bmSettings, ...parsed.bmSettings };
-      saveBmSettings();
-    }
-    if (parsed.siViewMode === "full" || parsed.siViewMode === "sections") {
-      siViewMode = parsed.siViewMode;
-      safeSaveStorage("bm_si_view_mode", siViewMode);
-    }
-    if (parsed.ttsRate) {
-      bmTtsRate = Math.min(1.5, Math.max(0.75, Number(parsed.ttsRate) || 1.0));
-      safeSaveStorage("bm_tts_rate", String(bmTtsRate));
-      if (!bmAudioPlaying) {
-        const ttsBtn = document.getElementById("ttsChapterBtn");
-        if (ttsBtn) ttsBtn.innerHTML = `<span class="tab-icon">🔊</span><span>${bmTtsRate !== 1 ? "Ascolta " + bmTtsRate + "x" : "Ascolta"}</span>`;
-      }
-    }
-    if (parsed.ttsAutoNext !== undefined) {
-      bmTtsAutoNextPref = Boolean(parsed.ttsAutoNext);
-      safeSaveStorage("bm_tts_autonext", bmTtsAutoNextPref ? "1" : "0");
-    }
-    if (parsed.personalReading && typeof parsed.personalReading === "object") {
-      const pBook = Math.min(66, Math.max(1, Number(parsed.personalReading.book) || 0));
-      const pChRaw = Number(parsed.personalReading.ch) || 0;
-      if (pBook >= 1 && pChRaw >= 1) {
-        const pCh = Math.min(getBook(pBook).ch, pChRaw);
-        safeSaveStorage("bm_pers_book", String(pBook));
-        safeSaveStorage("bm_pers_ch", String(pCh));
-        safeSaveStorage("bm_pers_scroll", String(Math.max(0, Number(parsed.personalReading.scroll) || 0)));
-      }
-      updateMyReadingLabel();
-    }
-    if (typeof parsed.studyMinutes === "number" && parsed.studyMinutes > 0) {
-      const curMins = Number(safeGetStorage("bm_study_minutes_v1")) || 0;
-      safeSaveStorage("bm_study_minutes_v1", String(Math.max(curMins, Math.round(parsed.studyMinutes))));
-    }
-    if (parsed.highlights && typeof parsed.highlights === "object" && !Array.isArray(parsed.highlights)) {
-      state.highlights = parsed.highlights;
-      safeSaveStorage("bm_hl", JSON.stringify(state.highlights));
-    }
-    if (Array.isArray(parsed.bookmarks)) {
-      state.bookmarks = parsed.bookmarks.filter(b => b && typeof b === "object");
-      safeSaveStorage("bm_bm", JSON.stringify(state.bookmarks));
-    }
-    if (Array.isArray(parsed.notes)) {
-      state.notes = parsed.notes
-        .filter(n => n && typeof n === "object")
-        .map((n, idx) => ({ ...n, id: n.id || (Date.now() + idx) }));
-      safeSaveStorage("bm_notes", JSON.stringify(state.notes));
-    }
-    if (Array.isArray(parsed.downloadedBibles) && parsed.downloadedBibles.length > 0) {
-      state.downloadedBibles = parsed.downloadedBibles.filter(x => typeof x === "string" && x.trim());
-      if (!state.downloadedBibles.length) state.downloadedBibles = [...DEFAULT_ACTIVE_IDS];
-      safeSaveStorage("bm_v10_pro_bibles", JSON.stringify(state.downloadedBibles));
-    }
-    if (parsed.trans1) { state.trans1 = String(parsed.trans1); safeSaveStorage("bm_trans1", state.trans1); }
-    if (parsed.trans2) { state.trans2 = String(parsed.trans2); safeSaveStorage("bm_trans2", state.trans2); }
-    if (parsed.trans3) { state.trans3 = String(parsed.trans3); safeSaveStorage("bm_trans3", state.trans3); }
-    if (parsed.bulbPosition && typeof parsed.bulbPosition === "object" && !Array.isArray(parsed.bulbPosition)) {
-      safeSaveStorage("bm_bulb_pos_v1", JSON.stringify(parsed.bulbPosition));
-      applySavedBulbPosition();
-    }
-    if (parsed.readingPlan && typeof parsed.readingPlan === "object" && !Array.isArray(parsed.readingPlan)) {
-      const validPlanId = READING_PLAN_TYPES.some(p => p.id === parsed.readingPlan.planId)
-        ? parsed.readingPlan.planId
-        : "chronological";
-      const validChecked = (parsed.readingPlan.checked && typeof parsed.readingPlan.checked === "object" && !Array.isArray(parsed.readingPlan.checked))
-        ? parsed.readingPlan.checked
-        : {};
-      rpState = { planId: validPlanId, checked: validChecked };
-      safeSaveStorage("bm_reading_plan_v1", JSON.stringify(rpState));
-      updateReadingPlanHeaderBtn();
-    }
+    applyStudioBackupObject(parsed);
     closeProModal();
     populateSelects().finally(() => loadChapterView());
     showBlueInfoModal("✔ Backup Ripristinato", "Tutti i tuoi dati di studio, impostazioni e il segnalibro Mia Lettura sono stati ripristinati!");
   } catch (err) {
     showBlueInfoModal("❌ File Non Valido", "Errore nel formato del file di backup (.json).");
+  }
+}
+
+// ============================================================================
+// 📦 MODULO MIGRAZIONE LIBRERIA OFFLINE (AppsGeyser ➔ Chrome PWA in 1 tocco)
+// Esporta e re-importa Bibbie EPUB, Perspicacia, Tutta la Scrittura, Giorno, Cartine HD e Dati Studio
+// ============================================================================
+let bmMigrationModulesCache = [];
+
+function describeIdbMigrationModule(id, extraCount = 0) {
+  if (id === "bm:si_it") return { icon: "📘", title: "Tutta la Scrittura", fileSlug: "tutta_la_scrittura", prio: 1 };
+  if (id === "bm:insight_it") return { icon: "📚", title: "Perspicacia (it)", fileSlug: "perspicacia", prio: 2 };
+  if (id === "bm:daily_text") return { icon: "☀️", title: "Scrittura del Giorno", fileSlug: "scrittura_giorno", prio: 3 };
+  if (id === "bm:maps_bundle") return { icon: "🗺️", title: `Cartine Bibliche HD${extraCount ? ` (${extraCount} tavole)` : ""}`, fileSlug: "cartine_hd", prio: 4 };
+  if (id === "bm:strong_ext") return { icon: "🏺", title: "Lessico Strong Esteso", fileSlug: "strong_esteso", prio: 5 };
+  if (id === "bm:xrefs_ext") return { icon: "🔗", title: "Riferimenti Incrociati Estesi", fileSlug: "riferimenti_estesi", prio: 6 };
+  const bMeta = dynamicCatalog.find(b => b.id === id) || CORE_BIBLES.find(b => b.id === id);
+  const label = bMeta ? bMeta.name : `Bibbia offline (${id})`;
+  const slug = String(id).replace(/[^a-zA-Z0-9_-]+/g, "_");
+  return { icon: "📖", title: label, fileSlug: `bibbia_${slug}`, prio: 10 };
+}
+
+async function scanOfflineLibraryModules() {
+  const allKeys = await idbGetAllKeys();
+  const mapImgKeys = allKeys.filter(k => k.startsWith(BP_DB_IMG));
+  const hasMapsMeta = allKeys.includes(BP_DB_META);
+  const modules = [];
+
+  if (hasMapsMeta || mapImgKeys.length > 0) {
+    const keys = [];
+    if (hasMapsMeta) keys.push(BP_DB_META);
+    mapImgKeys.forEach(k => keys.push(k));
+    const desc = describeIdbMigrationModule("bm:maps_bundle", mapImgKeys.length);
+    modules.push({ id: "bm:maps_bundle", keys, ...desc });
+  }
+
+  for (const k of allKeys) {
+    if (k === BP_DB_META || k.startsWith(BP_DB_IMG) || k === "bm:maps_it") continue;
+    const desc = describeIdbMigrationModule(k);
+    modules.push({ id: k, keys: [k], ...desc });
+  }
+
+  modules.sort((a, b) => (a.prio - b.prio) || a.title.localeCompare(b.title, "it"));
+  bmMigrationModulesCache = modules;
+  return modules;
+}
+
+async function openLibraryMigrationModal() {
+  bmChimeHaptic();
+  closeActionBar();
+  document.getElementById("proModalTitle").textContent = "📦 Migra Libreria Offline";
+  const body = document.getElementById("proModalBody");
+  if (!body) return;
+  body.innerHTML = `<div class="loader">🔍 Scansione del database offline in corso...</div>`;
+  document.getElementById("proModal").style.display = "flex";
+
+  const modules = await scanOfflineLibraryModules();
+  const totalCount = modules.length;
+
+  const listHtml = totalCount > 0
+    ? modules.map((m, idx) => `
+        <div class="result-card" style="display:flex; justify-content:space-between; align-items:center; gap:8px; cursor:default; padding:9px 10px; margin-bottom:6px;">
+          <div style="min-width:0; flex:1;">
+            <div style="font-size:13px; font-weight:800; color:#ffffff; word-break:break-word;">${m.icon} ${escapeHtml(m.title)}</div>
+          </div>
+          <button type="button" class="badge-btn" style="background:#1565c0; flex-shrink:0;" onclick="exportSingleLibraryModule(${idx})">📤 Esporta</button>
+        </div>`).join("")
+    : `<div class="loader" style="padding:14px;">Nessun modulo offline salvato in questa istanza dell'app.<br><span style="font-size:12px;">Usa il pulsante verde qui sopra per importare i file esportati da AppsGeyser!</span></div>`;
+
+  body.innerHTML = `
+    <div style="font-size:12.5px; color:#cfe3ff; line-height:1.45; margin-bottom:10px;">
+      Trasferisci <b>tutto</b> (Bibbie EPUB, Tutta la Scrittura, Perspicacia, Giorno, Cartine HD e Dati Studio) da AppsGeyser alla PWA di Chrome senza riconvertire nessun file.
+    </div>
+    <div id="bmMigrationStatus" style="display:none; font-size:13px; font-weight:800; color:#84ffff; background:#062356; border:1px solid #00e5ff; border-radius:8px; padding:8px 10px; margin-bottom:10px; text-align:center;"></div>
+    <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
+      <label class="myread-action-btn btn-color-anim" style="--btn-bg:#00c853; --btn-glow:rgba(0,229,255,0.8); background:linear-gradient(135deg, #1b5e20, #2e7d32); text-align:center; display:block;">
+        📥 Importa File di Migrazione (1 o più .json)
+        <input type="file" accept=".json,application/json" multiple style="display:none;" onchange="importLibraryMigrationFiles(event)">
+      </label>
+      ${totalCount > 0 ? `
+        <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,229,255,0.85); background:linear-gradient(135deg, #0d47a1, #1565c0);" onclick="exportFullLibraryBundle()">
+          📦 Esporta TUTTA la Libreria + Dati Studio (${totalCount} moduli)
+        </button>
+      ` : ""}
+    </div>
+    <div class="section-title">
+      <span>Moduli Salvati in Memoria (${totalCount})</span>
+      <span style="font-size:11px; opacity:0.85;">Esporta singolarmente se serve</span>
+    </div>
+    <div style="max-height:42vh; overflow-y:auto; padding-right:2px;">
+      ${listHtml}
+    </div>
+  `;
+}
+
+function setMigrationStatus(htmlMsg) {
+  const el = document.getElementById("bmMigrationStatus");
+  if (!el) return;
+  el.style.display = "block";
+  el.innerHTML = htmlMsg;
+}
+
+async function buildAndDeliverLibraryBundle(keysList, includeStudio, fileName, shareTitle) {
+  const parts = [
+    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v14.3","date":',
+    JSON.stringify(new Date().toISOString())
+  ];
+  if (includeStudio) {
+    parts.push(',"studioBackup":', JSON.stringify(buildStudioBackupObject()));
+  }
+  parts.push(',"entries":[');
+  let written = 0;
+  for (let i = 0; i < keysList.length; i++) {
+    const k = keysList[i];
+    setMigrationStatus(`⚙️ Preparazione blocco ${i + 1}/${keysList.length}...`);
+    const val = await idbGet(k);
+    if (val === null || val === undefined) continue;
+    if (written > 0) parts.push(",");
+    parts.push('{"key":', JSON.stringify(k), ',"value":', JSON.stringify(val), "}");
+    written++;
+  }
+  parts.push("]}");
+  const blob = new Blob(parts, { type: "application/json" });
+  const sizeMb = (blob.size / (1024 * 1024)).toFixed(2);
+  setMigrationStatus(`📤 Invio file <b>${escapeHtml(fileName)}</b> (${sizeMb} MB)...`);
+  const outcome = await deliverJsonBlobFile(blob, fileName, shareTitle);
+  if (outcome === "cancelled") {
+    setMigrationStatus(`ℹ️ Esportazione annullata (${sizeMb} MB).`);
+  } else {
+    setMigrationStatus(`✔ Esportato <b>${escapeHtml(fileName)}</b> (${sizeMb} MB, ${written} blocchi)! Salvalo in Download o condividilo con Files/X-Plore.`);
+  }
+}
+
+async function exportSingleLibraryModule(modIdx) {
+  bmHaptic(14);
+  const mod = bmMigrationModulesCache[Number(modIdx)];
+  if (!mod) return;
+  try {
+    const fileName = `BM_PRO_Modulo_${mod.fileSlug}.json`;
+    await buildAndDeliverLibraryBundle(mod.keys, false, fileName, `BM PRO — ${mod.title}`);
+  } catch (err) {
+    setMigrationStatus(`❌ Errore esportazione: ${escapeHtml(err.message || String(err))}`);
+  }
+}
+
+async function exportFullLibraryBundle() {
+  bmChimeHaptic();
+  try {
+    const modules = bmMigrationModulesCache.length ? bmMigrationModulesCache : await scanOfflineLibraryModules();
+    const allKeys = [];
+    modules.forEach(m => m.keys.forEach(k => allKeys.push(k)));
+    const fileName = `BM_PRO_Migrazione_Completa_${getLocalIsoDateStr()}.json`;
+    await buildAndDeliverLibraryBundle(allKeys, true, fileName, "Migrazione Completa Bibbia Multilingue PRO");
+  } catch (err) {
+    setMigrationStatus(`❌ File troppo grande per questa WebView (${escapeHtml(err.message || "memoria")}). Usa i pulsanti 📤 Esporta dei singoli moduli qui sotto!`);
+  }
+}
+
+async function importLibraryMigrationFiles(event) {
+  const inputEl = event.target;
+  const files = Array.from((inputEl && inputEl.files) || []);
+  if (!files.length) return;
+  let importedBlocks = 0;
+  let restoredStudio = false;
+  try {
+    for (let fIdx = 0; fIdx < files.length; fIdx++) {
+      const file = files[fIdx];
+      setMigrationStatus(`⏳ Lettura file ${fIdx + 1}/${files.length}: <b>${escapeHtml(file.name)}</b>...`);
+      const parsed = JSON.parse(await file.text());
+      if (!parsed || typeof parsed !== "object") continue;
+
+      if (parsed.bmLibraryBundle === true && Array.isArray(parsed.entries)) {
+        for (let eIdx = 0; eIdx < parsed.entries.length; eIdx++) {
+          const item = parsed.entries[eIdx];
+          if (!item || typeof item.key !== "string" || !item.key.trim() || item.value === undefined) continue;
+          const k = item.key.trim();
+          setMigrationStatus(`💾 Salvataggio offline (${fIdx + 1}/${files.length}) · blocco ${eIdx + 1}/${parsed.entries.length}...`);
+          await idbPut(k, item.value);
+          importedBlocks++;
+          if ((k.startsWith("gb:") || k.startsWith("epub:") || k.startsWith("helloao:")) && !state.downloadedBibles.includes(k)) {
+            state.downloadedBibles.unshift(k);
+          }
+        }
+        if (parsed.studioBackup && typeof parsed.studioBackup === "object") {
+          applyStudioBackupObject(parsed.studioBackup);
+          restoredStudio = true;
+        }
+      } else if (parsed.app === "BibbiaMultilingue_PRO") {
+        applyStudioBackupObject(parsed);
+        restoredStudio = true;
+      } else if (Array.isArray(parsed.books)) {
+        const books = parsed.books
+          .filter(b => b && Array.isArray(b.chapters) && b.chapters.length > 0)
+          .sort((a, b) => (Number(a.bookNumber) || 0) - (Number(b.bookNumber) || 0));
+        if (books.length > 0) {
+          await idbPut("bm:si_it", {
+            updated: Date.now(),
+            title: parsed.title || "Tutta la Scrittura è ispirata da Dio e utile",
+            frontMatter: Array.isArray(parsed.frontMatter) ? parsed.frontMatter : [],
+            books,
+            extras: Array.isArray(parsed.extras) ? parsed.extras : []
+          });
+          importedBlocks++;
+        }
+      }
+    }
+
+    safeSaveStorage("bm_v10_pro_bibles", JSON.stringify(state.downloadedBibles));
+    memoryBibleCache.clear();
+    insightMemCache = null;
+    insightTitleIndexMap = null;
+    resetInsightLookupCaches();
+    siMemCache = null;
+    bpMeta = null;
+    bpPlaceMap = null;
+    bmDynamicCatalogEnriched = false;
+    await loadExternalExegeticalModules();
+    await populateSelects();
+    updateReadingPlanHeaderBtn();
+    updateMyReadingLabel();
+
+    await openLibraryMigrationModal();
+    const summaryParts = [];
+    if (importedBlocks > 0) summaryParts.push(`${importedBlocks} blocchi libreria salvati`);
+    if (restoredStudio) summaryParts.push("dati studio e impostazioni ripristinati");
+    setMigrationStatus(`✔ Migrazione completata: ${summaryParts.join(" + ") || "nessun dato compatibile trovato"}!`);
+    bmChimeHaptic();
+  } catch (err) {
+    setMigrationStatus(`❌ Errore importazione: ${escapeHtml(err.message || String(err))}`);
+  } finally {
+    if (inputEl) inputEl.value = "";
   }
 }
 

@@ -1,5 +1,5 @@
-// Service Worker — Bibbia Multilingue PRO (v14.0 — Edizione Finale Definitiva)
-const BM_SW_VERSION = "bm-pro-shell-v14-0";
+// Service Worker — Bibbia Multilingue PRO (v14.3 — Parser EPUB Universale 4 Bibbie IT: NR, LND, CEI, TILC)
+const BM_SW_VERSION = "bm-pro-shell-v14-3";
 const BM_API_CACHE = "bm-pro-api-v1";
 const BM_CRITICAL_SHELL = [
   "./index.html",
