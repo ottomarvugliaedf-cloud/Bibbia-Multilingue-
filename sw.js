@@ -1,5 +1,5 @@
-// Service Worker — Bibbia Multilingue PRO (v14.8.9 — SWR Istantaneo, Guardie Redirect & Bulk JSON, Icone Maskable)
-const BM_SW_VERSION = "bm-pro-shell-v14-8-9";
+// Service Worker — Bibbia Multilingue PRO (v14.9.0 — SWR Istantaneo, Guardie Redirect & Bulk JSON, Icone Maskable)
+const BM_SW_VERSION = "bm-pro-shell-v14-9-0";
 const BM_API_CACHE = "bm-pro-api-v1";
 const BM_API_CACHE_MAX = 150;
 const BM_CRITICAL_SHELL = [

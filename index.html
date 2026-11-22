@@ -1747,12 +1747,357 @@ body.oled-mode .pub-ref-badge {
       38% { opacity: 0.86; transform: scale3d(1.72, 1.72, 1); }
       72%, 100% { opacity: 0; transform: scale3d(2.3, 2.3, 1); }
     }
+    /* Modalità Rotolo Biblico Antico 3D (Senza card d'appoggio, flottante sulla schermata) */
+    #bmExitModal.bm-exit-scroll-mode {
+      background: radial-gradient(circle at 50% 44%, rgba(5, 18, 44, 0.56) 0%, rgba(1, 6, 18, 0.84) 100%);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+    #bmExitModal.bm-exit-scroll-mode #bmExitCard {
+      display: none !important;
+    }
+    .bm-exit-scroll-stage {
+      display: none;
+      position: relative;
+      width: 100%;
+      max-width: 440px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 8px;
+      pointer-events: none;
+      animation: bmScrollStageIn 0.36s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    #bmExitModal.bm-exit-scroll-mode .bm-exit-scroll-stage,
+    #bmExitModal.bm-exit-scroll-mode .bm-scroll-close-float {
+      display: flex;
+    }
+    .bm-scroll-close-float {
+      position: fixed;
+      top: max(18px, env(safe-area-inset-top, 18px));
+      right: 18px;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(180, 232, 255, 0.45);
+      background: rgba(6, 28, 72, 0.72);
+      color: #ffffff;
+      font-size: 16px;
+      font-weight: 800;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      pointer-events: auto;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 1410;
+      transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+    }
+    .bm-scroll-close-float:active {
+      transform: scale(0.92);
+      border-color: #00e5ff;
+      background: rgba(13, 71, 161, 0.9);
+    }
+    .bm-biblical-scroll {
+      --bm-parch-h: clamp(188px, 34dvh, 252px);
+      --bm-roll-base: clamp(44px, 12vw, 56px);
+      --bm-roll-extra: 0px;
+      --bm-sheet-max: 180px;
+      --bm-sheet-w: 180px;
+      --bm-scroll-shade: 0.24;
+      --bm-roll-shift: 0%;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      transform: perspective(1000px) rotateX(4deg);
+      filter: drop-shadow(0 28px 34px rgba(0, 0, 0, 0.84)) drop-shadow(0 8px 16px rgba(0, 0, 0, 0.68));
+      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: transform;
+    }
+    .bm-biblical-scroll.dragging {
+      cursor: grabbing;
+      transform: perspective(1000px) rotateX(2deg) scale(1.015);
+    }
+    .bm-scroll-roller {
+      position: relative;
+      z-index: 4;
+      width: calc(var(--bm-roll-base) + var(--bm-roll-extra));
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .bm-scroll-finial {
+      width: calc(var(--bm-roll-base) + 10px);
+      height: clamp(62px, 11.2dvh, 84px);
+      display: block;
+      flex-shrink: 0;
+      pointer-events: none;
+      filter: drop-shadow(0 5px 8px rgba(0, 0, 0, 0.6));
+    }
+    .bm-scroll-finial.top {
+      margin-bottom: -5px;
+      z-index: 3;
+    }
+    .bm-scroll-finial.bottom {
+      margin-top: -5px;
+      transform: scaleY(-1);
+      z-index: 3;
+    }
+    .bm-scroll-cylinder {
+      position: relative;
+      width: 100%;
+      height: var(--bm-parch-h);
+      border-radius: 7px / 5px;
+      overflow: hidden;
+      z-index: 2;
+      box-shadow:
+        inset 0 6px 10px rgba(48, 28, 10, 0.48),
+        inset 0 -7px 11px rgba(40, 22, 8, 0.56);
+    }
+    .bm-scroll-roller.left .bm-scroll-cylinder {
+      background:
+        radial-gradient(ellipse 68% 36% at 32% 24%, rgba(164, 126, 74, 0.22) 0%, transparent 72%),
+        radial-gradient(ellipse 60% 42% at 62% 76%, rgba(132, 96, 52, 0.2) 0%, transparent 74%),
+        linear-gradient(
+          90deg,
+          #8b6d45 0%,
+          #caa977 14%,
+          #ebdcba calc(34% + var(--bm-roll-shift)),
+          #f8eed6 calc(54% + var(--bm-roll-shift)),
+          #e3cfa8 78%,
+          #b89564 93%,
+          #7b5b34 100%
+        );
+      box-shadow:
+        inset 0 6px 10px rgba(48, 28, 10, 0.48),
+        inset 0 -7px 11px rgba(40, 22, 8, 0.56),
+        6px 0 14px rgba(24, 14, 4, 0.45);
+    }
+    .bm-scroll-roller.right .bm-scroll-cylinder {
+      background:
+        radial-gradient(ellipse 64% 38% at 68% 28%, rgba(154, 118, 68, 0.2) 0%, transparent 72%),
+        radial-gradient(ellipse 58% 40% at 38% 72%, rgba(138, 100, 56, 0.18) 0%, transparent 74%),
+        linear-gradient(
+          90deg,
+          #7b5b34 0%,
+          #b89564 8%,
+          #e6d4b0 24%,
+          #f8eed6 calc(48% - var(--bm-roll-shift)),
+          #e8d5af calc(70% - var(--bm-roll-shift)),
+          #c6a472 88%,
+          #82643d 100%
+        );
+      box-shadow:
+        inset 0 6px 10px rgba(48, 28, 10, 0.48),
+        inset 0 -7px 11px rgba(40, 22, 8, 0.56),
+        -6px 0 14px rgba(24, 14, 4, 0.45);
+    }
+    .bm-scroll-cylinder::before,
+    .bm-scroll-cylinder::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 7px;
+      pointer-events: none;
+    }
+    .bm-scroll-cylinder::before {
+      top: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        rgba(86, 56, 22, 0.34) 0px,
+        rgba(248, 238, 214, 0.18) 2px,
+        rgba(86, 56, 22, 0.34) 4px
+      );
+    }
+    .bm-scroll-cylinder::after {
+      bottom: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        rgba(70, 44, 16, 0.38) 0px,
+        rgba(248, 238, 214, 0.15) 2px,
+        rgba(70, 44, 16, 0.38) 4px
+      );
+    }
+    .bm-scroll-ghost-ink {
+      position: absolute;
+      inset: 16px 5px;
+      font-family: "Frank Ruhl Libre", "SBL Hebrew", "Times New Roman", Georgia, serif;
+      font-size: 6px;
+      line-height: 1.45;
+      color: rgba(54, 34, 14, 0.14);
+      direction: rtl;
+      text-align: justify;
+      overflow: hidden;
+      pointer-events: none;
+      filter: blur(0.35px);
+    }
+    .bm-scroll-sheet-window {
+      position: relative;
+      width: var(--bm-sheet-w);
+      height: calc(var(--bm-parch-h) - 8px);
+      overflow: hidden;
+      flex-shrink: 0;
+      z-index: 2;
+      margin: 0 -1px;
+      background: #efe2c4;
+      box-shadow:
+        inset 0 6px 10px rgba(72, 46, 18, 0.28),
+        inset 0 -6px 10px rgba(64, 40, 14, 0.34);
+    }
+    .bm-scroll-sheet-window::before,
+    .bm-scroll-sheet-window::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 24px;
+      z-index: 3;
+      pointer-events: none;
+    }
+    .bm-scroll-sheet-window::before {
+      left: 0;
+      background: linear-gradient(90deg, rgba(46, 26, 8, calc(0.42 + var(--bm-scroll-shade))) 0%, rgba(74, 48, 20, 0.2) 48%, transparent 100%);
+    }
+    .bm-scroll-sheet-window::after {
+      right: 0;
+      background: linear-gradient(270deg, rgba(46, 26, 8, calc(0.42 + var(--bm-scroll-shade))) 0%, rgba(74, 48, 20, 0.2) 48%, transparent 100%);
+    }
+    .bm-scroll-sheet-inner {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: var(--bm-sheet-max);
+      transform: translate3d(-50%, 0, 0);
+      padding: 11px 8px 11px 8px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background:
+        radial-gradient(ellipse 75% 32% at 24% 16%, rgba(168, 128, 72, 0.18) 0%, transparent 72%),
+        radial-gradient(ellipse 68% 36% at 78% 82%, rgba(146, 108, 58, 0.2) 0%, transparent 74%),
+        radial-gradient(ellipse 52% 45% at 50% 48%, rgba(255, 250, 236, 0.45) 0%, transparent 76%),
+        linear-gradient(90deg, #dfcca6 0%, #f1e4c6 14%, #f7edd4 50%, #f0e2c2 86%, #d9c39a 100%);
+    }
+    .bm-scroll-sheet-inner::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: repeating-linear-gradient(
+        180deg,
+        transparent 0px,
+        transparent 11px,
+        rgba(128, 92, 46, 0.08) 11.5px,
+        transparent 12px
+      );
+      pointer-events: none;
+    }
+    .bm-scroll-hebrew {
+      position: relative;
+      z-index: 1;
+      direction: rtl;
+      unicode-bidi: isolate;
+      font-family: "Frank Ruhl Libre", "SBL Hebrew", "Ezra SIL", "Times New Roman", Georgia, serif;
+      color: #24170c;
+      opacity: 0.9;
+      font-size: clamp(5.8px, 1.55vw, 7.6px);
+      line-height: 1.44;
+      font-weight: 700;
+      letter-spacing: 0.15px;
+      text-shadow: 0 0.4px 0.6px rgba(48, 28, 10, 0.22);
+      display: flex;
+      flex-direction: column;
+      gap: 2.2px;
+    }
+    .bm-scroll-he-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .bm-scroll-he-line.prose {
+      justify-content: center;
+      text-align: center;
+    }
+    .bm-scroll-he-line.brick-a {
+      gap: 10px;
+    }
+    .bm-scroll-he-line.brick-b {
+      padding: 0 7px;
+      gap: 12px;
+    }
+    .bm-biblical-scroll.bm-scroll-animating .bm-scroll-sheet-window,
+    .bm-biblical-scroll.bm-scroll-animating .bm-scroll-roller {
+      transition: width 0.56s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .bm-scroll-caption-3d {
+      margin-top: 26px;
+      max-width: min(88vw, 355px);
+      text-align: center;
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1.48;
+      letter-spacing: 0.2px;
+      color: #eef8ff;
+      text-shadow:
+        0 1px 0 rgba(10, 42, 92, 0.9),
+        0 2px 4px rgba(0, 0, 0, 0.96),
+        0 7px 18px rgba(0, 0, 0, 0.92),
+        0 0 22px rgba(0, 229, 255, 0.42);
+      pointer-events: none;
+    }
+    .bm-scroll-subhint-3d {
+      margin-top: 8px;
+      max-width: min(86vw, 330px);
+      text-align: center;
+      font-size: 11.8px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      color: #ffe082;
+      text-shadow:
+        0 2px 5px rgba(0, 0, 0, 0.96),
+        0 4px 12px rgba(0, 0, 0, 0.85);
+      pointer-events: none;
+    }
+    @keyframes bmScrollStageIn {
+      from { opacity: 0; transform: translate3d(0, 14px, 0) scale(0.94); }
+      to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+    }
+    @media (max-height: 560px) {
+      .bm-biblical-scroll {
+        --bm-parch-h: clamp(134px, 38dvh, 178px);
+      }
+      .bm-scroll-finial {
+        height: clamp(44px, 11dvh, 58px);
+      }
+      .bm-scroll-caption-3d {
+        margin-top: 14px;
+        font-size: 13px;
+      }
+    }
     @media (prefers-reduced-motion: reduce) {
       .bm-exit-hand-wrap,
       .bm-swipe-trail,
       .bm-swipe-ripple,
-      .bm-swipe-chevrons span {
+      .bm-swipe-chevrons span,
+      .bm-exit-scroll-stage {
         animation: none !important;
+      }
+      .bm-biblical-scroll.bm-scroll-animating .bm-scroll-sheet-window,
+      .bm-biblical-scroll.bm-scroll-animating .bm-scroll-roller {
+        transition: none !important;
       }
     }
 
@@ -2695,9 +3040,9 @@ body.oled-mode .pub-ref-badge {
       <div id="bmSelectModalList" class="bm-select-list"></div>
     </div>
   </div>
-  <!-- Finestra Modale Conferma Uscita App (Zaffiro PRO — Fase 1 Conferma / Fase 2 Manina Swipe) -->
+  <!-- Finestra Modale Conferma Uscita App (Zaffiro PRO — Fase 1 Conferma / Fase 2 Manina o Rotolo Biblico 3D) -->
   <div id="bmExitModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="bmExitModalTitle" onclick="onBmExitBackdropClick(event)" style="display:none; z-index:1400;">
-    <div class="modal-card" style="max-width:380px;">
+    <div id="bmExitCard" class="modal-card" style="max-width:380px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
         <div id="bmExitModalTitle" class="modal-title" style="font-size:16.5px; margin:0;">Bibbia Multilingue PRO</div>
         <button type="button" class="nav-btn" style="padding:3px 9px;" onclick="closeBmExitModal(true)" aria-label="Chiudi">✕</button>
@@ -2772,6 +3117,115 @@ body.oled-mode .pub-ref-badge {
         <div id="bmExitStep2Sub" style="text-align:center; font-size:13px; font-weight:700; color:#84ffff; line-height:1.48; padding:0 4px;">
           Chrome blocca la chiusura automatica: fai uno swipe dal bordo dello schermo o usa Home.
         </div>
+      </div>
+    </div>
+    <!-- Fase 2 Alternativa: Rotolo Biblico Antico 3D flottante sulla schermata (senza riquadro d'appoggio) -->
+    <button type="button" id="bmExitScrollCloseBtn" class="bm-scroll-close-float" onclick="closeBmExitModal(true)" aria-label="Chiudi rotolo e resta nell'app">✕</button>
+    <div id="bmExitScrollStage" class="bm-exit-scroll-stage">
+      <svg style="position:absolute; width:0; height:0; overflow:hidden;" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="bmScrollWoodH" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#221006"/>
+            <stop offset="22%" stop-color="#5d3317"/>
+            <stop offset="46%" stop-color="#9b6234"/>
+            <stop offset="68%" stop-color="#6a3b1a"/>
+            <stop offset="88%" stop-color="#35190a"/>
+            <stop offset="100%" stop-color="#190a03"/>
+          </linearGradient>
+          <linearGradient id="bmScrollWoodDisc" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#261207"/>
+            <stop offset="24%" stop-color="#6c3e1d"/>
+            <stop offset="50%" stop-color="#b47743"/>
+            <stop offset="76%" stop-color="#683a1a"/>
+            <stop offset="100%" stop-color="#1d0d04"/>
+          </linearGradient>
+          <linearGradient id="bmScrollWoodTop" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#b87b46"/>
+            <stop offset="48%" stop-color="#7c4823"/>
+            <stop offset="100%" stop-color="#3b1d0c"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <div id="bmBiblicalScroll" class="bm-biblical-scroll" role="button" tabindex="0" aria-label="Rotolo biblico antico interattivo: tocca o trascina per chiudere e aprire" aria-pressed="false" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault(); toggleBmBiblicalScroll();}">
+        <!-- Rullo Sinistro (Legno tornito Etz Chaim + cilindro pergamena) -->
+        <div class="bm-scroll-roller left">
+          <svg class="bm-scroll-finial top" viewBox="0 0 88 92" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <ellipse cx="44" cy="11" rx="7.5" ry="9" fill="url(#bmScrollWoodH)"/>
+            <ellipse cx="44" cy="21" rx="10.5" ry="4.5" fill="url(#bmScrollWoodH)"/>
+            <path d="M36 24 C34 32 39 39 39 48 H49 C49 39 54 32 52 24 Z" fill="url(#bmScrollWoodH)"/>
+            <ellipse cx="44" cy="49" rx="11" ry="4.2" fill="url(#bmScrollWoodH)"/>
+            <path d="M36 52 C34 59 35 67 34 73 H54 C53 67 54 59 52 52 Z" fill="url(#bmScrollWoodH)"/>
+            <ellipse cx="44" cy="80" rx="41" ry="10.5" fill="url(#bmScrollWoodDisc)" stroke="#231005" stroke-width="1"/>
+            <ellipse cx="44" cy="77.2" rx="39.5" ry="8.4" fill="url(#bmScrollWoodTop)"/>
+            <ellipse cx="44" cy="77.2" rx="23" ry="4.2" fill="none" stroke="rgba(255,220,175,0.22)" stroke-width="1"/>
+          </svg>
+          <div class="bm-scroll-cylinder">
+            <div class="bm-scroll-ghost-ink" aria-hidden="true">ויושע יהוה ביום ההוא את ישראל מיד מצרים וירא ישראל את היד הגדלה אשר עשה יהוה אשירה ליהוה כי גאה גאה סוס ורכבו רמה בים עזי וזמרת יה ויהי לי לישועה</div>
+          </div>
+          <svg class="bm-scroll-finial bottom" viewBox="0 0 88 92" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <ellipse cx="44" cy="11" rx="7.5" ry="9" fill="url(#bmScrollWoodH)"/>
+            <ellipse cx="44" cy="21" rx="10.5" ry="4.5" fill="url(#bmScrollWoodH)"/>
+            <path d="M36 24 C34 32 39 39 39 48 H49 C49 39 54 32 52 24 Z" fill="url(#bmScrollWoodH)"/>
+            <ellipse cx="44" cy="49" rx="11" ry="4.2" fill="url(#bmScrollWoodH)"/>
+            <path d="M36 52 C34 59 35 67 34 73 H54 C53 67 54 59 52 52 Z" fill="url(#bmScrollWoodH)"/>
+            <ellipse cx="44" cy="80" rx="41" ry="10.5" fill="url(#bmScrollWoodDisc)" stroke="#231005" stroke-width="1"/>
+            <ellipse cx="44" cy="77.2" rx="39.5" ry="8.4" fill="url(#bmScrollWoodTop)"/>
+            <ellipse cx="44" cy="77.2" rx="23" ry="4.2" fill="none" stroke="rgba(255,220,175,0.22)" stroke-width="1"/>
+          </svg>
+        </div>
+        <!-- Pergamena Centrale con Testo Ebraico Antico (Cantico del Mare, Esodo 15 — impaginazione tradizionale a mattoni) -->
+        <div class="bm-scroll-sheet-window">
+          <div class="bm-scroll-sheet-inner">
+            <div class="bm-scroll-hebrew" dir="rtl" lang="he" aria-hidden="true">
+              <div class="bm-scroll-he-line prose">ויושע יהוה ביום ההוא את ישראל מיד מצרים</div>
+              <div class="bm-scroll-he-line prose">אז ישיר משה ובני ישראל את השירה הזאת ליהוה</div>
+              <div class="bm-scroll-he-line brick-a"><span>אשירה ליהוה כי גאה גאה</span><span>סוס ורכבו</span></div>
+              <div class="bm-scroll-he-line brick-b"><span>עזי וזמרת יה ויהי לי</span><span>לישועה</span></div>
+              <div class="bm-scroll-he-line brick-a"><span>זה אלי ואנוהו</span><span>אלהי אבי וארממנהו</span></div>
+              <div class="bm-scroll-he-line brick-b"><span>יהוה איש מלחמה</span><span>יהוה שמו</span></div>
+              <div class="bm-scroll-he-line brick-a"><span>מרכבת פרעה וחילו</span><span>ירה בים</span></div>
+              <div class="bm-scroll-he-line brick-b"><span>תהמת יכסימו</span><span>ירדו במצולת כמו אבן</span></div>
+              <div class="bm-scroll-he-line brick-a"><span>ימינך יהוה נאדרי בכח</span><span>תרעץ אויב</span></div>
+              <div class="bm-scroll-he-line brick-b"><span>וברוח אפיך נערמו מים</span><span>נצבו כמו נד</span></div>
+              <div class="bm-scroll-he-line brick-a"><span>מי כמכה באלם יהוה</span><span>נאדר בקדש</span></div>
+              <div class="bm-scroll-he-line brick-b"><span>נורא תהלת עשה פלא</span><span>נטית ימינך</span></div>
+              <div class="bm-scroll-he-line brick-a"><span>נחית בחסדך עם זו גאלת</span><span>נהלת בעזך</span></div>
+              <div class="bm-scroll-he-line prose">יהוה ימלך לעלם ועד ובני ישראל הלכו ביבשה</div>
+            </div>
+          </div>
+        </div>
+        <!-- Rullo Destro (Legno tornito Etz Chaim + cilindro pergamena) -->
+        <div class="bm-scroll-roller right">
+          <svg class="bm-scroll-finial top" viewBox="0 0 88 92" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <ellipse cx="44" cy="11" rx="7.5" ry="9" fill="url(#bmScrollWoodH)"/>
+            <ellipse cx="44" cy="21" rx="10.5" ry="4.5" fill="url(#bmScrollWoodH)"/>
+            <path d="M36 24 C34 32 39 39 39 48 H49 C49 39 54 32 52 24 Z" fill="url(#bmScrollWoodH)"/>
+            <ellipse cx="44" cy="49" rx="11" ry="4.2" fill="url(#bmScrollWoodH)"/>
+            <path d="M36 52 C34 59 35 67 34 73 H54 C53 67 54 59 52 52 Z" fill="url(#bmScrollWoodH)"/>
+            <ellipse cx="44" cy="80" rx="41" ry="10.5" fill="url(#bmScrollWoodDisc)" stroke="#231005" stroke-width="1"/>
+            <ellipse cx="44" cy="77.2" rx="39.5" ry="8.4" fill="url(#bmScrollWoodTop)"/>
+            <ellipse cx="44" cy="77.2" rx="23" ry="4.2" fill="none" stroke="rgba(255,220,175,0.22)" stroke-width="1"/>
+          </svg>
+          <div class="bm-scroll-cylinder">
+            <div class="bm-scroll-ghost-ink" aria-hidden="true">ובני ישראל הלכו ביבשה בתוך הים והמים להם חמה מימינם ומשמאלם ויאמינו ביהוה ובמשה עבדו יהוה ימלך לעלם ועד</div>
+          </div>
+          <svg class="bm-scroll-finial bottom" viewBox="0 0 88 92" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <ellipse cx="44" cy="11" rx="7.5" ry="9" fill="url(#bmScrollWoodH)"/>
+            <ellipse cx="44" cy="21" rx="10.5" ry="4.5" fill="url(#bmScrollWoodH)"/>
+            <path d="M36 24 C34 32 39 39 39 48 H49 C49 39 54 32 52 24 Z" fill="url(#bmScrollWoodH)"/>
+            <ellipse cx="44" cy="49" rx="11" ry="4.2" fill="url(#bmScrollWoodH)"/>
+            <path d="M36 52 C34 59 35 67 34 73 H54 C53 67 54 59 52 52 Z" fill="url(#bmScrollWoodH)"/>
+            <ellipse cx="44" cy="80" rx="41" ry="10.5" fill="url(#bmScrollWoodDisc)" stroke="#231005" stroke-width="1"/>
+            <ellipse cx="44" cy="77.2" rx="39.5" ry="8.4" fill="url(#bmScrollWoodTop)"/>
+            <ellipse cx="44" cy="77.2" rx="23" ry="4.2" fill="none" stroke="rgba(255,220,175,0.22)" stroke-width="1"/>
+          </svg>
+        </div>
+      </div>
+      <div id="bmExitScrollCaption" class="bm-scroll-caption-3d">
+        Chrome blocca la chiusura automatica: fai uno swipe dal bordo dello schermo o usa Home.
+      </div>
+      <div id="bmExitScrollHint" class="bm-scroll-subhint-3d">
+        Tocca o trascina il rotolo per chiuderlo e riaprirlo
       </div>
     </div>
   </div>
@@ -6220,6 +6674,7 @@ let bmSettings = safeJsonParse("bm_user_settings_v1", {
   messianicBulb: true,
   nameLinks: false,
   paperMode: false,
+  exitAnimStyle: "hand",
   openCard: "aspetto"
 });
 
@@ -6403,6 +6858,19 @@ function renderSettingsDrawerContent() {
             <button type="button" class="bm-seg-btn ${bmSettings.textAlign === 'left' ? 'active' : ''}" onclick="setBmSettingProp('textAlign', 'left')">Sinistra</button>
             <button type="button" class="bm-seg-btn ${bmSettings.textAlign === 'justify' ? 'active' : ''}" onclick="setBmSettingProp('textAlign', 'justify')">Giustificato</button>
           </div>
+        </div>
+        <div class="bm-set-row">
+          <span>Stile Uscita App</span>
+          <div class="bm-seg-group">
+            <button type="button" class="bm-seg-btn ${getBmExitAnimStyle() === 'hand' ? 'active' : ''}" onclick="setBmSettingProp('exitAnimStyle', 'hand')">👆 Manina</button>
+            <button type="button" class="bm-seg-btn ${getBmExitAnimStyle() === 'scroll' ? 'active' : ''}" onclick="setBmSettingProp('exitAnimStyle', 'scroll')">📜 Rotolo</button>
+          </div>
+        </div>
+        <div class="bm-set-row" style="border-bottom:none; padding-top:4px;">
+          <span style="font-size:12px; opacity:0.86;">${getBmExitAnimStyle() === 'scroll' ? 'Apri e chiudi il rotolo biblico 3D' : 'Anteprima animazione stile moderno'}</span>
+          <button type="button" class="bm-seg-btn active" style="padding:5px 10px;" onclick="openBmExitStylePreview()">
+            ${getBmExitAnimStyle() === 'scroll' ? '📜 Prova Rotolo' : '👆 Prova Manina'}
+          </button>
         </div>
       </div>
     </div>
@@ -12691,7 +13159,7 @@ function scrollRpToToday(smooth = false) {
 function buildStudioBackupObject() {
   return {
     app: "BibbiaMultilingue_PRO",
-    version: "PRO_v14.8.9",
+    version: "PRO_v14.9.0",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
@@ -13008,7 +13476,7 @@ function setMigrationStatus(htmlMsg) {
 
 async function buildAndDeliverLibraryBundle(keysList, includeStudio, fileName, shareTitle) {
   const parts = [
-    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v14.8.9","date":',
+    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v14.9.0","date":',
     JSON.stringify(new Date().toISOString())
   ];
   if (includeStudio) {
@@ -14502,35 +14970,52 @@ async function executeOmniSearch() {
 }
 
 // ============================================================================
-// 5. SWIPE BORDO DESTRO, MODALE USCITA ZAFFIRO PRO (FASE 1 & 2) & TRANSIZIONE GPU 120Hz
+// 5. SWIPE BORDO DESTRO, MODALE USCITA ZAFFIRO PRO (MANINA / ROTOLO 3D) & TRANSIZIONE GPU 120Hz
 // ============================================================================
 const BM_EXIT_DEFAULT_SUB = "I tuoi appunti, segnalibri e dati offline sono già al sicuro.";
 const BM_EXIT_FALLBACK_SUB = "Chrome blocca la chiusura automatica: fai uno swipe dal bordo dello schermo o usa Home.";
+const BM_EXIT_PREVIEW_SCROLL_SUB = "Anteprima Rotolo Biblico 3D: tocca o trascina per chiuderlo e riaprirlo.";
+const BM_EXIT_PREVIEW_HAND_SUB = "Anteprima Stile Moderno: trascina la manina o scorri da destra a sinistra.";
 let bmExitConfirmOpen = false;
 let bmExitCurrentStep = 1;
+let bmExitPreviewMode = false;
 let bmExitActionLock = false;
 let bmExitingApp = false;
 let bmExitActivePid = null;
 let bmExitCaptureTarget = null;
 let bmExitSuppressBackdropUntil = 0;
+let bmScrollProgress = 0;
 let bmExitChoiceTimer = null;
 let bmExitFallbackTimer = null;
 let bmExitHandTimer = null;
 let bmExitSnapTimer = null;
+let bmScrollAnimTimer = null;
+
+function getBmExitAnimStyle() {
+  return (bmSettings && bmSettings.exitAnimStyle === "scroll") ? "scroll" : "hand";
+}
+
+function getBmScrollMaxSheetWidth() {
+  const w = window.innerWidth || document.documentElement.clientWidth || 360;
+  return Math.min(208, Math.max(146, Math.round(w * 0.45)));
+}
 
 function clearBmExitTimers() {
   clearTimeout(bmExitChoiceTimer);
   clearTimeout(bmExitFallbackTimer);
   clearTimeout(bmExitHandTimer);
   clearTimeout(bmExitSnapTimer);
+  clearTimeout(bmScrollAnimTimer);
   bmExitChoiceTimer = null;
   bmExitFallbackTimer = null;
   bmExitHandTimer = null;
   bmExitSnapTimer = null;
+  bmScrollAnimTimer = null;
 }
 
 function onBmExitBackdropClick(e) {
-  if (!e || !e.target || e.target.id !== "bmExitModal") return;
+  if (!e || !e.target) return;
+  if (e.target.id !== "bmExitModal" && e.target.id !== "bmExitScrollStage") return;
   if (Date.now() < bmExitSuppressBackdropUntil) return;
   closeBmExitModal(true);
 }
@@ -14547,33 +15032,73 @@ function releaseBmExitDragPointer() {
   bmExitCaptureTarget = null;
 }
 
+function setBmScrollProgress(prog, animate = false) {
+  const scrollEl = document.getElementById("bmBiblicalScroll");
+  const clamped = Math.min(1, Math.max(0, Number(prog) || 0));
+  bmScrollProgress = clamped;
+  if (!scrollEl) return;
+  const maxSheetW = getBmScrollMaxSheetWidth();
+  const curSheetW = maxSheetW * (1 - clamped);
+  clearTimeout(bmScrollAnimTimer);
+  bmScrollAnimTimer = null;
+  scrollEl.classList.toggle("bm-scroll-animating", Boolean(animate));
+  scrollEl.style.setProperty("--bm-sheet-max", `${maxSheetW}px`);
+  scrollEl.style.setProperty("--bm-sheet-w", `${curSheetW.toFixed(1)}px`);
+  scrollEl.style.setProperty("--bm-roll-extra", `${(clamped * 5.5).toFixed(2)}px`);
+  scrollEl.style.setProperty("--bm-scroll-shade", (0.24 + clamped * 0.34).toFixed(2));
+  scrollEl.style.setProperty("--bm-roll-shift", `${(clamped * 6).toFixed(1)}%`);
+  scrollEl.setAttribute("aria-pressed", clamped >= 0.5 ? "true" : "false");
+  if (animate) {
+    bmScrollAnimTimer = setTimeout(() => {
+      bmScrollAnimTimer = null;
+      scrollEl.classList.remove("bm-scroll-animating");
+    }, 580);
+  }
+}
+
+function animateBmScrollTo(targetProg, withHaptic = true) {
+  const scrollEl = document.getElementById("bmBiblicalScroll");
+  if (scrollEl) scrollEl.classList.remove("dragging");
+  if (withHaptic) bmHaptic(targetProg >= 0.5 ? 16 : 11);
+  setBmScrollProgress(targetProg, true);
+}
+
+function toggleBmBiblicalScroll() {
+  animateBmScrollTo(bmScrollProgress < 0.5 ? 1 : 0, true);
+}
+
 function resetBmExitHandVisuals() {
   releaseBmExitDragPointer();
   const handBtn = document.getElementById("bmExitHandBtn");
-  if (!handBtn) return;
-  handBtn.classList.remove("dragging", "snapping", "swiping");
-  handBtn.style.removeProperty("--bm-swipe-from");
-  handBtn.style.removeProperty("--bm-swipe-mid");
-  handBtn.style.removeProperty("--bm-swipe-to");
-  handBtn.style.removeProperty("--bm-swipe-rot");
-  handBtn.style.removeProperty("--bm-trail-from");
-  handBtn.style.removeProperty("--bm-trail-op");
-  handBtn.style.removeProperty("--bm-trail-peak");
-  handBtn.style.removeProperty("--bm-trail-width");
-  handBtn.style.removeProperty("--bm-ripple-from");
-  handBtn.style.removeProperty("--bm-ripple-op");
-  const handWrap = handBtn.querySelector(".bm-exit-hand-wrap");
-  const trail = handBtn.querySelector(".bm-swipe-trail");
-  const ripple = handBtn.querySelector(".bm-swipe-ripple");
-  if (handWrap) handWrap.style.transform = "";
-  if (trail) {
-    trail.style.transform = "";
-    trail.style.opacity = "";
-    trail.style.width = "";
+  if (handBtn) {
+    handBtn.classList.remove("dragging", "snapping", "swiping");
+    handBtn.style.removeProperty("--bm-swipe-from");
+    handBtn.style.removeProperty("--bm-swipe-mid");
+    handBtn.style.removeProperty("--bm-swipe-to");
+    handBtn.style.removeProperty("--bm-swipe-rot");
+    handBtn.style.removeProperty("--bm-trail-from");
+    handBtn.style.removeProperty("--bm-trail-op");
+    handBtn.style.removeProperty("--bm-trail-peak");
+    handBtn.style.removeProperty("--bm-trail-width");
+    handBtn.style.removeProperty("--bm-ripple-from");
+    handBtn.style.removeProperty("--bm-ripple-op");
+    const handWrap = handBtn.querySelector(".bm-exit-hand-wrap");
+    const trail = handBtn.querySelector(".bm-swipe-trail");
+    const ripple = handBtn.querySelector(".bm-swipe-ripple");
+    if (handWrap) handWrap.style.transform = "";
+    if (trail) {
+      trail.style.transform = "";
+      trail.style.opacity = "";
+      trail.style.width = "";
+    }
+    if (ripple) {
+      ripple.style.transform = "";
+      ripple.style.opacity = "";
+    }
   }
-  if (ripple) {
-    ripple.style.transform = "";
-    ripple.style.opacity = "";
+  const scrollEl = document.getElementById("bmBiblicalScroll");
+  if (scrollEl) {
+    scrollEl.classList.remove("dragging", "bm-scroll-animating");
   }
 }
 
@@ -14583,18 +15108,47 @@ function setBmExitModalStep(stepNum) {
   const s2 = document.getElementById("bmExitStep2");
   const sub1 = document.getElementById("bmExitModalSub");
   const sub2 = document.getElementById("bmExitStep2Sub");
+  const scrollCap = document.getElementById("bmExitScrollCaption");
+  const scrollHint = document.getElementById("bmExitScrollHint");
   bmExitCurrentStep = (stepNum === 2) ? 2 : 1;
-  if (modal) modal.classList.toggle("bm-exit-step2-active", bmExitCurrentStep === 2);
+  const isScrollMode = (bmExitCurrentStep === 2 && getBmExitAnimStyle() === "scroll");
+  if (modal) {
+    modal.classList.toggle("bm-exit-step2-active", bmExitCurrentStep === 2);
+    modal.classList.toggle("bm-exit-scroll-mode", isScrollMode);
+  }
   resetBmExitHandVisuals();
   if (bmExitCurrentStep === 2) {
-    if (s1) s1.style.display = "none";
-    if (s2) s2.style.display = "flex";
-    if (sub2) sub2.textContent = BM_EXIT_FALLBACK_SUB;
+    if (isScrollMode) {
+      if (s1) s1.style.display = "none";
+      if (s2) s2.style.display = "none";
+      if (scrollCap) scrollCap.textContent = bmExitPreviewMode ? BM_EXIT_PREVIEW_SCROLL_SUB : BM_EXIT_FALLBACK_SUB;
+      if (scrollHint) scrollHint.textContent = bmExitPreviewMode ? "Tocca fuori o ✕ per tornare all'app" : "Tocca o trascina il rotolo per chiuderlo e riaprirlo";
+      setBmScrollProgress(0, false);
+    } else {
+      if (s1) s1.style.display = "none";
+      if (s2) s2.style.display = "flex";
+      if (sub2) sub2.textContent = bmExitPreviewMode ? BM_EXIT_PREVIEW_HAND_SUB : BM_EXIT_FALLBACK_SUB;
+    }
   } else {
     if (s2) s2.style.display = "none";
     if (s1) s1.style.display = "block";
     if (sub1) sub1.textContent = BM_EXIT_DEFAULT_SUB;
   }
+}
+
+function openBmExitStylePreview() {
+  closeSettingsDrawer();
+  const modal = document.getElementById("bmExitModal");
+  if (!modal) return;
+  clearBmExitTimers();
+  modal.querySelectorAll(".bm-exit-lit").forEach(el => el.classList.remove("bm-exit-lit"));
+  bmExitPreviewMode = true;
+  bmExitActionLock = false;
+  bmExitingApp = false;
+  bmExitConfirmOpen = true;
+  setBmExitModalStep(2);
+  modal.style.display = "flex";
+  bmHaptic(14);
 }
 
 function getBmGuardDepth() {
@@ -14620,6 +15174,7 @@ function openBmExitModal() {
   if (!modal) return;
   clearBmExitTimers();
   modal.querySelectorAll(".bm-exit-lit").forEach(el => el.classList.remove("bm-exit-lit"));
+  bmExitPreviewMode = false;
   setBmExitModalStep(1);
   bmExitActionLock = false;
   bmExitingApp = false;
@@ -14635,6 +15190,7 @@ function closeBmExitModal(rearmGuard = true) {
     modal.style.display = "none";
     modal.querySelectorAll(".bm-exit-lit").forEach(el => el.classList.remove("bm-exit-lit"));
   }
+  bmExitPreviewMode = false;
   setBmExitModalStep(1);
   bmExitConfirmOpen = false;
   bmExitActionLock = false;
@@ -14719,13 +15275,14 @@ function triggerBmExitHandSwipe(startDx = 0, startRot = 0, startProgress = 0, dr
     bmExitHandTimer = null;
     resetBmExitHandVisuals();
   }, 790);
-  // Tenta l'uscita sincrona preservando la user activation del gesto (saltato se già intercettato da Android OS)
-  if (attemptExit) tryNativePwaExitNow();
+  // Tenta l'uscita sincrona preservando la user activation del gesto (saltato in anteprima o se già intercettato da Android OS)
+  if (attemptExit && !bmExitPreviewMode) tryNativePwaExitNow();
 }
 
 function initBmExitHandDrag() {
   const modal = document.getElementById("bmExitModal");
   const handBtn = document.getElementById("bmExitHandBtn");
+  const scrollEl = document.getElementById("bmBiblicalScroll");
   if (!modal || !handBtn) return;
   const handWrap = handBtn.querySelector(".bm-exit-hand-wrap");
   const trail = handBtn.querySelector(".bm-swipe-trail");
@@ -14733,7 +15290,10 @@ function initBmExitHandDrag() {
   let startX = 0;
   let startY = 0;
   let startTime = 0;
+  let activeMode = "hand";
   let startedOnHand = false;
+  let startedOnScroll = false;
+  let startScrollProg = 0;
   let dragEngaged = false;
   let maxAbsDx = 0;
   let lastDx = 0;
@@ -14746,8 +15306,17 @@ function initBmExitHandDrag() {
     dragEngaged = true;
     clearTimeout(bmExitHandTimer);
     clearTimeout(bmExitSnapTimer);
+    clearTimeout(bmScrollAnimTimer);
     bmExitHandTimer = null;
     bmExitSnapTimer = null;
+    bmScrollAnimTimer = null;
+    if (activeMode === "scroll") {
+      if (scrollEl) {
+        scrollEl.classList.remove("bm-scroll-animating");
+        scrollEl.classList.add("dragging");
+      }
+      return;
+    }
     handBtn.classList.remove("snapping", "swiping");
     handBtn.classList.add("dragging");
     if (handWrap) handWrap.style.transform = "translate3d(0px, -50%, 0) rotate(0deg)";
@@ -14779,13 +15348,16 @@ function initBmExitHandDrag() {
   };
 
   // Ascolta sull'intero overlay del modale (100% schermo) durante la Fase 2:
-  // qualsiasi swipe da destra a sinistra sullo schermo muove la manina in contemporanea 1:1.
+  // muove in contemporanea 1:1 sia la Manina (stile moderno) sia il Rotolo Biblico 3D (stile antico).
   modal.addEventListener("pointerdown", function (e) {
     if (!bmExitConfirmOpen || bmExitCurrentStep !== 2 || e.isPrimary === false) return;
     if (e.pointerType === "mouse" && e.button !== 0) return;
     const t = e.target;
     if (t && t.closest("button") && !t.closest("#bmExitHandBtn")) return;
-    startedOnHand = Boolean(t && t.closest("#bmExitHandBtn"));
+    activeMode = getBmExitAnimStyle();
+    startedOnHand = (activeMode === "hand") && Boolean(t && t.closest("#bmExitHandBtn"));
+    startedOnScroll = (activeMode === "scroll") && Boolean(t && t.closest("#bmBiblicalScroll"));
+    startScrollProg = bmScrollProgress;
     dragEngaged = false;
     maxAbsDx = 0;
     lastDx = 0;
@@ -14794,7 +15366,9 @@ function initBmExitHandDrag() {
     startX = e.clientX;
     startY = e.clientY;
     startTime = Date.now();
-    maxDrag = Math.max(116, (handBtn.clientWidth || 300) - 134);
+    maxDrag = (activeMode === "scroll")
+      ? Math.max(120, getBmScrollMaxSheetWidth())
+      : Math.max(116, (handBtn.clientWidth || 300) - 134);
     releaseBmExitDragPointer();
     bmExitActivePid = e.pointerId;
     if (startedOnHand) {
@@ -14803,6 +15377,11 @@ function initBmExitHandDrag() {
         bmExitCaptureTarget = handBtn;
       } catch (err) { console.debug(err); }
       engageDragVisuals();
+    } else if (startedOnScroll && scrollEl) {
+      try {
+        scrollEl.setPointerCapture(e.pointerId);
+        bmExitCaptureTarget = scrollEl;
+      } catch (err) { console.debug(err); }
     }
   });
 
@@ -14815,6 +15394,22 @@ function initBmExitHandDrag() {
     const rawDx = e.clientX - startX;
     const rawDy = e.clientY - startY;
     maxAbsDx = Math.max(maxAbsDx, Math.abs(rawDx));
+
+    if (activeMode === "scroll") {
+      if (!dragEngaged) {
+        const wantsEngage = startedOnScroll
+          ? (Math.abs(rawDx) >= 6 && Math.abs(rawDx) >= Math.abs(rawDy) * 0.85)
+          : (rawDx <= -5 && Math.abs(rawDx) >= Math.abs(rawDy) * 0.9);
+        if (wantsEngage) engageDragVisuals();
+        else return;
+      }
+      lastDx = rawDx;
+      const nextProg = Math.min(1, Math.max(0, startScrollProg + (-rawDx / maxDrag)));
+      lastProgress = nextProg;
+      setBmScrollProgress(nextProg, false);
+      return;
+    }
+
     if (!dragEngaged) {
       if (rawDx <= -5 && Math.abs(rawDx) >= Math.abs(rawDy) * 0.9) {
         engageDragVisuals();
@@ -14848,10 +15443,63 @@ function initBmExitHandDrag() {
       return;
     }
     const elapsed = Math.max(1, Date.now() - startTime);
+    const w = window.innerWidth || document.documentElement.clientWidth || 360;
+
+    if (activeMode === "scroll") {
+      if (scrollEl) scrollEl.classList.remove("dragging");
+      if (cancelled) {
+        const isRightEdgeOsSwipe = startX >= w - 48 && (lastDx <= -2 || elapsed < 350);
+        if (isRightEdgeOsSwipe) {
+          animateBmScrollTo(1, false);
+        } else if (dragEngaged) {
+          animateBmScrollTo(startScrollProg, false);
+        }
+        return;
+      }
+      if (dragEngaged || maxAbsDx >= 10) {
+        bmExitSuppressBackdropUntil = Date.now() + 400;
+      }
+      const isQuickTapOnScroll = startedOnScroll && !dragEngaged && maxAbsDx < 10 && elapsed < 360;
+      if (isQuickTapOnScroll) {
+        bmExitSuppressBackdropUntil = Date.now() + 400;
+        toggleBmBiblicalScroll();
+        return;
+      }
+      if (!dragEngaged) return;
+      const speedLeft = (-lastDx) / elapsed;
+      const speedRight = lastDx / elapsed;
+      const isDecisiveExitSwipe = lastDx <= -48 || (lastDx <= -24 && speedLeft >= 0.28);
+      if (startedOnScroll) {
+        if (speedRight >= 0.28 && lastDx >= 20) {
+          animateBmScrollTo(0, true);
+        } else if (isDecisiveExitSwipe || bmScrollProgress >= 0.5) {
+          const shouldTryExit = Boolean(isDecisiveExitSwipe && !bmExitPreviewMode);
+          animateBmScrollTo(1, !shouldTryExit);
+          if (shouldTryExit) {
+            bmChimeHaptic();
+            tryNativePwaExitNow();
+          }
+        } else {
+          animateBmScrollTo(0, true);
+        }
+      } else {
+        if (isDecisiveExitSwipe || bmScrollProgress >= 0.52) {
+          const shouldTryExit = Boolean(isDecisiveExitSwipe && !bmExitPreviewMode);
+          animateBmScrollTo(1, !shouldTryExit);
+          if (shouldTryExit) {
+            bmChimeHaptic();
+            tryNativePwaExitNow();
+          }
+        } else {
+          animateBmScrollTo(startScrollProg, false);
+        }
+      }
+      return;
+    }
+
     if (cancelled) {
       // Se Android OS intercetta lo swipe dal bordo destro fisico per chiudere la PWA (System Back),
       // lancia subito la corsa fluida della manina verso sinistra in sincrono con l'uscita di sistema.
-      const w = window.innerWidth || document.documentElement.clientWidth || 360;
       const isRightEdgeOsSwipe = startX >= w - 48 && (lastDx <= -2 || elapsed < 350);
       if (isRightEdgeOsSwipe) {
         triggerBmExitHandSwipe(lastDx, lastRot, lastProgress, maxDrag, false);
@@ -14884,6 +15532,11 @@ function initBmExitHandDrag() {
 
   window.addEventListener("pointerup", (e) => finishDrag(e, false), { passive: true });
   window.addEventListener("pointercancel", (e) => finishDrag(e, true), { passive: true });
+  window.addEventListener("resize", () => {
+    if (bmExitConfirmOpen && bmExitCurrentStep === 2 && getBmExitAnimStyle() === "scroll") {
+      setBmScrollProgress(bmScrollProgress, false);
+    }
+  }, { passive: true });
 }
 
 function onBmExitChoice(shouldExit, btnEl) {
@@ -14971,7 +15624,14 @@ function onBmExitChoice(shouldExit, btnEl) {
 
   // Intercettazione gesto Indietro di sistema (popstate): chiude eventuali overlay aperti, altrimenti apre subito #bmExitModal
   window.addEventListener("popstate", function () {
-    if (bmExitingApp || bmExitConfirmOpen) return;
+    if (bmExitingApp) return;
+    if (bmExitConfirmOpen) {
+      if (bmExitPreviewMode) {
+        bmHaptic(10);
+        closeBmExitModal(true);
+      }
+      return;
+    }
 
     const closeIfFlex = (id, fn) => {
       const el = document.getElementById(id);
