@@ -1,5 +1,5 @@
-// Service Worker — Bibbia Multilingue PRO (v14.9.0 — SWR Istantaneo, Guardie Redirect & Bulk JSON, Icone Maskable)
-const BM_SW_VERSION = "bm-pro-shell-v14-9-0";
+// Service Worker — Bibbia Multilingue PRO (v15.0.1 — SWR Istantaneo, Guardie Redirect & Bulk JSON, Icone Maskable)
+const BM_SW_VERSION = "bm-pro-shell-v15-0-1";
 const BM_API_CACHE = "bm-pro-api-v1";
 const BM_API_CACHE_MAX = 150;
 const BM_CRITICAL_SHELL = [
@@ -56,7 +56,6 @@ self.addEventListener("install", (event) => {
     await Promise.allSettled(
       BM_OPTIONAL_SHELL.map((url) => cache.add(new Request(url, { cache: "reload" })))
     );
-    self.skipWaiting();
   })());
 });
 
@@ -76,6 +75,10 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("message", (event) => {
   const data = event.data || {};
+  if (data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+    return;
+  }
   if (data.type === "GET_CACHE_STATUS" && event.ports && event.ports[0]) {
     const port = event.ports[0];
     const task = (async () => {
@@ -175,7 +178,7 @@ self.addEventListener("fetch", (event) => {
     const resPromise = (async () => {
       const cache = await caches.open(BM_SW_VERSION);
       const cached = await cache.match(canonicalShellKey) || await cache.match(req, { ignoreSearch: true });
-      const fetchPromise = fetch(req, { cache: "no-cache" }).then((net) => {
+      const fetchPromise = fetch(canonicalShellKey, { cache: "no-cache" }).then((net) => {
         if (net && net.ok && !net.redirected) {
           return safeCachePut(cache, canonicalShellKey, net.clone()).then(() => net);
         }

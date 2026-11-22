@@ -423,24 +423,6 @@
   from { opacity: 0; transform: translate3d(0, 10px, 0); }
   to { opacity: 1; transform: translate3d(0, 0, 0); }
 }
-@media (prefers-reduced-motion: reduce) {
-  #splashScreen.ready .splash-box,
-  #splashScreen.ready .splash-text,
-  #splashScreen.ready .splash-sub,
-  #splashScreen.ready .splash-sub-main,
-  #splashScreen.ready .splash-sub-pro,
-  #splashScreen.ready .splash-sub-pro::before {
-    animation: none !important;
-    opacity: 1;
-  }
-  #splashScreen.ready .splash-box {
-    border: 2px solid rgba(255, 255, 255, 0.5);
-  }
-  #splashScreen.ready .splash-box::before,
-  #splashScreen.ready .splash-sub-pro::before {
-    display: none;
-  }
-}
     /* HEADER CON GRIGLIA A 3 COLONNE E BADGE OVALE CENTRATO */
     header {
       background: linear-gradient(270deg, var(--primary-dark) 0%, var(--primary-main) 50%, var(--primary-dark) 100%);
@@ -885,7 +867,6 @@
     .verse-row {
       padding: 8px 6px;
       border-radius: 6px;
-      line-height: var(--verse-line-height, 1.58);
       font-size: var(--font-size-verse);
       cursor: pointer;
       margin-bottom: 3px;
@@ -1747,7 +1728,7 @@ body.oled-mode .pub-ref-badge {
       38% { opacity: 0.86; transform: scale3d(1.72, 1.72, 1); }
       72%, 100% { opacity: 0; transform: scale3d(2.3, 2.3, 1); }
     }
-    /* Modalità Rotolo Biblico Antico 3D (Senza card d'appoggio, flottante sulla schermata) */
+    /* Modalità Rotolo Biblico Antico 3D (Senza card d'appoggio, 120Hz Compositor-Only con Umbilicus & Cornua) */
     #bmExitModal.bm-exit-scroll-mode {
       background: radial-gradient(circle at 50% 44%, rgba(5, 18, 44, 0.56) 0%, rgba(1, 6, 18, 0.84) 100%);
       backdrop-filter: blur(4px);
@@ -1803,11 +1784,12 @@ body.oled-mode .pub-ref-badge {
     .bm-biblical-scroll {
       --bm-parch-h: clamp(188px, 34dvh, 252px);
       --bm-roll-base: clamp(44px, 12vw, 56px);
-      --bm-roll-extra: 0px;
       --bm-sheet-max: 180px;
-      --bm-sheet-w: 180px;
-      --bm-scroll-shade: 0.24;
-      --bm-roll-shift: 0%;
+      --bm-sheet-clip: 0px;
+      --bm-roll-tx-l: 0px;
+      --bm-roll-tx-r: 0px;
+      --bm-cyl-scale: 1;
+      --bm-cast-op: 1;
       position: relative;
       display: flex;
       align-items: center;
@@ -1818,7 +1800,7 @@ body.oled-mode .pub-ref-badge {
       user-select: none;
       -webkit-user-select: none;
       transform: perspective(1000px) rotateX(4deg);
-      filter: drop-shadow(0 28px 34px rgba(0, 0, 0, 0.84)) drop-shadow(0 8px 16px rgba(0, 0, 0, 0.68));
+      filter: drop-shadow(0 24px 28px rgba(0, 0, 0, 0.82));
       transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
       will-change: transform;
     }
@@ -1829,26 +1811,55 @@ body.oled-mode .pub-ref-badge {
     .bm-scroll-roller {
       position: relative;
       z-index: 4;
-      width: calc(var(--bm-roll-base) + var(--bm-roll-extra));
+      width: var(--bm-roll-base);
       display: flex;
       flex-direction: column;
       align-items: center;
       flex-shrink: 0;
+      will-change: transform;
     }
+    .bm-scroll-roller.left {
+      transform: translate3d(var(--bm-roll-tx-l), 0, 0);
+    }
+    .bm-scroll-roller.right {
+      transform: translate3d(var(--bm-roll-tx-r), 0, 0);
+    }
+    /* Ombra curva proiettata dal cilindro sulla pergamena: viaggia 1:1 col rullo senza reflow */
+    .bm-scroll-roller::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: 22px;
+      height: calc(var(--bm-parch-h) - 8px);
+      transform: translate3d(0, -50%, 0);
+      pointer-events: none;
+      z-index: 1;
+      opacity: var(--bm-cast-op);
+    }
+    .bm-scroll-roller.left::after {
+      left: calc(100% - 1px);
+      background: linear-gradient(90deg, rgba(42, 22, 6, 0.62) 0%, rgba(72, 44, 16, 0.24) 48%, transparent 100%);
+    }
+    .bm-scroll-roller.right::after {
+      right: calc(100% - 1px);
+      background: linear-gradient(270deg, rgba(42, 22, 6, 0.62) 0%, rgba(72, 44, 16, 0.24) 48%, transparent 100%);
+    }
+    /* Cornua tornite + disco + Umbilicus ligneo sporgente che entra nel cuore del cilindro di pergamena */
     .bm-scroll-finial {
-      width: calc(var(--bm-roll-base) + 10px);
-      height: clamp(62px, 11.2dvh, 84px);
+      width: calc(var(--bm-roll-base) + 8px);
+      aspect-ratio: 88 / 108;
+      height: auto;
+      max-height: 82px;
       display: block;
       flex-shrink: 0;
       pointer-events: none;
-      filter: drop-shadow(0 5px 8px rgba(0, 0, 0, 0.6));
     }
     .bm-scroll-finial.top {
-      margin-bottom: -5px;
+      margin-bottom: -6px;
       z-index: 3;
     }
     .bm-scroll-finial.bottom {
-      margin-top: -5px;
+      margin-top: -6px;
       transform: scaleY(-1);
       z-index: 3;
     }
@@ -1859,11 +1870,14 @@ body.oled-mode .pub-ref-badge {
       border-radius: 7px / 5px;
       overflow: hidden;
       z-index: 2;
+      transform: scaleX(var(--bm-cyl-scale));
+      will-change: transform;
       box-shadow:
-        inset 0 6px 10px rgba(48, 28, 10, 0.48),
+        inset 0 7px 11px rgba(48, 28, 10, 0.5),
         inset 0 -7px 11px rgba(40, 22, 8, 0.56);
     }
     .bm-scroll-roller.left .bm-scroll-cylinder {
+      transform-origin: center center;
       background:
         radial-gradient(ellipse 68% 36% at 32% 24%, rgba(164, 126, 74, 0.22) 0%, transparent 72%),
         radial-gradient(ellipse 60% 42% at 62% 76%, rgba(132, 96, 52, 0.2) 0%, transparent 74%),
@@ -1871,18 +1885,19 @@ body.oled-mode .pub-ref-badge {
           90deg,
           #8b6d45 0%,
           #caa977 14%,
-          #ebdcba calc(34% + var(--bm-roll-shift)),
-          #f8eed6 calc(54% + var(--bm-roll-shift)),
+          #ebdcba 36%,
+          #f8eed6 54%,
           #e3cfa8 78%,
           #b89564 93%,
           #7b5b34 100%
         );
       box-shadow:
-        inset 0 6px 10px rgba(48, 28, 10, 0.48),
+        inset 0 7px 11px rgba(48, 28, 10, 0.5),
         inset 0 -7px 11px rgba(40, 22, 8, 0.56),
-        6px 0 14px rgba(24, 14, 4, 0.45);
+        4px 0 12px rgba(24, 14, 4, 0.44);
     }
     .bm-scroll-roller.right .bm-scroll-cylinder {
+      transform-origin: center center;
       background:
         radial-gradient(ellipse 64% 38% at 68% 28%, rgba(154, 118, 68, 0.2) 0%, transparent 72%),
         radial-gradient(ellipse 58% 40% at 38% 72%, rgba(138, 100, 56, 0.18) 0%, transparent 74%),
@@ -1891,15 +1906,15 @@ body.oled-mode .pub-ref-badge {
           #7b5b34 0%,
           #b89564 8%,
           #e6d4b0 24%,
-          #f8eed6 calc(48% - var(--bm-roll-shift)),
-          #e8d5af calc(70% - var(--bm-roll-shift)),
+          #f8eed6 48%,
+          #e8d5af 70%,
           #c6a472 88%,
           #82643d 100%
         );
       box-shadow:
-        inset 0 6px 10px rgba(48, 28, 10, 0.48),
+        inset 0 7px 11px rgba(48, 28, 10, 0.5),
         inset 0 -7px 11px rgba(40, 22, 8, 0.56),
-        -6px 0 14px rgba(24, 14, 4, 0.45);
+        -4px 0 12px rgba(24, 14, 4, 0.44);
     }
     .bm-scroll-cylinder::before,
     .bm-scroll-cylinder::after {
@@ -1907,78 +1922,61 @@ body.oled-mode .pub-ref-badge {
       position: absolute;
       left: 0;
       right: 0;
-      height: 7px;
+      height: 8px;
       pointer-events: none;
     }
     .bm-scroll-cylinder::before {
       top: 0;
-      background: repeating-linear-gradient(
-        90deg,
-        rgba(86, 56, 22, 0.34) 0px,
-        rgba(248, 238, 214, 0.18) 2px,
-        rgba(86, 56, 22, 0.34) 4px
-      );
+      background:
+        radial-gradient(ellipse 26% 78% at 50% 0%, rgba(44, 22, 8, 0.72) 0%, rgba(78, 46, 18, 0.35) 55%, transparent 100%),
+        repeating-linear-gradient(
+          90deg,
+          rgba(86, 56, 22, 0.34) 0px,
+          rgba(248, 238, 214, 0.18) 2px,
+          rgba(86, 56, 22, 0.34) 4px
+        );
     }
     .bm-scroll-cylinder::after {
       bottom: 0;
-      background: repeating-linear-gradient(
-        90deg,
-        rgba(70, 44, 16, 0.38) 0px,
-        rgba(248, 238, 214, 0.15) 2px,
-        rgba(70, 44, 16, 0.38) 4px
-      );
+      background:
+        radial-gradient(ellipse 26% 78% at 50% 100%, rgba(38, 18, 6, 0.74) 0%, rgba(72, 42, 16, 0.36) 55%, transparent 100%),
+        repeating-linear-gradient(
+          90deg,
+          rgba(70, 44, 16, 0.38) 0px,
+          rgba(248, 238, 214, 0.15) 2px,
+          rgba(70, 44, 16, 0.38) 4px
+        );
     }
     .bm-scroll-ghost-ink {
       position: absolute;
       inset: 16px 5px;
-      font-family: "Frank Ruhl Libre", "SBL Hebrew", "Times New Roman", Georgia, serif;
+      font-family: "Frank Ruhl Libre", "SBL Hebrew", "Noto Serif Hebrew", "Noto Sans Hebrew", "Times New Roman", Georgia, serif;
       font-size: 6px;
       line-height: 1.45;
-      color: rgba(54, 34, 14, 0.14);
+      color: rgba(54, 34, 14, 0.13);
       direction: rtl;
       text-align: justify;
       overflow: hidden;
       pointer-events: none;
-      filter: blur(0.35px);
     }
     .bm-scroll-sheet-window {
       position: relative;
-      width: var(--bm-sheet-w);
+      width: var(--bm-sheet-max);
       height: calc(var(--bm-parch-h) - 8px);
       overflow: hidden;
       flex-shrink: 0;
       z-index: 2;
       margin: 0 -1px;
       background: #efe2c4;
+      clip-path: inset(0 var(--bm-sheet-clip) 0 var(--bm-sheet-clip));
+      will-change: clip-path;
       box-shadow:
         inset 0 6px 10px rgba(72, 46, 18, 0.28),
         inset 0 -6px 10px rgba(64, 40, 14, 0.34);
     }
-    .bm-scroll-sheet-window::before,
-    .bm-scroll-sheet-window::after {
-      content: "";
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      width: 24px;
-      z-index: 3;
-      pointer-events: none;
-    }
-    .bm-scroll-sheet-window::before {
-      left: 0;
-      background: linear-gradient(90deg, rgba(46, 26, 8, calc(0.42 + var(--bm-scroll-shade))) 0%, rgba(74, 48, 20, 0.2) 48%, transparent 100%);
-    }
-    .bm-scroll-sheet-window::after {
-      right: 0;
-      background: linear-gradient(270deg, rgba(46, 26, 8, calc(0.42 + var(--bm-scroll-shade))) 0%, rgba(74, 48, 20, 0.2) 48%, transparent 100%);
-    }
     .bm-scroll-sheet-inner {
       position: absolute;
-      top: 0;
-      bottom: 0;
-      left: 50%;
-      width: var(--bm-sheet-max);
-      transform: translate3d(-50%, 0, 0);
+      inset: 0;
       padding: 11px 8px 11px 8px;
       box-sizing: border-box;
       display: flex;
@@ -2008,7 +2006,7 @@ body.oled-mode .pub-ref-badge {
       z-index: 1;
       direction: rtl;
       unicode-bidi: isolate;
-      font-family: "Frank Ruhl Libre", "SBL Hebrew", "Ezra SIL", "Times New Roman", Georgia, serif;
+      font-family: "Frank Ruhl Libre", "SBL Hebrew", "Ezra SIL", "Noto Serif Hebrew", "Noto Sans Hebrew", "Times New Roman", Georgia, serif;
       color: #24170c;
       opacity: 0.9;
       font-size: clamp(5.8px, 1.55vw, 7.6px);
@@ -2038,9 +2036,15 @@ body.oled-mode .pub-ref-badge {
       padding: 0 7px;
       gap: 12px;
     }
-    .bm-biblical-scroll.bm-scroll-animating .bm-scroll-sheet-window,
-    .bm-biblical-scroll.bm-scroll-animating .bm-scroll-roller {
-      transition: width 0.56s cubic-bezier(0.22, 1, 0.36, 1);
+    .bm-biblical-scroll.bm-scroll-animating .bm-scroll-roller,
+    .bm-biblical-scroll.bm-scroll-animating .bm-scroll-cylinder {
+      transition: transform 0.52s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .bm-biblical-scroll.bm-scroll-animating .bm-scroll-roller::after {
+      transition: opacity 0.46s ease;
+    }
+    .bm-biblical-scroll.bm-scroll-animating .bm-scroll-sheet-window {
+      transition: clip-path 0.52s cubic-bezier(0.22, 1, 0.36, 1);
     }
     .bm-scroll-caption-3d {
       margin-top: 26px;
@@ -2077,30 +2081,24 @@ body.oled-mode .pub-ref-badge {
     }
     @media (max-height: 560px) {
       .bm-biblical-scroll {
-        --bm-parch-h: clamp(134px, 38dvh, 178px);
+        --bm-parch-h: clamp(148px, 40dvh, 184px);
       }
       .bm-scroll-finial {
-        height: clamp(44px, 11dvh, 58px);
+        max-height: 54px;
+      }
+      .bm-scroll-sheet-inner {
+        padding: 6px 6px 6px 6px;
+      }
+      .bm-scroll-hebrew {
+        font-size: 5.2px;
+        line-height: 1.24;
+        gap: 1.1px;
       }
       .bm-scroll-caption-3d {
         margin-top: 14px;
         font-size: 13px;
       }
     }
-    @media (prefers-reduced-motion: reduce) {
-      .bm-exit-hand-wrap,
-      .bm-swipe-trail,
-      .bm-swipe-ripple,
-      .bm-swipe-chevrons span,
-      .bm-exit-scroll-stage {
-        animation: none !important;
-      }
-      .bm-biblical-scroll.bm-scroll-animating .bm-scroll-sheet-window,
-      .bm-biblical-scroll.bm-scroll-animating .bm-scroll-roller {
-        transition: none !important;
-      }
-    }
-
 
     /* Biblioteca online JW.org: cerchio azzurro con torre vettoriale + effetto radiale dal centro ai bordi */
     .jw-btn {
@@ -2596,20 +2594,58 @@ body.oled-mode .pub-ref-badge {
   body.oled-mode .bm-drawer-head,
   body.oled-mode .bm-acc-card,
   body.oled-mode .bm-acc-content,
+  body.oled-mode .bm-drawer-quick-btn,
+  body.oled-mode .bm-seg-group,
+  body.oled-mode .bm-switch .bm-slider,
+  body.oled-mode .bm-si-mode-bar,
+  body.oled-mode .book-selector-btn,
+  body.oled-mode .map-card,
+  body.oled-mode .map-thumb,
+  body.oled-mode .rp-banner,
   body.oled-mode .rp-scroll-window,
   body.oled-mode .rp-row,
+  body.oled-mode .rp-row .tag-badge,
   body.oled-mode .bm-outline-box,
   body.oled-mode .bm-outline-body,
+  body.oled-mode .bm-outline-book-btn,
   body.oled-mode .bm-prophecy-bubble,
+  body.oled-mode .bm-pb-arrow,
+  body.oled-mode .bm-exit-swipe-stage,
+  body.oled-mode .bm-scroll-close-float,
   body.oled-mode .bp-viewer,
   body.oled-mode .bp-stage,
   body.oled-mode .bp-sheet,
   body.oled-mode .bp-card,
+  body.oled-mode .bp-ref,
+  body.oled-mode .bp-vhead,
+  body.oled-mode .bp-vtools,
+  body.oled-mode #mapsViewer .bp-vhead,
+  body.oled-mode #mapsViewer .bp-vtools,
+  body.oled-mode .bp-vbtn,
+  body.oled-mode .bp-tool-btn,
   body.oled-mode .bm-select-opt,
   body.oled-mode .modal-card .nav-btn,
   body.oled-mode .chapter-nav-btns .nav-btn:not(.bm-back-history-btn) {
+    background: var(--bg-main);
+    border-color: var(--border-color);
+  }
+  body.oled-mode .bm-exit-swipe-stage {
     background: #000000;
-    border-color: #242424;
+    border-color: #262626;
+  }
+  body.oled-mode .bm-scroll-close-float {
+    background: rgba(0, 0, 0, 0.85);
+    border-color: #333333;
+  }
+  body.oled-mode .bm-switch input:checked + .bm-slider {
+    background: #38bdf8;
+    border-color: #84ffff;
+  }
+  body.oled-mode .bm-drawer-quick-btn,
+  body.oled-mode .rp-banner,
+  body.oled-mode .book-selector-btn,
+  body.oled-mode .bp-ref {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 4px 12px rgba(0, 0, 0, 0.9);
   }
   body.oled-mode .bm-acc-card.open {
     border-color: #38bdf8;
@@ -2900,6 +2936,44 @@ body.oled-mode .pub-ref-badge {
     background: rgba(245, 158, 11, 0.18) !important;
     box-shadow: 0 2px 10px rgba(180, 83, 9, 0.25) !important;
   }
+  @media (prefers-reduced-motion: reduce) {
+    #splashScreen.ready .splash-box,
+    #splashScreen.ready .splash-text,
+    #splashScreen.ready .splash-sub,
+    #splashScreen.ready .splash-sub-main,
+    #splashScreen.ready .splash-sub-pro,
+    #splashScreen.ready .splash-sub-pro::before {
+      animation: none !important;
+      opacity: 1;
+    }
+    #splashScreen.ready .splash-box {
+      border: 2px solid rgba(255, 255, 255, 0.5);
+    }
+    #splashScreen.ready .splash-box::before,
+    #splashScreen.ready .splash-sub-pro::before {
+      display: none;
+    }
+    .bm-exit-hand-wrap,
+    .bm-swipe-trail,
+    .bm-swipe-ripple,
+    .bm-swipe-chevrons span,
+    .bm-exit-scroll-stage,
+    .bm-bulb-orb,
+    .bm-bulb-spark,
+    .bm-bulb-orb svg,
+    .bp-hl,
+    .pill-marquee-track,
+    .bm-view-anim,
+    .verse-action-bar {
+      animation: none !important;
+    }
+    .bm-biblical-scroll.bm-scroll-animating .bm-scroll-sheet-window,
+    .bm-biblical-scroll.bm-scroll-animating .bm-scroll-roller,
+    .bm-biblical-scroll.bm-scroll-animating .bm-scroll-roller::after,
+    .bm-biblical-scroll.bm-scroll-animating .bm-scroll-cylinder {
+      transition: none !important;
+    }
+  }
   </style>
 </head>
 <body>
@@ -3020,11 +3094,11 @@ body.oled-mode .pub-ref-badge {
     </div>
   </div>
   <!-- Finestra Modale Personalizzata per Mia Lettura (Blu Scuro PRO) -->
-  <div id="myReadModal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Finestra di dialogo" onclick="if(event.target.id==='myReadModal') this.style.display='none'" style="display:none;">
+  <div id="myReadModal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Finestra di dialogo" onclick="if(event.target.id==='myReadModal') closeMyReadModal()" style="display:none;">
     <div class="modal-card">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
         <div class="modal-title" style="font-size:17px; margin:0;">Bibbia Multilingue PRO</div>
-        <button class="nav-btn" style="padding:3px 9px;" onclick="document.getElementById('myReadModal').style.display='none'">✕</button>
+        <button class="nav-btn" style="padding:3px 9px;" onclick="closeMyReadModal()">✕</button>
       </div>
       <div id="myReadModalBody" style="font-size:14.5px; line-height:1.55; color:var(--text-main);"></div>
     </div>
@@ -3132,6 +3206,14 @@ body.oled-mode .pub-ref-badge {
             <stop offset="88%" stop-color="#35190a"/>
             <stop offset="100%" stop-color="#190a03"/>
           </linearGradient>
+          <linearGradient id="bmScrollUmbilicus" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#1b0c04"/>
+            <stop offset="18%" stop-color="#4e2912"/>
+            <stop offset="44%" stop-color="#a86d3b"/>
+            <stop offset="62%" stop-color="#c98b52"/>
+            <stop offset="82%" stop-color="#522b13"/>
+            <stop offset="100%" stop-color="#160802"/>
+          </linearGradient>
           <linearGradient id="bmScrollWoodDisc" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stop-color="#261207"/>
             <stop offset="24%" stop-color="#6c3e1d"/>
@@ -3144,34 +3226,39 @@ body.oled-mode .pub-ref-badge {
             <stop offset="48%" stop-color="#7c4823"/>
             <stop offset="100%" stop-color="#3b1d0c"/>
           </linearGradient>
+          <!-- Simbolo unico (Cornua tornita + Disco + Umbilicus / ombelico ligneo centrale con imbocco pergamena) -->
+          <symbol id="bmScrollFinialSym" viewBox="0 0 88 108">
+            <!-- Cornua (impugnatura superiore tornita) -->
+            <ellipse cx="44" cy="10" rx="7.2" ry="8.5" fill="url(#bmScrollWoodH)"/>
+            <ellipse cx="44" cy="19.5" rx="10.2" ry="4.2" fill="url(#bmScrollWoodH)"/>
+            <path d="M36.5 22.5 C34.5 30 39 36.5 39 45 H49 C49 36.5 53.5 30 51.5 22.5 Z" fill="url(#bmScrollWoodH)"/>
+            <ellipse cx="44" cy="46.2" rx="10.8" ry="4" fill="url(#bmScrollWoodH)"/>
+            <path d="M36.5 49 C34.8 55.5 35.5 62 34.5 68 H53.5 C52.5 62 53.2 55.5 51.5 49 Z" fill="url(#bmScrollWoodH)"/>
+            <!-- Disco paracolpi ligneo (collegato all'umbilicus) -->
+            <ellipse cx="44" cy="74.5" rx="40.5" ry="9.6" fill="url(#bmScrollWoodDisc)" stroke="#231005" stroke-width="1"/>
+            <ellipse cx="44" cy="72" rx="39" ry="7.6" fill="url(#bmScrollWoodTop)"/>
+            <ellipse cx="44" cy="72" rx="22" ry="3.8" fill="none" stroke="rgba(255,220,175,0.22)" stroke-width="1"/>
+            <!-- Ombelico / Umbilicus (perno cilindrico in legno su cui scorre e si avvolge il rotolo) -->
+            <rect x="33.5" y="79" width="21" height="26" rx="2.5" fill="url(#bmScrollUmbilicus)" stroke="#200e04" stroke-width="1"/>
+            <!-- Ombra proiettata dal disco sull'umbilicus + ghiera tornita di fissaggio -->
+            <rect x="33.5" y="79.5" width="21" height="5.5" fill="rgba(18,7,2,0.52)"/>
+            <ellipse cx="44" cy="87.5" rx="12.2" ry="3.1" fill="url(#bmScrollWoodDisc)" stroke="#231005" stroke-width="0.9"/>
+            <ellipse cx="44" cy="86.6" rx="11.2" ry="2.1" fill="url(#bmScrollWoodTop)"/>
+            <!-- Anello d'innesto dell'umbilicus nel cuore della pergamena arrotolata -->
+            <ellipse cx="44" cy="102.5" rx="18" ry="4.4" fill="none" stroke="rgba(218,191,142,0.55)" stroke-width="1.4"/>
+            <ellipse cx="44" cy="102.5" rx="13.5" ry="3.3" fill="none" stroke="rgba(96,62,24,0.68)" stroke-width="1.2"/>
+            <ellipse cx="44" cy="102.5" rx="10.2" ry="2.7" fill="url(#bmScrollUmbilicus)" stroke="#261105" stroke-width="0.9"/>
+          </symbol>
         </defs>
       </svg>
       <div id="bmBiblicalScroll" class="bm-biblical-scroll" role="button" tabindex="0" aria-label="Rotolo biblico antico interattivo: tocca o trascina per chiudere e aprire" aria-pressed="false" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault(); toggleBmBiblicalScroll();}">
-        <!-- Rullo Sinistro (Legno tornito Etz Chaim + cilindro pergamena) -->
+        <!-- Rullo Sinistro (Cornua + Umbilicus ligneo + cilindro pergamena) -->
         <div class="bm-scroll-roller left">
-          <svg class="bm-scroll-finial top" viewBox="0 0 88 92" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <ellipse cx="44" cy="11" rx="7.5" ry="9" fill="url(#bmScrollWoodH)"/>
-            <ellipse cx="44" cy="21" rx="10.5" ry="4.5" fill="url(#bmScrollWoodH)"/>
-            <path d="M36 24 C34 32 39 39 39 48 H49 C49 39 54 32 52 24 Z" fill="url(#bmScrollWoodH)"/>
-            <ellipse cx="44" cy="49" rx="11" ry="4.2" fill="url(#bmScrollWoodH)"/>
-            <path d="M36 52 C34 59 35 67 34 73 H54 C53 67 54 59 52 52 Z" fill="url(#bmScrollWoodH)"/>
-            <ellipse cx="44" cy="80" rx="41" ry="10.5" fill="url(#bmScrollWoodDisc)" stroke="#231005" stroke-width="1"/>
-            <ellipse cx="44" cy="77.2" rx="39.5" ry="8.4" fill="url(#bmScrollWoodTop)"/>
-            <ellipse cx="44" cy="77.2" rx="23" ry="4.2" fill="none" stroke="rgba(255,220,175,0.22)" stroke-width="1"/>
-          </svg>
+          <svg class="bm-scroll-finial top" viewBox="0 0 88 108" preserveAspectRatio="xMidYMax meet" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#bmScrollFinialSym"/></svg>
           <div class="bm-scroll-cylinder">
             <div class="bm-scroll-ghost-ink" aria-hidden="true">ויושע יהוה ביום ההוא את ישראל מיד מצרים וירא ישראל את היד הגדלה אשר עשה יהוה אשירה ליהוה כי גאה גאה סוס ורכבו רמה בים עזי וזמרת יה ויהי לי לישועה</div>
           </div>
-          <svg class="bm-scroll-finial bottom" viewBox="0 0 88 92" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <ellipse cx="44" cy="11" rx="7.5" ry="9" fill="url(#bmScrollWoodH)"/>
-            <ellipse cx="44" cy="21" rx="10.5" ry="4.5" fill="url(#bmScrollWoodH)"/>
-            <path d="M36 24 C34 32 39 39 39 48 H49 C49 39 54 32 52 24 Z" fill="url(#bmScrollWoodH)"/>
-            <ellipse cx="44" cy="49" rx="11" ry="4.2" fill="url(#bmScrollWoodH)"/>
-            <path d="M36 52 C34 59 35 67 34 73 H54 C53 67 54 59 52 52 Z" fill="url(#bmScrollWoodH)"/>
-            <ellipse cx="44" cy="80" rx="41" ry="10.5" fill="url(#bmScrollWoodDisc)" stroke="#231005" stroke-width="1"/>
-            <ellipse cx="44" cy="77.2" rx="39.5" ry="8.4" fill="url(#bmScrollWoodTop)"/>
-            <ellipse cx="44" cy="77.2" rx="23" ry="4.2" fill="none" stroke="rgba(255,220,175,0.22)" stroke-width="1"/>
-          </svg>
+          <svg class="bm-scroll-finial bottom" viewBox="0 0 88 108" preserveAspectRatio="xMidYMax meet" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#bmScrollFinialSym"/></svg>
         </div>
         <!-- Pergamena Centrale con Testo Ebraico Antico (Cantico del Mare, Esodo 15 — impaginazione tradizionale a mattoni) -->
         <div class="bm-scroll-sheet-window">
@@ -3194,31 +3281,13 @@ body.oled-mode .pub-ref-badge {
             </div>
           </div>
         </div>
-        <!-- Rullo Destro (Legno tornito Etz Chaim + cilindro pergamena) -->
+        <!-- Rullo Destro (Cornua + Umbilicus ligneo + cilindro pergamena) -->
         <div class="bm-scroll-roller right">
-          <svg class="bm-scroll-finial top" viewBox="0 0 88 92" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <ellipse cx="44" cy="11" rx="7.5" ry="9" fill="url(#bmScrollWoodH)"/>
-            <ellipse cx="44" cy="21" rx="10.5" ry="4.5" fill="url(#bmScrollWoodH)"/>
-            <path d="M36 24 C34 32 39 39 39 48 H49 C49 39 54 32 52 24 Z" fill="url(#bmScrollWoodH)"/>
-            <ellipse cx="44" cy="49" rx="11" ry="4.2" fill="url(#bmScrollWoodH)"/>
-            <path d="M36 52 C34 59 35 67 34 73 H54 C53 67 54 59 52 52 Z" fill="url(#bmScrollWoodH)"/>
-            <ellipse cx="44" cy="80" rx="41" ry="10.5" fill="url(#bmScrollWoodDisc)" stroke="#231005" stroke-width="1"/>
-            <ellipse cx="44" cy="77.2" rx="39.5" ry="8.4" fill="url(#bmScrollWoodTop)"/>
-            <ellipse cx="44" cy="77.2" rx="23" ry="4.2" fill="none" stroke="rgba(255,220,175,0.22)" stroke-width="1"/>
-          </svg>
+          <svg class="bm-scroll-finial top" viewBox="0 0 88 108" preserveAspectRatio="xMidYMax meet" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#bmScrollFinialSym"/></svg>
           <div class="bm-scroll-cylinder">
             <div class="bm-scroll-ghost-ink" aria-hidden="true">ובני ישראל הלכו ביבשה בתוך הים והמים להם חמה מימינם ומשמאלם ויאמינו ביהוה ובמשה עבדו יהוה ימלך לעלם ועד</div>
           </div>
-          <svg class="bm-scroll-finial bottom" viewBox="0 0 88 92" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <ellipse cx="44" cy="11" rx="7.5" ry="9" fill="url(#bmScrollWoodH)"/>
-            <ellipse cx="44" cy="21" rx="10.5" ry="4.5" fill="url(#bmScrollWoodH)"/>
-            <path d="M36 24 C34 32 39 39 39 48 H49 C49 39 54 32 52 24 Z" fill="url(#bmScrollWoodH)"/>
-            <ellipse cx="44" cy="49" rx="11" ry="4.2" fill="url(#bmScrollWoodH)"/>
-            <path d="M36 52 C34 59 35 67 34 73 H54 C53 67 54 59 52 52 Z" fill="url(#bmScrollWoodH)"/>
-            <ellipse cx="44" cy="80" rx="41" ry="10.5" fill="url(#bmScrollWoodDisc)" stroke="#231005" stroke-width="1"/>
-            <ellipse cx="44" cy="77.2" rx="39.5" ry="8.4" fill="url(#bmScrollWoodTop)"/>
-            <ellipse cx="44" cy="77.2" rx="23" ry="4.2" fill="none" stroke="rgba(255,220,175,0.22)" stroke-width="1"/>
-          </svg>
+          <svg class="bm-scroll-finial bottom" viewBox="0 0 88 108" preserveAspectRatio="xMidYMax meet" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#bmScrollFinialSym"/></svg>
         </div>
       </div>
       <div id="bmExitScrollCaption" class="bm-scroll-caption-3d">
@@ -3501,11 +3570,6 @@ let PRO_STRONG_DICT = {
     "orig": "רֵאשִׁית (reshith) / ἀρχή (archē)",
     "def": "Inizio, origine, primizia, fondamento temporale o d'autorità."
   },
-  "beginning": {
-    "code": "H7225 / G746",
-    "orig": "רֵאשִׁית (reshith) / ἀρχή (archē)",
-    "def": "Origin, firstfruits, commencement, chief cornerstone."
-  },
   "dio": {
     "code": "H430 / G2316",
     "orig": "אֱלֹהִים (Elohim) / θεός (Theos)",
@@ -3516,20 +3580,10 @@ let PRO_STRONG_DICT = {
     "orig": "אֱלֹהִים (Elohim)",
     "def": "Plurale di maestà ebraico che esprime la pienezza della potenza e maestà divina."
   },
-  "god": {
-    "code": "H430 / G2316",
-    "orig": "אֱלֹהִים (Elohim) / θεός (Theos)",
-    "def": "Supreme Deity, Creator and Ruler of the universe."
-  },
   "geova": {
     "code": "H3068",
     "orig": "יְהוָה (YHWH)",
     "def": "Il Nome personale di Dio (Tetragramma sacro): 'Egli fa divenire'."
-  },
-  "jehovah": {
-    "code": "H3068",
-    "orig": "יְהוָה (YHWH)",
-    "def": "The personal Name of God (Tetragrammaton): 'He Causes to Become'."
   },
   "signore": {
     "code": "H3068 / H136 / G2962",
@@ -3545,11 +3599,6 @@ let PRO_STRONG_DICT = {
     "code": "H5769 / G166",
     "orig": "עוֹלָם ('olam) / αἰώνιος (aiōnios)",
     "def": "Tempo indefinito, perpetuo, senza fine né principio quando riferito a Dio."
-  },
-  "lord": {
-    "code": "H3068 / G2962",
-    "orig": "יְהוָה (YHWH) / κύριος (Kyrios)",
-    "def": "Self-Existent Eternal One (YHWH) / Supreme Master (Kyrios)."
   },
   "onnipotente": {
     "code": "H7706 / G3841",
@@ -3871,20 +3920,10 @@ let PRO_STRONG_DICT = {
     "orig": "πίστις (pistis) / אֱמוּנָה ('emunah)",
     "def": "Certezza, solida fiducia, fedeltà costante e convinzione radicata nelle promesse divine."
   },
-  "faith": {
-    "code": "G4102 / H530",
-    "orig": "πίστις (pistis) / אֱמוּנָה ('emunah)",
-    "def": "Assured expectation, firm trust, and steadfast faithfulness."
-  },
   "amore": {
     "code": "G26 / H160",
     "orig": "ἀγάπη (agapē) / אַהֲבָה ('ahavah)",
     "def": "Amore incondizionato, guidato da princìpi e altruistico, espressione della natura di Dio."
-  },
-  "love": {
-    "code": "G26 / H160",
-    "orig": "ἀγάπη (agapē) / אַהֲבָה ('ahavah)",
-    "def": "Principled, self-sacrificing love rooted in God's own nature."
   },
   "grazia": {
     "code": "G5485 / H2580",
@@ -4320,11 +4359,6 @@ let PRO_STRONG_DICT = {
     "code": "H4043 / G2375",
     "orig": "מָגֵן (magen) / θυρεός (thyreos)",
     "def": "Grande scudo difensivo; simbolo della protezione divina e della fede."
-  },
-  "sabbath": {
-    "code": "H7676 / G4521",
-    "orig": "שַׁבָּת (shabbath) / σάββατον (sabbaton)",
-    "def": "Cessazione, riposo sacro dedicato all'adorazione di Dio."
   },
   "sabato": {
     "code": "H7676 / G4521",
@@ -5194,6 +5228,8 @@ function escapeJsStr(str) {
     .replace(/\\/g, "\\\\")
     .replace(/'/g, "\\'")
     .replace(/"/g, "&quot;")
+    .replace(/</g, "\\x3c")
+    .replace(/>/g, "\\x3e")
     .replace(/\r?\n/g, " ");
 }
 function safeJsonParse(key, fallback) {
@@ -5324,8 +5360,8 @@ let state = {
   trans1: safeGetStorage("bm_trans1") || "gb:riveduta",
   trans2: safeGetStorage("bm_trans2") || "gb:kjv",
   trans3: safeGetStorage("bm_trans3") || "gb:valera",
-  parallelCount: 1,
-  diffMode: false,
+  parallelCount: Math.min(3, Math.max(1, Number(safeGetStorage("bm_parallel_count")) || 1)),
+  diffMode: safeGetStorage("bm_diff_mode") === "1",
   themeMode: safeGetStorage("bm_theme") || "light",
   fontSize: Math.min(30, Math.max(14, Number(safeGetStorage("bm_font_size")) || 18)),
   selectedVerse: null,
@@ -5444,13 +5480,19 @@ async function removeOfflineBible(id) {
   memoryBibleCache.delete(id);
   await idbDelete(id);
 }
+function fetchWithTimeout(url, ms = 3500) {
+  if (typeof AbortController === "undefined") return fetch(url);
+  const ctrl = new AbortController();
+  const tid = setTimeout(() => ctrl.abort(), ms);
+  return fetch(url, { signal: ctrl.signal }).finally(() => clearTimeout(tid));
+}
 async function loadFullGlobalCatalog() {
   if (catalogLoaded) return dynamicCatalog;
   const map = new Map();
   CORE_BIBLES.forEach(b => map.set(b.id, b));
   let netSuccess = false;
   try {
-    const res1 = await fetch("https://api.getbible.net/v2/translations.json");
+    const res1 = await fetchWithTimeout("https://api.getbible.net/v2/translations.json", 3500);
     if (res1.ok) {
       netSuccess = true;
       const data1 = await res1.json();
@@ -5470,7 +5512,7 @@ async function loadFullGlobalCatalog() {
     }
   } catch (e) { console.debug(e); }
   try {
-    const res2 = await fetch("https://bible.helloao.org/api/available_translations.json");
+    const res2 = await fetchWithTimeout("https://bible.helloao.org/api/available_translations.json", 3500);
     if (res2.ok) {
       netSuccess = true;
       const data2 = await res2.json();
@@ -5492,12 +5534,18 @@ async function loadFullGlobalCatalog() {
   return dynamicCatalog;
 }
 
-async function populateSelects() {
-  const hasExtraBibles = state.downloadedBibles.some(id => !DEFAULT_ACTIVE_IDS.includes(id));
-  if (hasExtraBibles && !catalogLoaded) {
-    await loadFullGlobalCatalog();
-  }
+function renderBibleSelectOptionsOnly() {
   let activeList = dynamicCatalog.filter(b => state.downloadedBibles.includes(b.id));
+  if (!catalogLoaded) {
+    const knownIds = new Set(activeList.map(b => b.id));
+    state.downloadedBibles.forEach(id => {
+      if (id && !knownIds.has(id)) {
+        const shortCode = String(id).includes(":") ? String(id).split(":")[1] : String(id);
+        activeList.push({ id, name: `🌐 ${shortCode}`, lang: "Global" });
+        knownIds.add(id);
+      }
+    });
+  }
   if (activeList.length < 1) {
     state.downloadedBibles = [...DEFAULT_ACTIVE_IDS];
     safeSaveStorage("bm_v10_pro_bibles", JSON.stringify(state.downloadedBibles));
@@ -5506,16 +5554,28 @@ async function populateSelects() {
   const s1 = document.getElementById("trans1");
   const s2 = document.getElementById("trans2");
   const s3 = document.getElementById("trans3");
-  const html = activeList.map(t => `<option value="${escapeHtml(t.id)}">${escapeHtml(t.name)}</option>`).join("");
-  s1.innerHTML = html;
-  s2.innerHTML = html;
-  s3.innerHTML = html;
-  if (activeList.some(b => b.id === state.trans1)) s1.value = state.trans1;
-  else { state.trans1 = activeList[0].id; s1.value = state.trans1; }
-  if (activeList.some(b => b.id === state.trans2)) s2.value = state.trans2;
-  else { state.trans2 = (activeList[1] || activeList[0]).id; s2.value = state.trans2; }
-  if (activeList.some(b => b.id === state.trans3)) s3.value = state.trans3;
-  else { state.trans3 = (activeList[2] || activeList[0]).id; s3.value = state.trans3; }
+  const optHtml = activeList.map(t => `<option value="${escapeHtml(t.id)}">${escapeHtml(t.name)}</option>`).join("");
+  if (s1) s1.innerHTML = optHtml;
+  if (s2) s2.innerHTML = optHtml;
+  if (s3) s3.innerHTML = optHtml;
+  if (activeList.some(b => b.id === state.trans1)) { if (s1) s1.value = state.trans1; }
+  else if (!(!catalogLoaded && state.downloadedBibles.includes(state.trans1))) { state.trans1 = activeList[0].id; if (s1) s1.value = state.trans1; }
+  if (activeList.some(b => b.id === state.trans2)) { if (s2) s2.value = state.trans2; }
+  else if (!(!catalogLoaded && state.downloadedBibles.includes(state.trans2))) { state.trans2 = (activeList[1] || activeList[0]).id; if (s2) s2.value = state.trans2; }
+  if (activeList.some(b => b.id === state.trans3)) { if (s3) s3.value = state.trans3; }
+  else if (!(!catalogLoaded && state.downloadedBibles.includes(state.trans3))) { state.trans3 = (activeList[2] || activeList[0]).id; if (s3) s3.value = state.trans3; }
+}
+async function populateSelects(allowBlockingCatalog = true) {
+  renderBibleSelectOptionsOnly();
+  const hasExtraBibles = state.downloadedBibles.some(id => !DEFAULT_ACTIVE_IDS.includes(id));
+  if (hasExtraBibles && !catalogLoaded) {
+    if (allowBlockingCatalog) {
+      await loadFullGlobalCatalog();
+      renderBibleSelectOptionsOnly();
+    } else {
+      loadFullGlobalCatalog().then(() => renderBibleSelectOptionsOnly()).catch(() => {});
+    }
+  }
 }
 function setHeaderCenterPill(text = "", mode = "") {
   const pillEl = document.getElementById("currentBookChapterPill");
@@ -6572,6 +6632,18 @@ async function renderChapterView() {
       syncBmPaperMode();
       return false;
     }
+    const isOfflineErr = (typeof navigator !== "undefined" && navigator.onLine === false) || (err && err.name === "TypeError" && /fetch|network/i.test(err.message || ""));
+    if (isOfflineErr) {
+      main.innerHTML = `
+        <div class="loader">
+          📡 <b>Sei offline</b>: impossibile scaricare <b>${escapeHtml(book.name)} ${state.chapter}</b> senza connessione.<br><br>
+          Scarica questa traduzione dal Catalogo per leggerla sempre offline oppure seleziona una Bibbia già scaricata in alto.<br><br>
+          <button class="search-btn" onclick="showCatalogView()">⬇️ Apri Catalogo Offline</button>
+          <button class="nav-btn" onclick="showBooksView()">Scegli Libro</button>
+        </div>`;
+      syncBmPaperMode();
+      return false;
+    }
     const isNT = state.bookId >= 40;
     main.innerHTML = `
       <div class="loader">
@@ -6617,6 +6689,9 @@ function nextChapter() {
   loadChapterView();
     }
 function onTranslationChange() {
+  if (currentViewContext.type !== "bible") {
+    saveCurrentPositionToHistory();
+  }
   state.trans1 = document.getElementById("trans1").value;
   state.trans2 = document.getElementById("trans2").value;
   state.trans3 = document.getElementById("trans3").value;
@@ -6625,8 +6700,9 @@ function onTranslationChange() {
   safeSaveStorage("bm_trans3", state.trans3);
   loadChapterView();
 }
-function toggleParallel() {
-  state.parallelCount = (state.parallelCount % 3) + 1;
+function syncParallelAndDiffUI() {
+  state.parallelCount = Math.min(3, Math.max(1, Number(state.parallelCount) || 1));
+  state.diffMode = Boolean(state.diffMode);
   const btn = document.getElementById("parallelBtn");
   const lbl = document.getElementById("parallelLabel");
   const diffBtn = document.getElementById("diffBtn");
@@ -6634,32 +6710,40 @@ function toggleParallel() {
   const sel3 = document.getElementById("trans3");
   if (state.parallelCount === 1) {
     if (lbl) lbl.textContent = "Parallelo: 1x";
-    btn.classList.remove("active");
-    sel2.style.display = "none";
-    sel3.style.display = "none";
-    diffBtn.style.display = "none";
+    if (btn) btn.classList.remove("active");
+    if (sel2) sel2.style.display = "none";
+    if (sel3) sel3.style.display = "none";
+    if (diffBtn) diffBtn.style.display = "none";
   } else if (state.parallelCount === 2) {
     if (lbl) lbl.textContent = "Parallelo: 2x";
-    btn.classList.add("active");
-    sel2.style.display = "block";
-    sel3.style.display = "none";
-    diffBtn.style.display = "inline-flex";
+    if (btn) btn.classList.add("active");
+    if (sel2) sel2.style.display = "block";
+    if (sel3) sel3.style.display = "none";
+    if (diffBtn) diffBtn.style.display = "inline-flex";
   } else {
     if (lbl) lbl.textContent = "Parallelo: 3x";
-    btn.classList.add("active");
-    sel2.style.display = "block";
-    sel3.style.display = "block";
-    diffBtn.style.display = "inline-flex";
+    if (btn) btn.classList.add("active");
+    if (sel2) sel2.style.display = "block";
+    if (sel3) sel3.style.display = "block";
+    if (diffBtn) diffBtn.style.display = "inline-flex";
   }
+  if (diffBtn) {
+    diffBtn.textContent = state.diffMode ? "🔍Diff: ON" : "🔍Diff: OFF";
+    diffBtn.classList.toggle("highlight", state.diffMode);
+  }
+}
+function toggleParallel() {
+  state.parallelCount = (state.parallelCount % 3) + 1;
+  safeSaveStorage("bm_parallel_count", String(state.parallelCount));
+  syncParallelAndDiffUI();
   loadChapterView();
-      }
+}
 function toggleDiffMode() {
   state.diffMode = !state.diffMode;
-  const btn = document.getElementById("diffBtn");
-  btn.textContent = state.diffMode ? "🔍Diff: ON" : "🔍Diff: OFF";
-  btn.classList.toggle("highlight", state.diffMode);
+  safeSaveStorage("bm_diff_mode", state.diffMode ? "1" : "0");
+  syncParallelAndDiffUI();
   loadChapterView();
-    }
+}
     let activeNoteTarget = null;
     let selectedVersesMap = new Map();
 
@@ -6707,13 +6791,16 @@ function applyBmSettingsToDOM() {
 applyBmSettingsToDOM();
 
 let bmHapticAudioCtx = null;
+let bmHapticSuspendTimer = null;
 function bmPlayMechanicalTick(isDouble = false) {
   if (bmSettings.soundTick === false) return;
   try {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     if (!AudioCtx) return;
     if (!bmHapticAudioCtx) bmHapticAudioCtx = new AudioCtx();
-    if (bmHapticAudioCtx.state === "suspended") bmHapticAudioCtx.resume();
+    if (bmHapticAudioCtx.state === "suspended") {
+      bmHapticAudioCtx.resume().catch(() => {});
+    }
     const fireTick = (delaySec, freq, gainVal) => {
       const osc = bmHapticAudioCtx.createOscillator();
       const gain = bmHapticAudioCtx.createGain();
@@ -6729,6 +6816,13 @@ function bmPlayMechanicalTick(isDouble = false) {
     };
     fireTick(0, 1450, 0.08);
     if (isDouble) fireTick(0.055, 1950, 0.11);
+    clearTimeout(bmHapticSuspendTimer);
+    bmHapticSuspendTimer = setTimeout(() => {
+      bmHapticSuspendTimer = null;
+      if (bmHapticAudioCtx && bmHapticAudioCtx.state === "running") {
+        bmHapticAudioCtx.suspend().catch(() => {});
+      }
+    }, 2000);
   } catch (e) { console.debug(e); }
 }
 
@@ -7273,6 +7367,7 @@ function saveBookmark() {
       bookId: state.bookId,
       chapter: state.chapter,
       verse: nums[0],
+      verseSpec: rangeStr,
       ref: ref,
       text: combinedText
     });
@@ -7292,17 +7387,25 @@ function openNoteModalForVerse(customRef, customNoteId = null) {
     existing = state.notes.find(n => n.ref === customRef) || null;
   }
   if (!customRef && !existing) {
-    const vNum = state.selectedVerse || 1;
+    const multiNums = selectedVersesMap.size > 0
+      ? Array.from(selectedVersesMap.keys()).sort((a, b) => a - b)
+      : null;
+    const vNum = multiNums ? multiNums[0] : (state.selectedVerse || 1);
+    const rangeStr = multiNums ? formatSelectedVersesRangeLabel(multiNums) : String(vNum);
     if (!state.selectedVerseText) selectVerseDataFromDOM(vNum);
-    const ref = `${book.name} ${state.chapter}:${vNum}`;
+    const ref = `${book.name} ${state.chapter}:${rangeStr}`;
     existing = state.notes.find(n => n.ref === ref) || null;
+    const multiText = multiNums && multiNums.length > 1
+      ? multiNums.map(n => `[${n}] ${selectedVersesMap.get(n) || ""}`).join(" ")
+      : (state.selectedVerseText || (existing ? existing.verseText : "") || "");
     activeNoteTarget = {
       id: existing ? existing.id : null,
       bookId: state.bookId,
       chapter: state.chapter,
       verse: vNum,
+      verseSpec: rangeStr,
       ref: ref,
-      verseText: state.selectedVerseText || (existing ? existing.verseText : "") || "",
+      verseText: multiText,
       isFreeNote: false
     };
   } else if (existing) {
@@ -7312,6 +7415,7 @@ function openNoteModalForVerse(customRef, customNoteId = null) {
       bookId: existing.bookId || state.bookId,
       chapter: existing.chapter || state.chapter,
       verse: existing.verse || 1,
+      verseSpec: existing.verseSpec || "",
       ref: existing.ref,
       verseText: existing.verseText || "",
       isFreeNote: isFree
@@ -7409,6 +7513,7 @@ function saveNoteFromModal() {
     bookId: activeNoteTarget.bookId,
     chapter: activeNoteTarget.chapter,
     verse: activeNoteTarget.verse,
+    verseSpec: activeNoteTarget.verseSpec || "",
     ref: activeNoteTarget.ref,
     verseText: activeNoteTarget.verseText,
     isFreeNote: Boolean(activeNoteTarget.isFreeNote),
@@ -7780,9 +7885,75 @@ function showPubRefModal(fullRef) {
   modal.style.display = "flex";
 }
 
+let notesSearchQuery = "";
+
+function getFilteredStudioNotes() {
+  const qNorm = normalizeForSearch((notesSearchQuery || "").trim());
+  return state.notes.filter(n => {
+    const tagOk = !state.activeTagFilter || (n.tags || []).includes(state.activeTagFilter);
+    if (!tagOk) return false;
+    if (!qNorm) return true;
+    const hay = normalizeForSearch(`${n.ref || ""} ${n.text || ""} ${n.verseText || ""} ${(n.tags || []).join(" ")}`);
+    return qNorm.split(/\s+/).filter(Boolean).every(tok => hay.includes(tok));
+  });
+}
+
+function exportFilteredNotesDossier(btnEl) {
+  bmChimeHaptic();
+  const list = getFilteredStudioNotes();
+  if (!list.length) return;
+  const label = [
+    state.activeTagFilter ? `#${state.activeTagFilter}` : "Tutti i tag",
+    notesSearchQuery.trim() ? `"${notesSearchQuery.trim()}"` : ""
+  ].filter(Boolean).join(" · ");
+  const lines = [`━━━ 📝 DOSSIER APPUNTI STUDIO (${list.length} · ${label}) ━━━`];
+  list.forEach(n => {
+    lines.push("", `📌 ${n.ref}${n.date ? ` (${n.date})` : ""}`);
+    if (n.verseText) lines.push(`📖 "${n.verseText}"`);
+    lines.push(n.text || "");
+    if (n.tags && n.tags.length) lines.push(`🏷️ ${n.tags.map(t => "#" + t).join(" ")}`);
+  });
+  lines.push("", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  copyPubRefToClipboard(lines.join("\n"));
+  if (btnEl) btnEl.textContent = `✔ Copiati (${list.length})!`;
+}
+
+function renderNotesListOnly() {
+  const listWrap = document.getElementById("bmNotesListWrap");
+  const countEl = document.getElementById("bmNotesCountLabel");
+  if (!listWrap) return;
+  const filtered = getFilteredStudioNotes();
+  if (countEl) countEl.textContent = `${filtered.length} ${filtered.length === 1 ? "nota" : "note"}`;
+  if (!filtered.length) {
+    listWrap.innerHTML = `<div class="loader" style="padding:18px;">Nessun appunto corrisponde al filtro corrente.</div>`;
+    return;
+  }
+  const exportBar = (state.activeTagFilter || notesSearchQuery.trim() || filtered.length > 1)
+    ? `<div style="display:flex; justify-content:flex-end; margin-bottom:8px;"><button type="button" class="nav-btn bm-copy-hl-btn" style="font-size:12px; padding:5px 10px; border-color:#00e5ff; color:#84ffff;" onclick="exportFilteredNotesDossier(this)">📋 Esporta ${filtered.length} ${filtered.length === 1 ? "nota" : "note"}</button></div>`
+    : "";
+  listWrap.innerHTML = exportBar + filtered.map(n => {
+    const safeRefJs = escapeJsStr(n.ref || "");
+    const noteId = n.id;
+    return `
+    <div class="result-card" onclick="openRef(${Number(n.bookId) || 1}, ${Number(n.chapter) || 1}, ${n.verseSpec ? `'${escapeJsStr(n.verseSpec)}'` : (Number(n.verse) || 0)})">
+      <div class="result-ref" style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;">
+        <span>📝 ${escapeHtml(n.ref)} <small style="color:var(--text-muted);font-weight:normal;">(${escapeHtml(n.date || '')})</small></span>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <span class="bm-note-dossier-link" onclick="event.stopPropagation();exportSingleNoteDossier(${Number(noteId)}, '${safeRefJs}')" style="color:#00e5ff;cursor:pointer;font-size:13px;font-weight:800;">📋 Dossier</span>
+          <span onclick="event.stopPropagation();openNoteModalForVerse('${safeRefJs}', ${Number(noteId)})" style="color:var(--primary-light);cursor:pointer;font-size:13px;">✏️ Modifica</span>
+          <span onclick="event.stopPropagation();deleteNoteById(${Number(noteId)}, '${safeRefJs}')" style="color:var(--danger);cursor:pointer;font-size:13px;">🗑 Elimina</span>
+        </div>
+      </div>
+      ${n.verseText ? `<div style="font-size:12.5px;color:var(--text-muted);font-style:italic;margin:6px 0 8px 0;border-left:3px solid var(--primary-light);padding-left:8px;">"${escapeHtml(n.verseText)}"</div>` : ""}
+      <div style="margin-top:6px;line-height:1.55;white-space:pre-wrap;font-weight:500;">${formatNoteLinks(n.text)}</div>
+      ${(n.tags && n.tags.length) ? `<div style="margin-top:8px;">${n.tags.map(t => `<span class="tag-badge" onclick="event.stopPropagation();filterNotesByTag('${escapeJsStr(t)}')">#${escapeHtml(t)}</span>`).join("")}</div>` : ""}
+    </div>`;
+  }).join("");
+}
+
 function filterNotesByTag(tagVal) {
   state.activeTagFilter = tagVal || null;
-  showNotesView();
+  showNotesView(true);
 }
 function showNotesView(fromBack = false) {
   currentViewReqId++;
@@ -7794,7 +7965,7 @@ function showNotesView(fromBack = false) {
   const main = document.getElementById("mainContainer");
   const curBook = getBook(state.bookId);
   const headerActions = `
-    <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
+    <div style="display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
       ${getBackBtnHtml()}
       <button class="search-btn" style="flex:1;" onclick="openNewFreeNoteModal()">➕ Scrivi Nuova Nota Libera</button>
       <button class="nav-btn" onclick="openNoteModalForVerse()">📝 Nota su ${escapeHtml(curBook.name)} ${state.chapter}:${state.selectedVerse || 1}</button>
@@ -7816,38 +7987,30 @@ function showNotesView(fromBack = false) {
   if (state.activeTagFilter && !allTags.has(state.activeTagFilter)) {
     state.activeTagFilter = null;
   }
-  const filtered = state.activeTagFilter
-    ? state.notes.filter(n => (n.tags || []).includes(state.activeTagFilter))
-    : state.notes;
-  let tagBar = `<div style="margin-bottom:12px; display:flex; flex-wrap:wrap; gap:4px;">
+  let tagBar = `<div style="margin-bottom:10px; display:flex; flex-wrap:wrap; gap:4px;">
     <span class="tag-badge" style="${!state.activeTagFilter ? 'background:var(--primary-main);color:#fff;' : ''}" onclick="filterNotesByTag(null)">Tutti (${state.notes.length})</span>`;
   allTags.forEach(t => {
     const act = state.activeTagFilter === t;
     tagBar += `<span class="tag-badge" style="${act ? 'background:var(--primary-main);color:#fff;' : ''}" onclick="filterNotesByTag('${escapeJsStr(t)}')">#${escapeHtml(t)}</span>`;
   });
   tagBar += `</div>`;
-  main.innerHTML = `<div class="section-title"><span>I tuoi Appunti e Note di Studio</span><span>${filtered.length} note</span></div>` +
+  const searchBarHtml = `
+    <div class="search-box" style="margin-bottom:10px;">
+      <input type="search" id="bmNotesSearchInput" class="search-input" value="${escapeHtml(notesSearchQuery)}" placeholder="🔍 Filtra appunti per testo, riferimento o #tag..." oninput="notesSearchQuery=this.value; renderNotesListOnly();" autocomplete="off">
+    </div>
+  `;
+  main.innerHTML = `<div class="section-title"><span>I tuoi Appunti e Note di Studio</span><span id="bmNotesCountLabel">${state.notes.length} note</span></div>` +
     headerActions +
+    searchBarHtml +
     tagBar +
-    filtered.map(n => {
-      const safeRefJs = escapeJsStr(n.ref || "");
-      const noteId = n.id;
-      return `
-      <div class="result-card" onclick="openRef(${Number(n.bookId) || 1}, ${Number(n.chapter) || 1}, ${Number(n.verse) || 0})">
-        <div class="result-ref" style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;">
-          <span>📝 ${escapeHtml(n.ref)} <small style="color:var(--text-muted);font-weight:normal;">(${escapeHtml(n.date || '')})</small></span>
-          <div style="display:flex;gap:10px;align-items:center;">
-            <span class="bm-note-dossier-link" onclick="event.stopPropagation();exportSingleNoteDossier(${Number(noteId)}, '${safeRefJs}')" style="color:#00e5ff;cursor:pointer;font-size:13px;font-weight:800;">📋 Dossier</span>
-            <span onclick="event.stopPropagation();openNoteModalForVerse('${safeRefJs}', ${Number(noteId)})" style="color:var(--primary-light);cursor:pointer;font-size:13px;">✏️ Modifica</span>
-            <span onclick="event.stopPropagation();deleteNoteById(${Number(noteId)}, '${safeRefJs}')" style="color:var(--danger);cursor:pointer;font-size:13px;">🗑 Elimina</span>
-          </div>
-        </div>
-        ${n.verseText ? `<div style="font-size:12.5px;color:var(--text-muted);font-style:italic;margin:6px 0 8px 0;border-left:3px solid var(--primary-light);padding-left:8px;">"${escapeHtml(n.verseText)}"</div>` : ""}
-        <div style="margin-top:6px;line-height:1.55;white-space:pre-wrap;font-weight:500;">${formatNoteLinks(n.text)}</div>
-        ${(n.tags && n.tags.length) ? `<div style="margin-top:8px;">${n.tags.map(t => `<span class="tag-badge" onclick="event.stopPropagation();filterNotesByTag('${escapeJsStr(t)}')">#${escapeHtml(t)}</span>`).join("")}</div>` : ""}
-      </div>`;
-    }).join("");
+    `<div id="bmNotesListWrap"></div>`;
+  renderNotesListOnly();
   syncBmPaperMode();
+}
+function closeMyReadModal() {
+  window.__bmPendingDeleteFn = null;
+  const modal = document.getElementById("myReadModal");
+  if (modal) modal.style.display = "none";
 }
 function showBlueDeleteConfirmModal(titleTxt, msgHtml, onConfirm) {
   const modal = document.getElementById("myReadModal");
@@ -7861,7 +8024,7 @@ function showBlueDeleteConfirmModal(titleTxt, msgHtml, onConfirm) {
       <div style="font-size:14px; color:#e3f2fd; line-height:1.5;">${msgHtml}</div>
     </div>
     <div style="display:flex; gap:10px;">
-      <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#062356; --btn-glow:rgba(41,182,246,0.6); background:var(--bg-main); flex:1;" onclick="window.__bmPendingDeleteFn=null; document.getElementById('myReadModal').style.display='none'">Annulla</button>
+      <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#062356; --btn-glow:rgba(41,182,246,0.6); background:var(--bg-main); flex:1;" onclick="closeMyReadModal()">Annulla</button>
       <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#c62828; --btn-glow:rgba(239,83,80,0.75); background:#b71c1c; flex:1.2;" onclick="const fn=window.__bmPendingDeleteFn; window.__bmPendingDeleteFn=null; document.getElementById('myReadModal').style.display='none'; if(typeof fn==='function') fn();">🗑️ Elimina</button>
     </div>
   `;
@@ -8303,16 +8466,34 @@ function renderSearchResultsPage() {
   const searchTransId = cachedSearchMeta.transId;
 
   const highlightSearchMatches = (plainText) => {
-    let safeTxt = escapeHtml(plainText);
-    queryWords.forEach(w => {
-      if (w.length < 2) return;
+    const raw = String(plainText || "");
+    const activeTerms = queryWords.filter(w => w && w.length >= 2);
+    if (!activeTerms.length) return escapeHtml(raw);
+    const ranges = [];
+    activeTerms.forEach(w => {
       const rgx = buildAccentInsensitiveRegex(w);
-      safeTxt = safeTxt.replace(/(<[^>]+>|&(?:[a-zA-Z][a-zA-Z0-9]*|#\d+|#x[0-9a-fA-F]+);)|([^<&]+)/g, (_m, tagOrEnt, txtNode) => {
-        if (tagOrEnt) return tagOrEnt;
-        return txtNode.replace(rgx, '<span class="diff-word" style="font-weight:700;">$1</span>');
-      });
+      let m;
+      while ((m = rgx.exec(raw)) !== null) {
+        if (m[0].length === 0) { rgx.lastIndex++; continue; }
+        ranges.push([m.index, m.index + m[0].length]);
+      }
     });
-    return safeTxt;
+    if (!ranges.length) return escapeHtml(raw);
+    ranges.sort((a, b) => a[0] - b[0] || b[1] - a[1]);
+    const merged = [ranges[0]];
+    for (let i = 1; i < ranges.length; i++) {
+      const prev = merged[merged.length - 1];
+      if (ranges[i][0] <= prev[1]) prev[1] = Math.max(prev[1], ranges[i][1]);
+      else merged.push(ranges[i]);
+    }
+    let out = "", pos = 0;
+    merged.forEach(([s, e]) => {
+      if (s > pos) out += escapeHtml(raw.slice(pos, s));
+      out += `<span class="diff-word" style="font-weight:700;">${escapeHtml(raw.slice(s, e))}</span>`;
+      pos = e;
+    });
+    if (pos < raw.length) out += escapeHtml(raw.slice(pos));
+    return out;
   };
 
   let pageOptions = "";
@@ -8607,6 +8788,8 @@ async function openCrossRefsModalForVerse() {
   document.getElementById("proModal").style.display = "flex";
 }
 let savedColorFilter = "ALL";
+let savedSearchQuery = "";
+let bmSavedViewState = { hlItems: [] };
 
 function filterSavedByColor(colorCode) {
   bmHaptic(12);
@@ -8636,6 +8819,66 @@ async function copyFilteredHighlightsDossier(btnEl) {
   if (btnEl) btnEl.textContent = "✔ Copiati negli Appunti!";
 }
 
+function renderSavedListsOnly() {
+  const bmWrap = document.getElementById("bmSavedBookmarksWrap");
+  const hlWrap = document.getElementById("bmSavedHighlightsWrap");
+  const bmCntEl = document.getElementById("bmSavedBmCount");
+  const hlCntEl = document.getElementById("bmSavedHlCount");
+  if (!bmWrap || !hlWrap) return;
+
+  const qTokens = normalizeForSearch((savedSearchQuery || "").trim()).split(/\s+/).filter(Boolean);
+  const matchesQ = (ref, txt) => {
+    if (!qTokens.length) return true;
+    const hay = normalizeForSearch(`${ref || ""} ${txt || ""}`);
+    return qTokens.every(tok => hay.includes(tok));
+  };
+
+  const filteredBookmarks = state.bookmarks
+    .map((b, idx) => ({ b, idx }))
+    .filter(({ b }) => matchesQ(b.ref, b.text));
+
+  if (bmCntEl) bmCntEl.textContent = `🔖 Preferiti Salvati (${filteredBookmarks.length}${qTokens.length ? "/" + state.bookmarks.length : ""})`;
+
+  bmWrap.innerHTML = filteredBookmarks.length
+    ? filteredBookmarks.map(({ b, idx }) => {
+        const vArg = b.verseSpec ? `'${escapeJsStr(b.verseSpec)}'` : `${Number(b.verse) || 0}`;
+        return `
+        <div class="result-card" onclick="openRef(${Number(b.bookId) || 1}, ${Number(b.chapter) || 1}, ${vArg})">
+          <div class="result-ref" style="display:flex;justify-content:space-between;align-items:center;">
+            <span>🔖 ${escapeHtml(b.ref)}</span>
+            <span onclick="event.stopPropagation();deleteBookmark(${idx})" style="color:var(--danger);font-size:13px;">🗑 Elimina</span>
+          </div>
+          <div style="line-height:1.5;">${escapeHtml(b.text)}</div>
+        </div>`;
+      }).join("")
+    : `<div class="loader" style="padding:14px;">${qTokens.length ? "Nessun preferito corrisponde alla ricerca." : "Nessun preferito salvato col tasto 🔖."}</div>`;
+
+  const allHl = bmSavedViewState.hlItems || [];
+  const filteredHl = allHl.filter(h =>
+    (savedColorFilter === "ALL" || h.cls === savedColorFilter) &&
+    matchesQ(h.fullRef, h.vTxt)
+  );
+  if (hlCntEl) hlCntEl.textContent = `${filteredHl.length} ${qTokens.length ? "trovati" : "mostrati"} · ${allHl.length} totali`;
+  const copyHlBtn = document.getElementById("bmSavedCopyHlBtn");
+  if (copyHlBtn) {
+    copyHlBtn.style.display = filteredHl.length > 0 ? "" : "none";
+    copyHlBtn.textContent = `📋 Copia (${filteredHl.length})`;
+  }
+
+  hlWrap.innerHTML = filteredHl.length
+    ? `<div style="display:flex; flex-direction:column; gap:7px; margin-bottom:16px;">
+        ${filteredHl.map(h => `
+            <div class="result-card bm-hl-saved-item ${escapeHtml(h.cls)}" data-ref="${escapeHtml(h.fullRef)}" data-vtext="${escapeHtml(h.vTxt)}" style="margin-bottom:0; padding:10px 12px;" onclick="openRef(${h.bookId}, ${h.chapter}, ${h.verse})">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:${h.vTxt ? '4px' : '0'};">
+                <span class="bm-hl-title" style="font-weight:900; font-size:14px; color:var(--text-main);">🎨 ${escapeHtml(h.fullRef)}</span>
+                <span class="bm-hl-remove" onclick="event.stopPropagation(); removeSingleHighlightFromSaved('${escapeJsStr(h.key)}')" title="Rimuovi evidenziazione" style="color:#ffd54f; font-weight:800; font-size:12.5px; padding:2px 6px;">✕ Rimuovi</span>
+              </div>
+              ${h.vTxt ? `<div class="bm-hl-body" style="font-size:13.5px; color:var(--text-main); line-height:1.45;">"${escapeHtml(h.vTxt)}"</div>` : ""}
+            </div>`).join("")}
+      </div>`
+    : `<div class="loader" style="padding:14px;">${qTokens.length ? "Nessun versetto evidenziato corrisponde alla ricerca." : "Nessun versetto evidenziato con questo colore."}</div>`;
+}
+
 async function showSavedView(fromBack = false) {
   const reqId = ++currentViewReqId;
   if (!fromBack && currentViewContext.type !== "saved") saveCurrentPositionToHistory();
@@ -8662,11 +8905,6 @@ async function showSavedView(fromBack = false) {
     .filter(x => x.bookId >= 1 && x.bookId <= 66 && x.chapter >= 1 && x.verse >= 1)
     .sort((a, b) => a.bookId - b.bookId || a.chapter - b.chapter || a.verse - b.verse);
 
-  const filteredHl = savedColorFilter === "ALL"
-    ? hlEntries
-    : hlEntries.filter(x => x.cls === savedColorFilter);
-
-  // Recupera il testo dei versetti evidenziati dalla Bibbia attiva in cache/DB
   const activeBible = await getOfflineBible(state.trans1);
   if (reqId !== currentViewReqId) return;
   const getFastVerseText = (bId, chNum, vNum) => {
@@ -8687,6 +8925,19 @@ async function showSavedView(fromBack = false) {
     return "";
   };
 
+  bmSavedViewState.hlItems = hlEntries.map(h => {
+    const bObj = getBook(h.bookId);
+    return {
+      ...h,
+      fullRef: `${bObj.name} ${h.chapter}:${h.verse}`,
+      vTxt: getFastVerseText(h.bookId, h.chapter, h.verse)
+    };
+  });
+
+  const filteredColorCount = savedColorFilter === "ALL"
+    ? hlEntries.length
+    : hlEntries.filter(x => x.cls === savedColorFilter).length;
+
   const colorPillsHtml = `
     <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; align-items:center; justify-content:space-between;">
       <div style="display:flex; gap:5px; flex-wrap:wrap;">
@@ -8699,55 +8950,33 @@ async function showSavedView(fromBack = false) {
           </span>`;
         }).join("")}
       </div>
-      ${filteredHl.length > 0 ? `<button class="nav-btn bm-copy-hl-btn" style="font-size:11.5px; padding:5px 10px; border-color:#00e5ff; color:#84ffff;" onclick="copyFilteredHighlightsDossier(this)">📋 Copia (${filteredHl.length})</button>` : ""}
+      ${hlEntries.length > 0 ? `<button id="bmSavedCopyHlBtn" class="nav-btn bm-copy-hl-btn" style="font-size:11.5px; padding:5px 10px; border-color:#00e5ff; color:#84ffff;${filteredColorCount === 0 ? " display:none;" : ""}" onclick="copyFilteredHighlightsDossier(this)">📋 Copia (${filteredColorCount})</button>` : ""}
     </div>
   `;
 
-  const bookmarksHtml = state.bookmarks.length
-    ? state.bookmarks.map((b, idx) => `
-        <div class="result-card" onclick="openRef(${Number(b.bookId) || 1}, ${Number(b.chapter) || 1}, ${Number(b.verse) || 0})">
-          <div class="result-ref" style="display:flex;justify-content:space-between;align-items:center;">
-            <span>🔖 ${escapeHtml(b.ref)}</span>
-            <span onclick="event.stopPropagation();deleteBookmark(${idx})" style="color:var(--danger);font-size:13px;">🗑 Elimina</span>
-          </div>
-          <div style="line-height:1.5;">${escapeHtml(b.text)}</div>
-        </div>`).join("")
-    : `<div class="loader" style="padding:14px;">Nessun preferito salvato col tasto 🔖.</div>`;
-
-  const highlightsHtml = filteredHl.length
-    ? `<div style="display:flex; flex-direction:column; gap:7px; margin-bottom:16px;">
-        ${filteredHl.map(h => {
-          const bObj = getBook(h.bookId);
-          const fullRef = `${bObj.name} ${h.chapter}:${h.verse}`;
-          const vTxt = getFastVerseText(h.bookId, h.chapter, h.verse);
-          return `
-            <div class="result-card bm-hl-saved-item ${escapeHtml(h.cls)}" data-ref="${escapeHtml(fullRef)}" data-vtext="${escapeHtml(vTxt)}" style="margin-bottom:0; padding:10px 12px;" onclick="openRef(${h.bookId}, ${h.chapter}, ${h.verse})">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:${vTxt ? '4px' : '0'};">
-                <span class="bm-hl-title" style="font-weight:900; font-size:14px; color:var(--text-main);">🎨 ${escapeHtml(fullRef)}</span>
-                <span class="bm-hl-remove" onclick="event.stopPropagation(); removeSingleHighlightFromSaved('${escapeJsStr(h.key)}')" title="Rimuovi evidenziazione" style="color:#ffd54f; font-weight:800; font-size:12.5px; padding:2px 6px;">✕ Rimuovi</span>
-              </div>
-              ${vTxt ? `<div class="bm-hl-body" style="font-size:13.5px; color:var(--text-main); line-height:1.45;">"${escapeHtml(vTxt)}"</div>` : ""}
-            </div>`;
-        }).join("")}
-      </div>`
-    : `<div class="loader" style="padding:14px;">Nessun versetto evidenziato con questo colore.</div>`;
+  const searchBarHtml = (state.bookmarks.length > 0 || hlEntries.length > 0) ? `
+    <div class="search-box" style="margin-bottom:10px;">
+      <input type="search" id="bmSavedSearchInput" class="search-input" value="${escapeHtml(savedSearchQuery)}" placeholder="🔍 Filtra preferiti e versetti evidenziati..." oninput="savedSearchQuery=this.value; renderSavedListsOnly();" autocomplete="off">
+    </div>
+  ` : "";
 
   main.innerHTML = `
     <div class="section-title">
-      <span>🔖 Preferiti Salvati (${state.bookmarks.length})</span>
+      <span id="bmSavedBmCount">🔖 Preferiti Salvati (${state.bookmarks.length})</span>
       <span>${getBackBtnHtml()}</span>
     </div>
-    ${bookmarksHtml}
+    ${searchBarHtml}
+    <div id="bmSavedBookmarksWrap"></div>
     <div class="section-title" style="margin-top:18px;">
       <span>🎨 Versetti Evidenziati per Colore</span>
-      <span>${hlEntries.length} totali</span>
+      <span id="bmSavedHlCount">${hlEntries.length} totali</span>
     </div>
     ${colorPillsHtml}
-    ${highlightsHtml}
+    <div id="bmSavedHighlightsWrap"></div>
   `;
+  renderSavedListsOnly();
   syncBmPaperMode();
 }
-
 function deleteBookmark(idx) {
   const item = state.bookmarks[idx];
   if (!item) return;
@@ -9350,7 +9579,12 @@ function previewSelectedTtsVoice() {
 async function requestAudioWakeLock() {
   if ("wakeLock" in navigator && navigator.wakeLock) {
     try {
-      if (!bmWakeLock) bmWakeLock = await navigator.wakeLock.request("screen");
+      if (!bmWakeLock || bmWakeLock.released) {
+        bmWakeLock = await navigator.wakeLock.request("screen");
+        if (bmWakeLock && typeof bmWakeLock.addEventListener === "function") {
+          bmWakeLock.addEventListener("release", () => { bmWakeLock = null; }, { once: true });
+        }
+      }
     } catch (e) { console.debug(e); }
   }
 }
@@ -9483,6 +9717,11 @@ function highlightTtsKaraokeVerse(vNum) {
 function updateMediaSessionMetadata(titleStr, subtitleStr, isPlaying) {
   if (!("mediaSession" in navigator) || !navigator.mediaSession) return;
   try {
+    if (!isPlaying) {
+      navigator.mediaSession.metadata = null;
+      navigator.mediaSession.playbackState = "none";
+      return;
+    }
     if (typeof MediaMetadata !== "undefined") {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: titleStr || "Bibbia Multilingue PRO",
@@ -9491,7 +9730,7 @@ function updateMediaSessionMetadata(titleStr, subtitleStr, isPlaying) {
         artwork: [{ src: "./icon-512.png", sizes: "512x512", type: "image/png" }]
       });
     }
-    navigator.mediaSession.playbackState = isPlaying ? "playing" : "none";
+    navigator.mediaSession.playbackState = "playing";
     navigator.mediaSession.setActionHandler("play", () => { if (!bmAudioPlaying) toggleChapterTTS(); });
     navigator.mediaSession.setActionHandler("pause", () => { stopAllAudio(); });
     navigator.mediaSession.setActionHandler("stop", () => { stopAllAudio(); });
@@ -9655,9 +9894,6 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
   if (updateMainBtn && btn) {
     btn.classList.add("active");
     btn.innerHTML = '<span class="tab-icon">⏹️</span><span>Ferma</span>';
-  }
-  if (!bmAudioPlayer) {
-    bmAudioPlayer = new Audio();
   }
   if ("speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined") {
     let idx = 0;
@@ -10181,6 +10417,8 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
     setStatus(`💾 Salvataggio permanente nel database Offline...`);
     const fullBibleObj = { id: targetId, name: labelName, books: finalBooksData };
     await saveOfflineBible(targetId, fullBibleObj);
+    cachedSearchMatches = [];
+    cachedSearchMeta.query = "";
     if (!state.downloadedBibles.includes(targetId)) {
       state.downloadedBibles.unshift(targetId);
       safeSaveStorage("bm_v10_pro_bibles", JSON.stringify(state.downloadedBibles));
@@ -10463,8 +10701,8 @@ function parseJwEpubChapterXhtml(xhtml) {
   const doc = parser.parseFromString(xhtml, "text/html");
   // Estrae PRIMA le note in calce ufficiali (es. 9.987 note in nwt_I.epub) prima di pulire il corpo dei versetti
   const footnotes = extractJwFootnotesFromDoc(doc);
-  // Rimuove note a piè di pagina, riferimenti marginali, intestazioni e link di rimando
-  doc.querySelectorAll(".footnote, .footnotes, .groupFootnote, .marginal, a.b, a.fn, rt, sup.xrefLink, .du-color--textSubdued").forEach(el => el.remove());
+  // Rimuove note a piè di pagina, riferimenti marginali, intestazioni e link di rimando (*, +)
+  doc.querySelectorAll(".footnote, .footnotes, .groupFootnote, .marginal, a.b, a.fn, a.xrefLink, span.fn, rt, sup.xrefLink, .du-color--textSubdued").forEach(el => el.remove());
 
   const body = doc.body || doc.documentElement;
   if (!body) return { verses: [], footnotes };
@@ -10499,7 +10737,6 @@ function parseJwEpubChapterXhtml(xhtml) {
         let cleanTxt = (parts[i + 1] || "")
           .replace(leadVNumRe, "")
           .replace(/^[\s\u00A0]+/, "")
-          .replace(/[\+\*]/g, "")
           .replace(/\s+/g, " ")
           .trim();
         if (vNum > 0 && cleanTxt) {
@@ -10537,7 +10774,6 @@ function parseJwEpubChapterXhtml(xhtml) {
     let cleanTxt = (fbParts[i + 1] || "")
       .replace(leadVNumRe, "")
       .replace(/^[\s\u00A0]+/, "")
-      .replace(/[\+\*]/g, "")
       .replace(/\s+/g, " ")
       .trim();
     if (vNum > 0 && cleanTxt) {
@@ -11346,22 +11582,52 @@ let insightSearchQuery = "";
 let searchTimeout = null;
 let currentHitIdx = 0;
 
+function stripRtfIgnoredGroups(src) {
+  const ignRe = /^\{\\(?:fonttbl|colortbl|stylesheet|info|pict|object|header|footer|fldinst|\*\\)/i;
+  const outParts = [];
+  let lastCopy = 0;
+  let i = 0;
+  while (i < src.length) {
+    if (src[i] === "{" && ignRe.test(src.slice(i, i + 24))) {
+      let depth = 0;
+      let j = i;
+      while (j < src.length) {
+        if (src[j] === "\\") { j += 2; continue; }
+        if (src[j] === "{") depth++;
+        else if (src[j] === "}") {
+          depth--;
+          if (depth === 0) {
+            if (i > lastCopy) outParts.push(src.slice(lastCopy, i));
+            i = j + 1;
+            lastCopy = i;
+            break;
+          }
+        }
+        j++;
+      }
+      if (depth !== 0) i++;
+    } else {
+      i++;
+    }
+  }
+  if (lastCopy < src.length) outParts.push(src.slice(lastCopy));
+  return outParts.join("");
+}
 function parseRtfToCleanText(rtfRaw) {
   if (!rtfRaw) return "";
-  let s = rtfRaw
+  let s = stripRtfIgnoredGroups(rtfRaw)
     .replace(/\\(?:par|pard|sect|page|line|row)\b[ \t]*/gi, "\n")
     .replace(/\\\r?\n/g, "\n")
     .replace(/\\tab\b[ \t]*/gi, " ");
-  s = s.replace(/\{\\(?:fonttbl|colortbl|stylesheet|info|pict|object|header|footer|\*\\)[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/gi, "");
+  s = s.replace(/\\u(-?\d+)[ \t]?(?:\\'[0-9a-fA-F]{2}|[^\\{}])?/g, (_, d) => {
+    let c = parseInt(d, 10);
+    if (c < 0) c += 65536;
+    return String.fromCharCode(c);
+  });
   s = s.replace(/\\'[0-9a-fA-F]{2}/g, m => {
     const code = parseInt(m.slice(2), 16);
     try { return new TextDecoder("windows-1252").decode(new Uint8Array([code])); }
     catch (e) { console.debug(e); return String.fromCharCode(code); }
-  });
-  s = s.replace(/\\u(-?\d+)\??/g, (_, d) => {
-    let c = parseInt(d, 10);
-    if (c < 0) c += 65536;
-    return String.fromCharCode(c);
   });
   s = s.replace(/\\~/g, " ").replace(/\\_/g, "-");
   s = s.replace(/\\[a-zA-Z]+-?\d*[ \t]?/g, "");
@@ -11369,7 +11635,6 @@ function parseRtfToCleanText(rtfRaw) {
   s = s.replace(/[{}]/g, "");
   return s.replace(/\r/g, "").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
 }
-
 function splitCleanTextIntoEntries(rawText, entriesArray) {
   const lines = rawText.split("\n").map(l => l.trim()).filter(Boolean);
   let curTitle = "";
@@ -11498,6 +11763,7 @@ async function importInsightFiles(event) {
     insightTitleIndexMap = null;
     resetInsightLookupCaches();
     bmDynamicCatalogEnriched = false;
+    bmEnrichPromise = null;
     setStatus(`💾 Salvataggio di ${entries.length} voci nel database offline...`);
     await idbPut("bm:insight_it", payload);
     setStatus(`✔ Perspicacia salvata offline (${entries.length} voci pronte)!`);
@@ -11593,7 +11859,9 @@ function buildAccentInsensitiveRegex(term) {
     o: "[oòóôõö]",
     u: "[uùúûü]"
   };
-  const pattern = clean.replace(/[aeiou]/g, ch => map[ch] || ch);
+  const pattern = clean
+    .replace(/[aeiou]/g, ch => map[ch] || ch)
+    .replace(/\s+/g, "[\\s'’\\-.,;:]+");
   return new RegExp(`(${pattern})`, "gi");
 }
 
@@ -11927,6 +12195,7 @@ async function importSiFile(event) {
     };
     siMemCache = payload;
     bmDynamicCatalogEnriched = false;
+    bmEnrichPromise = null;
     setStatus(`💾 Salvataggio di ${books.length} libri nel database offline...`);
     await idbPut("bm:si_it", payload);
     setStatus(`✔ Tutta la Scrittura salvata offline (${books.length} libri pronti)!`);
@@ -12775,7 +13044,24 @@ function bpBindGestures() {
     const p = pos(e);
     bpZoomAt(e.deltaY < 0 ? 1.18 : 1 / 1.18, p.x, p.y);
   }, { passive: false });
-  window.addEventListener("resize", () => { if (document.getElementById("mapsViewer").style.display === "flex" && bpV.map) bpApply(); });
+  window.addEventListener("resize", () => {
+    const mv = document.getElementById("mapsViewer");
+    if (!mv || mv.style.display !== "flex" || !bpV.map || !bpV.w || !bpV.h) return;
+    const stageEl = document.getElementById("bpStage");
+    if (!stageEl || !stageEl.clientWidth || !stageEl.clientHeight) return;
+    const oldFit = bpV.fit || 1;
+    const wasNearFit = Math.abs(bpV.s - oldFit) <= oldFit * 0.06;
+    const relScale = bpV.s / oldFit;
+    bpV.fit = Math.min(stageEl.clientWidth / bpV.w, stageEl.clientHeight / bpV.h);
+    bpV.minS = bpV.fit * 0.9;
+    bpV.maxS = Math.max(bpV.fit * 10, 2);
+    if (wasNearFit) {
+      bpFitView();
+    } else {
+      bpV.s = Math.min(bpV.maxS, Math.max(bpV.minS, bpV.fit * relScale));
+      bpApply();
+    }
+  });
 }
 
 // ---------- Elenco dei luoghi della cartina (legenda ricercabile) ----------
@@ -12801,11 +13087,11 @@ function bpSheetHtml(map) {
     });
   }
   if (map.altitudeScale) {
-    h += `<div class="bp-gt">Altitudine</div>` + map.altitudeScale.rows.map(r => `<div class="bp-it"><span class="bp-g">${r.meters} m</span><span>${r.feet} piedi${r.note ? " — " + escapeHtml(r.note) : ""}</span></div>`).join("");
+    h += `<div class="bp-gt">Altitudine</div>` + map.altitudeScale.rows.map(r => `<div class="bp-it"><span class="bp-g">${escapeHtml(String(r.meters ?? ""))} m</span><span>${escapeHtml(String(r.feet ?? ""))} piedi${r.note ? " — " + escapeHtml(r.note) : ""}</span></div>`).join("");
   }
   (map.groups || []).forEach((g, gi) => {
     h += `<div class="bp-group-wrap" data-g="${gi}">`;
-    if (g.title) h += `<div class="bp-gt">${escapeHtml(g.title)}${g.titleGrid ? " · " + g.titleGrid : ""}</div>`;
+    if (g.title) h += `<div class="bp-gt">${escapeHtml(g.title)}${g.titleGrid ? " · " + escapeHtml(String(g.titleGrid)) : ""}</div>`;
     (g.items || []).forEach(it => {
       const cells = it.grid || [];
       const cellsArg = escapeJsStr(cells.join(","));
@@ -13159,13 +13445,15 @@ function scrollRpToToday(smooth = false) {
 function buildStudioBackupObject() {
   return {
     app: "BibbiaMultilingue_PRO",
-    version: "PRO_v14.9.0",
+    version: "PRO_v15.0.1",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
     trans1: state.trans1,
     trans2: state.trans2,
     trans3: state.trans3,
+    parallelCount: state.parallelCount,
+    diffMode: state.diffMode,
     downloadedBibles: state.downloadedBibles,
     fontSize: state.fontSize,
     themeMode: state.themeMode,
@@ -13279,6 +13567,15 @@ function applyStudioBackupObject(parsed) {
   if (parsed.trans1) { state.trans1 = String(parsed.trans1); safeSaveStorage("bm_trans1", state.trans1); }
   if (parsed.trans2) { state.trans2 = String(parsed.trans2); safeSaveStorage("bm_trans2", state.trans2); }
   if (parsed.trans3) { state.trans3 = String(parsed.trans3); safeSaveStorage("bm_trans3", state.trans3); }
+  if (parsed.parallelCount !== undefined) {
+    state.parallelCount = Math.min(3, Math.max(1, Number(parsed.parallelCount) || 1));
+    safeSaveStorage("bm_parallel_count", String(state.parallelCount));
+  }
+  if (parsed.diffMode !== undefined) {
+    state.diffMode = Boolean(parsed.diffMode);
+    safeSaveStorage("bm_diff_mode", state.diffMode ? "1" : "0");
+  }
+  syncParallelAndDiffUI();
   if (parsed.bulbPosition && typeof parsed.bulbPosition === "object" && !Array.isArray(parsed.bulbPosition)) {
     safeSaveStorage("bm_bulb_pos_v1", JSON.stringify(parsed.bulbPosition));
     applySavedBulbPosition();
@@ -13419,6 +13716,19 @@ async function scanOfflineLibraryModules() {
   return modules;
 }
 
+async function getBmStorageSummaryHtml() {
+  try {
+    if (!navigator.storage) return "";
+    const persisted = typeof navigator.storage.persisted === "function" ? await navigator.storage.persisted() : null;
+    const est = typeof navigator.storage.estimate === "function" ? await navigator.storage.estimate() : null;
+    const usedMb = est && typeof est.usage === "number" ? (est.usage / (1024 * 1024)).toFixed(1) : null;
+    const quotaMb = est && typeof est.quota === "number" ? Math.round(est.quota / (1024 * 1024)) : null;
+    const pBadge = persisted === true ? "🔒 <b>Archiviazione Persistente Attiva</b>" : (persisted === false ? "⚠️ <i>Archiviazione Non Persistente</i>" : "");
+    const qBadge = (usedMb !== null && quotaMb !== null) ? `💾 Spazio: <b>${usedMb} MB</b> / ${quotaMb} MB` : "";
+    if (!pBadge && !qBadge) return "";
+    return `<div style="font-size:11.5px; color:#cfe3ff; background:var(--bg-main); border:1px solid var(--border-color); border-radius:8px; padding:6px 10px; margin-bottom:10px; display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap;"><span>${pBadge}</span><span>${qBadge}</span></div>`;
+  } catch (_e) { return ""; }
+}
 async function openLibraryMigrationModal() {
   bmChimeHaptic();
   closeActionBar();
@@ -13428,7 +13738,7 @@ async function openLibraryMigrationModal() {
   body.innerHTML = `<div class="loader">🔍 Scansione del database offline in corso...</div>`;
   document.getElementById("proModal").style.display = "flex";
 
-  const modules = await scanOfflineLibraryModules();
+  const [modules, storageHtml] = await Promise.all([scanOfflineLibraryModules(), getBmStorageSummaryHtml()]);
   const totalCount = modules.length;
 
   const listHtml = totalCount > 0
@@ -13442,9 +13752,10 @@ async function openLibraryMigrationModal() {
     : `<div class="loader" style="padding:14px;">Nessun modulo offline salvato in questa istanza dell'app.<br><span style="font-size:12px;">Usa il pulsante verde qui sopra per importare i file esportati da AppsGeyser!</span></div>`;
 
   body.innerHTML = `
-    <div style="font-size:12.5px; color:#cfe3ff; line-height:1.45; margin-bottom:10px;">
+    <div style="font-size:12.5px; color:#cfe3ff; line-height:1.45; margin-bottom:8px;">
       Trasferisci <b>tutto</b> (Bibbie EPUB, Tutta la Scrittura, Perspicacia, Giorno, Cartine HD e Dati Studio) da AppsGeyser alla PWA di Chrome senza riconvertire nessun file.
     </div>
+    ${storageHtml}
     <div id="bmMigrationStatus" style="display:none; font-size:13px; font-weight:800; color:#84ffff; background:var(--bg-main); border:1px solid #00e5ff; border-radius:8px; padding:8px 10px; margin-bottom:10px; text-align:center;"></div>
     <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
       <label class="myread-action-btn btn-color-anim" style="--btn-bg:#00c853; --btn-glow:rgba(0,229,255,0.8); background:linear-gradient(135deg, #1b5e20, #2e7d32); text-align:center; display:block;">
@@ -13476,7 +13787,7 @@ function setMigrationStatus(htmlMsg) {
 
 async function buildAndDeliverLibraryBundle(keysList, includeStudio, fileName, shareTitle) {
   const parts = [
-    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v14.9.0","date":',
+    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v15.0.1","date":',
     JSON.stringify(new Date().toISOString())
   ];
   if (includeStudio) {
@@ -13550,6 +13861,7 @@ async function importLibraryMigrationFiles(event) {
           const item = parsed.entries[eIdx];
           if (!item || typeof item.key !== "string" || !item.key.trim() || item.value === undefined) continue;
           const k = item.key.trim();
+          if (!/^(?:bm:|gb:|epub:|helloao:)/.test(k)) continue;
           setMigrationStatus(`💾 Salvataggio offline (${fIdx + 1}/${files.length}) · blocco ${eIdx + 1}/${parsed.entries.length}...`);
           await idbPut(k, item.value);
           importedBlocks++;
@@ -13591,6 +13903,9 @@ async function importLibraryMigrationFiles(event) {
     bpMeta = null;
     bpPlaceMap = null;
     bmDynamicCatalogEnriched = false;
+    bmEnrichPromise = null;
+    cachedSearchMatches = [];
+    cachedSearchMeta.query = "";
     await loadExternalExegeticalModules();
     await populateSelects();
     updateReadingPlanHeaderBtn();
@@ -14280,19 +14595,46 @@ document.addEventListener("touchend", () => setTimeout(handlePortionTextSelectio
 // ============================================================================
 // MODULO PWA 100% OFFLINE (Service Worker Registration & Verifica Aggiornamenti)
 // ============================================================================
+let bmSwReloading = false;
+function showBmSwUpdatePrompt() {
+  showBlueInfoModal(
+    "🚀 Aggiornamento Pronto",
+    `È disponibile una nuova versione di <b>Bibbia Multilingue PRO</b>.<br><br><button type="button" class="myread-action-btn" onclick="applyPendingBmSwUpdate()">🔄 Ricarica Ora</button>`
+  );
+}
+function applyPendingBmSwUpdate() {
+  try {
+    if (bmSwReg && bmSwReg.waiting) {
+      bmSwReg.waiting.postMessage({ type: "SKIP_WAITING" });
+      setTimeout(() => {
+        if (!bmSwReloading) {
+          bmSwReloading = true;
+          window.location.reload();
+        }
+      }, 1500);
+      return;
+    }
+  } catch (e) { console.debug(e); }
+  window.location.reload();
+}
 function initBmServiceWorker() {
   if (!("serviceWorker" in navigator) || !/^https?:$/i.test(window.location.protocol)) return;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (bmSwReloading) return;
+    bmSwReloading = true;
+    window.location.reload();
+  });
   navigator.serviceWorker.register("./sw.js").then(reg => {
     bmSwReg = reg;
+    if (reg.waiting && navigator.serviceWorker.controller) {
+      showBmSwUpdatePrompt();
+    }
     reg.addEventListener("updatefound", () => {
       const nw = reg.installing;
       if (!nw) return;
       nw.addEventListener("statechange", () => {
         if (nw.state === "installed" && navigator.serviceWorker.controller) {
-          showBlueInfoModal(
-            "🚀 Aggiornamento Pronto",
-            `È disponibile una nuova versione di <b>Bibbia Multilingue PRO</b>.<br><br><button type="button" class="myread-action-btn" onclick="window.location.reload()">🔄 Ricarica Ora</button>`
-          );
+          showBmSwUpdatePrompt();
         }
       });
     });
@@ -14326,9 +14668,15 @@ async function checkBmPwaUpdates() {
         statusLine = "✔ Service Worker attivo e sincronizzato.";
       }
     }
+    const hasWaitingUpdate = Boolean(reg && reg.waiting);
+    if (reg) bmSwReg = reg;
+    const stHtml = await getBmStorageSummaryHtml();
+    const actionBtnHtml = hasWaitingUpdate
+      ? `<button type="button" class="myread-action-btn" style="background:linear-gradient(135deg,#00838f,#00acc1);border-color:#84ffff;" onclick="applyPendingBmSwUpdate()">🚀 Applica Nuovo Aggiornamento Ora</button>`
+      : `<button type="button" class="myread-action-btn" onclick="window.location.reload()">🔄 Ricarica App</button>`;
     showBlueInfoModal(
       "📡 Stato PWA Offline & Aggiornamenti",
-      `${statusLine}<br><br><button type="button" class="myread-action-btn" onclick="window.location.reload()">🔄 Ricarica App</button>`
+      `${statusLine}${stHtml ? "<br>" + stHtml : ""}<br>${actionBtnHtml}`
     );
   } catch (err) {
     showBlueInfoModal("⚠️ Verifica PWA", escapeHtml(err.message || "Impossibile contattare il Service Worker."));
@@ -14636,7 +14984,7 @@ document.addEventListener("touchend", function(e) {
   const { x, y, sel } = selectTouchStartPos;
   selectTouchStartPos = null;
   if (sel && !sel.disabled && t && Math.hypot(t.clientX - x, t.clientY - y) < 12) {
-    e.preventDefault();
+    if (e.cancelable) e.preventDefault();
     e.stopPropagation();
     sel.blur();
     lastCustomSelectOpenAt = Date.now();
@@ -14677,7 +15025,7 @@ document.addEventListener("keydown", function(e) {
     closeMapViewer();
     return;
   }
-  if (document.getElementById("myReadModal")?.style.display === "flex") { document.getElementById("myReadModal").style.display = "none"; return; }
+  if (document.getElementById("myReadModal")?.style.display === "flex") { closeMyReadModal(); return; }
   if (document.getElementById("proModal")?.style.display === "flex") { closeProModal(); return; }
   if (document.getElementById("noteModal")?.style.display === "flex") { closeNoteModal(); return; }
   if (document.getElementById("verseActionBar")?.style.display === "flex") { closeActionBar(); return; }
@@ -14819,6 +15167,9 @@ function openTtsSettingsModal() {
 function setBmTtsRate(newRate, refreshTarget = "modal") {
   bmTtsRate = Math.min(1.5, Math.max(0.75, Number(newRate) || 1.0));
   safeSaveStorage("bm_tts_rate", String(bmTtsRate));
+  if (bmAudioPlayer) {
+    try { bmAudioPlayer.playbackRate = bmTtsRate; } catch (e) { console.debug(e); }
+  }
   if (!bmAudioPlaying) {
     const btn = document.getElementById("ttsChapterBtn");
     if (btn) btn.innerHTML = `<span class="tab-icon">🔊</span><span>${bmTtsRate !== 1 ? "Ascolta " + bmTtsRate + "x" : "Ascolta"}</span>`;
@@ -15014,8 +15365,7 @@ function clearBmExitTimers() {
 }
 
 function onBmExitBackdropClick(e) {
-  if (!e || !e.target) return;
-  if (e.target.id !== "bmExitModal" && e.target.id !== "bmExitScrollStage") return;
+  if (!e || !e.target || e.target.id !== "bmExitModal") return;
   if (Date.now() < bmExitSuppressBackdropUntil) return;
   closeBmExitModal(true);
 }
@@ -15038,21 +15388,25 @@ function setBmScrollProgress(prog, animate = false) {
   bmScrollProgress = clamped;
   if (!scrollEl) return;
   const maxSheetW = getBmScrollMaxSheetWidth();
-  const curSheetW = maxSheetW * (1 - clamped);
+  const halfClip = (maxSheetW * 0.5) * clamped;
+  const rollShiftPx = Math.max(0, halfClip - 1.5 * clamped);
+  const cylScale = 1 + clamped * 0.04;
+  const castOp = Math.max(0, 1 - clamped * 1.18);
   clearTimeout(bmScrollAnimTimer);
   bmScrollAnimTimer = null;
   scrollEl.classList.toggle("bm-scroll-animating", Boolean(animate));
   scrollEl.style.setProperty("--bm-sheet-max", `${maxSheetW}px`);
-  scrollEl.style.setProperty("--bm-sheet-w", `${curSheetW.toFixed(1)}px`);
-  scrollEl.style.setProperty("--bm-roll-extra", `${(clamped * 5.5).toFixed(2)}px`);
-  scrollEl.style.setProperty("--bm-scroll-shade", (0.24 + clamped * 0.34).toFixed(2));
-  scrollEl.style.setProperty("--bm-roll-shift", `${(clamped * 6).toFixed(1)}%`);
+  scrollEl.style.setProperty("--bm-sheet-clip", `${halfClip.toFixed(2)}px`);
+  scrollEl.style.setProperty("--bm-roll-tx-l", `${rollShiftPx.toFixed(2)}px`);
+  scrollEl.style.setProperty("--bm-roll-tx-r", `${(-rollShiftPx).toFixed(2)}px`);
+  scrollEl.style.setProperty("--bm-cyl-scale", cylScale.toFixed(3));
+  scrollEl.style.setProperty("--bm-cast-op", castOp.toFixed(2));
   scrollEl.setAttribute("aria-pressed", clamped >= 0.5 ? "true" : "false");
   if (animate) {
     bmScrollAnimTimer = setTimeout(() => {
       bmScrollAnimTimer = null;
       scrollEl.classList.remove("bm-scroll-animating");
-    }, 580);
+    }, 540);
   }
 }
 
@@ -15115,6 +15469,7 @@ function setBmExitModalStep(stepNum) {
   if (modal) {
     modal.classList.toggle("bm-exit-step2-active", bmExitCurrentStep === 2);
     modal.classList.toggle("bm-exit-scroll-mode", isScrollMode);
+    modal.setAttribute("aria-labelledby", isScrollMode ? "bmExitScrollCaption" : "bmExitModalTitle");
   }
   resetBmExitHandVisuals();
   if (bmExitCurrentStep === 2) {
@@ -15300,7 +15655,36 @@ function initBmExitHandDrag() {
   let lastRot = 0;
   let lastProgress = 0;
   let maxDrag = 156;
+  let dragRafId = null;
+  let pendingMoveState = null;
 
+  const flushPendingVisuals = () => {
+    dragRafId = null;
+    if (!pendingMoveState || !dragEngaged || !bmExitConfirmOpen || bmExitCurrentStep !== 2) return;
+    const st = pendingMoveState;
+    if (st.mode === "scroll") {
+      setBmScrollProgress(st.nextProg, false);
+      return;
+    }
+    if (handWrap) handWrap.style.transform = `translate3d(${st.dx.toFixed(1)}px, -50%, 0) rotate(${st.rot.toFixed(2)}deg)`;
+    if (trail) {
+      trail.style.transform = `scaleX(${st.progress.toFixed(3)})`;
+      trail.style.opacity = st.progress > 0.03 ? (0.28 + st.progress * 0.7).toFixed(2) : "0";
+    }
+    if (ripple) {
+      ripple.style.opacity = st.progress > 0.03 ? (0.45 + st.progress * 0.52).toFixed(2) : "0.7";
+      const sc = (0.85 + st.progress * 0.65).toFixed(2);
+      ripple.style.transform = `scale3d(${sc}, ${sc}, 1)`;
+    }
+  };
+  const scheduleVisualFrame = (st) => {
+    pendingMoveState = st;
+    if (dragRafId === null) dragRafId = requestAnimationFrame(flushPendingVisuals);
+  };
+  const cancelScheduledFrame = () => {
+    if (dragRafId !== null) { cancelAnimationFrame(dragRafId); dragRafId = null; }
+    pendingMoveState = null;
+  };
   const engageDragVisuals = () => {
     if (dragEngaged) return;
     dragEngaged = true;
@@ -15360,6 +15744,7 @@ function initBmExitHandDrag() {
     startScrollProg = bmScrollProgress;
     dragEngaged = false;
     maxAbsDx = 0;
+    cancelScheduledFrame();
     lastDx = 0;
     lastRot = 0;
     lastProgress = 0;
@@ -15405,8 +15790,8 @@ function initBmExitHandDrag() {
       }
       lastDx = rawDx;
       const nextProg = Math.min(1, Math.max(0, startScrollProg + (-rawDx / maxDrag)));
-      lastProgress = nextProg;
-      setBmScrollProgress(nextProg, false);
+      bmScrollProgress = nextProg;
+      scheduleVisualFrame({ mode: "scroll", nextProg });
       return;
     }
 
@@ -15423,20 +15808,16 @@ function initBmExitHandDrag() {
     lastDx = dx;
     lastRot = rot;
     lastProgress = progress;
-    if (handWrap) handWrap.style.transform = `translate3d(${dx.toFixed(1)}px, -50%, 0) rotate(${rot.toFixed(2)}deg)`;
-    if (trail) {
-      trail.style.transform = `scaleX(${progress.toFixed(3)})`;
-      trail.style.opacity = progress > 0.03 ? (0.28 + progress * 0.7).toFixed(2) : "0";
-    }
-    if (ripple) {
-      ripple.style.opacity = progress > 0.03 ? (0.45 + progress * 0.52).toFixed(2) : "0.7";
-      const sc = (0.85 + progress * 0.65).toFixed(2);
-      ripple.style.transform = `scale3d(${sc}, ${sc}, 1)`;
-    }
+    scheduleVisualFrame({ mode: "hand", dx, rot, progress });
   }, { passive: true });
 
   const finishDrag = (e, cancelled) => {
     if (bmExitActivePid === null || e.pointerId !== bmExitActivePid) return;
+    const hadPending = pendingMoveState;
+    cancelScheduledFrame();
+    if (hadPending && !cancelled && bmExitConfirmOpen && bmExitCurrentStep === 2 && dragEngaged && hadPending.mode === "scroll") {
+      setBmScrollProgress(hadPending.nextProg, false);
+    }
     releaseBmExitDragPointer();
     if (!bmExitConfirmOpen || bmExitCurrentStep !== 2) {
       resetBmExitHandVisuals();
@@ -15459,7 +15840,7 @@ function initBmExitHandDrag() {
       if (dragEngaged || maxAbsDx >= 10) {
         bmExitSuppressBackdropUntil = Date.now() + 400;
       }
-      const isQuickTapOnScroll = startedOnScroll && !dragEngaged && maxAbsDx < 10 && elapsed < 360;
+      const isQuickTapOnScroll = startedOnScroll && !dragEngaged && maxAbsDx < 10 && elapsed < 450;
       if (isQuickTapOnScroll) {
         bmExitSuppressBackdropUntil = Date.now() + 400;
         toggleBmBiblicalScroll();
@@ -15674,7 +16055,7 @@ function onBmExitChoice(shouldExit, btnEl) {
 
     // 4. Altri modali e barra azioni versetto
     const handledModal =
-      closeIfFlex("myReadModal") ||
+      closeIfFlex("myReadModal", closeMyReadModal) ||
       closeIfFlex("proModal", closeProModal) ||
       closeIfFlex("noteModal", closeNoteModal) ||
       closeIfFlex("verseActionBar", closeActionBar);
@@ -15968,9 +16349,21 @@ function showXRayRootPopup(dictKey, contextBookId = null) {
   modal.style.display = "flex";
 }
 
+function pickStrongRootForTestament(entry, isNT) {
+  if (!entry || typeof entry !== "object") return { code: "", orig: "" };
+  const codeParts = String(entry.code || "").split("/").map(s => s.trim()).filter(Boolean);
+  const origParts = String(entry.orig || "").split("/").map(s => s.replace(/\([^)]*\)/g, "").trim()).filter(Boolean);
+  const prefIdx = codeParts.findIndex(c => c.toUpperCase().startsWith(isNT ? "G" : "H"));
+  return {
+    code: (prefIdx > -1 ? codeParts[prefIdx] : codeParts[0]) || String(entry.code || ""),
+    orig: (prefIdx > -1 && origParts[prefIdx] ? origParts[prefIdx] : origParts[0]) || String(entry.orig || "")
+  };
+}
+
 function decorateXRayInterlinearRoots(htmlText) {
   if (!bmXRayRootsActive || !htmlText) return htmlText;
   const seenInVerse = new Set();
+  const isNT = (lastXRayData ? lastXRayData.bookId : state.bookId) >= 40;
   return htmlText.replace(/(<[^>]+>|&(?:[a-zA-Z][a-zA-Z0-9]*|#\d+|#x[0-9a-fA-F]+);)|([A-Za-zÀ-ÖØ-öø-ÿ]{3,})/g, (match, tagOrEnt, word) => {
     if (tagOrEnt) return tagOrEnt;
     const dictKey = getStrongDictKey(word);
@@ -15978,13 +16371,8 @@ function decorateXRayInterlinearRoots(htmlText) {
     const d = PRO_STRONG_DICT[dictKey];
     if (!d || typeof d !== "object") return match;
     seenInVerse.add(dictKey);
-    const isNT = (lastXRayData ? lastXRayData.bookId : state.bookId) >= 40;
-    const origParts = String(d.orig || "").split("/").map(s => s.replace(/\([^)]*\)/g, "").trim()).filter(Boolean);
-    const codeParts = String(d.code || "").split("/").map(s => s.trim()).filter(Boolean);
-    const prefIdx = codeParts.findIndex(c => c.toUpperCase().startsWith(isNT ? "G" : "H"));
-    const shortCode = (prefIdx > -1 ? codeParts[prefIdx] : codeParts[0]) || d.code;
-    const shortRoot = (prefIdx > -1 && origParts[prefIdx] ? origParts[prefIdx] : origParts[0]) || d.orig;
-    return `${word} <span onclick="event.stopPropagation(); showXRayRootPopup('${escapeJsStr(dictKey)}')" title="${escapeHtml(d.orig)} — ${escapeHtml(d.def)}" style="display:inline-flex; align-items:center; gap:3px; background:linear-gradient(135deg, rgba(255,213,79,0.22), rgba(0,229,255,0.18)); color:#ffd54f; border:1px solid rgba(255,213,79,0.75); border-radius:6px; padding:0 5px; font-size:11px; font-weight:800; cursor:pointer; vertical-align:baseline;">${escapeHtml(shortRoot)}·${escapeHtml(shortCode)}</span>`;
+    const picked = pickStrongRootForTestament(d, isNT);
+    return `${word} <span onclick="event.stopPropagation(); showXRayRootPopup('${escapeJsStr(dictKey)}')" title="${escapeHtml(d.orig)} — ${escapeHtml(d.def)}" style="display:inline-flex; align-items:center; gap:3px; background:linear-gradient(135deg, rgba(255,213,79,0.22), rgba(0,229,255,0.18)); color:#ffd54f; border:1px solid rgba(255,213,79,0.75); border-radius:6px; padding:0 5px; font-size:11px; font-weight:800; cursor:pointer; vertical-align:baseline;">${escapeHtml(picked.orig)}·${escapeHtml(picked.code)}</span>`;
   });
 }
 
@@ -16009,10 +16397,10 @@ function copyXRayComparisonDossier(btnEl) {
   bmChimeHaptic();
   const d = lastXRayDossier;
   if (!d) return;
-  const rowsList = d.rows || d.editions || [];
+  const rowsList = d.rows || [];
   const lines = [
     `━━━ 🔬 CONFRONTO ESEGETICO RAGGI X: ${d.ref} ━━━`,
-    ...rowsList.map(r => `• ${r.name || r.label}:\n  "${r.text}"`),
+    ...rowsList.map(r => `• ${r.name}:\n  "${r.text}"`),
     `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
   ];
   copyPubRefToClipboard(lines.join("\n"));
@@ -16023,10 +16411,10 @@ function saveXRayDossierAsNote(btnEl) {
   bmChimeHaptic();
   const d = lastXRayDossier;
   if (!d) return;
-  const rowsList = d.rows || d.editions || [];
+  const rowsList = d.rows || [];
   const bodyLines = [
     `🔬 Confronto Multilingue Raggi X (${d.ref}):`,
-    ...rowsList.map(r => `• ${r.name || r.label}: "${r.text}"`)
+    ...rowsList.map(r => `• ${r.name}: "${r.text}"`)
   ].join("\n");
 
   const noteTitle = `${d.ref} (Raggi X)`;
@@ -16080,14 +16468,17 @@ async function openVerseXRayModal(forcedVerseNum) {
   const candidateIds = [...new Set([state.trans1, state.trans2, state.trans3, ...state.downloadedBibles])];
   const storedIdbKeys = new Set(await idbGetAllKeys());
   if (reqId !== currentXRayReqId) return;
-  const resolvedRows = await Promise.all(candidateIds.map(async tId => {
+  const resolvedRows = [];
+  for (const tId of candidateIds) {
+    if (reqId !== currentXRayReqId) return;
     const bMeta = dynamicCatalog.find(b => b.id === tId) || CORE_BIBLES.find(b => b.id === tId);
-    if (!bMeta) return null;
+    if (!bMeta) continue;
     let vTxt = "";
-    // Legge solo le Bibbie davvero presenti in RAM o IndexedDB, senza sporcare la cache LRU delle 4 Bibbie attive
+    // Lettura sequenziale anti-picco RAM con abort immediato su cambio versetto
     let fullOff = memoryBibleCache.has(tId) ? memoryBibleCache.get(tId) : null;
     if (!fullOff && storedIdbKeys.has(tId)) {
       fullOff = await idbGet(tId);
+      if (reqId !== currentXRayReqId) return;
     }
     if (fullOff && Array.isArray(fullOff.books)) {
       const bObj = fullOff.books.find(b => Number(b.nr) === Number(targetBookId));
@@ -16104,8 +16495,8 @@ async function openVerseXRayModal(forcedVerseNum) {
         } catch (e) { console.debug(e); }
       }
     }
-    return vTxt ? { id: tId, name: bMeta.name, lang: bMeta.lang || "Global", text: vTxt } : null;
-  }));
+    if (vTxt) resolvedRows.push({ id: tId, name: bMeta.name, lang: bMeta.lang || "Global", text: vTxt });
+  }
   if (reqId !== currentXRayReqId) return;
   const rawLoadedList = resolvedRows.filter(Boolean);
 
@@ -16540,6 +16931,7 @@ let bmBubbleExpanded = true;
 let bmDailyStartProphecy = safeJsonParse("bm_messianic_daily_origin_v1", null);
 const bmMessianicPrevLP = createLongPressHandlers(() => stepMessianicProphecy(-1), () => { bmChimeHaptic(); returnToDailyOriginProphecy(); }, 560);
 let bmDynamicCatalogEnriched = false;
+let bmEnrichPromise = null;
 
 function isValidMessianicOtCoordinate(bookId, ch, firstVerseNum = 1) {
   const b = Number(bookId);
@@ -16559,10 +16951,10 @@ function getFirstVerseNumFromSpec(vSpec) {
 // Auto-Arricchimento che conserva SEMPRE il testo INTEGRALE (fullDesc) oltre all'anteprima breve (desc)
 async function enrichMessianicPropheciesFromOfflineDB() {
   if (bmDynamicCatalogEnriched) return bmProphecyList;
-  bmDynamicCatalogEnriched = true;
-  bmProphecyList = CORE_MESSIANIC_PROPHECIES.map(p => ({ ...p, isCurated: true }));
-
-  const seenKeys = new Set(bmProphecyList.map(p => `${p.b}_${p.c}_${getFirstVerseNumFromSpec(p.v)}`));
+  if (bmEnrichPromise) return bmEnrichPromise;
+  bmEnrichPromise = (async () => {
+    const builtList = CORE_MESSIANIC_PROPHECIES.map(p => ({ ...p, isCurated: true }));
+    const seenKeys = new Set(builtList.map(p => `${p.b}_${p.c}_${getFirstVerseNumFromSpec(p.v)}`));
 
   const addDiscoveredProphecy = (bId, chNum, vSpec, fullParagraphText, ntArr = [], catStr = "Profezia", sourceMeta = null) => {
     const firstV = getFirstVerseNumFromSpec(vSpec);
@@ -16578,7 +16970,7 @@ async function enrichMessianicPropheciesFromOfflineDB() {
     const isLong = cleanFull.length > 165;
     const shortPreview = isLong ? (cleanFull.slice(0, 160).trim() + "…") : cleanFull;
 
-    bmProphecyList.push({
+    builtList.push({
       b: Number(bId),
       c: Number(chNum),
       v: String(vSpec || firstV),
@@ -16659,17 +17051,21 @@ async function enrichMessianicPropheciesFromOfflineDB() {
       });
     }
 
+    builtList.sort((a, b) => {
+      if (a.b !== b.b) return a.b - b.b;
+      if (a.c !== b.c) return a.c - b.c;
+      return getFirstVerseNumFromSpec(a.v) - getFirstVerseNumFromSpec(b.v);
+    });
+    bmProphecyList = builtList;
+    bmDynamicCatalogEnriched = true;
+    return bmProphecyList;
   } catch (e) {
+    bmEnrichPromise = null;
     console.debug(e);
+    return bmProphecyList;
   }
-
-  bmProphecyList.sort((a, b) => {
-    if (a.b !== b.b) return a.b - b.b;
-    if (a.c !== b.c) return a.c - b.c;
-    return getFirstVerseNumFromSpec(a.v) - getFirstVerseNumFromSpec(b.v);
-  });
-
-  return bmProphecyList;
+  })();
+  return bmEnrichPromise;
 }
 
 function recordDailyStartingProphecyIfNeeded(prophecyIdx) {
@@ -16973,7 +17369,7 @@ function openGreekFulfillmentAction() {
     <hr style="border:none; border-top:1px solid rgba(41,182,246,0.35); margin:10px 0;">
     <div style="display:flex; gap:8px;">
       <button type="button" class="myread-action-btn" style="background:var(--bg-main); flex:1;" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
-      <button type="button" class="myread-action-btn" style="background:linear-gradient(135deg, #00838f, #00acc1); border-color:#84ffff; flex:1.5;" onclick="document.getElementById('myReadModal').style.display='none'; openMessianicCatalogModal(true);">
+      <button type="button" class="myread-action-btn" style="background:linear-gradient(135deg, #00838f, #00acc1); border-color:#84ffff; flex:1.5;" onclick="closeMyReadModal(); bmMessianicSearchQ=''; openMessianicCatalogModal(true);">
         📜 Tutte le Citate nel NT
       </button>
     </div>
@@ -17069,8 +17465,14 @@ function placeBulbAtOrbCoords(orbLeftPx, bottomPx) {
   if (!widget) return;
   const vw = window.innerWidth;
   const vh = window.innerHeight;
+  const hdr = document.querySelector("header");
+  const nav = document.querySelector("nav.bottom-nav");
+  const hdrRect = hdr ? hdr.getBoundingClientRect() : null;
+  const navRect = nav ? nav.getBoundingClientRect() : null;
+  const topSafe = (hdrRect && hdrRect.height > 0) ? Math.max(68, Math.round(hdrRect.bottom + 8)) : 18;
+  const bottomSafe = (navRect && navRect.height > 0) ? Math.max(78, Math.round(vh - navRect.top + 8)) : 18;
   const clampedLeft = Math.min(vw - 64, Math.max(8, orbLeftPx));
-  const clampedBottom = Math.min(vh - 64, Math.max(74, bottomPx));
+  const clampedBottom = Math.min(Math.max(bottomSafe + 8, vh - topSafe - 56), Math.max(bottomSafe, bottomPx));
   const orbCenterX = clampedLeft + 28;
   const flipLeft = orbCenterX < (vw / 2);
   widget.classList.toggle("flipped-left", flipLeft);
@@ -17098,15 +17500,19 @@ function applySavedBulbPosition() {
   const widget = document.getElementById("bmProphecyWidget");
   if (!orb || !widget) return;
 
-  let dragging = false;
+  let activePid = null;
   let moved = false;
   let startX = 0, startY = 0;
   let startOrbLeft = 0, startBottom = 84;
+  let bulbRaf = null;
+  let pendingBulb = null;
 
   orb.addEventListener("pointerdown", e => {
-    dragging = true;
+    if (activePid !== null || e.isPrimary === false) return;
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    activePid = e.pointerId;
     moved = false;
-    orb.setPointerCapture(e.pointerId);
+    try { orb.setPointerCapture(e.pointerId); } catch (err) { console.debug(err); }
     startX = e.clientX;
     startY = e.clientY;
     const orbRect = orb.getBoundingClientRect();
@@ -17115,26 +17521,39 @@ function applySavedBulbPosition() {
   });
 
   orb.addEventListener("pointermove", e => {
-    if (!dragging) return;
+    if (activePid === null || e.pointerId !== activePid) return;
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
     if (Math.hypot(dx, dy) > 7) moved = true;
     if (!moved) return;
-    placeBulbAtOrbCoords(startOrbLeft + dx, startBottom - dy);
+    pendingBulb = { left: startOrbLeft + dx, bottom: startBottom - dy };
+    if (bulbRaf === null) {
+      bulbRaf = requestAnimationFrame(() => {
+        bulbRaf = null;
+        if (pendingBulb) placeBulbAtOrbCoords(pendingBulb.left, pendingBulb.bottom);
+      });
+    }
   });
 
   const endDrag = e => {
-    if (!dragging) return;
-    dragging = false;
-    try { orb.releasePointerCapture(e.pointerId); } catch (err) { console.debug(err); }
+    if (activePid === null || e.pointerId !== activePid) return;
+    activePid = null;
+    const finalPending = pendingBulb;
+    if (bulbRaf !== null) { cancelAnimationFrame(bulbRaf); bulbRaf = null; }
+    pendingBulb = null;
+    try { if (orb.hasPointerCapture(e.pointerId)) orb.releasePointerCapture(e.pointerId); } catch (err) { console.debug(err); }
+    if (e.type === "pointercancel") return;
     if (moved) {
+      if (e.type === "pointerup" && finalPending) {
+        placeBulbAtOrbCoords(finalPending.left, finalPending.bottom);
+      }
       const orbRect = orb.getBoundingClientRect();
       safeSaveStorage("bm_bulb_pos_v1", JSON.stringify({
         orbLeft: Math.round(orbRect.left),
         right: Math.round(window.innerWidth - orbRect.right),
         bottom: Math.round(window.innerHeight - orbRect.bottom)
       }));
-    } else {
+    } else if (e.type === "pointerup") {
       toggleMessianicBubble();
     }
   };
@@ -17269,15 +17688,12 @@ async function openChapterDossierModal() {
     .sort((a, b) => (b[1] - a[1]) || a[0].localeCompare(b[0], "it"))
     .slice(0, 12)
     .map(([dictKey, count]) => {
-      const d = PRO_STRONG_DICT[dictKey];
-      const codeParts = d.code.split("/").map(s => s.trim()).filter(Boolean);
-      const origParts = d.orig.split("/").map(s => s.replace(/\([^)]*\)/g, "").trim()).filter(Boolean);
-      const prefIdx = codeParts.findIndex(c => c.toUpperCase().startsWith(isNT ? "G" : "H"));
+      const picked = pickStrongRootForTestament(PRO_STRONG_DICT[dictKey], isNT);
       return {
         dictKey,
         count,
-        code: (prefIdx > -1 ? codeParts[prefIdx] : codeParts[0]) || d.code,
-        orig: (prefIdx > -1 && origParts[prefIdx] ? origParts[prefIdx] : origParts[0]) || d.orig
+        code: picked.code,
+        orig: picked.orig
       };
     });
 
@@ -17481,23 +17897,29 @@ function saveChapterDossierAsNote(btnEl) {
 // ============================================================================
 document.documentElement.style.setProperty("--font-size-verse", state.fontSize + "px");
 applySavedTheme();
+syncParallelAndDiffUI();
 updateReadingPlanHeaderBtn();
 updateMyReadingLabel();
 if (bmTtsRate !== 1) {
   const ttsBootBtn = document.getElementById("ttsChapterBtn");
   if (ttsBootBtn) ttsBootBtn.innerHTML = `<span class="tab-icon">🔊</span><span>Ascolta ${bmTtsRate}x</span>`;
 }
+try {
+  if (typeof navigator !== "undefined" && navigator.storage && typeof navigator.storage.persist === "function") {
+    navigator.storage.persist().catch(e => console.debug(e));
+  }
+} catch (e) { console.debug(e); }
 try { initTtsVoicesWatcher(); } catch (e) { console.debug(e); }
-try { loadExternalExegeticalModules(); } catch (e) { console.debug(e); }
+try {
+  const extModP = loadExternalExegeticalModules();
+  if (extModP && typeof extModP.catch === "function") extModP.catch(e => console.debug(e));
+} catch (e) { console.debug(e); }
 try { initBmServiceWorker(); } catch (e) { console.debug(e); }
-populateSelects()
+populateSelects(false).catch(() => {});
+showDailyTextView(0, true)
   .catch(() => {})
   .finally(() => {
-    showDailyTextView(0, true)
-      .catch(() => {})
-      .finally(() => {
-        dismissSplashScreen();
-      });
+    dismissSplashScreen();
   });
 </script>
 </body>
