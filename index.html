@@ -149,23 +149,23 @@
       text-rendering: optimizeLegibility;
       -webkit-font-smoothing: antialiased;
     }
-/* SCHERMATA INIZIALE BLU PRO — 3 PULSAZIONI SINCRONIZZATE & EFFETTO LUCE GEMINI INTELLIGENCE */
+/* SCHERMATA INIZIALE BLU PRO — 3 PULSAZIONI LENTE & EFFETTO LUCE GEMINI INTELLIGENCE */
 .splash-box, .splash-sub { opacity: 0; will-change: transform, opacity; backface-visibility: hidden; }
 #splashScreen.ready .splash-box {
   opacity: 1;
-  transition: opacity 0.32s ease;
-  animation: splashPulse 0.95s ease-in-out 3 forwards;
+  transition: opacity 0.38s ease;
+  animation: splashPulse 1.65s ease-in-out 3 forwards;
 }
 #splashScreen.ready .splash-box::before {
-  animation: bmOrbitClockwise 0.95s linear 3 forwards;
+  animation: bmOrbitClockwise 3.3s linear infinite;
 }
 #splashScreen.ready .splash-text {
-  animation: bmTextSweepSlow 0.95s ease-in-out 3 forwards;
+  animation: bmTextSweepSlow 1.65s ease-in-out 3 forwards;
 }
 #splashScreen.ready .splash-sub {
   animation:
-    fadeInSub 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.08s forwards,
-    bmSubSweepFast 0.95s cubic-bezier(0.25, 0.1, 0.25, 1) 0.12s 3 forwards;
+    fadeInSub 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.08s forwards,
+    bmSubSweepFast 1.65s cubic-bezier(0.32, 0.08, 0.28, 1) 0.14s 3 forwards;
 }
 #splashScreen {
   position: fixed;
@@ -195,8 +195,8 @@
 .splash-box {
   position: relative;
   width: 126px; height: 126px;
-  background: #0a367e;
-  border: 1px solid rgba(132, 255, 255, 0.35);
+  background: #08275e;
+  border: 1px solid rgba(132, 255, 255, 0.32);
   border-radius: 28px;
   overflow: hidden;
   overflow: clip;
@@ -204,7 +204,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 32px rgba(33, 150, 243, 0.45);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.62), 0 0 30px rgba(33, 150, 243, 0.42);
   transform: translateZ(0);
 }
 .splash-box::before {
@@ -216,14 +216,14 @@
   left: -60%;
   background: conic-gradient(
     from 0deg,
-    rgba(13, 71, 161, 0.16) 0deg,
-    rgba(13, 71, 161, 0.16) 205deg,
-    rgba(21, 101, 192, 0.78) 242deg,
-    #1e88e5 276deg,
-    #29b6f6 308deg,
-    #00e5ff 336deg,
-    #b3e5fc 352deg,
-    rgba(13, 71, 161, 0.16) 360deg
+    rgba(13, 71, 161, 0.12) 0deg,
+    rgba(13, 71, 161, 0.12) 190deg,
+    rgba(21, 101, 192, 0.68) 235deg,
+    #1e88e5 275deg,
+    #29b6f6 310deg,
+    #00e5ff 338deg,
+    #e0f7fa 354deg,
+    rgba(13, 71, 161, 0.12) 360deg
   );
   z-index: 0;
   will-change: transform;
@@ -232,10 +232,10 @@
 .splash-box::after {
   content: "";
   position: absolute;
-  inset: 3.5px;
-  border-radius: 24.5px;
-  background: linear-gradient(135deg, #2196f3 0%, #0d47a1 100%);
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.35), inset 0 -6px 14px rgba(2, 11, 28, 0.32);
+  inset: 4px;
+  border-radius: 24px;
+  background: linear-gradient(145deg, #1659b8 0%, #092c6b 100%);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.34), inset 0 -6px 14px rgba(2, 11, 28, 0.36);
   z-index: 1;
 }
 @keyframes bmOrbitClockwise {
@@ -245,11 +245,11 @@
 @keyframes splashPulse {
   0%, 100% {
     transform: scale3d(1, 1, 1);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 26px rgba(33, 150, 243, 0.42);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.62), 0 0 26px rgba(33, 150, 243, 0.4);
   }
   50% {
-    transform: scale3d(1.09, 1.09, 1);
-    box-shadow: 0 28px 54px rgba(0, 0, 0, 0.72), 0 0 58px rgba(0, 229, 255, 0.78), 0 0 84px rgba(33, 150, 243, 0.48);
+    transform: scale3d(1.075, 1.075, 1);
+    box-shadow: 0 28px 54px rgba(0, 0, 0, 0.72), 0 0 54px rgba(0, 229, 255, 0.72), 0 0 80px rgba(33, 150, 243, 0.45);
   }
 }
 .splash-text {
@@ -261,14 +261,15 @@
   font-family: Georgia, serif;
   color: transparent;
   background-image: linear-gradient(
-    110deg,
+    108deg,
     #ffffff 0%,
-    #ffffff 38%,
-    #b3e5fc 44%,
-    #00e5ff 49%,
-    #2979ff 55%,
-    #40c4ff 59%,
-    #ffffff 64%,
+    #ffffff 34%,
+    #84ffff 41%,
+    #00e5ff 46%,
+    #0d47a1 51%,
+    #00b0ff 56%,
+    #80d8ff 61%,
+    #ffffff 66%,
     #ffffff 100%
   );
   background-size: 300% 100%;
@@ -276,7 +277,7 @@
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.42));
+  filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.46));
 }
 .splash-sub {
   margin-top: 22px;
@@ -286,30 +287,30 @@
   text-transform: uppercase;
   color: transparent;
   background-image: linear-gradient(
-    110deg,
-    #e3f2fd 0%,
-    #e3f2fd 38%,
+    108deg,
+    #b8d4f5 0%,
+    #b8d4f5 38%,
     #84ffff 44%,
-    #00b0ff 50%,
-    #2962ff 55%,
-    #80d8ff 60%,
-    #e3f2fd 65%,
-    #e3f2fd 100%
+    #00e5ff 48%,
+    #2979ff 52%,
+    #00b0ff 57%,
+    #b8d4f5 62%,
+    #b8d4f5 100%
   );
   background-size: 300% 100%;
   background-position: 100% 0;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.52));
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.56));
 }
 @keyframes bmTextSweepSlow {
   0% { background-position: 100% 0; }
-  92%, 100% { background-position: 0% 0; }
+  94%, 100% { background-position: 0% 0; }
 }
 @keyframes bmSubSweepFast {
   0% { background-position: 100% 0; }
-  62%, 100% { background-position: 0% 0; }
+  74%, 100% { background-position: 0% 0; }
 }
 @keyframes fadeInSub {
   from { opacity: 0; transform: translate3d(0, 10px, 0); }
@@ -1443,6 +1444,31 @@ body.oled-mode .pub-ref-badge {
       box-shadow: 0 0 20px var(--btn-glow, rgba(0, 229, 255, 0.85)), inset 0 0 14px rgba(2, 11, 28, 0.85) !important;
       transform: scale(0.95) !important;
     }
+    .bm-exit-toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(82px + env(safe-area-inset-bottom, 0px));
+      transform: translate3d(-50%, 14px, 0);
+      background: linear-gradient(135deg, rgba(10, 54, 126, 0.96), rgba(4, 26, 66, 0.98));
+      color: #e3f2fd;
+      border: 1.5px solid #00e5ff;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-size: 12.5px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      text-align: center;
+      max-width: min(92vw, 390px);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.65), 0 0 16px rgba(0, 229, 255, 0.38);
+      z-index: 1450;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .bm-exit-toast.show {
+      opacity: 1;
+      transform: translate3d(-50%, 0, 0);
+    }
 
     /* Biblioteca online JW.org: cerchio azzurro con torre vettoriale + effetto radiale dal centro ai bordi */
     .jw-btn {
@@ -2400,6 +2426,7 @@ body.oled-mode .pub-ref-badge {
       </div>
     </div>
   </div>
+  <div id="bmExitToast" class="bm-exit-toast" role="status" aria-live="polite"></div>
   <!-- Visualizzatore cartine (Dove? / Cartine Bibliche — Manifattura Zaffiro PRO) -->
   <div id="mapsViewer" class="bp-viewer">
     <div class="bp-vhead">
@@ -12316,7 +12343,7 @@ function scrollRpToToday(smooth = false) {
 function buildStudioBackupObject() {
   return {
     app: "BibbiaMultilingue_PRO",
-    version: "PRO_v14.8.3",
+    version: "PRO_v14.8.4",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
@@ -12633,7 +12660,7 @@ function setMigrationStatus(htmlMsg) {
 
 async function buildAndDeliverLibraryBundle(keysList, includeStudio, fileName, shareTitle) {
   const parts = [
-    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v14.8.3","date":',
+    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v14.8.4","date":',
     JSON.stringify(new Date().toISOString())
   ];
   if (includeStudio) {
@@ -13383,8 +13410,8 @@ function dismissSplashScreen() {
     return;
   }
   const prefersReduced = Boolean(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  // 3 pulsazioni complete sincronizzate con gli effetti luce (3 x 950ms + margine chiusura); un tocco consente di saltare subito a boot completato
-  const minDisplayMs = prefersReduced ? 400 : 3000;
+  // 3 pulsazioni lente ed eleganti sincronizzate con gli effetti luce (3 x 1650ms); un tocco salta subito a boot completato
+  const minDisplayMs = prefersReduced ? 400 : 4950;
   const elapsed = Date.now() - window.__splashShownAt;
   const wait = Math.max(0, minDisplayMs - elapsed);
   splashDismissTimer = setTimeout(fadeOutSplashNow, wait);
@@ -13395,7 +13422,7 @@ document.getElementById("splashScreen")?.addEventListener("click", function () {
   if (splashDismissed) fadeOutSplashNow();
 });
 // Fallback di sicurezza nel caso la rete o il DB tardino
-setTimeout(dismissSplashScreen, 4800);
+setTimeout(dismissSplashScreen, 6400);
 let lastScrollSaveTimer = null;
 document.getElementById("mainContainer")?.addEventListener("scroll", function() {
   const el = this;
@@ -13852,12 +13879,26 @@ document.getElementById("mainContainer")?.addEventListener("pointerdown", functi
 }, { passive: true });
 
 // ============================================================================
-// 2. NAVIGAZIONE SWIPE ORIZZONTALE A UNA MANO (Bibbia, Giorno, Perspicacia, SI)
+// 2. NAVIGAZIONE SWIPE ORIZZONTALE CENTRALE (Bibbia, Giorno, Perspicacia, SI)
+//    Distinto dallo swipe rapido dal bordo destro (riservato al Modale di Uscita)
 // ============================================================================
 let bmSwipeStartX = 0;
 let bmSwipeStartY = 0;
 let bmSwipeStartTime = 0;
 let bmSwipeIgnore = false;
+
+function isInRightEdgeExitZone(clientX) {
+  const w = window.innerWidth || document.documentElement.clientWidth || 360;
+  return clientX >= Math.max(w - 44, w * 0.88);
+}
+
+function isAnyBmOverlayOpen() {
+  const drawerOpen = document.getElementById("bmSettingsDrawer")?.classList.contains("open");
+  return Boolean(drawerOpen || ["bmExitModal", "proModal", "noteModal", "myReadModal", "bmSelectModal", "mapsViewer"].some(id => {
+    const el = document.getElementById(id);
+    return el && el.style.display === "flex";
+  }));
+}
 
 document.getElementById("mainContainer")?.addEventListener("touchstart", function(e) {
   if (!e.touches || e.touches.length !== 1) { bmSwipeIgnore = true; return; }
@@ -13880,15 +13921,12 @@ document.getElementById("mainContainer")?.addEventListener("touchend", function(
   if (elapsed > 650) return;
   const dx = e.changedTouches[0].clientX - bmSwipeStartX;
   const dy = e.changedTouches[0].clientY - bmSwipeStartY;
+  // Se lo swipe parte dalla fascia del bordo destro verso sinistra, lascia spazio al Modale di Uscita
+  if (dx < 0 && isInRightEdgeExitZone(bmSwipeStartX)) return;
   if (Math.abs(dx) < 88 || Math.abs(dy) > 38 || Math.abs(dx) < Math.abs(dy) * 2.4) return;
-  const drawerOpen = document.getElementById("bmSettingsDrawer")?.classList.contains("open");
-  const anyModalOpen = drawerOpen || ["bmExitModal", "proModal", "noteModal", "myReadModal", "bmSelectModal", "mapsViewer"].some(id => {
-    const el = document.getElementById(id);
-    return el && el.style.display === "flex";
-  });
-  if (anyModalOpen) return;
+  if (isAnyBmOverlayOpen()) return;
 
-  const isNext = dx < 0; // Swipe verso sinistra -> Successivo; Swipe verso destra -> Precedente
+  const isNext = dx < 0; // Swipe centrale verso sinistra -> Successivo; verso destra -> Precedente
   if (currentViewContext.type === "bible") {
     if (isNext) nextChapter(); else prevChapter();
   } else if (currentViewContext.type === "daily") {
@@ -14115,36 +14153,44 @@ async function executeOmniSearch() {
 }
 
 // ============================================================================
-// 5. SWIPE INDIETRO INTELLIGENTE, MODALE USCITA ZAFFIRO PRO & TRANSIZIONE GPU 120Hz
+// 5. SWIPE BORDO DESTRO, MODALE USCITA ZAFFIRO PRO (1 TOCCO) & TRANSIZIONE GPU 120Hz
 // ============================================================================
 const BM_EXIT_DEFAULT_SUB = "I tuoi appunti, segnalibri e dati offline sono già al sicuro.";
-const BM_EXIT_FALLBACK_SUB = "Fai ancora uno swipe Indietro o usa Home per chiudere l'app.";
 let bmExitConfirmOpen = false;
 let bmExitActionLock = false;
 let bmExitingApp = false;
+let bmExitWindowActive = false;
+let bmExitWindowStartedAt = 0;
 let bmExitChoiceTimer = null;
 let bmExitBackTimer = null;
-let bmExitFallbackTimer = null;
+let bmExitToastTimer = null;
+let bmExitWindowTimer = null;
 
 function clearBmExitTimers() {
   clearTimeout(bmExitChoiceTimer);
   clearTimeout(bmExitBackTimer);
-  clearTimeout(bmExitFallbackTimer);
+  clearTimeout(bmExitToastTimer);
+  clearTimeout(bmExitWindowTimer);
   bmExitChoiceTimer = null;
   bmExitBackTimer = null;
-  bmExitFallbackTimer = null;
+  bmExitToastTimer = null;
+  bmExitWindowTimer = null;
 }
 
-function setBmExitModalSubtitle(text, isFallback = false) {
-  const sub = document.getElementById("bmExitModalSub");
-  if (!sub) return;
-  sub.textContent = text;
-  sub.style.color = isFallback ? "#84ffff" : "#cfe3ff";
-  sub.style.fontWeight = isFallback ? "700" : "";
+function hideBmExitToast() {
+  const toast = document.getElementById("bmExitToast");
+  if (toast) toast.classList.remove("show");
+}
+
+function showBmExitToast(msg) {
+  const toast = document.getElementById("bmExitToast");
+  if (!toast) return;
+  toast.textContent = msg;
+  toast.classList.add("show");
 }
 
 function armBmBackGuard() {
-  if (bmExitConfirmOpen || bmExitingApp) return;
+  if (bmExitConfirmOpen || bmExitingApp || bmExitWindowActive) return;
   try {
     if (window.history.state && window.history.state.bmGuard === "active") return;
     window.history.pushState({ bmGuard: "active" }, "");
@@ -14155,10 +14201,17 @@ function openBmExitModal() {
   const modal = document.getElementById("bmExitModal");
   if (!modal) return;
   clearBmExitTimers();
+  hideBmExitToast();
   modal.querySelectorAll(".bm-exit-lit").forEach(el => el.classList.remove("bm-exit-lit"));
-  setBmExitModalSubtitle(BM_EXIT_DEFAULT_SUB, false);
+  const sub = document.getElementById("bmExitModalSub");
+  if (sub) {
+    sub.textContent = BM_EXIT_DEFAULT_SUB;
+    sub.style.color = "#cfe3ff";
+    sub.style.fontWeight = "";
+  }
   bmExitActionLock = false;
   bmExitingApp = false;
+  bmExitWindowActive = false;
   bmExitConfirmOpen = true;
   modal.style.display = "flex";
   bmHaptic(14);
@@ -14166,46 +14219,63 @@ function openBmExitModal() {
 
 function closeBmExitModal(rearmGuard = true) {
   clearBmExitTimers();
+  hideBmExitToast();
   const modal = document.getElementById("bmExitModal");
   if (modal) {
     modal.style.display = "none";
     modal.querySelectorAll(".bm-exit-lit").forEach(el => el.classList.remove("bm-exit-lit"));
   }
-  setBmExitModalSubtitle(BM_EXIT_DEFAULT_SUB, false);
   bmExitConfirmOpen = false;
   bmExitActionLock = false;
   bmExitingApp = false;
+  bmExitWindowActive = false;
   if (rearmGuard) armBmBackGuard();
 }
 
 function confirmBmAppExit() {
   clearBmExitTimers();
+  hideBmExitToast();
+  const modal = document.getElementById("bmExitModal");
+  if (modal) {
+    modal.style.display = "none";
+    modal.querySelectorAll(".bm-exit-lit").forEach(el => el.classList.remove("bm-exit-lit"));
+  }
+  bmExitConfirmOpen = false;
+  bmExitActionLock = false;
   bmExitingApp = true;
+  bmExitWindowActive = true;
+  bmExitWindowStartedAt = Date.now();
+
   try { stopAllAudio(); } catch (e) { console.debug(e); }
   try { window.close(); } catch (e) { console.debug(e); }
+
   bmExitBackTimer = setTimeout(() => {
     bmExitBackTimer = null;
     try {
-      if (document.visibilityState === "visible" && window.history.length > 1) {
-        window.history.back();
+      if (document.visibilityState === "visible") {
+        if (window.history.state && window.history.state.bmGuard === "active") {
+          window.history.back();
+        } else if (window.history.length > 1) {
+          window.history.back();
+        }
       }
     } catch (e) { console.debug(e); }
-  }, 80);
-  // Se Chrome Android WebAPK blocca window.close()/history.back() su indice 0, mantiene il modale aperto su "root"
-  // con istruzione chiara così il successivo swipe Indietro chiude la PWA nativamente al volo.
-  bmExitFallbackTimer = setTimeout(() => {
-    bmExitFallbackTimer = null;
+  }, 50);
+
+  // Se Chrome Android WebAPK blocca la chiusura da script (limite di sicurezza di Android),
+  // il modale resta chiuso dopo il singolo tocco su "Sì, esci" e un breve avviso segnala che
+  // la guardia è disarmata per 4s (uno swipe dal bordo o Home chiude subito; altrimenti si riarma da sola).
+  bmExitToastTimer = setTimeout(() => {
+    bmExitToastTimer = null;
     bmExitingApp = false;
     if (document.visibilityState !== "visible") return;
-    const modal = document.getElementById("bmExitModal");
-    if (modal) {
-      modal.style.display = "flex";
-      modal.querySelectorAll(".bm-exit-lit").forEach(el => el.classList.remove("bm-exit-lit"));
-    }
-    setBmExitModalSubtitle(BM_EXIT_FALLBACK_SUB, true);
-    bmExitConfirmOpen = true;
-    bmExitActionLock = false;
-  }, 220);
+    showBmExitToast("🚪 Uscita pronta: scorri dal bordo o tocca Home per chiudere");
+    bmExitWindowTimer = setTimeout(() => {
+      bmExitWindowTimer = null;
+      hideBmExitToast();
+      bmExitWindowActive = false;
+    }, 4000);
+  }, 280);
 }
 
 function onBmExitChoice(shouldExit, btnEl) {
@@ -14218,7 +14288,7 @@ function onBmExitChoice(shouldExit, btnEl) {
     bmExitChoiceTimer = null;
     if (shouldExit) confirmBmAppExit();
     else closeBmExitModal(true);
-  }, 150);
+  }, 140);
 }
 
 (function initEnterpriseNativeFeel() {
@@ -14226,19 +14296,88 @@ function onBmExitChoice(shouldExit, btnEl) {
     window.history.replaceState({ bmGuard: "root" }, "");
   } catch (e) { console.debug(e); }
 
-  // Arma la guardia sul primo gesto reale dell'utente (compatibile con la policy anti-trappola di Chrome Android)
-  const armOnUserGesture = () => {
-    if (!bmExitConfirmOpen && !bmExitingApp) armBmBackGuard();
+  // Arma la guardia solo su reali attivazioni utente (compatibile con History Manipulation Intervention di Chrome Android)
+  const armOnUserGesture = (ev) => {
+    if (bmExitConfirmOpen || bmExitingApp) return;
+    if (bmExitWindowActive) {
+      if (Date.now() - bmExitWindowStartedAt < 500) return;
+      if (ev && typeof ev.clientX === "number") {
+        const w = window.innerWidth || document.documentElement.clientWidth || 360;
+        if (ev.clientX <= 56 || ev.clientX >= w - 56) return;
+      }
+      bmExitWindowActive = false;
+      clearTimeout(bmExitWindowTimer);
+      bmExitWindowTimer = null;
+      hideBmExitToast();
+    }
+    armBmBackGuard();
   };
   document.addEventListener("pointerdown", armOnUserGesture, { capture: true, passive: true });
   document.addEventListener("keydown", armOnUserGesture, { capture: true, passive: true });
+  window.addEventListener("pageshow", () => {
+    bmExitWindowActive = false;
+    bmExitingApp = false;
+    hideBmExitToast();
+  });
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden" && (bmExitConfirmOpen || bmExitingApp)) {
-      closeBmExitModal(false);
+    if (document.visibilityState === "hidden") {
+      if (bmExitConfirmOpen || bmExitingApp || bmExitWindowActive) {
+        closeBmExitModal(false);
+      }
+    } else if (document.visibilityState === "visible") {
+      bmExitWindowActive = false;
+      bmExitingApp = false;
+      hideBmExitToast();
     }
   });
 
+  // Gestore dedicato: swipe rapido e deciso dal bordo destro verso sinistra -> apre sempre #bmExitModal
+  let edgeStartX = 0;
+  let edgeStartY = 0;
+  let edgeStartTime = 0;
+  let edgeCandidate = false;
+
+  document.addEventListener("touchstart", function (e) {
+    edgeCandidate = false;
+    if (!e.touches || e.touches.length !== 1) return;
+    if (bmExitConfirmOpen || bmExitingApp || bmExitWindowActive || isAnyBmOverlayOpen()) return;
+    const t = e.target;
+    if (t && t.closest("#splashScreen, #bmExitModal, #bmProphecyWidget, #mapsViewer, input, textarea, select, .quick-menu-bar, .verse-action-bar, .rp-scroll-window")) return;
+    const sel = window.getSelection ? window.getSelection() : null;
+    if (sel && !sel.isCollapsed) return;
+    const x = e.touches[0].clientX;
+    if (!isInRightEdgeExitZone(x)) return;
+    edgeCandidate = true;
+    edgeStartX = x;
+    edgeStartY = e.touches[0].clientY;
+    edgeStartTime = Date.now();
+  }, { passive: true });
+
+  document.addEventListener("touchend", function (e) {
+    if (!edgeCandidate || !e.changedTouches || e.changedTouches.length !== 1) {
+      edgeCandidate = false;
+      return;
+    }
+    edgeCandidate = false;
+    if (bmExitConfirmOpen || bmExitingApp || bmExitWindowActive || isAnyBmOverlayOpen()) return;
+    const elapsed = Date.now() - edgeStartTime;
+    if (elapsed > 420) return;
+    const dx = e.changedTouches[0].clientX - edgeStartX;
+    const dy = e.changedTouches[0].clientY - edgeStartY;
+    const speed = Math.abs(dx) / Math.max(1, elapsed);
+    if (dx <= -72 && Math.abs(dy) <= 48 && Math.abs(dx) >= Math.abs(dy) * 2.0 && speed >= 0.28) {
+      openBmExitModal();
+    }
+  }, { passive: true });
+  document.addEventListener("touchcancel", function () {
+    edgeCandidate = false;
+  }, { passive: true });
+
+  // Intercettazione gesto Indietro di sistema (popstate): chiude eventuali overlay aperti, altrimenti apre subito #bmExitModal
   window.addEventListener("popstate", function () {
+    if (bmExitingApp || bmExitWindowActive) return;
+    if (bmExitConfirmOpen) return;
+
     const closeIfFlex = (id, fn) => {
       const el = document.getElementById(id);
       if (el && el.style.display === "flex") {
@@ -14248,7 +14387,7 @@ function onBmExitChoice(shouldExit, btnEl) {
       return false;
     };
 
-    // 1. Tendina Blu PRO (z-index 1350, sempre in cima anche sopra il Cassetto)
+    // 1. Tendina Blu PRO (z-index 1350)
     if (closeIfFlex("bmSelectModal", closeBmSelectModal)) {
       bmHaptic(10);
       armBmBackGuard();
@@ -14264,7 +14403,7 @@ function onBmExitChoice(shouldExit, btnEl) {
       return;
     }
 
-    // 3. Visualizzatore Cartine HD (chiude prima l'elenco luoghi #bpSheet se aperto, poi la cartina)
+    // 3. Visualizzatore Cartine HD (prima l'elenco luoghi #bpSheet, poi la cartina)
     const mapsEl = document.getElementById("mapsViewer");
     if (mapsEl && mapsEl.style.display === "flex") {
       const bpSh = document.getElementById("bpSheet");
@@ -14298,19 +14437,8 @@ function onBmExitChoice(shouldExit, btnEl) {
       return;
     }
 
-    // 6. Cronologia interna di navigazione
-    if (navHistory.length > 0) {
-      bmHaptic(12);
-      goBackHistory();
-      armBmBackGuard();
-      return;
-    }
-
-    // 7. Nessun livello aperto né cronologia: apre il Modale di Uscita Zaffiro PRO
-    // Resta sul livello "root": "No, resta" riarma la guardia; "Sì, esci" o un secondo swipe indietro chiudono l'app.
-    if (!bmExitConfirmOpen) {
-      openBmExitModal();
-    }
+    // 6. Su qualsiasi schermata principale, richiama direttamente il Modale di Uscita Zaffiro PRO
+    openBmExitModal();
   });
 
   const mainEl = document.getElementById("mainContainer");
