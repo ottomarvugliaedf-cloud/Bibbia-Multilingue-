@@ -1556,6 +1556,12 @@ body.oled-mode .pub-ref-badge {
       transform: scale(0.95) !important;
     }
     /* Fase 2 Modale Uscita: Manina animata con dito indice a sinistra, pollice raccolto, polsino e manica */
+    #bmExitModal.bm-exit-step2-active,
+    #bmExitModal.bm-exit-step2-active .modal-card {
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
     .bm-exit-step2 {
       display: none;
       flex-direction: column;
@@ -2690,7 +2696,7 @@ body.oled-mode .pub-ref-badge {
     </div>
   </div>
   <!-- Finestra Modale Conferma Uscita App (Zaffiro PRO — Fase 1 Conferma / Fase 2 Manina Swipe) -->
-  <div id="bmExitModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="bmExitModalTitle" onclick="if(event.target.id==='bmExitModal') closeBmExitModal(true)" style="display:none; z-index:1400;">
+  <div id="bmExitModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="bmExitModalTitle" onclick="onBmExitBackdropClick(event)" style="display:none; z-index:1400;">
     <div class="modal-card" style="max-width:380px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
         <div id="bmExitModalTitle" class="modal-title" style="font-size:16.5px; margin:0;">Bibbia Multilingue PRO</div>
@@ -12685,7 +12691,7 @@ function scrollRpToToday(smooth = false) {
 function buildStudioBackupObject() {
   return {
     app: "BibbiaMultilingue_PRO",
-    version: "PRO_v14.8.8",
+    version: "PRO_v14.8.9",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
@@ -13002,7 +13008,7 @@ function setMigrationStatus(htmlMsg) {
 
 async function buildAndDeliverLibraryBundle(keysList, includeStudio, fileName, shareTitle) {
   const parts = [
-    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v14.8.8","date":',
+    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v14.8.9","date":',
     JSON.stringify(new Date().toISOString())
   ];
   if (includeStudio) {
@@ -14501,8 +14507,12 @@ async function executeOmniSearch() {
 const BM_EXIT_DEFAULT_SUB = "I tuoi appunti, segnalibri e dati offline sono già al sicuro.";
 const BM_EXIT_FALLBACK_SUB = "Chrome blocca la chiusura automatica: fai uno swipe dal bordo dello schermo o usa Home.";
 let bmExitConfirmOpen = false;
+let bmExitCurrentStep = 1;
 let bmExitActionLock = false;
 let bmExitingApp = false;
+let bmExitActivePid = null;
+let bmExitCaptureTarget = null;
+let bmExitSuppressBackdropUntil = 0;
 let bmExitChoiceTimer = null;
 let bmExitFallbackTimer = null;
 let bmExitHandTimer = null;
@@ -14519,7 +14529,26 @@ function clearBmExitTimers() {
   bmExitSnapTimer = null;
 }
 
+function onBmExitBackdropClick(e) {
+  if (!e || !e.target || e.target.id !== "bmExitModal") return;
+  if (Date.now() < bmExitSuppressBackdropUntil) return;
+  closeBmExitModal(true);
+}
+
+function releaseBmExitDragPointer() {
+  if (bmExitActivePid !== null && bmExitCaptureTarget) {
+    try {
+      if (bmExitCaptureTarget.hasPointerCapture(bmExitActivePid)) {
+        bmExitCaptureTarget.releasePointerCapture(bmExitActivePid);
+      }
+    } catch (err) { console.debug(err); }
+  }
+  bmExitActivePid = null;
+  bmExitCaptureTarget = null;
+}
+
 function resetBmExitHandVisuals() {
+  releaseBmExitDragPointer();
   const handBtn = document.getElementById("bmExitHandBtn");
   if (!handBtn) return;
   handBtn.classList.remove("dragging", "snapping", "swiping");
@@ -14549,12 +14578,15 @@ function resetBmExitHandVisuals() {
 }
 
 function setBmExitModalStep(stepNum) {
+  const modal = document.getElementById("bmExitModal");
   const s1 = document.getElementById("bmExitStep1");
   const s2 = document.getElementById("bmExitStep2");
   const sub1 = document.getElementById("bmExitModalSub");
   const sub2 = document.getElementById("bmExitStep2Sub");
+  bmExitCurrentStep = (stepNum === 2) ? 2 : 1;
+  if (modal) modal.classList.toggle("bm-exit-step2-active", bmExitCurrentStep === 2);
   resetBmExitHandVisuals();
-  if (stepNum === 2) {
+  if (bmExitCurrentStep === 2) {
     if (s1) s1.style.display = "none";
     if (s2) s2.style.display = "flex";
     if (sub2) sub2.textContent = BM_EXIT_FALLBACK_SUB;
@@ -14653,13 +14685,13 @@ function confirmBmAppExit() {
   }, 250);
 }
 
-function triggerBmExitHandSwipe(startDx = 0, startRot = 0, startProgress = 0, dragWidth = 0) {
+function triggerBmExitHandSwipe(startDx = 0, startRot = 0, startProgress = 0, dragWidth = 0, attemptExit = true) {
   const handBtn = document.getElementById("bmExitHandBtn");
   clearTimeout(bmExitHandTimer);
   clearTimeout(bmExitSnapTimer);
   bmExitHandTimer = null;
   bmExitSnapTimer = null;
-  bmChimeHaptic();
+  if (attemptExit) bmChimeHaptic();
   if (handBtn) {
     resetBmExitHandVisuals();
     const fromDx = Number(startDx || 0);
@@ -14687,23 +14719,48 @@ function triggerBmExitHandSwipe(startDx = 0, startRot = 0, startProgress = 0, dr
     bmExitHandTimer = null;
     resetBmExitHandVisuals();
   }, 790);
-  // Tenta l'uscita sincrona preservando la user activation del gesto sulla manina
-  tryNativePwaExitNow();
+  // Tenta l'uscita sincrona preservando la user activation del gesto (saltato se già intercettato da Android OS)
+  if (attemptExit) tryNativePwaExitNow();
 }
 
 function initBmExitHandDrag() {
+  const modal = document.getElementById("bmExitModal");
   const handBtn = document.getElementById("bmExitHandBtn");
-  if (!handBtn) return;
+  if (!modal || !handBtn) return;
   const handWrap = handBtn.querySelector(".bm-exit-hand-wrap");
   const trail = handBtn.querySelector(".bm-swipe-trail");
   const ripple = handBtn.querySelector(".bm-swipe-ripple");
-  let activePid = null;
   let startX = 0;
+  let startY = 0;
   let startTime = 0;
+  let startedOnHand = false;
+  let dragEngaged = false;
+  let maxAbsDx = 0;
   let lastDx = 0;
   let lastRot = 0;
   let lastProgress = 0;
   let maxDrag = 156;
+
+  const engageDragVisuals = () => {
+    if (dragEngaged) return;
+    dragEngaged = true;
+    clearTimeout(bmExitHandTimer);
+    clearTimeout(bmExitSnapTimer);
+    bmExitHandTimer = null;
+    bmExitSnapTimer = null;
+    handBtn.classList.remove("snapping", "swiping");
+    handBtn.classList.add("dragging");
+    if (handWrap) handWrap.style.transform = "translate3d(0px, -50%, 0) rotate(0deg)";
+    if (trail) {
+      trail.style.width = `${maxDrag}px`;
+      trail.style.transform = "scaleX(0)";
+      trail.style.opacity = "0";
+    }
+    if (ripple) {
+      ripple.style.opacity = "0.7";
+      ripple.style.transform = "scale3d(0.85, 0.85, 1)";
+    }
+  };
 
   const snapBackHand = () => {
     handBtn.classList.remove("dragging");
@@ -14721,38 +14778,50 @@ function initBmExitHandDrag() {
     }, 250);
   };
 
-  handBtn.addEventListener("pointerdown", function (e) {
-    if (!bmExitConfirmOpen || e.isPrimary === false) return;
+  // Ascolta sull'intero overlay del modale (100% schermo) durante la Fase 2:
+  // qualsiasi swipe da destra a sinistra sullo schermo muove la manina in contemporanea 1:1.
+  modal.addEventListener("pointerdown", function (e) {
+    if (!bmExitConfirmOpen || bmExitCurrentStep !== 2 || e.isPrimary === false) return;
     if (e.pointerType === "mouse" && e.button !== 0) return;
-    clearTimeout(bmExitHandTimer);
-    clearTimeout(bmExitSnapTimer);
-    bmExitHandTimer = null;
-    bmExitSnapTimer = null;
-    resetBmExitHandVisuals();
-    activePid = e.pointerId;
-    startX = e.clientX;
-    startTime = Date.now();
+    const t = e.target;
+    if (t && t.closest("button") && !t.closest("#bmExitHandBtn")) return;
+    startedOnHand = Boolean(t && t.closest("#bmExitHandBtn"));
+    dragEngaged = false;
+    maxAbsDx = 0;
     lastDx = 0;
     lastRot = 0;
     lastProgress = 0;
+    startX = e.clientX;
+    startY = e.clientY;
+    startTime = Date.now();
     maxDrag = Math.max(116, (handBtn.clientWidth || 300) - 134);
-    try { handBtn.setPointerCapture(e.pointerId); } catch (err) { console.debug(err); }
-    handBtn.classList.add("dragging");
-    if (handWrap) handWrap.style.transform = "translate3d(0px, -50%, 0) rotate(0deg)";
-    if (trail) {
-      trail.style.width = `${maxDrag}px`;
-      trail.style.transform = "scaleX(0)";
-      trail.style.opacity = "0";
-    }
-    if (ripple) {
-      ripple.style.opacity = "0.7";
-      ripple.style.transform = "scale3d(0.85, 0.85, 1)";
+    releaseBmExitDragPointer();
+    bmExitActivePid = e.pointerId;
+    if (startedOnHand) {
+      try {
+        handBtn.setPointerCapture(e.pointerId);
+        bmExitCaptureTarget = handBtn;
+      } catch (err) { console.debug(err); }
+      engageDragVisuals();
     }
   });
 
-  handBtn.addEventListener("pointermove", function (e) {
-    if (activePid === null || e.pointerId !== activePid) return;
+  window.addEventListener("pointermove", function (e) {
+    if (bmExitActivePid === null || e.pointerId !== bmExitActivePid) return;
+    if (!bmExitConfirmOpen || bmExitCurrentStep !== 2) {
+      resetBmExitHandVisuals();
+      return;
+    }
     const rawDx = e.clientX - startX;
+    const rawDy = e.clientY - startY;
+    maxAbsDx = Math.max(maxAbsDx, Math.abs(rawDx));
+    if (!dragEngaged) {
+      if (rawDx <= -5 && Math.abs(rawDx) >= Math.abs(rawDy) * 0.9) {
+        engageDragVisuals();
+      } else {
+        return;
+      }
+    }
     const dx = Math.max(-maxDrag, Math.min(8, rawDx));
     const progress = Math.min(1, Math.max(0, -dx / maxDrag));
     const rot = -(progress * 6.5);
@@ -14769,36 +14838,52 @@ function initBmExitHandDrag() {
       const sc = (0.85 + progress * 0.65).toFixed(2);
       ripple.style.transform = `scale3d(${sc}, ${sc}, 1)`;
     }
-  });
+  }, { passive: true });
 
   const finishDrag = (e, cancelled) => {
-    if (activePid === null || e.pointerId !== activePid) return;
-    try {
-      if (handBtn.hasPointerCapture(e.pointerId)) handBtn.releasePointerCapture(e.pointerId);
-    } catch (err) { console.debug(err); }
-    activePid = null;
-    if (cancelled || !bmExitConfirmOpen) {
+    if (bmExitActivePid === null || e.pointerId !== bmExitActivePid) return;
+    releaseBmExitDragPointer();
+    if (!bmExitConfirmOpen || bmExitCurrentStep !== 2) {
       resetBmExitHandVisuals();
       return;
     }
     const elapsed = Math.max(1, Date.now() - startTime);
+    if (cancelled) {
+      // Se Android OS intercetta lo swipe dal bordo destro fisico per chiudere la PWA (System Back),
+      // lancia subito la corsa fluida della manina verso sinistra in sincrono con l'uscita di sistema.
+      const w = window.innerWidth || document.documentElement.clientWidth || 360;
+      const isRightEdgeOsSwipe = startX >= w - 48 && (lastDx <= -2 || elapsed < 350);
+      if (isRightEdgeOsSwipe) {
+        triggerBmExitHandSwipe(lastDx, lastRot, lastProgress, maxDrag, false);
+      } else if (dragEngaged) {
+        snapBackHand();
+      } else {
+        resetBmExitHandVisuals();
+      }
+      return;
+    }
+    if (dragEngaged || maxAbsDx >= 10) {
+      bmExitSuppressBackdropUntil = Date.now() + 400;
+    }
+    if (!dragEngaged) return;
     const speed = (-lastDx) / elapsed;
     const isDecisiveSwipe = lastDx <= -48 || (lastDx <= -24 && speed >= 0.28);
-    const isQuickTap = Math.abs(lastDx) < 10 && elapsed < 350;
+    const isQuickTap = startedOnHand && Math.abs(lastDx) < 10 && elapsed < 350;
     if (isDecisiveSwipe || isQuickTap) {
       triggerBmExitHandSwipe(
         isQuickTap ? 0 : lastDx,
         isQuickTap ? 0 : lastRot,
         isQuickTap ? 0 : lastProgress,
-        isQuickTap ? 0 : maxDrag
+        isQuickTap ? 0 : maxDrag,
+        true
       );
     } else {
       snapBackHand();
     }
   };
 
-  handBtn.addEventListener("pointerup", (e) => finishDrag(e, false));
-  handBtn.addEventListener("pointercancel", (e) => finishDrag(e, true));
+  window.addEventListener("pointerup", (e) => finishDrag(e, false), { passive: true });
+  window.addEventListener("pointercancel", (e) => finishDrag(e, true), { passive: true });
 }
 
 function onBmExitChoice(shouldExit, btnEl) {
