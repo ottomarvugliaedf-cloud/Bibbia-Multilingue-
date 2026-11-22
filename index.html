@@ -1572,12 +1572,19 @@ body.oled-mode .pub-ref-badge {
       border: 1.5px solid rgba(79, 195, 247, 0.58);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 8px 22px rgba(0, 0, 0, 0.48), 0 0 18px rgba(0, 229, 255, 0.18);
       overflow: hidden;
-      cursor: pointer;
+      cursor: grab;
       padding: 0;
       display: block;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.16s ease;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .bm-exit-swipe-stage.dragging {
+      cursor: grabbing;
     }
     .bm-exit-swipe-stage:active,
+    .bm-exit-swipe-stage.dragging,
     .bm-exit-swipe-stage.swiping {
       border-color: #00e5ff;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 24px rgba(0, 229, 255, 0.55);
@@ -1659,19 +1666,38 @@ body.oled-mode .pub-ref-badge {
       pointer-events: none;
       animation: bmExitRippleIdle 2.4s ease-out infinite;
     }
+    .bm-exit-swipe-stage.dragging .bm-exit-hand-wrap,
+    .bm-exit-swipe-stage.dragging .bm-swipe-trail,
+    .bm-exit-swipe-stage.dragging .bm-swipe-ripple {
+      animation: none !important;
+      transition: none !important;
+    }
+    .bm-exit-swipe-stage.dragging .bm-swipe-chevrons span {
+      color: #84ffff;
+      opacity: 0.88;
+    }
+    .bm-exit-swipe-stage.snapping .bm-exit-hand-wrap {
+      animation: none !important;
+      transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .bm-exit-swipe-stage.snapping .bm-swipe-trail,
+    .bm-exit-swipe-stage.snapping .bm-swipe-ripple {
+      animation: none !important;
+      transition: transform 0.22s ease, opacity 0.22s ease;
+    }
     .bm-exit-swipe-stage.swiping .bm-exit-hand-wrap {
-      animation: bmExitHandActive 0.62s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      animation: bmExitHandActive 0.78s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     }
     .bm-exit-swipe-stage.swiping .bm-swipe-trail {
-      width: min(148px, calc(100% - 122px));
-      animation: bmExitTrailActive 0.62s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      width: var(--bm-trail-width, min(156px, calc(100% - 122px)));
+      animation: bmExitTrailActive 0.78s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     }
     .bm-exit-swipe-stage.swiping .bm-swipe-ripple {
-      animation: bmExitRippleActive 0.62s ease-out forwards;
+      animation: bmExitRippleActive 0.78s ease-out forwards;
     }
     .bm-exit-swipe-stage.swiping .bm-swipe-chevrons span {
       color: #84ffff;
-      opacity: 0.9;
+      opacity: 0.92;
     }
     @keyframes bmExitChevronWave {
       0%, 100% { opacity: 0.16; transform: translateX(0); }
@@ -1679,9 +1705,9 @@ body.oled-mode .pub-ref-badge {
       75% { opacity: 0.16; transform: translateX(-8px); }
     }
     @keyframes bmExitHandIdle {
-      0%, 14% { transform: translate3d(0, -50%, 0) rotate(0deg); }
-      24% { transform: translate3d(-4px, -49%, 0) rotate(-1.5deg); }
-      62% { transform: translate3d(-44px, -50%, 0) rotate(-3.5deg); }
+      0%, 14% { transform: translate3d(0, -50%, 0) rotate(0deg); opacity: 1; }
+      24% { transform: translate3d(-4px, -49%, 0) rotate(-1.5deg); opacity: 1; }
+      62% { transform: translate3d(-44px, -50%, 0) rotate(-3.5deg); opacity: 1; }
       78% { transform: translate3d(-44px, -50%, 0) rotate(-2deg); opacity: 0.92; }
       92%, 100% { transform: translate3d(0, -50%, 0) rotate(0deg); opacity: 1; }
     }
@@ -1698,21 +1724,22 @@ body.oled-mode .pub-ref-badge {
       72%, 100% { opacity: 0; transform: scale3d(1.65, 1.65, 1); }
     }
     @keyframes bmExitHandActive {
-      0% { transform: translate3d(0, -50%, 0) rotate(0deg) scale(1); }
-      14% { transform: translate3d(-6px, -48%, 0) rotate(-3deg) scale(0.97); }
-      72% { transform: translate3d(-118px, -50%, 0) rotate(-6deg) scale(1.02); opacity: 1; }
-      100% { transform: translate3d(-148px, -50%, 0) rotate(-7deg) scale(0.96); opacity: 0.15; }
+      0% { transform: translate3d(var(--bm-swipe-from, 0px), -50%, 0) rotate(var(--bm-swipe-rot, 0deg)) scale(1); opacity: 1; }
+      48% { transform: translate3d(var(--bm-swipe-mid, -138px), -50%, 0) rotate(-6deg) scale(1.02); opacity: 1; }
+      72% { transform: translate3d(var(--bm-swipe-to, -174px), -50%, 0) rotate(-7.5deg) scale(0.95); opacity: 0; }
+      74% { transform: translate3d(0px, -50%, 0) rotate(0deg) scale(1); opacity: 0; }
+      100% { transform: translate3d(0px, -50%, 0) rotate(0deg) scale(1); opacity: 1; }
     }
     @keyframes bmExitTrailActive {
-      0% { transform: scaleX(0); opacity: 0; }
-      22% { transform: scaleX(0.55); opacity: 0.95; }
-      75% { transform: scaleX(1.08); opacity: 0.85; }
-      100% { transform: scaleX(1.12); opacity: 0; }
+      0% { transform: scaleX(var(--bm-trail-from, 0)); opacity: var(--bm-trail-op, 0); }
+      22% { transform: scaleX(var(--bm-trail-peak, 0.65)); opacity: 0.95; }
+      54% { transform: scaleX(1.06); opacity: 0.78; }
+      72%, 100% { transform: scaleX(1.1); opacity: 0; }
     }
     @keyframes bmExitRippleActive {
-      0% { opacity: 0.95; transform: scale3d(0.55, 0.55, 1); }
-      45% { opacity: 0.9; transform: scale3d(1.65, 1.65, 1); }
-      100% { opacity: 0; transform: scale3d(2.3, 2.3, 1); }
+      0% { opacity: var(--bm-ripple-op, 0.92); transform: scale3d(var(--bm-ripple-from, 0.55), var(--bm-ripple-from, 0.55), 1); }
+      38% { opacity: 0.86; transform: scale3d(1.72, 1.72, 1); }
+      72%, 100% { opacity: 0; transform: scale3d(2.3, 2.3, 1); }
     }
     @media (prefers-reduced-motion: reduce) {
       .bm-exit-hand-wrap,
@@ -2681,7 +2708,7 @@ body.oled-mode .pub-ref-badge {
         </div>
       </div>
       <div id="bmExitStep2" class="bm-exit-step2">
-        <button type="button" id="bmExitHandBtn" class="bm-exit-swipe-stage" onclick="onBmExitHandTap()" aria-label="Esegui lo swipe di uscita verso sinistra">
+        <button type="button" id="bmExitHandBtn" class="bm-exit-swipe-stage" onclick="if(event.detail===0) triggerBmExitHandSwipe()" aria-label="Trascina la manina verso sinistra per uscire">
           <span class="bm-swipe-edge-bar" aria-hidden="true"></span>
           <span class="bm-swipe-chevrons" aria-hidden="true"><span>‹</span><span>‹</span><span>‹</span></span>
           <span class="bm-swipe-trail" aria-hidden="true"></span>
@@ -2737,7 +2764,7 @@ body.oled-mode .pub-ref-badge {
           </span>
         </button>
         <div id="bmExitStep2Sub" style="text-align:center; font-size:13px; font-weight:700; color:#84ffff; line-height:1.48; padding:0 4px;">
-          Chrome blocca la chiusura automatica: fai uno swipe Indietro o usa Home.
+          Chrome blocca la chiusura automatica: fai uno swipe dal bordo dello schermo o usa Home.
         </div>
       </div>
     </div>
@@ -12658,7 +12685,7 @@ function scrollRpToToday(smooth = false) {
 function buildStudioBackupObject() {
   return {
     app: "BibbiaMultilingue_PRO",
-    version: "PRO_v14.8.7",
+    version: "PRO_v14.8.8",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
@@ -12975,7 +13002,7 @@ function setMigrationStatus(htmlMsg) {
 
 async function buildAndDeliverLibraryBundle(keysList, includeStudio, fileName, shareTitle) {
   const parts = [
-    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v14.8.7","date":',
+    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v14.8.8","date":',
     JSON.stringify(new Date().toISOString())
   ];
   if (includeStudio) {
@@ -14472,30 +14499,61 @@ async function executeOmniSearch() {
 // 5. SWIPE BORDO DESTRO, MODALE USCITA ZAFFIRO PRO (FASE 1 & 2) & TRANSIZIONE GPU 120Hz
 // ============================================================================
 const BM_EXIT_DEFAULT_SUB = "I tuoi appunti, segnalibri e dati offline sono già al sicuro.";
-const BM_EXIT_FALLBACK_SUB = "Chrome blocca la chiusura automatica: fai uno swipe Indietro o usa Home.";
+const BM_EXIT_FALLBACK_SUB = "Chrome blocca la chiusura automatica: fai uno swipe dal bordo dello schermo o usa Home.";
 let bmExitConfirmOpen = false;
 let bmExitActionLock = false;
 let bmExitingApp = false;
 let bmExitChoiceTimer = null;
 let bmExitFallbackTimer = null;
 let bmExitHandTimer = null;
+let bmExitSnapTimer = null;
 
 function clearBmExitTimers() {
   clearTimeout(bmExitChoiceTimer);
   clearTimeout(bmExitFallbackTimer);
   clearTimeout(bmExitHandTimer);
+  clearTimeout(bmExitSnapTimer);
   bmExitChoiceTimer = null;
   bmExitFallbackTimer = null;
   bmExitHandTimer = null;
+  bmExitSnapTimer = null;
+}
+
+function resetBmExitHandVisuals() {
+  const handBtn = document.getElementById("bmExitHandBtn");
+  if (!handBtn) return;
+  handBtn.classList.remove("dragging", "snapping", "swiping");
+  handBtn.style.removeProperty("--bm-swipe-from");
+  handBtn.style.removeProperty("--bm-swipe-mid");
+  handBtn.style.removeProperty("--bm-swipe-to");
+  handBtn.style.removeProperty("--bm-swipe-rot");
+  handBtn.style.removeProperty("--bm-trail-from");
+  handBtn.style.removeProperty("--bm-trail-op");
+  handBtn.style.removeProperty("--bm-trail-peak");
+  handBtn.style.removeProperty("--bm-trail-width");
+  handBtn.style.removeProperty("--bm-ripple-from");
+  handBtn.style.removeProperty("--bm-ripple-op");
+  const handWrap = handBtn.querySelector(".bm-exit-hand-wrap");
+  const trail = handBtn.querySelector(".bm-swipe-trail");
+  const ripple = handBtn.querySelector(".bm-swipe-ripple");
+  if (handWrap) handWrap.style.transform = "";
+  if (trail) {
+    trail.style.transform = "";
+    trail.style.opacity = "";
+    trail.style.width = "";
+  }
+  if (ripple) {
+    ripple.style.transform = "";
+    ripple.style.opacity = "";
+  }
 }
 
 function setBmExitModalStep(stepNum) {
   const s1 = document.getElementById("bmExitStep1");
   const s2 = document.getElementById("bmExitStep2");
-  const handBtn = document.getElementById("bmExitHandBtn");
   const sub1 = document.getElementById("bmExitModalSub");
   const sub2 = document.getElementById("bmExitStep2Sub");
-  if (handBtn) handBtn.classList.remove("swiping");
+  resetBmExitHandVisuals();
   if (stepNum === 2) {
     if (s1) s1.style.display = "none";
     if (s2) s2.style.display = "flex";
@@ -14595,21 +14653,152 @@ function confirmBmAppExit() {
   }, 250);
 }
 
-function onBmExitHandTap() {
+function triggerBmExitHandSwipe(startDx = 0, startRot = 0, startProgress = 0, dragWidth = 0) {
   const handBtn = document.getElementById("bmExitHandBtn");
+  clearTimeout(bmExitHandTimer);
+  clearTimeout(bmExitSnapTimer);
+  bmExitHandTimer = null;
+  bmExitSnapTimer = null;
   bmChimeHaptic();
   if (handBtn) {
-    handBtn.classList.remove("swiping");
+    resetBmExitHandVisuals();
+    const fromDx = Number(startDx || 0);
+    const midDx = Math.min(-138, fromDx - 28);
+    const toDx = Math.min(-174, fromDx - 58);
+    const prog = Math.min(1, Math.max(0, Number(startProgress || 0)));
+    const trailOp = prog > 0.03 ? (0.28 + prog * 0.7) : 0;
+    const trailPeak = Math.max(0.65, Math.min(1.06, prog + 0.32));
+    const rippleFrom = prog > 0.03 ? (0.85 + prog * 0.65) : 0.55;
+    const rippleOp = prog > 0.03 ? (0.45 + prog * 0.52) : 0.92;
+    handBtn.style.setProperty("--bm-swipe-from", `${fromDx.toFixed(1)}px`);
+    handBtn.style.setProperty("--bm-swipe-mid", `${midDx.toFixed(1)}px`);
+    handBtn.style.setProperty("--bm-swipe-to", `${toDx.toFixed(1)}px`);
+    handBtn.style.setProperty("--bm-swipe-rot", `${Number(startRot || 0).toFixed(2)}deg`);
+    handBtn.style.setProperty("--bm-trail-from", prog.toFixed(3));
+    handBtn.style.setProperty("--bm-trail-op", trailOp.toFixed(2));
+    handBtn.style.setProperty("--bm-trail-peak", trailPeak.toFixed(3));
+    if (dragWidth > 0) handBtn.style.setProperty("--bm-trail-width", `${Math.round(dragWidth)}px`);
+    handBtn.style.setProperty("--bm-ripple-from", rippleFrom.toFixed(2));
+    handBtn.style.setProperty("--bm-ripple-op", rippleOp.toFixed(2));
     void handBtn.offsetWidth;
     if (bmExitConfirmOpen) handBtn.classList.add("swiping");
   }
-  clearTimeout(bmExitHandTimer);
   bmExitHandTimer = setTimeout(() => {
     bmExitHandTimer = null;
-    if (handBtn) handBtn.classList.remove("swiping");
-  }, 700);
-  // Tenta comunque l'uscita sincrona durante il tap sull'icona manina
+    resetBmExitHandVisuals();
+  }, 790);
+  // Tenta l'uscita sincrona preservando la user activation del gesto sulla manina
   tryNativePwaExitNow();
+}
+
+function initBmExitHandDrag() {
+  const handBtn = document.getElementById("bmExitHandBtn");
+  if (!handBtn) return;
+  const handWrap = handBtn.querySelector(".bm-exit-hand-wrap");
+  const trail = handBtn.querySelector(".bm-swipe-trail");
+  const ripple = handBtn.querySelector(".bm-swipe-ripple");
+  let activePid = null;
+  let startX = 0;
+  let startTime = 0;
+  let lastDx = 0;
+  let lastRot = 0;
+  let lastProgress = 0;
+  let maxDrag = 156;
+
+  const snapBackHand = () => {
+    handBtn.classList.remove("dragging");
+    handBtn.classList.add("snapping");
+    if (handWrap) handWrap.style.transform = "translate3d(0px, -50%, 0) rotate(0deg)";
+    if (trail) {
+      trail.style.transform = "scaleX(0)";
+      trail.style.opacity = "0";
+    }
+    if (ripple) ripple.style.opacity = "0";
+    clearTimeout(bmExitSnapTimer);
+    bmExitSnapTimer = setTimeout(() => {
+      bmExitSnapTimer = null;
+      resetBmExitHandVisuals();
+    }, 250);
+  };
+
+  handBtn.addEventListener("pointerdown", function (e) {
+    if (!bmExitConfirmOpen || e.isPrimary === false) return;
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    clearTimeout(bmExitHandTimer);
+    clearTimeout(bmExitSnapTimer);
+    bmExitHandTimer = null;
+    bmExitSnapTimer = null;
+    resetBmExitHandVisuals();
+    activePid = e.pointerId;
+    startX = e.clientX;
+    startTime = Date.now();
+    lastDx = 0;
+    lastRot = 0;
+    lastProgress = 0;
+    maxDrag = Math.max(116, (handBtn.clientWidth || 300) - 134);
+    try { handBtn.setPointerCapture(e.pointerId); } catch (err) { console.debug(err); }
+    handBtn.classList.add("dragging");
+    if (handWrap) handWrap.style.transform = "translate3d(0px, -50%, 0) rotate(0deg)";
+    if (trail) {
+      trail.style.width = `${maxDrag}px`;
+      trail.style.transform = "scaleX(0)";
+      trail.style.opacity = "0";
+    }
+    if (ripple) {
+      ripple.style.opacity = "0.7";
+      ripple.style.transform = "scale3d(0.85, 0.85, 1)";
+    }
+  });
+
+  handBtn.addEventListener("pointermove", function (e) {
+    if (activePid === null || e.pointerId !== activePid) return;
+    const rawDx = e.clientX - startX;
+    const dx = Math.max(-maxDrag, Math.min(8, rawDx));
+    const progress = Math.min(1, Math.max(0, -dx / maxDrag));
+    const rot = -(progress * 6.5);
+    lastDx = dx;
+    lastRot = rot;
+    lastProgress = progress;
+    if (handWrap) handWrap.style.transform = `translate3d(${dx.toFixed(1)}px, -50%, 0) rotate(${rot.toFixed(2)}deg)`;
+    if (trail) {
+      trail.style.transform = `scaleX(${progress.toFixed(3)})`;
+      trail.style.opacity = progress > 0.03 ? (0.28 + progress * 0.7).toFixed(2) : "0";
+    }
+    if (ripple) {
+      ripple.style.opacity = progress > 0.03 ? (0.45 + progress * 0.52).toFixed(2) : "0.7";
+      const sc = (0.85 + progress * 0.65).toFixed(2);
+      ripple.style.transform = `scale3d(${sc}, ${sc}, 1)`;
+    }
+  });
+
+  const finishDrag = (e, cancelled) => {
+    if (activePid === null || e.pointerId !== activePid) return;
+    try {
+      if (handBtn.hasPointerCapture(e.pointerId)) handBtn.releasePointerCapture(e.pointerId);
+    } catch (err) { console.debug(err); }
+    activePid = null;
+    if (cancelled || !bmExitConfirmOpen) {
+      resetBmExitHandVisuals();
+      return;
+    }
+    const elapsed = Math.max(1, Date.now() - startTime);
+    const speed = (-lastDx) / elapsed;
+    const isDecisiveSwipe = lastDx <= -48 || (lastDx <= -24 && speed >= 0.28);
+    const isQuickTap = Math.abs(lastDx) < 10 && elapsed < 350;
+    if (isDecisiveSwipe || isQuickTap) {
+      triggerBmExitHandSwipe(
+        isQuickTap ? 0 : lastDx,
+        isQuickTap ? 0 : lastRot,
+        isQuickTap ? 0 : lastProgress,
+        isQuickTap ? 0 : maxDrag
+      );
+    } else {
+      snapBackHand();
+    }
+  };
+
+  handBtn.addEventListener("pointerup", (e) => finishDrag(e, false));
+  handBtn.addEventListener("pointercancel", (e) => finishDrag(e, true));
 }
 
 function onBmExitChoice(shouldExit, btnEl) {
@@ -14633,6 +14822,7 @@ function onBmExitChoice(shouldExit, btnEl) {
   try {
     window.history.replaceState({ bmGuard: "root", bmDepth: 0 }, "");
   } catch (e) { console.debug(e); }
+  initBmExitHandDrag();
 
   // Su Android Chrome pointerdown su touch scatta PRIMA di UserActivation (avvelenando lo stato come skippable):
   // armiamo solo su click / pointerup / touchend / keydown quando navigator.userActivation conferma un'attivazione reale.
