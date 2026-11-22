@@ -149,23 +149,30 @@
       text-rendering: optimizeLegibility;
       -webkit-font-smoothing: antialiased;
     }
-/* SCHERMATA INIZIALE BLU PRO — 3 PULSAZIONI LENTE & EFFETTO LUCE GEMINI INTELLIGENCE */
+/* SCHERMATA INIZIALE BLU PRO — 3 PULSAZIONI CON SCIA SFUMATA GEMINI & PRO IN ORO PULSANTE */
 .splash-box, .splash-sub { opacity: 0; will-change: transform, opacity; backface-visibility: hidden; }
 #splashScreen.ready .splash-box {
   opacity: 1;
-  transition: opacity 0.38s ease;
-  animation: splashPulse 1.65s ease-in-out 3 forwards;
+  transition: opacity 0.34s ease;
+  animation: splashPulse 1.28s ease-in-out 3 forwards;
 }
 #splashScreen.ready .splash-box::before {
-  animation: bmOrbitClockwise 3.3s linear infinite;
+  animation: bmOrbitClockwise 2.56s linear infinite;
 }
 #splashScreen.ready .splash-text {
-  animation: bmTextSweepSlow 1.65s ease-in-out 3 forwards;
+  animation: bmTextSweepSlow 1.28s ease-in-out 3 forwards;
 }
 #splashScreen.ready .splash-sub {
-  animation:
-    fadeInSub 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.08s forwards,
-    bmSubSweepFast 1.65s cubic-bezier(0.32, 0.08, 0.28, 1) 0.14s 3 forwards;
+  animation: fadeInSub 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.06s forwards;
+}
+#splashScreen.ready .splash-sub-main {
+  animation: bmSubSweepFast 1.28s cubic-bezier(0.32, 0.08, 0.28, 1) 0.10s 3 forwards;
+}
+#splashScreen.ready .splash-sub-pro {
+  animation: bmProTextGlow 1.28s ease-in-out 0.48s 3 forwards;
+}
+#splashScreen.ready .splash-sub-pro::before {
+  animation: bmProHaloPulse 1.28s ease-out 0.48s 3 forwards;
 }
 #splashScreen {
   position: fixed;
@@ -176,7 +183,7 @@
   z-index: 9999;
   overflow: hidden;
   contain: layout paint style;
-  transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.48s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: opacity;
   backface-visibility: hidden;
 }
@@ -195,8 +202,8 @@
 .splash-box {
   position: relative;
   width: 126px; height: 126px;
-  background: #08275e;
-  border: 1px solid rgba(132, 255, 255, 0.32);
+  background: #103e8c;
+  border: 1px solid rgba(132, 255, 255, 0.28);
   border-radius: 28px;
   overflow: hidden;
   overflow: clip;
@@ -204,27 +211,32 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.62), 0 0 30px rgba(33, 150, 243, 0.42);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 32px rgba(41, 182, 246, 0.46);
   transform: translateZ(0);
 }
 .splash-box::before {
   content: "";
   position: absolute;
-  width: 220%;
-  height: 220%;
-  top: -60%;
-  left: -60%;
+  width: 240%;
+  height: 240%;
+  top: -70%;
+  left: -70%;
   background: conic-gradient(
     from 0deg,
-    rgba(13, 71, 161, 0.12) 0deg,
-    rgba(13, 71, 161, 0.12) 190deg,
-    rgba(21, 101, 192, 0.68) 235deg,
-    #1e88e5 275deg,
-    #29b6f6 310deg,
-    #00e5ff 338deg,
-    #e0f7fa 354deg,
-    rgba(13, 71, 161, 0.12) 360deg
+    #144da8 0deg,
+    #1b62cf 50deg,
+    #298ef2 108deg,
+    #29b6f6 160deg,
+    #40c4ff 202deg,
+    #84ffff 238deg,
+    #e0f7fa 262deg,
+    #ffffff 276deg,
+    #b3e5fc 294deg,
+    #40c4ff 316deg,
+    #1e7ae0 338deg,
+    #144da8 360deg
   );
+  filter: blur(2.5px);
   z-index: 0;
   will-change: transform;
   transform: rotate(0deg);
@@ -234,8 +246,8 @@
   position: absolute;
   inset: 4px;
   border-radius: 24px;
-  background: linear-gradient(145deg, #1659b8 0%, #092c6b 100%);
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.34), inset 0 -6px 14px rgba(2, 11, 28, 0.36);
+  background: linear-gradient(145deg, #1659b8 0%, #08275e 100%);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.36), inset 0 -6px 14px rgba(2, 11, 28, 0.38);
   z-index: 1;
 }
 @keyframes bmOrbitClockwise {
@@ -245,11 +257,11 @@
 @keyframes splashPulse {
   0%, 100% {
     transform: scale3d(1, 1, 1);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.62), 0 0 26px rgba(33, 150, 243, 0.4);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 28px rgba(41, 182, 246, 0.44);
   }
   50% {
     transform: scale3d(1.075, 1.075, 1);
-    box-shadow: 0 28px 54px rgba(0, 0, 0, 0.72), 0 0 54px rgba(0, 229, 255, 0.72), 0 0 80px rgba(33, 150, 243, 0.45);
+    box-shadow: 0 28px 54px rgba(0, 0, 0, 0.72), 0 0 56px rgba(0, 229, 255, 0.78), 0 0 84px rgba(41, 182, 246, 0.5);
   }
 }
 .splash-text {
@@ -261,16 +273,18 @@
   font-family: Georgia, serif;
   color: transparent;
   background-image: linear-gradient(
-    108deg,
-    #ffffff 0%,
-    #ffffff 34%,
-    #84ffff 41%,
-    #00e5ff 46%,
-    #0d47a1 51%,
-    #00b0ff 56%,
-    #80d8ff 61%,
-    #ffffff 66%,
-    #ffffff 100%
+    105deg,
+    #cce8ff 0%,
+    #cce8ff 33%,
+    #1565c0 39%,
+    #1e88e5 44%,
+    #00b0ff 49%,
+    #00e5ff 53%,
+    #b3e5fc 57%,
+    #ffffff 60%,
+    #84ffff 63%,
+    #cce8ff 67%,
+    #cce8ff 100%
   );
   background-size: 300% 100%;
   background-position: 100% 0;
@@ -281,21 +295,31 @@
 }
 .splash-sub {
   margin-top: 22px;
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
   font-weight: 800;
   font-size: 14.5px;
   letter-spacing: 1.8px;
   text-transform: uppercase;
+}
+.splash-sub-main {
+  display: inline-block;
   color: transparent;
   background-image: linear-gradient(
-    108deg,
-    #b8d4f5 0%,
-    #b8d4f5 38%,
-    #84ffff 44%,
-    #00e5ff 48%,
-    #2979ff 52%,
-    #00b0ff 57%,
-    #b8d4f5 62%,
-    #b8d4f5 100%
+    105deg,
+    #8fbef0 0%,
+    #8fbef0 34%,
+    #1565c0 40%,
+    #1e88e5 45%,
+    #00b0ff 50%,
+    #00e5ff 54%,
+    #b3e5fc 58%,
+    #ffffff 61%,
+    #84ffff 64%,
+    #8fbef0 68%,
+    #8fbef0 100%
   );
   background-size: 300% 100%;
   background-position: 100% 0;
@@ -304,13 +328,72 @@
   -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.56));
 }
+.splash-sub-pro {
+  position: relative;
+  display: inline-block;
+  font-weight: 900;
+  letter-spacing: 2px;
+  isolation: isolate;
+  color: transparent;
+  background-image: linear-gradient(
+    135deg,
+    #fff6cc 0%,
+    #f7d36a 28%,
+    #d49b1a 56%,
+    #ffe58f 80%,
+    #b88310 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 6px rgba(245, 200, 76, 0.5));
+}
+.splash-sub-pro::before {
+  content: "";
+  position: absolute;
+  inset: -10px -14px;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 228, 138, 0.62) 0%,
+    rgba(232, 180, 56, 0.32) 44%,
+    rgba(212, 155, 26, 0) 74%
+  );
+  z-index: -1;
+  opacity: 0;
+  transform: scale3d(0.65, 0.65, 1);
+  pointer-events: none;
+  will-change: transform, opacity;
+}
 @keyframes bmTextSweepSlow {
   0% { background-position: 100% 0; }
-  94%, 100% { background-position: 0% 0; }
+  92%, 100% { background-position: 0% 0; }
 }
 @keyframes bmSubSweepFast {
   0% { background-position: 100% 0; }
-  74%, 100% { background-position: 0% 0; }
+  68%, 100% { background-position: 0% 0; }
+}
+@keyframes bmProTextGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 5px rgba(245, 200, 76, 0.42));
+  }
+  42% {
+    filter: drop-shadow(0 0 12px rgba(255, 232, 145, 0.92)) drop-shadow(0 0 22px rgba(212, 155, 26, 0.65));
+  }
+}
+@keyframes bmProHaloPulse {
+  0% {
+    opacity: 0;
+    transform: scale3d(0.62, 0.62, 1);
+  }
+  26% {
+    opacity: 0.92;
+    transform: scale3d(1.18, 1.18, 1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale3d(2.25, 2.25, 1);
+  }
 }
 @keyframes fadeInSub {
   from { opacity: 0; transform: translate3d(0, 10px, 0); }
@@ -319,14 +402,18 @@
 @media (prefers-reduced-motion: reduce) {
   #splashScreen.ready .splash-box,
   #splashScreen.ready .splash-text,
-  #splashScreen.ready .splash-sub {
+  #splashScreen.ready .splash-sub,
+  #splashScreen.ready .splash-sub-main,
+  #splashScreen.ready .splash-sub-pro,
+  #splashScreen.ready .splash-sub-pro::before {
     animation: none !important;
     opacity: 1;
   }
   #splashScreen.ready .splash-box {
     border: 2px solid rgba(255, 255, 255, 0.5);
   }
-  #splashScreen.ready .splash-box::before {
+  #splashScreen.ready .splash-box::before,
+  #splashScreen.ready .splash-sub-pro::before {
     display: none;
   }
 }
@@ -1444,31 +1531,7 @@ body.oled-mode .pub-ref-badge {
       box-shadow: 0 0 20px var(--btn-glow, rgba(0, 229, 255, 0.85)), inset 0 0 14px rgba(2, 11, 28, 0.85) !important;
       transform: scale(0.95) !important;
     }
-    .bm-exit-toast {
-      position: fixed;
-      left: 50%;
-      bottom: calc(82px + env(safe-area-inset-bottom, 0px));
-      transform: translate3d(-50%, 14px, 0);
-      background: linear-gradient(135deg, rgba(10, 54, 126, 0.96), rgba(4, 26, 66, 0.98));
-      color: #e3f2fd;
-      border: 1.5px solid #00e5ff;
-      border-radius: 999px;
-      padding: 10px 16px;
-      font-size: 12.5px;
-      font-weight: 800;
-      letter-spacing: 0.2px;
-      text-align: center;
-      max-width: min(92vw, 390px);
-      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.65), 0 0 16px rgba(0, 229, 255, 0.38);
-      z-index: 1450;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-    .bm-exit-toast.show {
-      opacity: 1;
-      transform: translate3d(-50%, 0, 0);
-    }
+
 
     /* Biblioteca online JW.org: cerchio azzurro con torre vettoriale + effetto radiale dal centro ai bordi */
     .jw-btn {
@@ -2277,7 +2340,7 @@ body.oled-mode .pub-ref-badge {
       <div class="splash-box">
         <span class="splash-text">BM</span>
       </div>
-      <div class="splash-sub">Bibbia Multilingue PRO</div>
+      <div class="splash-sub"><span class="splash-sub-main">Bibbia Multilingue</span> <span class="splash-sub-pro">PRO</span></div>
     </div>
   </div>
   <script>
@@ -2426,7 +2489,6 @@ body.oled-mode .pub-ref-badge {
       </div>
     </div>
   </div>
-  <div id="bmExitToast" class="bm-exit-toast" role="status" aria-live="polite"></div>
   <!-- Visualizzatore cartine (Dove? / Cartine Bibliche — Manifattura Zaffiro PRO) -->
   <div id="mapsViewer" class="bp-viewer">
     <div class="bp-vhead">
@@ -12343,7 +12405,7 @@ function scrollRpToToday(smooth = false) {
 function buildStudioBackupObject() {
   return {
     app: "BibbiaMultilingue_PRO",
-    version: "PRO_v14.8.4",
+    version: "PRO_v14.8.6",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
@@ -12660,7 +12722,7 @@ function setMigrationStatus(htmlMsg) {
 
 async function buildAndDeliverLibraryBundle(keysList, includeStudio, fileName, shareTitle) {
   const parts = [
-    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v14.8.4","date":',
+    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v14.8.6","date":',
     JSON.stringify(new Date().toISOString())
   ];
   if (includeStudio) {
@@ -13396,7 +13458,7 @@ function fadeOutSplashNow() {
   splashDismissTimer = null;
   splash.style.pointerEvents = "none";
   splash.style.opacity = "0";
-  setTimeout(() => splash.remove(), 560);
+  setTimeout(() => splash.remove(), 500);
 }
 
 function dismissSplashScreen() {
@@ -13410,8 +13472,8 @@ function dismissSplashScreen() {
     return;
   }
   const prefersReduced = Boolean(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  // 3 pulsazioni lente ed eleganti sincronizzate con gli effetti luce (3 x 1650ms); un tocco salta subito a boot completato
-  const minDisplayMs = prefersReduced ? 400 : 4950;
+  // 3 pulsazioni sincronizzate (3 x 1280ms); un tocco salta subito a boot completato
+  const minDisplayMs = prefersReduced ? 400 : 3850;
   const elapsed = Date.now() - window.__splashShownAt;
   const wait = Math.max(0, minDisplayMs - elapsed);
   splashDismissTimer = setTimeout(fadeOutSplashNow, wait);
@@ -13422,7 +13484,7 @@ document.getElementById("splashScreen")?.addEventListener("click", function () {
   if (splashDismissed) fadeOutSplashNow();
 });
 // Fallback di sicurezza nel caso la rete o il DB tardino
-setTimeout(dismissSplashScreen, 6400);
+setTimeout(dismissSplashScreen, 5200);
 let lastScrollSaveTimer = null;
 document.getElementById("mainContainer")?.addEventListener("scroll", function() {
   const el = this;
@@ -13889,7 +13951,8 @@ let bmSwipeIgnore = false;
 
 function isInRightEdgeExitZone(clientX) {
   const w = window.innerWidth || document.documentElement.clientWidth || 360;
-  return clientX >= Math.max(w - 44, w * 0.88);
+  const edgeStrip = Math.min(72, Math.round(w * 0.16));
+  return clientX >= w - edgeStrip;
 }
 
 function isAnyBmOverlayOpen() {
@@ -14153,47 +14216,42 @@ async function executeOmniSearch() {
 }
 
 // ============================================================================
-// 5. SWIPE BORDO DESTRO, MODALE USCITA ZAFFIRO PRO (1 TOCCO) & TRANSIZIONE GPU 120Hz
+// 5. SWIPE BORDO DESTRO, MODALE USCITA ZAFFIRO PRO (1 LIVELLO) & TRANSIZIONE GPU 120Hz
 // ============================================================================
 const BM_EXIT_DEFAULT_SUB = "I tuoi appunti, segnalibri e dati offline sono già al sicuro.";
+const BM_EXIT_FALLBACK_SUB = "Chrome blocca la chiusura automatica: fai uno swipe Indietro o usa Home.";
 let bmExitConfirmOpen = false;
 let bmExitActionLock = false;
 let bmExitingApp = false;
-let bmExitWindowActive = false;
-let bmExitWindowStartedAt = 0;
 let bmExitChoiceTimer = null;
-let bmExitBackTimer = null;
-let bmExitToastTimer = null;
-let bmExitWindowTimer = null;
+let bmExitFallbackTimer = null;
 
 function clearBmExitTimers() {
   clearTimeout(bmExitChoiceTimer);
-  clearTimeout(bmExitBackTimer);
-  clearTimeout(bmExitToastTimer);
-  clearTimeout(bmExitWindowTimer);
+  clearTimeout(bmExitFallbackTimer);
   bmExitChoiceTimer = null;
-  bmExitBackTimer = null;
-  bmExitToastTimer = null;
-  bmExitWindowTimer = null;
+  bmExitFallbackTimer = null;
 }
 
-function hideBmExitToast() {
-  const toast = document.getElementById("bmExitToast");
-  if (toast) toast.classList.remove("show");
+function setBmExitModalSubtitle(text, isFallback = false) {
+  const sub = document.getElementById("bmExitModalSub");
+  if (!sub) return;
+  sub.textContent = text;
+  sub.style.color = isFallback ? "#84ffff" : "#cfe3ff";
+  sub.style.fontWeight = isFallback ? "700" : "";
 }
 
-function showBmExitToast(msg) {
-  const toast = document.getElementById("bmExitToast");
-  if (!toast) return;
-  toast.textContent = msg;
-  toast.classList.add("show");
+function getBmGuardDepth() {
+  const st = window.history.state;
+  return (st && typeof st.bmDepth === "number") ? st.bmDepth : 0;
 }
 
 function armBmBackGuard() {
-  if (bmExitConfirmOpen || bmExitingApp || bmExitWindowActive) return;
+  if (bmExitConfirmOpen || bmExitingApp) return;
   try {
-    if (window.history.state && window.history.state.bmGuard === "active") return;
-    window.history.pushState({ bmGuard: "active" }, "");
+    const st = window.history.state;
+    if (st && st.bmGuard === "active") return;
+    window.history.pushState({ bmGuard: "active", bmDepth: 1 }, "");
   } catch (e) { console.debug(e); }
 }
 
@@ -14201,17 +14259,10 @@ function openBmExitModal() {
   const modal = document.getElementById("bmExitModal");
   if (!modal) return;
   clearBmExitTimers();
-  hideBmExitToast();
   modal.querySelectorAll(".bm-exit-lit").forEach(el => el.classList.remove("bm-exit-lit"));
-  const sub = document.getElementById("bmExitModalSub");
-  if (sub) {
-    sub.textContent = BM_EXIT_DEFAULT_SUB;
-    sub.style.color = "#cfe3ff";
-    sub.style.fontWeight = "";
-  }
+  setBmExitModalSubtitle(BM_EXIT_DEFAULT_SUB, false);
   bmExitActionLock = false;
   bmExitingApp = false;
-  bmExitWindowActive = false;
   bmExitConfirmOpen = true;
   modal.style.display = "flex";
   bmHaptic(14);
@@ -14219,119 +14270,96 @@ function openBmExitModal() {
 
 function closeBmExitModal(rearmGuard = true) {
   clearBmExitTimers();
-  hideBmExitToast();
   const modal = document.getElementById("bmExitModal");
   if (modal) {
     modal.style.display = "none";
     modal.querySelectorAll(".bm-exit-lit").forEach(el => el.classList.remove("bm-exit-lit"));
   }
+  setBmExitModalSubtitle(BM_EXIT_DEFAULT_SUB, false);
   bmExitConfirmOpen = false;
   bmExitActionLock = false;
   bmExitingApp = false;
-  bmExitWindowActive = false;
   if (rearmGuard) armBmBackGuard();
 }
 
 function confirmBmAppExit() {
   clearBmExitTimers();
-  hideBmExitToast();
-  const modal = document.getElementById("bmExitModal");
-  if (modal) {
-    modal.style.display = "none";
-    modal.querySelectorAll(".bm-exit-lit").forEach(el => el.classList.remove("bm-exit-lit"));
-  }
-  bmExitConfirmOpen = false;
-  bmExitActionLock = false;
   bmExitingApp = true;
-  bmExitWindowActive = true;
-  bmExitWindowStartedAt = Date.now();
-
   try { stopAllAudio(); } catch (e) { console.debug(e); }
+
+  // Eseguiti sincroni nel gesto "click" di "Sì, esci" per preservare la transient user activation di Chrome
+  const depth = getBmGuardDepth();
   try { window.close(); } catch (e) { console.debug(e); }
+  try {
+    if (depth > 0) {
+      window.history.go(-(depth + 1));
+    } else if (window.history.length > 1) {
+      window.history.back();
+    }
+  } catch (e) { console.debug(e); }
 
-  bmExitBackTimer = setTimeout(() => {
-    bmExitBackTimer = null;
-    try {
-      if (document.visibilityState === "visible") {
-        if (window.history.state && window.history.state.bmGuard === "active") {
-          window.history.back();
-        } else if (window.history.length > 1) {
-          window.history.back();
-        }
-      }
-    } catch (e) { console.debug(e); }
-  }, 50);
-
-  // Se Chrome Android WebAPK blocca la chiusura da script (limite di sicurezza di Android),
-  // il modale resta chiuso dopo il singolo tocco su "Sì, esci" e un breve avviso segnala che
-  // la guardia è disarmata per 4s (uno swipe dal bordo o Home chiude subito; altrimenti si riarma da sola).
-  bmExitToastTimer = setTimeout(() => {
-    bmExitToastTimer = null;
+  // Se Chrome Android WebAPK blocca per sicurezza la chiusura da script, riporta la cronologia su "root" (depth 0)
+  // e lascia il modale aperto con una riga chiara: lo swipe Indietro successivo o Home chiude la PWA al volo.
+  bmExitFallbackTimer = setTimeout(() => {
+    bmExitFallbackTimer = null;
+    if (document.visibilityState !== "visible") {
+      bmExitingApp = false;
+      return;
+    }
+    bmExitConfirmOpen = true;
+    const remDepth = getBmGuardDepth();
+    if (remDepth > 0) {
+      try { window.history.go(-remDepth); } catch (e) { console.debug(e); }
+    }
+    bmExitActionLock = false;
     bmExitingApp = false;
-    if (document.visibilityState !== "visible") return;
-    showBmExitToast("🚪 Uscita pronta: scorri dal bordo o tocca Home per chiudere");
-    bmExitWindowTimer = setTimeout(() => {
-      bmExitWindowTimer = null;
-      hideBmExitToast();
-      bmExitWindowActive = false;
-    }, 4000);
-  }, 280);
+    const modal = document.getElementById("bmExitModal");
+    if (modal) {
+      modal.style.display = "flex";
+      modal.querySelectorAll(".bm-exit-lit").forEach(el => el.classList.remove("bm-exit-lit"));
+    }
+    setBmExitModalSubtitle(BM_EXIT_FALLBACK_SUB, true);
+  }, 250);
 }
 
 function onBmExitChoice(shouldExit, btnEl) {
   if (bmExitActionLock) return;
   bmExitActionLock = true;
-  if (shouldExit) bmChimeHaptic();
+  if (shouldExit) {
+    bmChimeHaptic();
+    if (btnEl) btnEl.classList.add("bm-exit-lit");
+    confirmBmAppExit();
+    return;
+  }
   if (btnEl) btnEl.classList.add("bm-exit-lit");
   clearTimeout(bmExitChoiceTimer);
   bmExitChoiceTimer = setTimeout(() => {
     bmExitChoiceTimer = null;
-    if (shouldExit) confirmBmAppExit();
-    else closeBmExitModal(true);
-  }, 140);
+    closeBmExitModal(true);
+  }, 130);
 }
 
 (function initEnterpriseNativeFeel() {
   try {
-    window.history.replaceState({ bmGuard: "root" }, "");
+    window.history.replaceState({ bmGuard: "root", bmDepth: 0 }, "");
   } catch (e) { console.debug(e); }
 
-  // Arma la guardia solo su reali attivazioni utente (compatibile con History Manipulation Intervention di Chrome Android)
-  const armOnUserGesture = (ev) => {
+  // Arma il singolo livello di guardia solo su reali attivazioni utente (piena compatibilità con Chrome Android)
+  const armOnUserGesture = () => {
     if (bmExitConfirmOpen || bmExitingApp) return;
-    if (bmExitWindowActive) {
-      if (Date.now() - bmExitWindowStartedAt < 500) return;
-      if (ev && typeof ev.clientX === "number") {
-        const w = window.innerWidth || document.documentElement.clientWidth || 360;
-        if (ev.clientX <= 56 || ev.clientX >= w - 56) return;
-      }
-      bmExitWindowActive = false;
-      clearTimeout(bmExitWindowTimer);
-      bmExitWindowTimer = null;
-      hideBmExitToast();
-    }
     armBmBackGuard();
   };
   document.addEventListener("pointerdown", armOnUserGesture, { capture: true, passive: true });
   document.addEventListener("keydown", armOnUserGesture, { capture: true, passive: true });
-  window.addEventListener("pageshow", () => {
-    bmExitWindowActive = false;
-    bmExitingApp = false;
-    hideBmExitToast();
-  });
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") {
-      if (bmExitConfirmOpen || bmExitingApp || bmExitWindowActive) {
-        closeBmExitModal(false);
-      }
+    if (document.visibilityState === "hidden" && (bmExitConfirmOpen || bmExitingApp)) {
+      closeBmExitModal(false);
     } else if (document.visibilityState === "visible") {
-      bmExitWindowActive = false;
       bmExitingApp = false;
-      hideBmExitToast();
     }
   });
 
-  // Gestore dedicato: swipe rapido e deciso dal bordo destro verso sinistra -> apre sempre #bmExitModal
+  // Gestore dedicato: swipe rapido e deciso dal bordo destro verso sinistra -> apre sempre #bmExitModal ovunque ci si trovi
   let edgeStartX = 0;
   let edgeStartY = 0;
   let edgeStartTime = 0;
@@ -14340,7 +14368,7 @@ function onBmExitChoice(shouldExit, btnEl) {
   document.addEventListener("touchstart", function (e) {
     edgeCandidate = false;
     if (!e.touches || e.touches.length !== 1) return;
-    if (bmExitConfirmOpen || bmExitingApp || bmExitWindowActive || isAnyBmOverlayOpen()) return;
+    if (bmExitConfirmOpen || bmExitingApp || isAnyBmOverlayOpen()) return;
     const t = e.target;
     if (t && t.closest("#splashScreen, #bmExitModal, #bmProphecyWidget, #mapsViewer, input, textarea, select, .quick-menu-bar, .verse-action-bar, .rp-scroll-window")) return;
     const sel = window.getSelection ? window.getSelection() : null;
@@ -14359,13 +14387,13 @@ function onBmExitChoice(shouldExit, btnEl) {
       return;
     }
     edgeCandidate = false;
-    if (bmExitConfirmOpen || bmExitingApp || bmExitWindowActive || isAnyBmOverlayOpen()) return;
+    if (bmExitConfirmOpen || bmExitingApp || isAnyBmOverlayOpen()) return;
     const elapsed = Date.now() - edgeStartTime;
-    if (elapsed > 420) return;
+    if (elapsed > 400) return;
     const dx = e.changedTouches[0].clientX - edgeStartX;
     const dy = e.changedTouches[0].clientY - edgeStartY;
     const speed = Math.abs(dx) / Math.max(1, elapsed);
-    if (dx <= -72 && Math.abs(dy) <= 48 && Math.abs(dx) >= Math.abs(dy) * 2.0 && speed >= 0.28) {
+    if (dx <= -68 && Math.abs(dy) <= 48 && Math.abs(dx) >= Math.abs(dy) * 1.9 && speed >= 0.28) {
       openBmExitModal();
     }
   }, { passive: true });
@@ -14375,8 +14403,7 @@ function onBmExitChoice(shouldExit, btnEl) {
 
   // Intercettazione gesto Indietro di sistema (popstate): chiude eventuali overlay aperti, altrimenti apre subito #bmExitModal
   window.addEventListener("popstate", function () {
-    if (bmExitingApp || bmExitWindowActive) return;
-    if (bmExitConfirmOpen) return;
+    if (bmExitingApp || bmExitConfirmOpen) return;
 
     const closeIfFlex = (id, fn) => {
       const el = document.getElementById(id);
