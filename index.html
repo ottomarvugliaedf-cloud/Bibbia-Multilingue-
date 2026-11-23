@@ -149,12 +149,12 @@
       text-rendering: optimizeLegibility;
       -webkit-font-smoothing: antialiased;
     }
-/* SCHERMATA INIZIALE BLU PRO — 2 PULSAZIONI DISTESE (3.84s) CON SCIA SFUMATA GEMINI & PRO IN ORO PULSANTE */
+/* SCHERMATA INIZIALE BLU PRO — 2,5 PULSAZIONI DISTESE (4.80s, CHIUSURA IN RISALITA) CON SCIA SFUMATA GEMINI & PRO IN ORO PULSANTE */
 .splash-box, .splash-sub { opacity: 0; will-change: transform, opacity; backface-visibility: hidden; }
 #splashScreen.ready .splash-box {
   opacity: 1;
   transition: opacity 0.34s ease;
-  animation: splashPulse 1.92s ease-in-out 2 forwards;
+  animation: splashPulse 1.92s ease-in-out 2.5 forwards;
 }
 #splashScreen.ready .splash-box::before {
   animation: bmOrbitClockwise 2.56s linear infinite;
@@ -14449,7 +14449,7 @@ function scrollRpToToday(smooth = false) {
 function buildStudioBackupObject() {
   return {
     app: "BibbiaMultilingue_PRO",
-    version: "PRO_v16.0.10",
+    version: "PRO_v17.0.0",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
@@ -14829,7 +14829,7 @@ function setMigrationStatus(htmlMsg) {
 
 async function buildAndDeliverLibraryBundle(keysList, includeStudio, fileName, shareTitle) {
   const parts = [
-    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v16.0.10","date":',
+    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v17.0.0","date":',
     JSON.stringify(new Date().toISOString())
   ];
   if (includeStudio) {
@@ -15594,8 +15594,8 @@ function dismissSplashScreen() {
   if (!window.__splashShownAt) { setTimeout(dismissSplashScreen, 80); return; }
   splashDismissed = true;
   const prefersReduced = Boolean(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  // 2 pulsazioni distese sincronizzate (2 x 1920ms = 3840ms); un tocco salta subito a boot completato
-  const minDisplayMs = prefersReduced ? 400 : 3850;
+  // 2,5 pulsazioni distese (2 x 1920ms + risalita finale 960ms = 4800ms); fade-out 480ms avviato a 4320ms
+  const minDisplayMs = prefersReduced ? 400 : 4320;
   const elapsed = Date.now() - window.__splashShownAt;
   const wait = Math.max(0, minDisplayMs - elapsed);
   splashDismissTimer = setTimeout(fadeOutSplashNow, wait);
