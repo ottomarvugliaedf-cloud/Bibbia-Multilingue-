@@ -149,12 +149,12 @@
       text-rendering: optimizeLegibility;
       -webkit-font-smoothing: antialiased;
     }
-/* SCHERMATA INIZIALE BLU PRO — 3 PULSAZIONI CON SCIA SFUMATA GEMINI & PRO IN ORO PULSANTE */
+/* SCHERMATA INIZIALE BLU PRO — 2 PULSAZIONI DISTESE (3.84s) CON SCIA SFUMATA GEMINI & PRO IN ORO PULSANTE */
 .splash-box, .splash-sub { opacity: 0; will-change: transform, opacity; backface-visibility: hidden; }
 #splashScreen.ready .splash-box {
   opacity: 1;
   transition: opacity 0.34s ease;
-  animation: splashPulse 1.28s ease-in-out 3 forwards;
+  animation: splashPulse 1.92s ease-in-out 2 forwards;
 }
 #splashScreen.ready .splash-box::before {
   animation: bmOrbitClockwise 2.56s linear infinite;
@@ -260,7 +260,7 @@
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 28px rgba(41, 182, 246, 0.44);
   }
   50% {
-    transform: scale3d(1.075, 1.075, 1);
+    transform: scale3d(1.045, 1.045, 1);
     box-shadow: 0 28px 54px rgba(0, 0, 0, 0.72), 0 0 56px rgba(0, 229, 255, 0.78), 0 0 84px rgba(41, 182, 246, 0.5);
   }
 }
@@ -1469,9 +1469,11 @@ body.oled-mode .pub-ref-badge {
     .bp-msg { position: absolute; left: 0; right: 0; top: 40%; text-align: center; font-size: 14px; font-weight: 700; color: #9ec9ff; }
     .bp-hl { position: absolute; box-sizing: border-box; pointer-events: none; border: calc(3px * var(--inv, 1)) solid #00e5ff; border-radius: calc(4px * var(--inv, 1)); background: rgba(0, 229, 255, 0.24); box-shadow: 0 0 0 calc(2px * var(--inv, 1)) #041a42, 0 0 18px rgba(0, 229, 255, 0.95); animation: bpPulse 1.4s ease-in-out infinite; }
     @keyframes bpPulse { 50% { background: rgba(204, 255, 0, 0.38); border-color: #ccff00; } }
-    .bp-vtools { display: flex; align-items: center; gap: 6px; padding: 8px 10px; padding-bottom: max(12px, env(safe-area-inset-bottom, 12px)); background: linear-gradient(180deg, #0a367e 0%, #062356 100%); border-top: 1px solid #29b6f6; flex-shrink: 0; flex-wrap: wrap; }
-    .bp-vtools .bp-chips { display: flex; flex: 1; flex-wrap: wrap; gap: 5px; align-items: center; min-width: 140px; }
-    .bp-chiplabel { font-size: 12px; font-weight: 700; color: #cfe3ff; }
+    .bp-vtools { display: flex; flex-direction: column; align-items: stretch; gap: 6px; padding: 8px max(20px, env(safe-area-inset-right, 20px)) max(18px, env(safe-area-inset-bottom, 18px)) max(20px, env(safe-area-inset-left, 20px)); background: linear-gradient(180deg, #0a367e 0%, #062356 100%); border-top: 1px solid #29b6f6; flex-shrink: 0; }
+    .bp-vtools-row { display: flex; align-items: center; gap: 6px; width: 100%; min-width: 0; flex-wrap: wrap; }
+    .bp-cell-chips { display: contents; }
+    .bp-vtools .bp-chips { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; width: 100%; min-width: 0; }
+    .bp-chiplabel { font-size: 12px; font-weight: 700; color: #cfe3ff; line-height: 1.35; }
     .bp-chip { background: #1565c0; border: 1px solid #00e5ff; color: #fff; border-radius: 14px; padding: 4px 11px; font-size: 12.5px; font-weight: 800; cursor: pointer; box-shadow: 0 0 8px rgba(0, 229, 255, 0.35); }
     .bp-sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 64%; overflow-y: auto; background: linear-gradient(180deg, #0a367e 0%, #062356 100%); color: #ffffff; border-top: 2px solid #00e5ff; border-radius: 16px 16px 0 0; transform: translateY(105%); transition: transform .22s cubic-bezier(0.22, 1, 0.36, 1); padding: 12px 12px 18px; z-index: 5; box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.7); }
     .bp-sheet.open { transform: none; }
@@ -3469,10 +3471,13 @@ body.oled-mode .pub-ref-badge {
       <div id="bpWrap" class="bp-wrap"><img id="bpImg" alt=""></div>
       <div id="bpMsg" class="bp-msg"></div>
     </div>
-    <div class="bp-vtools">
-      <button class="bp-tool-btn" onclick="bpZoomBtn(1/1.5)" title="Riduci zoom">🔍−</button>
-      <button class="bp-tool-btn" onclick="bpZoomBtn(1.5)" title="Ingrandisci zoom">🔍+</button>
-      <button class="bp-tool-btn" onclick="bpFitView()" title="Adatta cartina allo schermo">🔄 Adatta</button>
+    <div id="bpVTools" class="bp-vtools">
+      <div class="bp-vtools-row">
+        <button type="button" class="bp-tool-btn" onclick="bpZoomBtn(1/1.5)" title="Riduci zoom">🔍−</button>
+        <button type="button" class="bp-tool-btn" onclick="bpZoomBtn(1.5)" title="Ingrandisci zoom">🔍+</button>
+        <button type="button" class="bp-tool-btn" onclick="bpFitView()" title="Adatta cartina allo schermo">🔄 Adatta</button>
+        <span id="bpCellChips" class="bp-cell-chips"></span>
+      </div>
       <div id="bpChips" class="bp-chips"></div>
     </div>
     <div id="bpSheet" class="bp-sheet"></div>
@@ -13834,6 +13839,7 @@ async function openMapViewer(mapId, cells, label, fromBack = false) {
   document.getElementById("mapsViewer").style.display = "flex";
   document.getElementById("bpVTitle").textContent = map.title;
   document.getElementById("bpVSub").textContent = `${map.chapterTitle} · ${bpPages(map.pages)}`;
+  bpRenderChips();
   const sheet = document.getElementById("bpSheet");
   sheet.classList.remove("open");
   sheet.innerHTML = "";
@@ -13858,9 +13864,9 @@ async function openMapViewer(mapId, cells, label, fromBack = false) {
     wrap.style.visibility = "visible";
     bpBindGestures();
     bpDrawHighlights();
+    bpRenderChips();
     bpFitView();
     if (bpV.cells.length) bpZoomToCell(bpV.cells[0]);
-    bpRenderChips();
   };
   img.onerror = () => {
     if (reqId !== bpLoadReqId) return;
@@ -13871,6 +13877,7 @@ async function openMapViewer(mapId, cells, label, fromBack = false) {
   img.src = uri;
 }
 function closeMapViewer() {
+  bpLoadReqId++;
   const viewer = document.getElementById("mapsViewer");
   const wasOpen = viewer && viewer.style.display === "flex";
   if (viewer) viewer.style.display = "none";
@@ -13952,18 +13959,28 @@ function bpDrawHighlights() {
   });
 }
 function bpRenderChips() {
-  const el = document.getElementById("bpChips");
+  const cellsEl = document.getElementById("bpCellChips");
+  const captionEl = document.getElementById("bpChips");
   const map = bpV.map;
-  let html = "";
-  if (bpV.cells.length) {
-    html += `<span class="bp-chiplabel">${bpV.label ? escapeHtml(bpV.label) + " · " : ""}quadrato</span>` +
-      bpV.cells.map(c => `<button class="bp-chip" onclick="bpZoomToCell('${escapeJsStr(c)}')">${escapeHtml(c)}</button>`).join("");
-  } else if (map.hasGrid) {
-    html += `<span class="bp-chiplabel">Griglia ${map.grid.letters[0]}–${map.grid.letters[map.grid.letters.length - 1]} × 1–${map.grid.rows}. Tocca 📋 per l’elenco dei luoghi.</span>`;
-  } else {
-    html += `<span class="bp-chiplabel">Cartina senza griglia. Tocca 📋 per l’elenco dei nomi.</span>`;
+  if (!captionEl || !map) return;
+
+  if (cellsEl) {
+    cellsEl.innerHTML = bpV.cells.length
+      ? bpV.cells.map(c => `<button type="button" class="bp-chip" onclick="bpZoomToCell('${escapeJsStr(c)}')">${escapeHtml(c)}</button>`).join("")
+      : "";
   }
-  el.innerHTML = html;
+
+  if (bpV.cells.length) {
+    const placePrefix = bpV.label ? `📍 <b>${escapeHtml(bpV.label)}</b> · ` : "";
+    const cellPrompt = bpV.cells.length > 1 ? "un quadrato" : "il quadrato";
+    captionEl.innerHTML = `<span class="bp-chiplabel">${placePrefix}Tocca ${cellPrompt} per centrare la zona</span>`;
+  } else if (map.hasGrid && map.grid && Array.isArray(map.grid.letters) && map.grid.letters.length) {
+    const firstCol = map.grid.letters[0];
+    const lastCol = map.grid.letters[map.grid.letters.length - 1];
+    captionEl.innerHTML = `<span class="bp-chiplabel">Griglia ${escapeHtml(firstCol)}–${escapeHtml(lastCol)} × 1–${map.grid.rows} · Tocca 📋 Luoghi per l’elenco</span>`;
+  } else {
+    captionEl.innerHTML = `<span class="bp-chiplabel">Cartina senza griglia · Tocca 📋 Luoghi per l’elenco dei nomi</span>`;
+  }
 }
 function bpBindGestures() {
   if (bpV.bound) return;
@@ -14432,7 +14449,7 @@ function scrollRpToToday(smooth = false) {
 function buildStudioBackupObject() {
   return {
     app: "BibbiaMultilingue_PRO",
-    version: "PRO_v16.0.7",
+    version: "PRO_v16.0.10",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
@@ -14812,7 +14829,7 @@ function setMigrationStatus(htmlMsg) {
 
 async function buildAndDeliverLibraryBundle(keysList, includeStudio, fileName, shareTitle) {
   const parts = [
-    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v16.0.7","date":',
+    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v16.0.10","date":',
     JSON.stringify(new Date().toISOString())
   ];
   if (includeStudio) {
@@ -15577,7 +15594,7 @@ function dismissSplashScreen() {
   if (!window.__splashShownAt) { setTimeout(dismissSplashScreen, 80); return; }
   splashDismissed = true;
   const prefersReduced = Boolean(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  // 3 pulsazioni sincronizzate (3 x 1280ms); un tocco salta subito a boot completato
+  // 2 pulsazioni distese sincronizzate (2 x 1920ms = 3840ms); un tocco salta subito a boot completato
   const minDisplayMs = prefersReduced ? 400 : 3850;
   const elapsed = Date.now() - window.__splashShownAt;
   const wait = Math.max(0, minDisplayMs - elapsed);
