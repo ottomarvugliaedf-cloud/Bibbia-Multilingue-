@@ -2936,6 +2936,157 @@ body.oled-mode .pub-ref-badge {
     background: rgba(245, 158, 11, 0.18) !important;
     box-shadow: 0 2px 10px rgba(180, 83, 9, 0.25) !important;
   }
+
+  /* ===== Filamento Progresso Lettura 120Hz (Compositor-Only GPU scaleX) ===== */
+  .bm-read-progress-track {
+    position: relative;
+    width: 100%;
+    height: 2.5px;
+    background: rgba(41, 182, 246, 0.14);
+    flex-shrink: 0;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 95;
+  }
+  .bm-read-progress-track.active {
+    opacity: 1;
+  }
+  .bm-read-progress-fill {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #00e5ff 0%, #84ffff 70%, #ffd54f 100%);
+    transform-origin: left center;
+    transform: scaleX(0);
+    will-change: transform;
+  }
+  body.oled-mode .bm-read-progress-track {
+    background: rgba(255, 255, 255, 0.08);
+  }
+  body.oled-mode .bm-read-progress-fill {
+    background: linear-gradient(90deg, #38bdf8 0%, #ffd54f 100%);
+  }
+  body.bm-paper-on .bm-read-progress-track {
+    background: rgba(140, 88, 24, 0.16);
+  }
+  body.bm-paper-on .bm-read-progress-fill {
+    background: linear-gradient(90deg, #8c5818 0%, #c48b3b 100%);
+  }
+
+  /* ===== Mini-Player Audio Flottante (Appare solo durante ascolto / pausa) ===== */
+  .bm-audio-mini-player {
+    position: fixed;
+    left: 50%;
+    bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+    transform: translate3d(-50%, 0, 0);
+    z-index: 195;
+    display: none;
+    align-items: center;
+    gap: 5px;
+    max-width: min(96vw, 440px);
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, rgba(10, 54, 126, 0.96) 0%, rgba(4, 26, 66, 0.98) 100%);
+    border: 1.5px solid #00e5ff;
+    color: #ffffff;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 10px 28px rgba(0, 0, 0, 0.65), 0 0 16px rgba(0, 229, 255, 0.35);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .bm-audio-mini-player.visible {
+    display: inline-flex;
+  }
+  body.bm-zen-on .bm-audio-mini-player {
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+  }
+  body.bm-miniplayer-open .verse-action-bar {
+    bottom: calc(124px + env(safe-area-inset-bottom, 0px));
+  }
+  .bm-mp-btn {
+    background: rgba(21, 101, 192, 0.72);
+    color: #ffffff;
+    border: 1px solid rgba(79, 195, 247, 0.62);
+    border-radius: 999px;
+    height: 30px;
+    min-width: 30px;
+    padding: 0 7px;
+    font-size: 13px;
+    font-weight: 900;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.12s ease, background 0.14s ease;
+  }
+  .bm-mp-btn:active {
+    transform: scale(0.92);
+    background: #00e5ff;
+    color: #041a42;
+  }
+  .bm-mp-btn.primary {
+    background: #00e5ff;
+    color: #041a42;
+    border-color: #84ffff;
+    min-width: 34px;
+  }
+  .bm-mp-btn.pill {
+    font-size: 11px;
+    padding: 0 8px;
+    white-space: nowrap;
+  }
+  .bm-mp-btn.pill.sleep-on {
+    background: rgba(255, 213, 79, 0.24);
+    border-color: #ffd54f;
+    color: #ffd54f;
+  }
+  .bm-mp-label {
+    font-size: 11.5px;
+    font-weight: 800;
+    color: #cfe3ff;
+    max-width: 82px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0 2px;
+  }
+  body.oled-mode .bm-audio-mini-player {
+    background: #000000;
+    border-color: #38bdf8;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.95), 0 0 12px rgba(56, 189, 248, 0.35);
+  }
+  body.oled-mode .bm-mp-btn:not(.primary):not(.sleep-on) {
+    background: #0d0d0d;
+    border-color: #2b2b2b;
+  }
+  body.bm-paper-on .bm-audio-mini-player {
+    background: #ebe3d1;
+    border-color: #8c5818;
+    color: #2c2216;
+    box-shadow: 0 8px 24px rgba(40, 26, 8, 0.25);
+  }
+  body.bm-paper-on .bm-mp-label {
+    color: #5c3a10;
+  }
+  body.bm-paper-on .bm-mp-btn {
+    background: #f5efe2;
+    color: #3b2a14;
+    border-color: #b59469;
+  }
+  body.bm-paper-on .bm-mp-btn.primary {
+    background: #8c5818;
+    color: #fff8e8;
+    border-color: #6b4c24;
+  }
+  body.bm-paper-on .bm-mp-btn.pill.sleep-on {
+    background: rgba(140, 88, 24, 0.2);
+    border-color: #8c5818;
+    color: #5c3a10;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     #splashScreen.ready .splash-box,
     #splashScreen.ready .splash-text,
@@ -3050,6 +3201,10 @@ body.oled-mode .pub-ref-badge {
     <button id="dailyTabBtn" class="quick-pill highlight" onclick="showDailyTextView()">☀️ Scrittura del Giorno</button>
     <button id="diffBtn" class="quick-pill" style="display:none;" onclick="toggleDiffMode()">🔍 Diff: OFF</button>
   </div>
+  <!-- Filamento di Progresso Lettura 120Hz (Compositor-Only scaleX) -->
+  <div id="bmReadProgressTrack" class="bm-read-progress-track" aria-hidden="true">
+    <div id="bmReadProgressFill" class="bm-read-progress-fill"></div>
+  </div>
   <!-- Contenitore Principale (Lettura, Griglia 66 Libri, Ricerca, Note, Catalogo) -->
   <main id="mainContainer"></main>
   <!-- Barra Azioni Versetto (Ordine Personalizzato PRO) -->
@@ -3063,7 +3218,8 @@ body.oled-mode .pub-ref-badge {
     <button class="icon-btn" style="color:var(--primary-light);" title="Passi Paralleli" onclick="openCrossRefsModalForVerse()">🔗</button>
     <button class="icon-btn" style="color:var(--primary-light);" title="Lessico Strong" onclick="openStrongModalForVerse()">🏺</button>
     <button class="icon-btn" style="color:#00e5ff;" title="Raggi X: Confronto Versioni & Analisi" onclick="openVerseXRayModal()">🔬</button>
-    <button class="icon-btn" style="color:var(--primary-light);" title="Ascolta versetto" onclick="speakSelectedVerse()">🔊</button>
+    <button class="icon-btn" style="color:var(--primary-light);" title="Ascolta versetto selezionato" onclick="speakSelectedVerse()">🔊</button>
+    <button class="icon-btn" style="color:#ccff00;" title="Ascolta continuo da questo versetto in poi" onclick="speakChapterFromSelectedVerse()">▶️</button>
     <button class="icon-btn" style="color:var(--text-main);" title="Copia versetto" onclick="copySelectedVerse()">📋</button>
     <button class="icon-btn" style="color:var(--primary-light);" title="Card Immagine" onclick="generateVerseCardModal()">🖼️</button>
     <button class="icon-btn" style="color:var(--primary-light);" title="Salva Preferito" onclick="saveBookmark()">🔖</button>
@@ -3330,6 +3486,17 @@ body.oled-mode .pub-ref-badge {
       </div>
       <div id="bmSettingsDrawerBody" class="bm-drawer-body"></div>
     </div>
+  </div>
+
+  <!-- Mini-Player Audio Flottante (Attivo durante ascolto / pausa) -->
+  <div id="bmAudioMiniPlayer" class="bm-audio-mini-player" role="region" aria-label="Controlli lettura vocale">
+    <button type="button" id="bmMpPrevBtn" class="bm-mp-btn" onclick="stepMiniPlayerVerse(-1)" title="Versetto precedente">⏮</button>
+    <button type="button" id="bmMpPlayPauseBtn" class="bm-mp-btn primary" onclick="toggleMiniPlayerPauseResume()" title="Pausa / Riprendi">⏸</button>
+    <button type="button" id="bmMpNextBtn" class="bm-mp-btn" onclick="stepMiniPlayerVerse(1)" title="Versetto successivo">⏭</button>
+    <span id="bmMpLabel" class="bm-mp-label">Audio</span>
+    <button type="button" id="bmMpRateBtn" class="bm-mp-btn pill" onclick="cycleMiniPlayerRate()" title="Cambia velocità di lettura">1x</button>
+    <button type="button" id="bmMpSleepBtn" class="bm-mp-btn pill" onclick="cycleMiniPlayerSleepTimer()" title="Sleep Timer: Off / Fine capitolo / 15m / 30m">🌙</button>
+    <button type="button" class="bm-mp-btn" onclick="stopAllAudio()" title="Ferma audio">✕</button>
   </div>
 
   <!-- Barra Navigazione Inferiore a 7 Strumenti (Dedicata al 100% allo Studio) -->
@@ -5326,12 +5493,15 @@ let catalogLoaded = false;
 const DEFAULT_ACTIVE_IDS = CORE_BIBLES.map(b => b.id);
 let navHistory = [];
 let currentViewReqId = 0;
-let currentXRayReqId = 0;
+let proModalSessionId = 0;
 let bpLoadReqId = 0;
 let searchReqId = 0;
 let omniReqId = 0;
 let peekReqId = 0;
-let deepenReqId = 0;
+function isProModalSessionActive(sid) {
+  const modalEl = document.getElementById("proModal");
+  return sid === proModalSessionId && Boolean(modalEl && modalEl.style.display === "flex");
+}
 let insightSearchReqId = 0;
 let siSearchReqId = 0;
 let mapsSearchReqId = 0;
@@ -5658,6 +5828,9 @@ function setActiveTab(tabId, quickPillId = null) {
     const widget = document.getElementById("bmProphecyWidget");
     if (widget) widget.classList.remove("visible");
   }
+  if (bmAudioPlaying || bmAudioPaused) {
+    updateAudioMiniPlayerUI();
+  }
 }
 function getBook(id) {
   return BIBLE_BOOKS.find(b => b.id === Number(id)) || BIBLE_BOOKS[0];
@@ -5667,8 +5840,8 @@ function showBooksView() {
   saveCurrentPositionToHistory();
   closeActionBar();
   clearSpeechContext();
-  setActiveTab("tabBooks");
   currentViewContext = { type: "books" };
+  setActiveTab("tabBooks");
   const main = document.getElementById("mainContainer");
   const ot = BIBLE_BOOKS.filter(b => b.sec === "OT");
   const nt = BIBLE_BOOKS.filter(b => b.sec === "NT");
@@ -5695,7 +5868,10 @@ function showChaptersView(bookId) {
     selectChapter(1);
     return;
   }
+  if (currentViewContext.type === "bible") saveCurrentPositionToHistory();
   currentViewContext = { type: "chapters", bookId: pendingGridBookId };
+  closeActionBar();
+  setActiveTab("tabBooks");
   syncBmPaperMode();
   const main = document.getElementById("mainContainer");
   let btns = "";
@@ -5719,7 +5895,7 @@ function selectChapter(ch) {
   state.bookId = targetB;
   state.chapter = targetC;
   loadChapterView();
-    }
+}
     const HELLOAO_BOOK_MAP = ["", "GEN", "EXO", "LEV", "NUM", "DEU", "JOS", "JDG", "RUT", "1SA", "2SA", "1KI", "2KI", "1CH", "2CH", "EZR", "NEH", "EST", "JOB", "PSA", "PRO", "ECC", "SNG", "ISA", "JER", "LAM", "EZK", "DAN", "HOS", "JOL", "AMO", "OBA", "JON", "MIC", "NAM", "HAB", "ZEP", "HAG", "ZEC", "MAL", "MAT", "MRK", "LUK", "JHN", "ACT", "ROM", "1CO", "2CO", "GAL", "EPH", "PHP", "COL", "1TH", "2TH", "1TI", "2TI", "TIT", "PHM", "HEB", "JAS", "1PE", "2PE", "1JN", "2JN", "3JN", "JUD", "REV"];
 function extractHelloAOVerseText(contentArr) {
   if (!contentArr) return "";
@@ -5971,8 +6147,8 @@ function formatInlineStrongs(rawText, verseNum, transId = state.trans1) {
   return applyNameLinks(withBadges, verseNum, transId);
 }
 
-// ===== Nomi cliccabili nel testo della TNM italiana (1987 bi12 e 2017 nwt) =====
-const BM_NAME_LINK_BIBLES = new Set(["gb:bi12", "gb:nwt"]);
+// ===== Nomi cliccabili su tutte le Bibbie italiane del catalogo base =====
+const BM_NAME_LINK_BIBLES = new Set(["gb:bi12", "gb:nwt", "epub:nr", "epub:nd", "epub:cei", "epub:tilc", "gb:riveduta", "gb:giovanni"]);
 
 // ins = titolo della voce in Perspicacia; si = numero (o array di numeri) del libro in Tutta la Scrittura:
 // se presente il tocco propone entrambe le destinazioni; names = forme esatte nel testo TNM 1987 e 2017.
@@ -5982,7 +6158,7 @@ const BM_NAME_LINK_BIBLES = new Set(["gb:bi12", "gb:nwt"]);
 // cliccabile (es. «Felice» solo in Atti, mai nei Salmi; «Eli» solo in 1 Samuele e 1 Re, non in Luca 3:23 né nell'«Elì» di Matteo 27:46).
 const BM_NAME_LINKS = [
   // Blocco 1: Geova, Gesù (e titoli a lui riferiti), Michele, spirito santo, Satana / Diavolo (e titoli a lui riferiti)
-  { ins: "GEOVA", names: ["Sovrano Signore Geova", "Geova degli eserciti", "Geova"] },
+  { ins: "GEOVA", names: ["Sovrano Signore Geova", "Geova degli eserciti", "SIGNORE degli eserciti", "Eterno degli eserciti", "Geova", "SIGNORE", "Eterno", "Yahweh", "Jahvè", "Iahvè"] },
   { ins: "IAH", names: ["Iah"] },
   { ins: "ALTISSIMO", names: ["Iddio Altissimo", "Altissimo"] },
   { ins: "GESÙ CRISTO", names: [
@@ -6162,7 +6338,7 @@ const BM_NAME_LINKS = [
   { ins: "GEDEONE", names: ["Gedeone"] },
   { ins: "BARAC", names: ["Barac"] },
   { ins: "SANSONE", names: ["Sansone"] },
-  { ins: "IEFTE", names: ["Iefte"] },
+  { ins: "IEFTE", names: ["Iefte", "Ieftè", "Gefte", "Jefte"] },
 
   // Blocco 5: nomi di importanza capitale
   { ins: "ADAMO", names: ["Adamo"] },
@@ -6176,9 +6352,9 @@ const BM_NAME_LINKS = [
   { ins: "ISMAELE", names: ["Ismaele"] },
   { ins: "AGAR", names: ["Agar"] },
   { ins: "RACHELE", names: ["Rachele"] },
-  { ins: "LEA", names: ["Lea"] },
+  { ins: "LEA", names: ["Lea", "Lia"] },
   { ins: "LABANO", names: ["Labano"] },
-  { ins: "MELCHISEDEC", names: ["Melchisedec"] },
+  { ins: "MELCHISEDEC", names: ["Melchisedec", "Melchisedek"] },
   { ins: "AARONNE", names: ["Aaronne", "Aronne"] },
   { ins: "MIRIAM", names: ["Miriam"] },
   { ins: "DEBORA", names: ["Debora"] },
@@ -6212,15 +6388,15 @@ const BM_NAME_LINKS = [
   { ins: "SION", names: ["Sion"] },
   { ins: "EDEN", names: ["Eden"] },
   { ins: "BETLEEM", names: ["Betleem", "Betlemme"] },
-  { ins: "NAZARET", names: ["Nazaret"] },
-  { ins: "ARMAGHEDON", names: ["Armaghedon"] },
+  { ins: "NAZARET", names: ["Nazaret", "Nazareth"] },
+  { ins: "ARMAGHEDON", names: ["Armaghedon", "Armageddon"] },
 
   // Blocco 6: ulteriori personaggi biblici e loro designazioni (Patriarchi, Esodo, Giudici, Monarchia, Esilio, Scritture Greche)
   // --- Genesi, Patriarchi, Esodo e Giudici ---
   { ins: "ABIMELEC", names: ["Abimelec"] },
   { ins: "ACAN", names: ["Acan"] },
   { ins: "BALAAM", names: ["Balaam"] },
-  { ins: "BOAZ", names: ["Boaz"] },
+  { ins: "BOAZ", names: ["Boaz", "Booz"] },
   { ins: "CALEB", names: ["Caleb"] },
   { ins: "CANAAN", names: ["Canaan"] },
   { ins: "CORA", names: ["Cora"] },
@@ -6236,7 +6412,7 @@ const BM_NAME_LINKS = [
   { ins: "IETRO", books: [2], names: ["Ietro", "Reuel"] },
   { ins: "LAMEC", names: ["Lamec"] },
   { ins: "METUSELA", names: ["Metusela", "Matusalemme"] },
-  { ins: "NAOMI", names: ["Naomi"] },
+  { ins: "NAOMI", names: ["Naomi", "Noemi"] },
   { ins: "NIMROD", names: ["Nimrod"] },
   { ins: "OTNIEL", names: ["Otniel"] },
   { ins: "POTIFAR", names: ["Potifar"] },
@@ -6249,7 +6425,7 @@ const BM_NAME_LINKS = [
   // --- Monarchia unita, divisa e Profeti ---
   { ins: "ABIGAIL", names: ["Abigail"] },
   { ins: "ABNER", names: ["Abner"] },
-  { ins: "ABSALOM", names: ["Absalom"] },
+  { ins: "ABSALOM", names: ["Absalom", "Absalomme", "Assalonne"] },
   { ins: "ADONIA", names: ["Adonia"] },
   { ins: "AHITOFEL", names: ["Ahitofel"] },
   { ins: "BARUC", names: ["Baruc"] },
@@ -6262,7 +6438,7 @@ const BM_NAME_LINKS = [
   { ins: "GOLIA", names: ["Golia"] },
   { ins: "IEOIADA", names: ["Ieoiada"] },
   { ins: "IESSE", names: ["Iesse"] },
-  { ins: "IZEBEL", names: ["Izebel"] },
+  { ins: "IZEBEL", names: ["Izebel", "Gezabele", "Iezebel"] },
   { ins: "MEFIBOSET", names: ["Mefiboset"] },
   { ins: "MICAL", names: ["Mical"] },
   { ins: "NAAMAN", names: ["Naaman"] },
@@ -6299,7 +6475,7 @@ const BM_NAME_LINKS = [
   { ins: "AQUILA, I", books: [44, 45, 46, 55], names: ["Aquila"] },
   { ins: "AUGUSTO", names: ["Cesare Augusto", "Augusto"] },
   { ins: "BARABBA", names: ["Barabba"] },
-  { ins: "CAIAFA", names: ["Caiafa"] },
+  { ins: "CAIAFA", names: ["Caiafa", "Caifa"] },
   { ins: "DEMA", names: ["Dema"] },
   { ins: "DIOTREFE", names: ["Diotrefe"] },
   { ins: "EPAFRA", names: ["Epafra"] },
@@ -6391,23 +6567,101 @@ function applyNameLinks(html, verseNum, transId) {
 function openNameLink(idx, verseNum, clickedSurface = "") {
   const link = BM_NAME_LINKS[idx];
   if (!link) return;
-  if (link.si === undefined) openNameLinkTarget(idx, "ins", verseNum);
-  else showNameLinkChooser(idx, verseNum, clickedSurface);
+  openNameLinkPeekModal(idx, verseNum, clickedSurface);
 }
 
 // Cerca in Perspicacia l'Esponente Principale (titolo esatto o numerato, come nell'elenco risultati).
-// Una sola voce → idx per aprirla direttamente; più omonimi (es. SAUL, I e SAUL, II) o nessuna → idx null, elenco filtrato
+// Restituisce anche l'elenco completo degli omonimi (es. SAUL, I / SAUL, II) per l'anteprima Peek.
 async function resolveInsightTarget(key) {
   try {
     const data = await getInsightData();
-    if (!data || !Array.isArray(data.entries)) return { idx: null, query: key };
+    if (!data || !Array.isArray(data.entries)) return { idx: null, query: key, hits: [] };
     const norm = t => normalizeForSearch(t).replace(/\s+/g, " ").trim();
     const k = norm(key).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const principalRgx = new RegExp(`^${k}(?:\\s*[,\\(\\s]\\s*(?:[ivx]+|\\d+)\\)?)?$`, "i");
     const hits = [];
     data.entries.forEach((e, i) => { if (principalRgx.test(norm(e.title))) hits.push(i); });
-    return hits.length === 1 ? { idx: hits[0], query: "" } : { idx: null, query: hits.length ? key : key.split(",")[0].trim() };
-  } catch (e) { return { idx: null, query: key.split(",")[0].trim() }; }
+    return {
+      idx: hits.length === 1 ? hits[0] : null,
+      query: hits.length === 1 ? "" : (hits.length ? key : key.split(",")[0].trim()),
+      hits
+    };
+  } catch (e) { return { idx: null, query: key.split(",")[0].trim(), hits: [] }; }
+}
+
+function makeInsightPeekExcerpt(bodyText, maxChars = 480) {
+  const clean = String(bodyText || "").replace(/\r/g, "").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+  if (clean.length <= maxChars) return clean;
+  const slice = clean.slice(0, maxChars);
+  const lastStop = Math.max(slice.lastIndexOf(". "), slice.lastIndexOf("; "), slice.lastIndexOf("\n"));
+  return (lastStop > maxChars * 0.55 ? slice.slice(0, lastStop + 1) : slice.replace(/\s+\S*$/, "")) + "…";
+}
+
+// Mini-scheda Peek di Perspicacia direttamente dal versetto biblico (senza perdere il punto di lettura)
+async function openNameLinkPeekModal(idx, verseNum, displayTitle = "") {
+  const reqId = ++peekReqId;
+  const link = BM_NAME_LINKS[idx];
+  const modal = document.getElementById("myReadModal");
+  const body = document.getElementById("myReadModalBody");
+  if (!link || !modal || !body) {
+    openNameLinkTarget(idx, "ins", verseNum);
+    return;
+  }
+  const shownName = displayTitle || link.names[0];
+  body.innerHTML = `<div class="loader" style="color:#cfe3ff; padding:18px 8px;">📚 Anteprima Perspicacia per <b>${escapeHtml(shownName)}</b>...</div>`;
+  modal.style.display = "flex";
+
+  const [insData, target] = await Promise.all([getInsightData(), resolveInsightTarget(link.ins)]);
+  if (reqId !== peekReqId || modal.style.display !== "flex") return;
+
+  const entries = (insData && Array.isArray(insData.entries)) ? insData.entries : [];
+  let previewHtml = "";
+  let primaryIdx = target.idx;
+
+  if (primaryIdx !== null && entries[primaryIdx]) {
+    const ent = entries[primaryIdx];
+    const excerpt = makeInsightPeekExcerpt(ent.body, 480);
+    previewHtml = `
+      <div style="font-size:12px; font-weight:800; color:#ffd54f; margin-bottom:6px; letter-spacing:0.3px;">📘 ${escapeHtml(ent.title)}</div>
+      <div class="bm-justify-text" style="max-height:38vh; overflow-y:auto; font-size:14px; line-height:1.55; color:#eef6ff; white-space:pre-wrap; background:var(--bg-main); border:1px solid rgba(41,182,246,0.45); border-radius:9px; padding:10px 11px; margin-bottom:10px;">${formatNoteLinks(excerpt)}</div>
+    `;
+  } else if (target.hits && target.hits.length > 1) {
+    const firstEnt = entries[target.hits[0]];
+    const excerpt = firstEnt ? makeInsightPeekExcerpt(firstEnt.body, 320) : "";
+    const homonymChips = target.hits.slice(0, 6).map(hi => {
+      const et = entries[hi];
+      return et ? `<span class="tag-badge" style="font-size:12px; padding:4px 9px;" onclick="closeMyReadModal(); state.selectedVerse=${verseNum}; insightActiveLetter='TUTTE'; insightSearchQuery=''; showInsightView(${hi});">📘 ${escapeHtml(et.title)}</span>` : "";
+    }).join(" ");
+    previewHtml = `
+      <div style="font-size:12px; color:#84ffff; font-weight:800; margin-bottom:6px;">Più voci omonime in Perspicacia (${target.hits.length}):</div>
+      <div style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:8px;">${homonymChips}</div>
+      ${excerpt ? `<div class="bm-justify-text" style="max-height:26vh; overflow-y:auto; font-size:13.5px; line-height:1.5; color:#e3f2fd; background:var(--bg-main); border:1px solid rgba(41,182,246,0.4); border-radius:9px; padding:9px 10px; margin-bottom:10px;">${formatNoteLinks(excerpt)}</div>` : ""}
+    `;
+  } else if (!entries.length) {
+    previewHtml = `<div style="font-size:13px; color:#cfe3ff; background:var(--bg-main); border:1px solid rgba(41,182,246,0.4); border-radius:9px; padding:10px; margin-bottom:10px; text-align:center;">Importa <b>Perspicacia (it)</b> una sola volta da ⚙️ ➔ Moduli per vedere qui l'anteprima enciclopedica istantanea.</div>`;
+  } else {
+    previewHtml = `<div style="font-size:13px; color:#cfe3ff; background:var(--bg-main); border:1px solid rgba(41,182,246,0.4); border-radius:9px; padding:10px; margin-bottom:10px; text-align:center;">Tocca qui sotto per cercare <b>${escapeHtml(link.ins)}</b> nell'indice completo di Perspicacia.</div>`;
+  }
+
+  const siNums = link.si !== undefined ? [].concat(link.si) : [];
+  const siBtnsHtml = siNums.map(n => {
+    const bk = BIBLE_BOOKS.find(x => x.id === n);
+    const lbl = siNums.length > 1 && bk ? `📘 ${escapeHtml(bk.name)}` : "📘 Tutta la Scrittura";
+    return `<button type="button" class="myread-action-btn" style="flex:1 1 auto; width:auto; font-size:12.5px; padding:9px 8px; background:#0d47a1;" onclick="closeMyReadModal(); openNameLinkTarget(${idx}, 'si', ${verseNum}, ${n});">${lbl}</button>`;
+  }).join("");
+
+  body.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px; border-bottom:1px solid rgba(41,182,246,0.4); padding-bottom:6px;">
+      <span style="font-size:16px; font-weight:900; color:#00e5ff;">🪪 ${escapeHtml(shownName)}</span>
+      <span style="font-size:11.5px; color:#9ec9ff; font-weight:700;">Anteprima Rapida</span>
+    </div>
+    ${previewHtml}
+    <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
+      <button type="button" class="myread-action-btn" style="flex:1.2 1 auto; width:auto; font-size:13px; padding:9px 10px; background:#1565c0;" onclick="closeMyReadModal(); openNameLinkTarget(${idx}, 'ins', ${verseNum});">📚 Apri voce completa</button>
+      ${siBtnsHtml}
+    </div>
+    <button type="button" class="myread-action-btn" style="background:var(--bg-main);" onclick="closeMyReadModal()">Chiudi (Resta nel capitolo)</button>
+  `;
 }
 
 // Il versetto toccato diventa il punto di ritorno: showInsightView / showSiBook / showSiView lo salvano
@@ -6429,50 +6683,66 @@ async function openNameLinkTarget(idx, kind, verseNum, bookNum) {
   state.selectedVerse = verseNum;
   await showInsightView(target.idx);
 }
-
-function showNameLinkChooser(idx, verseNum, displayTitle) {
-  const link = BM_NAME_LINKS[idx];
-  const modal = document.getElementById("myReadModal");
-  const body = document.getElementById("myReadModalBody");
-  if (!link || !modal || !body) return;
-  const btnStyle = "flex:1 1 auto; width:auto; font-size:12.5px; padding:9px 6px; white-space:nowrap;";
-  const closeJs = "document.getElementById('myReadModal').style.display='none';";
-  const siNums = [].concat(link.si);
-  const chooserBtns = `<button type="button" class="myread-action-btn" style="${btnStyle} background:#1565c0;" onclick="${closeJs} openNameLinkTarget(${idx}, 'ins', ${verseNum});">📚 Perspicacia</button>` +
-    siNums.map(n => {
-      const bk = BIBLE_BOOKS.find(x => x.id === n);
-      const lbl = siNums.length > 1 && bk ? `📘 ${escapeHtml(bk.name)}` : "📘 Tutta la Scrittura";
-      return `<button type="button" class="myread-action-btn" style="${btnStyle} background:#0d47a1;" onclick="${closeJs} openNameLinkTarget(${idx}, 'si', ${verseNum}, ${n});">${lbl}</button>`;
-    }).join("");
-  body.innerHTML = `
-    <div style="text-align:center; padding:4px 0 12px 0;">
-      <div style="font-size:17px; font-weight:900; color:#ffd54f; letter-spacing:0.4px;">${escapeHtml(displayTitle || link.names[0])}</div>
-      <div style="font-size:13px; color:#e3f2fd; margin-top:6px;">Dove vuoi approfondire?</div>
-    </div>
-    <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;">${chooserBtns}</div>
-    <button type="button" class="myread-action-btn" style="background:var(--bg-main);" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
-  `;
-  modal.style.display = "flex";
-}
-
 async function setNameLinksSetting(on) {
   setBmSettingProp("nameLinks", on);
   if (currentViewContext.type !== "bible") return;
   const main = document.getElementById("mainContainer");
   const top = main ? main.scrollTop : 0;
-  await loadChapterView();
+  await loadChapterView(shouldPreserveAudioOnChapterReload());
   if (main) main.scrollTop = top;
 }
 
-// Evidenzia le parole diverse dal testo base; i nomi cliccabili vengono inseriti prima e il marcatore
-// delle differenze scorre il testo già collegato, così un nome su più parole (es. «Giovanni il Battezzatore») resta intero
+// Micro-algoritmo LCS (Longest Common Subsequence) su token normalizzati per Diff filologico (ordine, singolare/plurale, sostituzioni)
+function computeLcsDiffFlags(baseRaw, targetRaw) {
+  const normTok = s => normalizeForSearch(s).replace(/[^\p{L}\p{N}]/gu, "");
+  const bTokens = stripTagsToPlainText(baseRaw).split(/\s+/).filter(Boolean).map(normTok);
+  const tRawWords = stripTagsToPlainText(targetRaw).split(/\s+/).filter(Boolean);
+  const tTokens = tRawWords.map(normTok);
+  const m = bTokens.length, n = tTokens.length;
+  if (!m || !n) return tTokens.map(() => false);
+  // Guardia di performance per testi anomali molto lunghi
+  if (m * n > 14400) {
+    const bSet = new Set(bTokens.filter(w => w.length > 2));
+    return tTokens.map(w => w.length > 2 && !bSet.has(w));
+  }
+  const dp = new Uint16Array((m + 1) * (n + 1));
+  const stride = n + 1;
+  for (let i = m - 1; i >= 0; i--) {
+    const bi = bTokens[i];
+    const rowOff = i * stride;
+    const nextOff = (i + 1) * stride;
+    for (let j = n - 1; j >= 0; j--) {
+      if (bi && bi === tTokens[j]) {
+        dp[rowOff + j] = dp[nextOff + j + 1] + 1;
+      } else {
+        const down = dp[nextOff + j];
+        const right = dp[rowOff + j + 1];
+        dp[rowOff + j] = down >= right ? down : right;
+      }
+    }
+  }
+  const matched = new Uint8Array(n);
+  let i = 0, j = 0;
+  while (i < m && j < n) {
+    if (bTokens[i] && bTokens[i] === tTokens[j]) {
+      matched[j] = 1;
+      i++;
+      j++;
+    } else if (dp[(i + 1) * stride + j] >= dp[i * stride + j + 1]) {
+      i++;
+    } else {
+      j++;
+    }
+  }
+  return tTokens.map((tok, idx) => tok.length > 0 && !matched[idx]);
+}
+
+// Evidenzia le parole diverse dal testo base con LCS filologico; i nomi cliccabili restano intatti
 function highlightDiffText(baseStr, targetStr, verseNum = 1, targetTransId = state.trans2) {
   const plainTarget = stripTagsToPlainText(targetStr);
   const linked = applyNameLinks(escapeHtml(plainTarget), verseNum, targetTransId);
   if (!state.diffMode || !baseStr || !plainTarget) return linked;
-  const clean = s => s.toLowerCase().replace(/[.,;:!?"'«»“”‘’—–\-()\[\]]/g, "");
-  const cleanBase = new Set(clean(stripTagsToPlainText(baseStr)).split(/\s+/));
-  const isDiff = plainTarget.split(/\s+/).map(w => { const c = clean(w); return c.length > 2 && !cleanBase.has(c); });
+  const isDiff = computeLcsDiffFlags(baseStr, plainTarget);
   let wordIdx = -1, inWord = false;
   return linked.split(/(<[^>]*>)/).map(part => {
     if (part.startsWith("<")) return part;
@@ -6483,23 +6753,30 @@ function highlightDiffText(baseStr, targetStr, verseNum = 1, targetTransId = sta
     });
   }).join("");
 }
-async function loadChapterView() {
-  const rendered = await renderChapterView();
+async function loadChapterView(preserveAudio = false) {
+  const rendered = await renderChapterView(preserveAudio);
   if (rendered) {
     await evaluateMessianicBulbForCurrentView();
   }
 }
-async function renderChapterView() {
+async function renderChapterView(preserveAudio = false) {
   const reqId = ++currentViewReqId;
-  closeActionBar();
-  setActiveTab("tabRead");
+  if (!preserveAudio && (bmAudioPlaying || bmAudioPaused)) {
+    stopAllAudio();
+  }
+  closeActionBar(preserveAudio);
   currentViewContext = { type: "bible" };
+  setActiveTab("tabRead");
   state.selectedVerse = null;
   state.selectedVerseText = "";
-  clearSpeechContext();
+  clearSpeechContext(preserveAudio);
   const book = getBook(state.bookId);
   state.bookId = book.id;
   state.chapter = Math.min(book.ch, Math.max(1, Number(state.chapter) || 1));
+  const topHist = navHistory[navHistory.length - 1];
+  if (topHist && topHist.type === "bible" && Number(topHist.bookId) === state.bookId && Number(topHist.chapter) === state.chapter) {
+    navHistory.pop();
+  }
   safeSaveStorage("bm_last_book", String(state.bookId));
   safeSaveStorage("bm_last_ch", String(state.chapter));
   setHeaderCenterPill(`${book.abbr} ${state.chapter}`, "bible");
@@ -6535,8 +6812,7 @@ async function renderChapterView() {
       versesHtml = data1.map(v => {
         const key = `${state.bookId}_${state.chapter}_${v.verse}`;
         const hlClass = state.highlights[key] || "";
-        const refStr = `${book.name} ${state.chapter}:${v.verse}`;
-        const hasNote = state.notes.some(n => n.ref === refStr);
+        const hasNote = Boolean(findNoteForVerse(state.bookId, state.chapter, v.verse));
         const cleanText = escapeHtml(stripTagsToPlainText(v.text));
         const formattedText = formatInlineStrongs(v.text, v.verse);
         const vFootnotes = (bmSettings.showFootnotes !== false) ? (footnotes1[String(v.verse)] || footnotes1[v.verse] || []) : [];
@@ -6616,6 +6892,18 @@ async function renderChapterView() {
       </div>
     `;
     syncBmPaperMode();
+    if (preserveAudio && bmSelectionReadingActive && selectedVersesMap.size > 0) {
+      selectedVersesMap.forEach((_, vNum) => {
+        const selRow = document.getElementById(`v_${vNum}`);
+        if (selRow) {
+          selRow.classList.add(pendingOrangeVersesSet.has(vNum) ? "bm-verse-queued-orange" : "bm-verse-selected");
+        }
+      });
+    }
+    if (preserveAudio && (bmAudioPlaying || bmAudioPaused) && bmCurrentSpokenVerse > 0) {
+      const activeRow = document.getElementById(`v_${bmCurrentSpokenVerse}`);
+      if (activeRow) activeRow.classList.add("bm-tts-active-verse");
+    }
     main.scrollTop = 0;
     return true;
   } catch (err) {
@@ -6662,7 +6950,7 @@ function openBibleTabFromMenu() {
   const savedRef = safeGetStorage("bm_last_scroll_ref");
   const savedScroll = Number(safeGetStorage("bm_last_scroll")) || 0;
   const curRefKey = `${state.bookId}_${state.chapter}`;
-  loadChapterView().then(() => {
+  loadChapterView(isActiveBibleChapterAudio()).then(() => {
     if (savedRef === curRefKey && savedScroll > 30) {
       const main = document.getElementById("mainContainer");
       if (main) main.scrollTop = savedScroll;
@@ -6687,7 +6975,7 @@ function nextChapter() {
   state.bookId = targetB;
   state.chapter = targetC;
   loadChapterView();
-    }
+}
 function onTranslationChange() {
   if (currentViewContext.type !== "bible") {
     saveCurrentPositionToHistory();
@@ -6733,16 +7021,18 @@ function syncParallelAndDiffUI() {
   }
 }
 function toggleParallel() {
+  if (currentViewContext.type !== "bible") saveCurrentPositionToHistory();
   state.parallelCount = (state.parallelCount % 3) + 1;
   safeSaveStorage("bm_parallel_count", String(state.parallelCount));
   syncParallelAndDiffUI();
-  loadChapterView();
+  loadChapterView(shouldPreserveAudioOnChapterReload());
 }
 function toggleDiffMode() {
+  if (currentViewContext.type !== "bible") saveCurrentPositionToHistory();
   state.diffMode = !state.diffMode;
   safeSaveStorage("bm_diff_mode", state.diffMode ? "1" : "0");
   syncParallelAndDiffUI();
-  loadChapterView();
+  loadChapterView(shouldPreserveAudioOnChapterReload());
 }
     let activeNoteTarget = null;
     let selectedVersesMap = new Map();
@@ -6769,6 +7059,30 @@ function saveBmSettings() {
   applyBmSettingsToDOM();
 }
 
+let bmReadProgRaf = null;
+function updateBmReadProgressBar() {
+  bmReadProgRaf = null;
+  const track = document.getElementById("bmReadProgressTrack");
+  const fill = document.getElementById("bmReadProgressFill");
+  const main = document.getElementById("mainContainer");
+  if (!track || !fill || !main) return;
+  const isBible = currentViewContext && currentViewContext.type === "bible";
+  const maxScroll = main.scrollHeight - main.clientHeight;
+  if (!isBible || maxScroll <= 24) {
+    track.classList.remove("active");
+    fill.style.transform = "scaleX(0)";
+    return;
+  }
+  const ratio = Math.min(1, Math.max(0, main.scrollTop / maxScroll));
+  track.classList.add("active");
+  fill.style.transform = `scaleX(${ratio.toFixed(4)})`;
+}
+function scheduleBmReadProgressUpdate() {
+  if (bmReadProgRaf === null) {
+    bmReadProgRaf = requestAnimationFrame(updateBmReadProgressBar);
+  }
+}
+
 function syncBmPaperMode() {
   const main = document.getElementById("mainContainer");
   if (!main) return;
@@ -6778,6 +7092,7 @@ function syncBmPaperMode() {
     ["bible", "daily", "insight", "si", "notes", "saved", "search"].includes(t) &&
     !isGridView && main.children.length > 0;
   main.classList.toggle("bm-paper-reading", Boolean(bmSettings.paperMode && isReading));
+  scheduleBmReadProgressUpdate();
 }
 
 function applyBmSettingsToDOM() {
@@ -6893,6 +7208,9 @@ function renderSettingsDrawerContent() {
   const prevScrollTop = body.scrollTop;
   const openId = bmSettings.openCard || "";
   const rates = [0.85, 1.0, 1.15, 1.3];
+  const bkRem = getBackupReminderInfo();
+  const bkDotHtml = bkRem.due ? '<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#ffd54f;box-shadow:0 0 8px #ffd54f;margin-left:6px;vertical-align:middle;" title="Consigliato un nuovo backup"></span>' : "";
+  const bkAlertHtml = bkRem.due ? `<div style="font-size:12px; color:#ffe082; background:rgba(255,213,79,0.12); border:1px solid rgba(255,213,79,0.55); border-radius:8px; padding:7px 10px; line-height:1.4;">🛡️ ${bkRem.neverBackedUp ? `Hai dati di studio attivi da ${bkRem.daysAgo} giorni senza un backup esportato.` : `Sono passati ${bkRem.daysAgo} giorni dall'ultimo backup e hai nuove note o evidenziazioni.`} Ti consigliamo un export rapido.</div>` : "";
 
   body.innerHTML = `
     <div style="display:flex; gap:8px; margin-bottom:4px; flex-shrink:0;">
@@ -6975,7 +7293,7 @@ function renderSettingsDrawerContent() {
         <div class="bm-acc-head-left">
           <span class="bm-acc-icon">💾</span>
           <div>
-            <div class="bm-acc-label">Backup & Memoria Studio</div>
+            <div class="bm-acc-label">Backup & Memoria Studio${bkDotHtml}</div>
             <div class="bm-acc-sub">Esporta/Importa JSON, Segnalibro e Rientri</div>
           </div>
         </div>
@@ -6983,6 +7301,7 @@ function renderSettingsDrawerContent() {
       </button>
       <div class="bm-acc-content">
         <div style="display:flex; flex-direction:column; gap:8px; padding-top:6px;">
+          ${bkAlertHtml}
           <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00c853; --btn-glow:rgba(0,229,255,0.8); background:linear-gradient(135deg, #1b5e20, #2e7d32);" onclick="closeSettingsDrawer(); openLibraryMigrationModal();">
             📦 Migra Libreria Offline (Esporta / Importa Tutto)
           </button>
@@ -7063,19 +7382,19 @@ function renderSettingsDrawerContent() {
         <div class="bm-set-row">
           <span>📌 Note in calce ufficiali (TNM)</span>
           <label class="bm-switch">
-            <input type="checkbox" ${bmSettings.showFootnotes !== false ? 'checked' : ''} onchange="setBmSettingProp('showFootnotes', this.checked); if (currentViewContext.type === 'bible') loadChapterView();">
+            <input type="checkbox" ${bmSettings.showFootnotes !== false ? 'checked' : ''} onchange="setBmSettingProp('showFootnotes', this.checked); if (currentViewContext.type === 'bible') loadChapterView(shouldPreserveAudioOnChapterReload());">
             <span class="bm-slider"></span>
           </label>
         </div>
         <div class="bm-set-row">
           <span>📑 Sommari ufficiali di capitolo (TNM)</span>
           <label class="bm-switch">
-            <input type="checkbox" ${bmSettings.showOutlines !== false ? 'checked' : ''} onchange="setBmSettingProp('showOutlines', this.checked); if (currentViewContext.type === 'bible') loadChapterView();">
+            <input type="checkbox" ${bmSettings.showOutlines !== false ? 'checked' : ''} onchange="setBmSettingProp('showOutlines', this.checked); if (currentViewContext.type === 'bible') loadChapterView(shouldPreserveAudioOnChapterReload());">
             <span class="bm-slider"></span>
           </label>
         </div>
         <div class="bm-set-row">
-          <span>🪪 Nomi chiave cliccabili (TNM)</span>
+          <span>🪪 Nomi chiave cliccabili (Bibbie IT)</span>
           <label class="bm-switch">
             <input type="checkbox" ${bmSettings.nameLinks === true ? 'checked' : ''} onchange="setNameLinksSetting(this.checked)">
             <span class="bm-slider"></span>
@@ -7193,11 +7512,13 @@ function onVerseClick(verseNum, text) {
   const row = document.getElementById(`v_${vNum}`);
   const vText = text || (row ? (row.getAttribute("data-text") || "") : "");
 
-  // CASO 1: La voce STA LEGGENDO i versetti selezionati in questo istante ->
+  // CASO 1: La voce STA LEGGENDO (o è in pausa su) i versetti selezionati in questo istante ->
   // Qualsiasi versetto toccato (nuovo o già letto) viene accodato subito in coda alla lettura!
-  if (bmAudioPlaying && bmSelectionReadingActive) {
+  if ((bmAudioPlaying || bmAudioPaused) && bmSelectionReadingActive) {
     selectedVersesMap.set(vNum, vText);
-    spokenVersesSet.add(vNum);
+    pendingOrangeVersesSet.add(vNum);
+    pendingOrangeOrder = pendingOrangeOrder.filter(n => n !== vNum);
+    pendingOrangeOrder.push(vNum);
     if (row) {
       row.classList.remove("bm-verse-selected");
       row.classList.add("bm-verse-queued-orange");
@@ -7262,17 +7583,20 @@ function onVerseClick(verseNum, text) {
   document.getElementById("verseActionBar").style.display = "flex";
 }
 
-function closeActionBar() {
+function closeActionBar(preserveSelectionReading = false) {
   const bar = document.getElementById("verseActionBar");
   if (bar) bar.style.display = "none";
-  selectedVersesMap.clear();
-  spokenVersesSet.clear();
-  pendingOrangeVersesSet.clear();
-  pendingOrangeOrder = [];
-  bmSelectionReadingActive = false;
-  document.querySelectorAll(".bm-verse-selected, .bm-verse-queued-orange").forEach(el => {
-    el.classList.remove("bm-verse-selected", "bm-verse-queued-orange");
-  });
+  const keepSelSession = Boolean(preserveSelectionReading && bmSelectionReadingActive);
+  if (!keepSelSession) {
+    selectedVersesMap.clear();
+    spokenVersesSet.clear();
+    pendingOrangeVersesSet.clear();
+    pendingOrangeOrder = [];
+    bmSelectionReadingActive = false;
+    document.querySelectorAll(".bm-verse-selected, .bm-verse-queued-orange").forEach(el => {
+      el.classList.remove("bm-verse-selected", "bm-verse-queued-orange");
+    });
+  }
   state.selectedVerse = null;
   state.selectedVerseText = "";
 }
@@ -7293,7 +7617,32 @@ function selectVerseDataFromDOM(verseNum) {
   state.selectedVerseText = txt;
 }
 
+function isFreeStudioNote(n) {
+  return Boolean(n && (n.isFreeNote || (!n.verseText && !parseRefStringToTarget(n.ref))));
+}
+
+function findNoteForVerse(bookId, chapter, verseNum) {
+  const bId = Number(bookId);
+  const ch = Number(chapter);
+  const v = Number(verseNum);
+  const book = getBook(bId);
+  const exactRef = `${book.name} ${ch}:${v}`;
+  const exact = state.notes.find(n => n && !isFreeStudioNote(n) && n.ref === exactRef);
+  if (exact) return exact;
+  return state.notes.find(n => {
+    if (!n || isFreeStudioNote(n)) return false;
+    if (Number(n.bookId) !== bId || Number(n.chapter) !== ch) return false;
+    const spec = n.verseSpec || (n.verse ? String(n.verse) : "");
+    return spec ? parseVerseSpecToArray(spec).includes(v) : false;
+  }) || null;
+}
+
 function openVerseNoteDirectly(verseNum) {
+  const existingNote = findNoteForVerse(state.bookId, state.chapter, verseNum);
+  if (existingNote) {
+    openNoteModalForVerse(existingNote.ref, existingNote.id);
+    return;
+  }
   selectVerseDataFromDOM(verseNum);
   openNoteModalForVerse();
 }
@@ -7329,6 +7678,7 @@ function applyHighlight(colorClass) {
     });
   });
   safeSaveStorage("bm_hl", JSON.stringify(state.highlights));
+  recordStudioDataEditedNow();
   closeActionBar();
 }
 
@@ -7372,6 +7722,7 @@ function saveBookmark() {
       text: combinedText
     });
     safeSaveStorage("bm_bm", JSON.stringify(state.bookmarks));
+    recordStudioDataEditedNow();
   }
   closeActionBar();
   showSavedView();
@@ -7409,7 +7760,7 @@ function openNoteModalForVerse(customRef, customNoteId = null) {
       isFreeNote: false
     };
   } else if (existing) {
-    const isFree = Boolean(existing.isFreeNote || (!existing.verseText && !parseRefStringToTarget(existing.ref)));
+    const isFree = isFreeStudioNote(existing);
     activeNoteTarget = {
       id: existing.id,
       bookId: existing.bookId || state.bookId,
@@ -7524,6 +7875,7 @@ function saveNoteFromModal() {
   if (existingIdx > -1) state.notes[existingIdx] = noteObj;
   else state.notes.unshift(noteObj);
   safeSaveStorage("bm_notes", JSON.stringify(state.notes));
+  recordStudioDataEditedNow();
   closeNoteModal();
   showNotesView();
 }
@@ -7887,6 +8239,30 @@ function showPubRefModal(fullRef) {
 
 let notesSearchQuery = "";
 
+function formatNoteMarkdownAndLinks(txt, defaultBookId = null) {
+  let htmlOut = formatNoteLinks(txt, defaultBookId);
+  // Applica mini-Markdown leggero SOLO fuori dai tag HTML (compatibile al 100% con testo puro e backup)
+  htmlOut = htmlOut.replace(/(<[^>]+>)|([^<]+)/g, (_m, tag, seg) => {
+    if (tag) return tag;
+    return seg
+      .replace(/\*\*([^\n*]+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/(^|[\s(\[])\*([^\n*]+?)\*(?=[\s.,;:!?)\]]|$)/g, "$1<em>$2</em>")
+      .replace(/(^|\n)[ \t]*-\s+/g, '$1<span style="color:var(--primary-light);font-weight:900;">•</span> ');
+  });
+  return htmlOut;
+}
+
+function openStudioNoteEntry(noteId) {
+  const n = state.notes.find(item => Number(item.id) === Number(noteId));
+  if (!n) return;
+  const isFree = isFreeStudioNote(n);
+  if (isFree) {
+    openNoteModalForVerse(n.ref, n.id);
+    return;
+  }
+  openRef(Number(n.bookId) || 1, Number(n.chapter) || 1, n.verseSpec || Number(n.verse) || 0);
+}
+
 function getFilteredStudioNotes() {
   const qNorm = normalizeForSearch((notesSearchQuery || "").trim());
   return state.notes.filter(n => {
@@ -7935,7 +8311,7 @@ function renderNotesListOnly() {
     const safeRefJs = escapeJsStr(n.ref || "");
     const noteId = n.id;
     return `
-    <div class="result-card" onclick="openRef(${Number(n.bookId) || 1}, ${Number(n.chapter) || 1}, ${n.verseSpec ? `'${escapeJsStr(n.verseSpec)}'` : (Number(n.verse) || 0)})">
+    <div class="result-card" onclick="openStudioNoteEntry(${Number(noteId)})">
       <div class="result-ref" style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;">
         <span>📝 ${escapeHtml(n.ref)} <small style="color:var(--text-muted);font-weight:normal;">(${escapeHtml(n.date || '')})</small></span>
         <div style="display:flex;gap:10px;align-items:center;">
@@ -7945,7 +8321,7 @@ function renderNotesListOnly() {
         </div>
       </div>
       ${n.verseText ? `<div style="font-size:12.5px;color:var(--text-muted);font-style:italic;margin:6px 0 8px 0;border-left:3px solid var(--primary-light);padding-left:8px;">"${escapeHtml(n.verseText)}"</div>` : ""}
-      <div style="margin-top:6px;line-height:1.55;white-space:pre-wrap;font-weight:500;">${formatNoteLinks(n.text)}</div>
+      <div style="margin-top:6px;line-height:1.55;white-space:pre-wrap;font-weight:500;">${formatNoteMarkdownAndLinks(n.text)}</div>
       ${(n.tags && n.tags.length) ? `<div style="margin-top:8px;">${n.tags.map(t => `<span class="tag-badge" onclick="event.stopPropagation();filterNotesByTag('${escapeJsStr(t)}')">#${escapeHtml(t)}</span>`).join("")}</div>` : ""}
     </div>`;
   }).join("");
@@ -7960,8 +8336,8 @@ function showNotesView(fromBack = false) {
   if (!fromBack && currentViewContext.type !== "notes") saveCurrentPositionToHistory();
   closeActionBar();
   clearSpeechContext();
-  setActiveTab("tabNotes");
   currentViewContext = { type: "notes" };
+  setActiveTab("tabNotes");
   const main = document.getElementById("mainContainer");
   const curBook = getBook(state.bookId);
   const headerActions = `
@@ -8077,8 +8453,8 @@ async function showCatalogView() {
   const reqId = ++currentViewReqId;
   closeActionBar();
   clearSpeechContext();
-  setActiveTab("");
   currentViewContext = { type: "catalog" };
+  setActiveTab("");
   const main = document.getElementById("mainContainer");
   main.innerHTML = `<div class="loader">Caricamento catalogo globale (oltre 1.350 versioni + edizioni Strong)...</div>`;
   syncBmPaperMode();
@@ -8174,8 +8550,8 @@ function showSearchView(fromBack = false) {
   if (!fromBack && currentViewContext.type !== "search") saveCurrentPositionToHistory();
   closeActionBar();
   clearSpeechContext();
-  setActiveTab("tabSearch");
   currentViewContext = { type: "search" };
+  setActiveTab("tabSearch");
   const main = document.getElementById("mainContainer");
   const defaultSearchBible = state.downloadedBibles.includes("gb:bi12") ? "gb:bi12" : state.trans1;
   const searchableMap = new Map();
@@ -8191,7 +8567,7 @@ function showSearchView(fromBack = false) {
     <div class="search-box">
       <input type="text" id="searchInput" class="search-input" placeholder="Parola, frase o versetto (tieni premuto 🔍 Cerca per Salto Rapido)..." onkeydown="if(event.key==='Enter') executeSearch(1)">
       <button class="search-btn" onclick="executeSearch(1)">🔍 Bibbia</button>
-      <button class="search-btn" style="background:linear-gradient(135deg, #00838f, #00acc1);" onclick="executeOmniSearch()" title="Cerca contemporaneamente in Perspicacia, Tutta la Scrittura, Cartine, Scrittura del Giorno e Bibbia">🌐 5 Pilastri</button>
+      <button class="search-btn" style="background:linear-gradient(135deg, #00838f, #00acc1);" onclick="executeOmniSearch()" title="Cerca contemporaneamente in Appunti/Preferiti, Perspicacia, Tutta la Scrittura, Cartine, Scrittura del Giorno e Bibbia">🌐 6 Pilastri</button>
       <button class="search-btn" style="background:linear-gradient(135deg, #1565c0, #0d47a1); border:1px solid #29b6f6;" onclick="openQuickJumpModal()" title="Salto Rapido al Passaggio (es. Gv 3 16)">⚡ Passo</button>
     </div>
     <div style="display:flex; gap:8px; flex-wrap:wrap; margin:0 0 10px 0;">
@@ -8212,8 +8588,10 @@ function showSearchView(fromBack = false) {
         <option value="gosp">Vangeli e Atti</option>
       </select>
     </div>
-    <div id="searchResults"><div class="loader">Inserisci una parola o frase (supporta <b>AND / OR / NOT</b> in maiuscolo, <code>-parola</code> per escludere e frasi esatte tra virgolette, es. <code>"spirito santo" AND fede -paura</code>) e premi <b>🔍 Bibbia</b> oppure <b>🌐 5 Pilastri</b>.</div></div>
+    <div id="bmRecentSearchesBar" style="display:flex; gap:5px; flex-wrap:wrap; margin-bottom:10px; align-items:center;"></div>
+    <div id="searchResults"><div class="loader">Inserisci una parola o frase (supporta <b>AND / OR / NOT</b> in maiuscolo, <code>-parola</code> per escludere e frasi esatte tra virgolette, es. <code>"spirito santo" AND fede -paura</code>) e premi <b>🔍 Bibbia</b> oppure <b>🌐 6 Pilastri</b>.</div></div>
   `;
+  renderRecentSearchChips();
   syncBmPaperMode();
 }
 const JW_TOWER_SVG = `<svg viewBox="0 0 1000 1000"><path d="M200 200H334V267H367V200H434V267H467V200H534V267H566V200H633V267H666V200H800V433H767V467H734V800H266V467H233V433H200Z"/></svg>`;
@@ -8269,7 +8647,62 @@ function openJwLibrary(lang, searchInputId = "searchInput", directQuery) {
 let currentSearchPage = 1;
 const RESULTS_PER_PAGE = 250;
 let cachedSearchMatches = [];
+let searchBookFacetId = 0;
 let cachedSearchMeta = { query: "", total: 0, transId: "", scope: "", mode: "", queryWords: [] };
+
+function recordRecentSearchQuery(q) {
+  const clean = String(q || "").trim();
+  if (clean.length < 2) return;
+  let rec = safeJsonParse("bm_recent_searches_v1", []);
+  if (!Array.isArray(rec)) rec = [];
+  const cleanLow = clean.toLowerCase();
+  rec = rec.filter(x => typeof x === "string" && x.trim().toLowerCase() !== cleanLow);
+  rec.unshift(clean);
+  rec = rec.slice(0, 6);
+  safeSaveStorage("bm_recent_searches_v1", JSON.stringify(rec));
+  renderRecentSearchChips();
+}
+
+function clearRecentSearchQueries() {
+  bmHaptic(10);
+  safeSaveStorage("bm_recent_searches_v1", "[]");
+  renderRecentSearchChips();
+}
+
+function runRecentSearchChip(q) {
+  bmHaptic(10);
+  const inp = document.getElementById("searchInput");
+  if (inp) {
+    inp.value = q;
+    executeSearch(1);
+  }
+}
+
+function renderRecentSearchChips() {
+  const bar = document.getElementById("bmRecentSearchesBar");
+  if (!bar) return;
+  const rec = safeJsonParse("bm_recent_searches_v1", []);
+  if (!Array.isArray(rec) || !rec.length) {
+    bar.style.display = "none";
+    bar.innerHTML = "";
+    return;
+  }
+  bar.style.display = "flex";
+  bar.innerHTML = `<span style="font-size:11.5px; color:var(--text-muted); font-weight:700; margin-right:2px;">⏱️ Recenti:</span>` +
+    rec.map(q => `<span class="tag-badge" style="font-size:11.5px; padding:3px 9px;" onclick="runRecentSearchChip('${escapeJsStr(q)}')">${escapeHtml(q)}</span>`).join("") +
+    `<span class="tag-badge" style="font-size:11px; padding:3px 7px; opacity:0.78;" onclick="clearRecentSearchQueries()" title="Cancella ricerche recenti">✕</span>`;
+}
+
+function goToSearchPage(page) {
+  currentSearchPage = Math.max(1, Number(page) || 1);
+  renderSearchResultsPage();
+}
+
+function filterSearchByBookFacet(bookId) {
+  bmHaptic(10);
+  searchBookFacetId = Number(bookId) || 0;
+  goToSearchPage(1);
+}
 function openSearchResultRef(transId, bookId, ch, v) {
   if (transId && state.downloadedBibles.includes(transId)) {
     state.trans1 = transId;
@@ -8291,6 +8724,7 @@ async function executeSearch(page = 1) {
   const bibleEl = document.getElementById("searchBibleSelect");
   const targetTrans = bibleEl ? bibleEl.value : "gb:bi12";
   if (!rawQuery) return;
+  recordRecentSearchQuery(rawQuery);
   const searchTransId = targetTrans.startsWith("helloao:") ? "gb:riveduta" : targetTrans;
   const isNewSearch = (page === 1) ||
     cachedSearchMeta.query !== rawQuery ||
@@ -8432,6 +8866,7 @@ async function executeSearch(page = 1) {
           }
         }
         cachedSearchMatches = allMatches;
+        searchBookFacetId = 0;
         cachedSearchMeta = { query: rawQuery, total: allMatches.length, transId: searchTransId, scope, mode, queryWords: hlTermsList };
       } else {
         const selectedBibleObj = dynamicCatalog.find(b => b.id === searchTransId) || CORE_BIBLES.find(b => b.id === searchTransId);
@@ -8451,17 +8886,43 @@ async function executeSearch(page = 1) {
 function renderSearchResultsPage() {
   const resDiv = document.getElementById("searchResults");
   if (!resDiv) return;
-  const totalFound = cachedSearchMatches.length;
-  if (totalFound === 0) {
+  const allFound = cachedSearchMatches.length;
+  if (allFound === 0) {
     resDiv.innerHTML = `<div class="loader">Nessun risultato trovato per "<b>${escapeHtml(cachedSearchMeta.query)}</b>".</div>`;
     return;
   }
-  const totalPages = Math.ceil(totalFound / RESULTS_PER_PAGE);
+  // Distribuzione per libro (Faceting cliccabile istantaneo senza nuova scansione)
+  const bookCountsMap = new Map();
+  cachedSearchMatches.forEach(m => {
+    const cur = bookCountsMap.get(m.bookId) || { id: m.bookId, name: m.bookName, count: 0 };
+    cur.count++;
+    bookCountsMap.set(m.bookId, cur);
+  });
+  const bookFacets = Array.from(bookCountsMap.values()).sort((a, b) => (b.count - a.count) || (a.id - b.id));
+  if (searchBookFacetId && !bookCountsMap.has(searchBookFacetId)) {
+    searchBookFacetId = 0;
+  }
+  const activeMatches = searchBookFacetId
+    ? cachedSearchMatches.filter(m => Number(m.bookId) === Number(searchBookFacetId))
+    : cachedSearchMatches;
+
+  const totalFound = activeMatches.length;
+  const totalPages = Math.max(1, Math.ceil(totalFound / RESULTS_PER_PAGE));
   if (currentSearchPage > totalPages) currentSearchPage = totalPages;
   if (currentSearchPage < 1) currentSearchPage = 1;
   const startIdx = (currentSearchPage - 1) * RESULTS_PER_PAGE;
   const endIdx = Math.min(startIdx + RESULTS_PER_PAGE, totalFound);
-  const pageItems = cachedSearchMatches.slice(startIdx, endIdx);
+  const pageItems = activeMatches.slice(startIdx, endIdx);
+
+  const facetBarHtml = bookFacets.length > 1 ? `
+    <div style="display:flex; gap:5px; overflow-x:auto; padding:4px 0 8px 0; margin-bottom:4px; scrollbar-width:none;">
+      <span class="tag-badge" style="white-space:nowrap; ${!searchBookFacetId ? "background:var(--primary-main);color:#fff;" : ""}" onclick="filterSearchByBookFacet(0)">Tutti (${allFound})</span>
+      ${bookFacets.slice(0, 18).map(bf => {
+        const isAct = Number(searchBookFacetId) === Number(bf.id);
+        return `<span class="tag-badge" style="white-space:nowrap; ${isAct ? "background:#00e5ff;color:#041a42;border-color:#84ffff;font-weight:900;" : ""}" onclick="filterSearchByBookFacet(${bf.id})">${escapeHtml(bf.name)} (${bf.count})</span>`;
+      }).join("")}
+    </div>
+  ` : "";
   const queryWords = cachedSearchMeta.queryWords || [];
   const searchTransId = cachedSearchMeta.transId;
 
@@ -8505,16 +8966,17 @@ function renderSearchResultsPage() {
 
   const paginationBar = totalPages > 1 ? `
     <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin:10px 0; padding:8px 0; border-top:1px solid var(--border-color); border-bottom:1px solid var(--border-color);">
-      <button class="nav-btn" ${currentSearchPage <= 1 ? 'disabled style="opacity:0.4;cursor:default;"' : ''} onclick="executeSearch(${currentSearchPage - 1})">◀ Prec.</button>
-      <select class="trans-select" style="max-width:190px; text-align:center;" onchange="executeSearch(Number(this.value))">${pageOptions}</select>
-      <button class="nav-btn" ${currentSearchPage >= totalPages ? 'disabled style="opacity:0.4;cursor:default;"' : ''} onclick="executeSearch(${currentSearchPage + 1})">Succ. ▶</button>
+      <button class="nav-btn" ${currentSearchPage <= 1 ? 'disabled style="opacity:0.4;cursor:default;"' : ''} onclick="goToSearchPage(${currentSearchPage - 1})">◀ Prec.</button>
+      <select class="trans-select" style="max-width:190px; text-align:center;" onchange="goToSearchPage(Number(this.value))">${pageOptions}</select>
+      <button class="nav-btn" ${currentSearchPage >= totalPages ? 'disabled style="opacity:0.4;cursor:default;"' : ''} onclick="goToSearchPage(${currentSearchPage + 1})">Succ. ▶</button>
     </div>
   ` : "";
 
   resDiv.innerHTML = `
-    <div style="margin-bottom:8px; font-size:13px; color:var(--text-muted);">
-      Trovate <b>${totalFound}</b> occorrenze nella Concordanza (mostrate <b>${startIdx + 1}–${endIdx}</b>):
+    <div style="margin-bottom:6px; font-size:13px; color:var(--text-muted);">
+      Trovate <b>${allFound}</b> occorrenze nella Concordanza${searchBookFacetId ? ` · filtrate: <b>${totalFound}</b>` : ""} (mostrate <b>${startIdx + 1}–${endIdx}</b>):
     </div>
+    ${facetBarHtml}
     ${paginationBar}
     <div>` + pageItems.map(m => `
       <div class="result-card" onclick="openSearchResultRef('${escapeJsStr(searchTransId)}', ${m.bookId}, ${m.ch}, ${m.v})">
@@ -8616,6 +9078,21 @@ function getInsightEntriesForBook(ins, bookId, bookPat) {
   return idxs;
 }
 
+function mapNormalizedOffsetToRaw(rawStr, normOffset) {
+  if (!rawStr || normOffset <= 0) return 0;
+  let normCount = 0;
+  for (let i = 0; i < rawStr.length; i++) {
+    if (normCount >= normOffset) return i;
+    const ch = rawStr[i];
+    if (ch.charCodeAt(0) < 0x80) {
+      normCount++;
+    } else {
+      normCount += ch.normalize("NFD").replace(/[\u0300-\u036f]/g, "").length;
+    }
+  }
+  return rawStr.length;
+}
+
 async function findInsightRefsForVerse(bookId, chapter, verseNum, maxHits = 14) {
   const cacheKey = `${bookId}_${chapter}_${verseNum}`;
   if (bmInsightVerseCache.has(cacheKey)) return bmInsightVerseCache.get(cacheKey);
@@ -8635,16 +9112,20 @@ async function findInsightRefsForVerse(bookId, chapter, verseNum, maxHits = 14) 
     const normBody = bmInsightNormBodies[i];
     chVerseRgx.lastIndex = 0;
     let m;
-    let matchedSpec = "";
+    let matchedNormPos = -1;
     while ((m = chVerseRgx.exec(normBody)) !== null) {
       const vList = parseVerseSpecToArray(m[1]);
       if (vList.includes(v)) {
-        matchedSpec = `${ch}:${v}`;
+        matchedNormPos = m.index;
         break;
       }
     }
-    if (matchedSpec) {
-      matches.push({ idx: i, title: ins.entries[i].title, query: `${ch}:${v}` });
+    if (matchedNormPos >= 0) {
+      const rawBody = ins.entries[i].body || "";
+      const rawPos = rawBody.length === normBody.length
+        ? matchedNormPos
+        : mapNormalizedOffsetToRaw(rawBody, matchedNormPos);
+      matches.push({ idx: i, title: ins.entries[i].title, query: `${ch}:${v}`, matchPos: rawPos });
       if (matches.length >= maxHits) break;
     }
   }
@@ -8695,6 +9176,7 @@ function filterStrongModalQuickSearch(queryStr) {
 }
 
 function openStrongModalForVerse(clickedCode) {
+  proModalSessionId++;
   const book = getBook(state.bookId);
   const vNum = state.selectedVerse || 1;
   const rawVerse = state.selectedVerseText || "";
@@ -8750,30 +9232,115 @@ function openStrongModalForVerse(clickedCode) {
   document.getElementById("proModal").style.display = "flex";
 }
 
+async function buildDynamicCrossRefsForVerse(bookId, chapter, verseNum, rawText, footnotesArr = [], insRefsArr = []) {
+  const bId = Number(bookId);
+  const ch = Number(chapter);
+  const v = Number(verseNum);
+  const key = `${bId}_${ch}_${v}`;
+  const curBook = getBook(bId);
+  const selfNorm = normalizeForSearch(`${curBook.name} ${ch}:${v}`);
+  const out = [];
+  const seen = new Set();
+  const addRef = (r) => {
+    const clean = String(r || "").replace(/\s+/g, " ").trim();
+    if (!clean) return;
+    if (!parseRefStringToTarget(clean, true)) return;
+    const norm = normalizeForSearch(clean);
+    if (norm === selfNorm || norm === normalizeForSearch(`${curBook.name} ${ch}`) || seen.has(norm)) return;
+    seen.add(norm);
+    out.push(clean);
+  };
+
+  const curated = Array.isArray(PRO_CROSS_REFS[key]) ? PRO_CROSS_REFS[key] : [];
+  curated.forEach(addRef);
+
+  const beforeDyn = out.length;
+  // 1. Estrae riferimenti biblici dalle Note in Calce ufficiali (legate esplicitamente al libro bId)
+  (footnotesArr || []).forEach(fnTxt => {
+    bpCitedRefs(fnTxt, bId).forEach(addRef);
+  });
+
+  // 2. Estrae passi paralleli espliciti dai paragrafi di Perspicacia centrati sul match esatto (libro + capitolo + intervallo/1-cap.)
+  if (Array.isArray(insRefsArr) && insRefsArr.length > 0 && out.length < 12) {
+    const insData = await getInsightData();
+    if (insData && Array.isArray(insData.entries)) {
+      for (let i = 0; i < Math.min(insRefsArr.length, 5) && out.length < 12; i++) {
+        const refHit = insRefsArr[i];
+        const ent = insData.entries[refHit.idx];
+        if (!ent || !ent.body || typeof refHit.matchPos !== "number" || refHit.matchPos < 0) continue;
+        const pos = refHit.matchPos;
+        const win = ent.body.slice(Math.max(0, pos - 240), Math.min(ent.body.length, pos + 260));
+        // defaultBookId = null: estrae solo citazioni complete con nome libro esplicito
+        bpCitedRefs(win, null).forEach(r => {
+          if (out.length < 12) addRef(r);
+        });
+      }
+    }
+  }
+  const dynCount = out.length - beforeDyn;
+
+  if (out.length < 4) {
+    buildUniversalRefsForVerse(bId, ch, v, rawText).forEach(r => {
+      if (out.length < 8) addRef(r);
+    });
+  }
+
+  let sourceLabel = "Suggerimenti Tematici Automatici";
+  if (curated.length > 0 && dynCount > 0) {
+    sourceLabel = `Passi Paralleli Esegetici (${curated.length} curati + ${dynCount} da Note/Perspicacia)`;
+  } else if (curated.length > 0) {
+    sourceLabel = "Passi Paralleli Esegetici";
+  } else if (dynCount > 0) {
+    sourceLabel = `Riferimenti Dinamici Offline (${dynCount} da Note in Calce & Perspicacia)`;
+  }
+  return { refs: out.slice(0, 12), sourceLabel };
+}
+
 async function openCrossRefsModalForVerse() {
-  const book = getBook(state.bookId);
+  const sid = ++proModalSessionId;
+  const targetBookId = state.bookId;
+  const targetChapter = state.chapter;
+  const targetTrans = state.trans1;
+  const book = getBook(targetBookId);
   const vNum = state.selectedVerse || 1;
   const rawVerse = state.selectedVerseText || "";
-  const refs = buildUniversalRefsForVerse(state.bookId, state.chapter, vNum, rawVerse);
+  const refLabel = `${book.name} ${targetChapter}:${vNum}`;
+  closeActionBar();
+
+  const modalEl = document.getElementById("proModal");
+  const titleEl = document.getElementById("proModalTitle");
+  const bodyEl = document.getElementById("proModalBody");
+  if (titleEl) titleEl.textContent = `🔗 Passi Paralleli & Riferimenti (${refLabel})`;
+  if (bodyEl) bodyEl.innerHTML = `<div class="loader">🔗 Ricerca passi paralleli e riferimenti per <b>${escapeHtml(refLabel)}</b>...</div>`;
+  if (modalEl) modalEl.style.display = "flex";
+
   const words = [...new Set(rawVerse.replace(/[^a-zA-ZÀ-ÿ\s]/g, " ").split(/\s+/).filter(w => w.length >= 4))];
-  const fnMap = await fetchChapterFootnotes(state.trans1, state.bookId, state.chapter);
+  const [fnMap, insRefs] = await Promise.all([
+    fetchChapterFootnotes(targetTrans, targetBookId, targetChapter),
+    findInsightRefsForVerse(targetBookId, targetChapter, vNum, 12)
+  ]);
+  if (!isProModalSessionActive(sid)) return;
+
   const vFootnotes = fnMap[String(vNum)] || fnMap[vNum] || [];
+  const { refs, sourceLabel } = await buildDynamicCrossRefsForVerse(targetBookId, targetChapter, vNum, rawVerse, vFootnotes, insRefs);
+  if (!isProModalSessionActive(sid)) return;
+
   const fnHtml = vFootnotes.length ? `
     <div class="section-title"><span>📌 Note in Calce Ufficiali (${vFootnotes.length})</span></div>
     <div style="margin-bottom:12px;">
-      ${vFootnotes.map((t, i) => `<div style="background:var(--bg-main); border-left:3px solid #ffd54f; border-radius:7px; padding:7px 10px; margin-bottom:6px; font-size:13.5px; line-height:1.5;"><b style="color:#ffd54f;">*${vFootnotes.length > 1 ? i + 1 : ""}</b> ${formatNoteLinks(t, state.bookId)}</div>`).join("")}
+      ${vFootnotes.map((t, i) => `<div style="background:var(--bg-main); border-left:3px solid #ffd54f; border-radius:7px; padding:7px 10px; margin-bottom:6px; font-size:13.5px; line-height:1.5;"><b style="color:#ffd54f;">*${vFootnotes.length > 1 ? i + 1 : ""}</b> ${formatNoteLinks(t, targetBookId)}</div>`).join("")}
     </div>` : "";
-  const insRefs = await findInsightRefsForVerse(state.bookId, state.chapter, vNum, 12);
   const insHtml = insRefs.length ? `
     <div class="section-title"><span>📚 Citato in Perspicacia (${insRefs.length} voci)</span></div>
     <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px;">
       ${insRefs.map(it => `<span class="tag-badge" style="background:rgba(46,125,50,0.28); color:#a5d6a7; border-color:#66bb6a; font-size:12.5px; padding:5px 10px;" onclick="openInsightArticleForVerse(${it.idx}, '${escapeJsStr(it.query)}')">📘 ${escapeHtml(it.title)}</span>`).join("")}
     </div>` : "";
-  document.getElementById("proModalTitle").textContent = `🔗 Passi Paralleli & Riferimenti (${book.name} ${state.chapter}:${vNum})`;
-  document.getElementById("proModalBody").innerHTML = `
+
+  if (titleEl) titleEl.textContent = `🔗 Passi Paralleli & Riferimenti (${refLabel})`;
+  if (bodyEl) bodyEl.innerHTML = `
     <div style="font-size:13px;color:var(--text-muted);font-style:italic;margin-bottom:10px;border-left:3px solid var(--primary-light);padding-left:8px;">"${escapeHtml(rawVerse)}"</div>
     ${fnHtml}
-    <div class="section-title"><span>${PRO_CROSS_REFS[`${state.bookId}_${state.chapter}_${vNum}`]?.length ? "Passi Paralleli Esegetici (Tocca per aprire)" : "Suggerimenti Tematici Automatici (Tocca per aprire)"}</span></div>
+    <div class="section-title"><span>${escapeHtml(sourceLabel)}</span></div>
     <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
       ${refs.map(r => `<span class="tag-badge" style="font-size:14px; padding:7px 12px;" onclick="jumpToRefString('${escapeJsStr(r)}')">📖${escapeHtml(r)}</span>`).join("")}
     </div>
@@ -8784,8 +9351,6 @@ async function openCrossRefsModalForVerse() {
       ${words.map(w => `<span class="tag-badge" style="font-size:13px;padding:5px 10px;" onclick="searchWordInConcordance('${escapeJsStr(w)}')">🔍${escapeHtml(w)}</span>`).join(" ")}
     </div>
   `;
-  closeActionBar();
-  document.getElementById("proModal").style.display = "flex";
 }
 let savedColorFilter = "ALL";
 let savedSearchQuery = "";
@@ -8884,8 +9449,8 @@ async function showSavedView(fromBack = false) {
   if (!fromBack && currentViewContext.type !== "saved") saveCurrentPositionToHistory();
   closeActionBar();
   clearSpeechContext();
-  setActiveTab("tabSaved");
   currentViewContext = { type: "saved" };
+  setActiveTab("tabSaved");
   const main = document.getElementById("mainContainer");
 
   const colorMeta = [
@@ -9153,7 +9718,7 @@ function goBackHistory() {
     return;
   }
   if (prev.type === "daily") {
-    showDailyTextView(prev.offset || 0).then(() => { if (main && prev.scrollTop) main.scrollTop = prev.scrollTop; });
+    showDailyTextView(prev.offset || 0, true).then(() => { if (main && prev.scrollTop) main.scrollTop = prev.scrollTop; });
     return;
   }
   if (prev.type === "insight") {
@@ -9191,7 +9756,7 @@ function openRef(bookId, chapter, verseSpec = 0) {
   loadChapterView().then(() => {
     if (verseSpec) scrollToVerseAndHighlight(verseSpec);
   });
-  }
+}
 function changeFontSize(delta) {
   state.fontSize = Math.min(30, Math.max(14, state.fontSize + delta));
   document.documentElement.style.setProperty("--font-size-verse", state.fontSize + "px");
@@ -9215,7 +9780,9 @@ function applySavedTheme() {
   if (metaTheme) metaTheme.setAttribute("content", themeHex);
 }
 function closeProModal() {
-  document.getElementById("proModal").style.display = "none";
+  proModalSessionId++;
+  const modalEl = document.getElementById("proModal");
+  if (modalEl) modalEl.style.display = "none";
 }
 
 const bmSearchLP = createLongPressHandlers(() => showSearchView(), () => { bmChimeHaptic(); openQuickJumpModal(); }, 550);
@@ -9254,7 +9821,7 @@ function runQuickJump() {
   jumpToRefString(raw, true);
 }
 
-function parseRefStringToTarget(str) {
+function parseRefStringToTarget(str, strict = false) {
   const cleanStr = String(str || "").trim().replace(/\s+/g, " ");
   const m = cleanStr.match(/^([1-3]?\s*[a-zA-ZÀ-ÿ]+(?:\s+dei\s+[a-zA-ZÀ-ÿ]+)?)\.?\s*(\d{1,3})(?:([:.,\s–-])\s*(\d.*))?$/i);
   if (!m) return null;
@@ -9287,6 +9854,7 @@ function parseRefStringToTarget(str) {
     if (sep === ":" && num1 === 1 && rest) {
       return { book: found, bookId: found.id, chapter: 1, vSpec: rest };
     }
+    if (strict && sep === ":" && num1 !== 1) return null;
     if (sep === "-" || sep === "–") {
       return { book: found, bookId: found.id, chapter: 1, vSpec: `${num1}-${rest}` };
     }
@@ -9298,6 +9866,8 @@ function parseRefStringToTarget(str) {
     }
     return { book: found, bookId: found.id, chapter: 1, vSpec: String(num1) };
   }
+
+  if (strict && (num1 < 1 || num1 > found.ch)) return null;
 
   let vSpec = "";
   if (sep === ":" || sep === "." || sep === " ") {
@@ -9600,10 +10170,13 @@ document.addEventListener("visibilitychange", () => {
     requestAudioWakeLock();
   }
 });
-// Azzera i testi di lettura legati alle viste (Testo del Giorno, Perspicacia, Cartine) quando si cambia schermata
-function clearSpeechContext() {
+// Azzera i testi di lettura legati alle viste al cambio schermata e chiude eventuali sessioni audio rimaste in pausa
+function clearSpeechContext(preservePausedAudio = false) {
   currentInsightSpeechText = "";
   currentDailySpeechText = "";
+  if (!preservePausedAudio && bmAudioPaused) {
+    stopAllAudio();
+  }
 }
 function getActiveTTSLangCode(fullLocale = false) {
   if ((typeof currentInsightSpeechText === "string" && currentInsightSpeechText.trim()) ||
@@ -9704,20 +10277,227 @@ function clearTtsKaraokeHighlight() {
   });
 }
 
+let bmCurrentSpokenVerse = 0;
+let bmCurrentSpokenIdx = 0;
+let bmAudioPaused = false;
+let bmAudioMediaMeta = { title: "", sub: "", autoNext: false, kind: "text", bookId: null, chapter: null };
+
+function isActiveBibleChapterAudio() {
+  return (bmAudioPlaying || bmAudioPaused)
+    && bmAudioMediaMeta.kind === "chapter"
+    && Number(bmAudioMediaMeta.bookId) === Number(state.bookId)
+    && Number(bmAudioMediaMeta.chapter) === Number(state.chapter);
+}
+
+function shouldPreserveAudioOnChapterReload() {
+  if (isActiveBibleChapterAudio()) return true;
+  return currentViewContext.type === "bible"
+    && (bmAudioPlaying || bmAudioPaused)
+    && bmAudioMediaMeta.kind === "selection"
+    && Number(bmAudioMediaMeta.bookId) === Number(state.bookId)
+    && Number(bmAudioMediaMeta.chapter) === Number(state.chapter);
+}
+let bmSleepMode = "off"; // "off" | "chapter" | "15" | "30"
+let bmSleepEndTs = 0;
+let bmSleepTimerId = null;
+let bmSleepTickInterval = null;
+
+function clearBmAudioSleepTimer(resetMode = true) {
+  clearTimeout(bmSleepTimerId);
+  clearInterval(bmSleepTickInterval);
+  bmSleepTimerId = null;
+  bmSleepTickInterval = null;
+  bmSleepEndTs = 0;
+  if (resetMode) bmSleepMode = "off";
+}
+
+function updateAudioMiniPlayerUI() {
+  const bar = document.getElementById("bmAudioMiniPlayer");
+  if (!bar) return;
+  const isVisible = bmAudioPlaying || bmAudioPaused;
+  bar.classList.toggle("visible", isVisible);
+  document.body.classList.toggle("bm-miniplayer-open", isVisible);
+  if (!isVisible) return;
+
+  const isChapterNav = currentViewContext.type === "bible" && isActiveBibleChapterAudio();
+  const prevBtn = document.getElementById("bmMpPrevBtn");
+  const nextBtn = document.getElementById("bmMpNextBtn");
+  const ppBtn = document.getElementById("bmMpPlayPauseBtn");
+  const lbl = document.getElementById("bmMpLabel");
+  const rateBtn = document.getElementById("bmMpRateBtn");
+  const sleepBtn = document.getElementById("bmMpSleepBtn");
+
+  if (prevBtn) prevBtn.style.display = isChapterNav ? "inline-flex" : "none";
+  if (nextBtn) nextBtn.style.display = isChapterNav ? "inline-flex" : "none";
+  if (ppBtn) {
+    ppBtn.textContent = bmAudioPaused ? "▶" : "⏸";
+    ppBtn.title = bmAudioPaused ? "Riprendi lettura" : "Metti in pausa";
+  }
+  if (lbl) {
+    if (isChapterNav && bmCurrentSpokenVerse > 0) {
+      const b = getBook(state.bookId);
+      lbl.textContent = `${b.abbr} ${state.chapter}:${bmCurrentSpokenVerse}`;
+    } else {
+      lbl.textContent = bmAudioMediaMeta.title || "Audio";
+    }
+  }
+  if (rateBtn) rateBtn.textContent = `${bmTtsRate}x`;
+  if (sleepBtn) {
+    if (bmSleepMode === "chapter") {
+      sleepBtn.textContent = "🌙 Cap.";
+      sleepBtn.classList.add("sleep-on");
+    } else if (bmSleepMode === "15" || bmSleepMode === "30") {
+      const remMin = Math.max(1, Math.ceil((bmSleepEndTs - Date.now()) / 60000));
+      sleepBtn.textContent = `🌙 ${remMin}m`;
+      sleepBtn.classList.add("sleep-on");
+    } else {
+      sleepBtn.textContent = "🌙";
+      sleepBtn.classList.remove("sleep-on");
+    }
+  }
+}
+
+function cycleMiniPlayerSleepTimer() {
+  bmHaptic(12);
+  const order = ["off", "chapter", "15", "30"];
+  const nextMode = order[(order.indexOf(bmSleepMode) + 1) % order.length];
+  clearBmAudioSleepTimer(false);
+  bmSleepMode = nextMode;
+  if (nextMode === "15" || nextMode === "30") {
+    const mins = Number(nextMode);
+    bmSleepEndTs = Date.now() + mins * 60000;
+    bmSleepTimerId = setTimeout(() => {
+      stopAllAudio();
+    }, mins * 60000);
+    bmSleepTickInterval = setInterval(() => {
+      if (!bmAudioPlaying && !bmAudioPaused) {
+        clearBmAudioSleepTimer(true);
+        return;
+      }
+      updateAudioMiniPlayerUI();
+    }, 15000);
+  }
+  updateAudioMiniPlayerUI();
+}
+
+function cycleMiniPlayerRate() {
+  bmHaptic(12);
+  const rates = [0.85, 1.0, 1.15, 1.3];
+  const curIdx = rates.findIndex(r => Math.abs(r - bmTtsRate) < 0.03);
+  const nextRate = rates[(curIdx + 1) % rates.length];
+  bmTtsRate = nextRate;
+  safeSaveStorage("bm_tts_rate", String(bmTtsRate));
+  if (bmAudioPlayer) {
+    try { bmAudioPlayer.playbackRate = bmTtsRate; } catch (e) { console.debug(e); }
+  }
+  // Se sta parlando con speechSynthesis nativo, riavvia in modo fluido dal punto corrente alla nuova velocità
+  if (bmAudioPlaying && !bmAudioPlayer && "speechSynthesis" in window) {
+    resumeAudioFromCurrentPosition();
+  } else {
+    updateAudioMiniPlayerUI();
+  }
+}
+
+function resumeAudioFromCurrentPosition() {
+  if (currentViewContext.type === "bible" && bmAudioMediaMeta.kind === "chapter" && Number(bmAudioMediaMeta.bookId) === Number(state.bookId) && Number(bmAudioMediaMeta.chapter) === Number(state.chapter) && bmCurrentSpokenVerse > 0) {
+    const v = bmCurrentSpokenVerse;
+    startChapterKaraokeSpeech(v, true);
+    return;
+  }
+  const remQueue = Array.isArray(activeTtsQueue) ? activeTtsQueue.slice(Math.max(0, bmCurrentSpokenIdx)) : [];
+  if (remQueue.length > 0) {
+    startQueueSpeech(
+      remQueue,
+      true,
+      bmAudioMediaMeta.autoNext,
+      bmAudioMediaMeta.title,
+      bmAudioMediaMeta.sub,
+      bmAudioMediaMeta.kind,
+      true,
+      bmAudioMediaMeta.bookId,
+      bmAudioMediaMeta.chapter
+    );
+  } else {
+    stopAllAudio();
+  }
+}
+
+function toggleMiniPlayerPauseResume() {
+  bmHaptic(12);
+  if (bmAudioPaused) {
+    bmAudioPaused = false;
+    resumeAudioFromCurrentPosition();
+    return;
+  }
+  if (!bmAudioPlaying) return;
+  // Mette in pausa senza azzerare la posizione o nascondere il Mini-Player
+  bmSessionId++;
+  bmUserStopped = true;
+  bmAudioPlaying = false;
+  bmAudioPaused = true;
+  releaseAudioWakeLock();
+  if (bmAudioPlayer) {
+    try {
+      bmAudioPlayer.onended = null;
+      bmAudioPlayer.onerror = null;
+      bmAudioPlayer.pause();
+      bmAudioPlayer.removeAttribute("src");
+    } catch (e) { console.debug(e); }
+    bmAudioPlayer = null;
+  }
+  if ("speechSynthesis" in window) {
+    try { window.speechSynthesis.cancel(); } catch (e) { console.debug(e); }
+  }
+  const btn = document.getElementById("ttsChapterBtn");
+  if (btn) {
+    btn.classList.add("active");
+    btn.innerHTML = '<span class="tab-icon">▶️</span><span>Riprendi</span>';
+  }
+  updateMediaSessionMetadata(bmAudioMediaMeta.title, bmAudioMediaMeta.sub, "paused");
+  updateAudioMiniPlayerUI();
+}
+
+function stepMiniPlayerVerse(delta) {
+  bmHaptic(12);
+  if (currentViewContext.type !== "bible" || !isActiveBibleChapterAudio()) return;
+  const rows = [...document.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3")];
+  if (!rows.length) return;
+  const vNums = rows.map(r => parseInt((r.id || "").replace("v_", ""), 10)).filter(n => n > 0).sort((a, b) => a - b);
+  if (!vNums.length) return;
+  const curIdx = vNums.indexOf(bmCurrentSpokenVerse);
+  const baseIdx = curIdx >= 0 ? curIdx : 0;
+  const nextIdx = Math.min(vNums.length - 1, Math.max(0, baseIdx + delta));
+  bmAudioPaused = false;
+  startChapterKaraokeSpeech(vNums[nextIdx], true);
+}
+
+function speakChapterFromSelectedVerse() {
+  bmChimeHaptic();
+  const nums = selectedVersesMap.size > 0
+    ? Array.from(selectedVersesMap.keys()).sort((a, b) => a - b)
+    : [state.selectedVerse || 1];
+  const startV = nums[0] || 1;
+  closeActionBar();
+  startChapterKaraokeSpeech(startV);
+}
+
 function highlightTtsKaraokeVerse(vNum) {
   clearTtsKaraokeHighlight();
   if (!vNum) return;
+  bmCurrentSpokenVerse = Number(vNum) || bmCurrentSpokenVerse;
   const row = document.getElementById(`v_${vNum}`);
   if (row) {
     row.classList.add("bm-tts-active-verse");
     row.scrollIntoView({ behavior: "smooth", block: "center" });
   }
+  updateAudioMiniPlayerUI();
 }
 
-function updateMediaSessionMetadata(titleStr, subtitleStr, isPlaying) {
+function updateMediaSessionMetadata(titleStr, subtitleStr, playbackState) {
   if (!("mediaSession" in navigator) || !navigator.mediaSession) return;
+  const resolvedState = playbackState === true ? "playing" : (playbackState === false ? "none" : String(playbackState || "none"));
   try {
-    if (!isPlaying) {
+    if (resolvedState === "none") {
       navigator.mediaSession.metadata = null;
       navigator.mediaSession.playbackState = "none";
       return;
@@ -9730,9 +10510,14 @@ function updateMediaSessionMetadata(titleStr, subtitleStr, isPlaying) {
         artwork: [{ src: "./icon-512.png", sizes: "512x512", type: "image/png" }]
       });
     }
-    navigator.mediaSession.playbackState = "playing";
-    navigator.mediaSession.setActionHandler("play", () => { if (!bmAudioPlaying) toggleChapterTTS(); });
-    navigator.mediaSession.setActionHandler("pause", () => { stopAllAudio(); });
+    navigator.mediaSession.playbackState = resolvedState;
+    navigator.mediaSession.setActionHandler("play", () => {
+      if (bmAudioPaused) toggleMiniPlayerPauseResume();
+      else if (!bmAudioPlaying) toggleChapterTTS();
+    });
+    navigator.mediaSession.setActionHandler("pause", () => {
+      if (bmAudioPlaying) toggleMiniPlayerPauseResume();
+    });
     navigator.mediaSession.setActionHandler("stop", () => { stopAllAudio(); });
     navigator.mediaSession.setActionHandler("previoustrack", () => {
       if (currentViewContext.type === "bible") {
@@ -9751,15 +10536,22 @@ function updateMediaSessionMetadata(titleStr, subtitleStr, isPlaying) {
   } catch (e) { console.debug(e); }
 }
 
-function stopAllAudio() {
+function stopAllAudio(preserveSleep = false) {
   releaseAudioWakeLock();
   clearTtsKaraokeHighlight();
   bmSessionId++;
   bmUserStopped = true;
   bmAudioPlaying = false;
+  bmAudioPaused = false;
   bmAutoNextChapter = false;
   bmQueueSupportsAutoNext = false;
   bmSelectionReadingActive = false;
+  if (!preserveSleep) {
+    clearBmAudioSleepTimer(true);
+    bmCurrentSpokenVerse = 0;
+    bmCurrentSpokenIdx = 0;
+    bmAudioMediaMeta = { title: "", sub: "", autoNext: false, kind: "text", bookId: null, chapter: null };
+  }
   if (bmAudioPlayer) {
     try {
       bmAudioPlayer.onended = null;
@@ -9774,6 +10566,7 @@ function stopAllAudio() {
   }
 
   updateMediaSessionMetadata("", "", false);
+  updateAudioMiniPlayerUI();
   const btn = document.getElementById("ttsChapterBtn");
   if (btn) {
     btn.classList.remove("active");
@@ -9799,6 +10592,10 @@ function onSpeechFinishedSession(sessionId) {
       }
     });
   }
+  if (bmSleepMode === "chapter") {
+    stopAllAudio();
+    return;
+  }
   if (bmAutoNextChapter && bmTtsAutoNextPref && !bmUserStopped && currentViewContext.type === "bible") {
     const book = getBook(state.bookId);
     if (state.chapter < book.ch) {
@@ -9810,11 +10607,12 @@ function onSpeechFinishedSession(sessionId) {
       stopAllAudio();
       return;
     }
-    loadChapterView().then(() => {
+    bmCurrentSpokenVerse = 0;
+    loadChapterView(true).then(() => {
       if (bmUserStopped || sessionId !== bmSessionId || currentViewContext.type !== "bible") return;
       setTimeout(() => {
         if (!bmUserStopped && sessionId === bmSessionId && currentViewContext.type === "bible") {
-          startChapterKaraokeSpeech(1);
+          startChapterKaraokeSpeech(1, true);
         }
       }, 350);
     });
@@ -9829,14 +10627,21 @@ function playWebViewStreamQueue(queueItems, idx, sessionId) {
     onSpeechFinishedSession(sessionId);
     return;
   }
+  bmCurrentSpokenIdx = idx;
   const item = queueItems[idx];
   if (item.verseNum) {
-    const row = document.getElementById(`v_${item.verseNum}`);
+    const vNumItem = Number(item.verseNum);
+    if (bmSelectionReadingActive) spokenVersesSet.add(vNumItem);
+    if (pendingOrangeVersesSet.has(vNumItem)) {
+      pendingOrangeVersesSet.delete(vNumItem);
+      pendingOrangeOrder = pendingOrangeOrder.filter(n => n !== vNumItem);
+    }
+    const row = document.getElementById(`v_${vNumItem}`);
     if (row && row.classList.contains("bm-verse-queued-orange")) {
       row.classList.remove("bm-verse-queued-orange");
       row.classList.add("bm-verse-selected");
     }
-    highlightTtsKaraokeVerse(item.verseNum);
+    highlightTtsKaraokeVerse(vNumItem);
   }
   const tl = getActiveTTSLangCode(false);
   const q = encodeURIComponent(item.text);
@@ -9878,18 +10683,30 @@ function playWebViewStreamQueue(queueItems, idx, sessionId) {
   tryNextUrl();
 }
 
-function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, mediaTitle = "", mediaSub = "", isSelectionQueue = false) {
-  stopAllAudio();
+function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, mediaTitle = "", mediaSub = "", sourceKind = "text", preserveSleep = false, sourceBookId = null, sourceChapter = null) {
+  stopAllAudio(preserveSleep);
   if (!queueItems || !queueItems.length) return;
   activeTtsQueue = queueItems;
-  bmSelectionReadingActive = Boolean(isSelectionQueue);
-  bmQueueSupportsAutoNext = Boolean(autoNext) && !bmSelectionReadingActive;
+  bmCurrentSpokenIdx = 0;
+  bmAudioPaused = false;
+  const resolvedKind = sourceKind === true ? "selection" : (sourceKind || "text");
+  bmAudioMediaMeta = {
+    title: mediaTitle || "",
+    sub: mediaSub || "",
+    autoNext: Boolean(autoNext),
+    kind: resolvedKind,
+    bookId: sourceBookId !== null && sourceBookId !== undefined ? Number(sourceBookId) : null,
+    chapter: sourceChapter !== null && sourceChapter !== undefined ? Number(sourceChapter) : null
+  };
+  bmSelectionReadingActive = resolvedKind === "selection";
+  bmQueueSupportsAutoNext = Boolean(autoNext) && resolvedKind === "chapter";
   const mySession = ++bmSessionId;
   bmUserStopped = false;
   bmAudioPlaying = true;
   bmAutoNextChapter = bmQueueSupportsAutoNext && bmTtsAutoNextPref;
   requestAudioWakeLock();
   updateMediaSessionMetadata(mediaTitle, mediaSub, true);
+  updateAudioMiniPlayerUI();
   const btn = document.getElementById("ttsChapterBtn");
   if (updateMainBtn && btn) {
     btn.classList.add("active");
@@ -9917,14 +10734,21 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
         onSpeechFinishedSession(mySession);
         return;
       }
+      bmCurrentSpokenIdx = idx;
       const item = activeTtsQueue[idx];
       if (item.verseNum) {
-        const row = document.getElementById(`v_${item.verseNum}`);
+        const vNumItem = Number(item.verseNum);
+        if (bmSelectionReadingActive) spokenVersesSet.add(vNumItem);
+        if (pendingOrangeVersesSet.has(vNumItem)) {
+          pendingOrangeVersesSet.delete(vNumItem);
+          pendingOrangeOrder = pendingOrangeOrder.filter(n => n !== vNumItem);
+        }
+        const row = document.getElementById(`v_${vNumItem}`);
         if (row && row.classList.contains("bm-verse-queued-orange")) {
           row.classList.remove("bm-verse-queued-orange");
           row.classList.add("bm-verse-selected");
         }
-        highlightTtsKaraokeVerse(item.verseNum);
+        highlightTtsKaraokeVerse(vNumItem);
       }
       try {
         const u = new SpeechSynthesisUtterance(item.text);
@@ -10016,7 +10840,7 @@ function startUniversalSpeech(rawText, updateMainBtn = true, autoNext = false) {
       : (ctxType === "si"
         ? (currentViewContext.label ? String(currentViewContext.label).replace(/^📘\s*/, "") : "Tutta la Scrittura")
         : (ctxType === "maps" ? "Cartine Bibliche" : `${curBook.name} ${state.chapter}`)));
-  startQueueSpeech(chunks, updateMainBtn, autoNext, titleStr, "Bibbia Multilingue PRO", false);
+  startQueueSpeech(chunks, updateMainBtn, autoNext, titleStr, "Bibbia Multilingue PRO", "text", false, null, null);
 }
 
 // Costruisce e avvia la lettura intelligente dei versetti selezionati:
@@ -10048,13 +10872,13 @@ function startSelectedVersesSmartSpeech(updateMainBtn = true) {
 
   if (queue.length > 0) {
     const rangeLbl = formatSelectedVersesRangeLabel(targetVerses);
-    startQueueSpeech(queue, updateMainBtn, false, `${curBook.name} ${state.chapter}:${rangeLbl}`, "Versetti Selezionati", true);
+    startQueueSpeech(queue, updateMainBtn, false, `${curBook.name} ${state.chapter}:${rangeLbl}`, "Versetti Selezionati", "selection", false, state.bookId, state.chapter);
     return true;
   }
   return false;
 }
 
-function startChapterKaraokeSpeech(startFromVerse = 1) {
+function startChapterKaraokeSpeech(startFromVerse = 1, preserveSleep = false) {
   const rows = [...document.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3")];
   if (!rows.length) return;
   const curBook = getBook(state.bookId);
@@ -10072,12 +10896,17 @@ function startChapterKaraokeSpeech(startFromVerse = 1) {
     }
   });
   if (queue.length > 0) {
-    startQueueSpeech(queue, true, true, `${curBook.name} ${state.chapter}`, "Lettura Biblica Sincronizzata", false);
+    bmCurrentSpokenVerse = Math.max(1, Number(startFromVerse) || 1);
+    startQueueSpeech(queue, true, true, `${curBook.name} ${state.chapter}`, "Lettura Biblica Sincronizzata", "chapter", preserveSleep, state.bookId, state.chapter);
   }
 }
 
 function toggleChapterTTS() {
   bmHaptic(12);
+  if (bmAudioPaused) {
+    toggleMiniPlayerPauseResume();
+    return;
+  }
   if (bmAudioPlaying) {
     stopAllAudio();
     return;
@@ -10129,7 +10958,182 @@ function speakSelectedVerse() {
   }
 }
 
+const BM_VERSE_CARD_THEMES = {
+  sapphire: {
+    label: "💎 Zaffiro",
+    bg1: "#041a42", bg2: "#0a367e", bg3: "#0288d1",
+    frame: "rgba(132, 255, 255, 0.35)", innerFrame: "rgba(255, 255, 255, 0.16)",
+    header: "rgba(180, 232, 255, 0.9)", text: "#ffffff", ref: "#ffd54f", trans: "#84ffff"
+  },
+  paper: {
+    label: "📜 Carta",
+    bg1: "#f7f1e3", bg2: "#efe6d2", bg3: "#e5d7bb",
+    frame: "rgba(140, 88, 24, 0.55)", innerFrame: "rgba(140, 88, 24, 0.24)",
+    header: "#6b4c24", text: "#1e1b16", ref: "#8c5818", trans: "#5c5446"
+  },
+  oled_gold: {
+    label: "🖤 OLED Oro",
+    bg1: "#000000", bg2: "#080808", bg3: "#120e05",
+    frame: "rgba(247, 211, 106, 0.68)", innerFrame: "rgba(247, 211, 106, 0.25)",
+    header: "#f7d36a", text: "#f7f4eb", ref: "#ffe082", trans: "#b89b52"
+  },
+  midnight: {
+    label: "🌌 Notte",
+    bg1: "#050d1a", bg2: "#0d213f", bg3: "#18335c",
+    frame: "rgba(79, 195, 247, 0.42)", innerFrame: "rgba(255, 255, 255, 0.14)",
+    header: "#9ec9ff", text: "#e6f1ff", ref: "#4fc3f7", trans: "#8ca0ba"
+  }
+};
+let bmVerseCardState = { ref: "", text: "", transBadge: "", theme: "sapphire", format: "1:1" };
+
+function getShortBibleBadge(transId) {
+  const map = {
+    "gb:nwt": "TNM 2017", "gb:bi12": "TNM 1987", "gb:nwt_e": "NWT 2013", "gb:bi12_e": "NWT 1984",
+    "gb:nwt_s": "TNM 2019", "gb:bi12_s": "TNM 1987", "gb:nwt_tpo": "TNM",
+    "epub:nr": "NR", "epub:nd": "LND", "epub:cei": "CEI 2008", "epub:tilc": "TILC",
+    "gb:riveduta": "Riveduta 1927", "gb:giovanni": "Diodati",
+    "gb:kjv": "KJV", "gb:web": "WEB", "gb:asv": "ASV", "gb:valera": "RVR 1909",
+    "gb:luther1912": "Luther", "gb:ls1910": "LSG", "gb:almeida": "Almeida"
+  };
+  if (map[transId]) return map[transId];
+  const meta = dynamicCatalog.find(b => b.id === transId) || CORE_BIBLES.find(b => b.id === transId);
+  if (meta && meta.name) {
+    const pm = meta.name.match(/\(([^()]{2,18})\)/);
+    if (pm) return pm[1].trim();
+  }
+  return String(transId || "").includes(":") ? String(transId).split(":")[1].toUpperCase() : "BM PRO";
+}
+
+function setVerseCardOption(prop, val) {
+  bmHaptic(12);
+  bmVerseCardState[prop] = val;
+  renderVerseCardModalUI();
+}
+
+function drawVerseCardCanvas() {
+  const canvas = document.getElementById("verseCanvas");
+  if (!canvas) return;
+  const isStory = bmVerseCardState.format === "9:16";
+  const W = 1080;
+  const H = isStory ? 1920 : 1080;
+  canvas.width = W;
+  canvas.height = H;
+  canvas.style.maxWidth = isStory ? "220px" : "320px";
+
+  const t = BM_VERSE_CARD_THEMES[bmVerseCardState.theme] || BM_VERSE_CARD_THEMES.sapphire;
+  const ctx = canvas.getContext("2d");
+
+  const grad = ctx.createLinearGradient(0, 0, W, H);
+  grad.addColorStop(0, t.bg1);
+  grad.addColorStop(0.55, t.bg2);
+  grad.addColorStop(1, t.bg3);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  if (bmVerseCardState.theme === "paper") {
+    const rad = ctx.createRadialGradient(W * 0.5, H * 0.45, 80, W * 0.5, H * 0.5, H * 0.68);
+    rad.addColorStop(0, "rgba(255,255,255,0.28)");
+    rad.addColorStop(1, "rgba(120,82,28,0.12)");
+    ctx.fillStyle = rad;
+    ctx.fillRect(0, 0, W, H);
+  } else {
+    const rad = ctx.createRadialGradient(W * 0.5, H * 0.42, 40, W * 0.5, H * 0.42, W * 0.65);
+    rad.addColorStop(0, bmVerseCardState.theme === "oled_gold" ? "rgba(247,211,106,0.09)" : "rgba(79,195,247,0.14)");
+    rad.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = rad;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  const pad = isStory ? 68 : 58;
+  ctx.strokeStyle = t.frame;
+  ctx.lineWidth = 4;
+  ctx.strokeRect(pad, pad, W - pad * 2, H - pad * 2);
+  ctx.strokeStyle = t.innerFrame;
+  ctx.lineWidth = 1.8;
+  ctx.strokeRect(pad + 16, pad + 16, W - (pad + 16) * 2, H - (pad + 16) * 2);
+
+  ctx.textAlign = "center";
+  ctx.fillStyle = t.header;
+  ctx.font = "bold 28px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.fillText("BIBBIA MULTILINGUE PRO", W / 2, isStory ? 210 : 142);
+
+  ctx.strokeStyle = t.frame;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(W / 2 - 90, isStory ? 245 : 172);
+  ctx.lineTo(W / 2 + 90, isStory ? 245 : 172);
+  ctx.stroke();
+
+  const text = bmVerseCardState.text || "";
+  ctx.fillStyle = t.text;
+  const maxTextW = W - (pad + 96) * 2;
+  const baseFont = isStory
+    ? (text.length > 520 ? 36 : (text.length > 260 ? 44 : 52))
+    : (text.length > 380 ? 30 : (text.length > 220 ? 36 : 42));
+  const lineHeight = Math.round(baseFont * 1.48);
+  ctx.font = `italic ${baseFont}px Georgia, serif`;
+
+  const words = text.split(" ");
+  let line = "", lines = [];
+  words.forEach(w => {
+    const test = line + w + " ";
+    if (ctx.measureText(test).width > maxTextW) {
+      if (line.trim()) lines.push(line.trim());
+      line = w + " ";
+    } else {
+      line = test;
+    }
+  });
+  if (line.trim()) lines.push(line.trim());
+
+  const maxLines = isStory ? 20 : 12;
+  if (lines.length > maxLines) {
+    lines = lines.slice(0, maxLines);
+    lines[maxLines - 1] = lines[maxLines - 1].replace(/[.,;:!?]?$/, "") + "…\"";
+  }
+
+  const blockH = lines.length * lineHeight;
+  let y = Math.max(isStory ? 340 : 238, Math.round((H * 0.48) - (blockH / 2)));
+  lines.forEach(l => {
+    ctx.fillText(l, W / 2, y);
+    y += lineHeight;
+  });
+
+  const refY = Math.min(H - (isStory ? 230 : 126), y + (isStory ? 95 : 64));
+  ctx.fillStyle = t.ref;
+  ctx.font = `bold ${isStory ? 44 : 38}px -apple-system, BlinkMacSystemFont, sans-serif`;
+  const sig = bmVerseCardState.transBadge ? `${bmVerseCardState.ref}  ·  ${bmVerseCardState.transBadge}` : bmVerseCardState.ref;
+  ctx.fillText(sig, W / 2, refY, W - (pad + 56) * 2);
+}
+
+function renderVerseCardModalUI() {
+  const themeBtns = Object.keys(BM_VERSE_CARD_THEMES).map(k => {
+    const act = bmVerseCardState.theme === k;
+    return `<button type="button" class="bm-seg-btn ${act ? "active" : ""}" style="flex:1; padding:6px 4px; font-size:11.5px;" onclick="setVerseCardOption('theme', '${k}')">${BM_VERSE_CARD_THEMES[k].label}</button>`;
+  }).join("");
+  const fmtBtns = [
+    { id: "1:1", label: "⬜ 1:1 Post/Chat" },
+    { id: "9:16", label: "📱 9:16 Storie/Stato" }
+  ].map(f => {
+    const act = bmVerseCardState.format === f.id;
+    return `<button type="button" class="bm-seg-btn ${act ? "active" : ""}" style="flex:1; padding:6px 8px; font-size:12px;" onclick="setVerseCardOption('format', '${f.id}')">${f.label}</button>`;
+  }).join("");
+
+  document.getElementById("proModalBody").innerHTML = `
+    <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:10px;">
+      <div class="bm-seg-group" style="width:100%; display:flex;">${themeBtns}</div>
+      <div class="bm-seg-group" style="width:100%; display:flex;">${fmtBtns}</div>
+    </div>
+    <div style="text-align:center;">
+      <canvas id="verseCanvas" width="1080" height="1080" style="width:100%; max-width:320px; border-radius:12px; margin-bottom:12px; box-shadow:0 8px 24px rgba(0,0,0,0.45);"></canvas>
+      <button class="search-btn" style="width:100%; padding:11px;" onclick="downloadCanvasCard()">💾 Scarica / Condividi Immagine PNG (${bmVerseCardState.format})</button>
+    </div>
+  `;
+  drawVerseCardCanvas();
+}
+
 function generateVerseCardModal() {
+  proModalSessionId++;
   const book = getBook(state.bookId);
   const nums = selectedVersesMap.size > 0
     ? Array.from(selectedVersesMap.keys()).sort((a, b) => a - b)
@@ -10139,51 +11143,16 @@ function generateVerseCardModal() {
   const rawBody = nums.length > 1
     ? nums.map(n => selectedVersesMap.get(n) || "").filter(Boolean).join(" ")
     : (state.selectedVerseText || selectedVersesMap.get(nums[0]) || "");
-  const text = `"${rawBody}"`;
-  document.getElementById("proModalTitle").textContent = nums.length > 1 ? `🖼️ Card Immagine (${nums.length} Versetti)` : "🖼️ Card Immagine Versetto";
-  document.getElementById("proModalBody").innerHTML = `
-    <div style="text-align:center;">
-      <canvas id="verseCanvas" width="1080" height="1080" style="width:100%; max-width:320px; border-radius:12px; margin-bottom:12px; box-shadow:0 6px 18px rgba(0,0,0,0.3);"></canvas>
-      <button class="search-btn" style="width:100%;" onclick="downloadCanvasCard()">💾 Scarica / Condividi Immagine PNG</button>
-    </div>
-  `;
+  bmVerseCardState.ref = ref;
+  bmVerseCardState.text = `"${rawBody}"`;
+  bmVerseCardState.transBadge = getShortBibleBadge(state.trans1);
+  if (bmSettings.paperMode) bmVerseCardState.theme = "paper";
+  else if (state.themeMode === "oled") bmVerseCardState.theme = "oled_gold";
+  else if (state.themeMode === "dark") bmVerseCardState.theme = "midnight";
+  else bmVerseCardState.theme = "sapphire";
+  document.getElementById("proModalTitle").textContent = nums.length > 1 ? `🖼️ Studio Card (${nums.length} Versetti)` : "🖼️ Studio Card Versetto";
   document.getElementById("proModal").style.display = "flex";
-  const canvas = document.getElementById("verseCanvas");
-  const ctx = canvas.getContext("2d");
-  const grad = ctx.createLinearGradient(0, 0, 1080, 1080);
-  grad.addColorStop(0, "#0a367e");
-  grad.addColorStop(1, "#0288d1");
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, 1080, 1080);
-  ctx.strokeStyle = "rgba(255,255,255,0.25)";
-  ctx.lineWidth = 5;
-  ctx.strokeRect(60, 60, 960, 960);
-  ctx.fillStyle = "rgba(255,255,255,0.85)";
-  ctx.font = "bold 32px sans-serif";
-  ctx.textAlign = "center";
-  ctx.fillText("BIBBIA MULTILINGUE PRO", 540, 140);
-  ctx.fillStyle = "#ffffff";
-  const fontSize = text.length > 380 ? 30 : (text.length > 220 ? 36 : 42);
-  const lineHeight = Math.round(fontSize * 1.45);
-  ctx.font = `italic ${fontSize}px Georgia, serif`;
-  const words = text.split(" ");
-  let line = "", lines = [];
-  words.forEach(w => {
-    const test = line + w + " ";
-    if (ctx.measureText(test).width > 840) { lines.push(line.trim()); line = w + " "; }
-    else line = test;
-  });
-  if (line.trim()) lines.push(line.trim());
-  const maxLines = 12;
-  if (lines.length > maxLines) {
-    lines = lines.slice(0, maxLines);
-    lines[maxLines - 1] += "…\"";
-  }
-  let y = Math.max(230, 540 - Math.floor((lines.length * lineHeight) / 2));
-  lines.forEach(l => { ctx.fillText(l, 540, y); y += lineHeight; });
-  ctx.fillStyle = "#ffeb3b";
-  ctx.font = "bold 40px sans-serif";
-  ctx.fillText(ref, 540, Math.min(960, y + 60));
+  renderVerseCardModalUI();
 }
 function downloadCanvasCard() {
   const canvas = document.getElementById("verseCanvas");
@@ -10214,6 +11183,7 @@ function downloadCanvasCard() {
 // IMPORTATORE UNIVERSALE MULTI-EPUB (TNM 2017, TNM 1987 bi12, NR, CEI 2008, TILC)
 // ============================================================================
 function openBackupModal() {
+  proModalSessionId++;
   document.getElementById("proModalTitle").textContent = "💾 Backup & Importazione EPUB Offline";
   document.getElementById("proModalBody").innerHTML = `
     <div class="section-title"><span>📗 Importa Bibbie Offline da file EPUB</span></div>
@@ -11413,20 +12383,22 @@ function jumpToPickedDailyDate() {
 
 let dailySearchTimer = null;
 async function openDailySearchModal() {
+  const sid = ++proModalSessionId;
   bmChimeHaptic();
   const savedDaily = await getOfflineBible("bm:daily_text");
+  if (sid !== proModalSessionId) return;
   if (!savedDaily || !savedDaily.days) {
     showBlueInfoModal("☀️ Scrittura del Giorno", "Importa prima il file EPUB della Scrittura del Giorno per cercare nei 365 commenti.");
     return;
   }
   const totalDays = Object.keys(savedDaily.days).length;
-  bpModalOpen(`🔍 Cerca nei ${totalDays} Giorni`, `
+  if (!bpModalOpen(`🔍 Cerca nei ${totalDays} Giorni`, `
     <input type="search" id="dailySearchInput" class="bp-search" placeholder="🔍 Cerca parola, versetto o tema (es. fede, coraggio, Salmo)..." autocomplete="off" oninput="onDailySearchInput(this.value)">
     <div id="dailySearchResults" style="max-height:58vh; overflow-y:auto;">
       <div class="loader" style="padding:18px 8px;">Digita almeno 2 caratteri per cercare in tutti i <b>${totalDays}</b> giorni dell'anno.</div>
     </div>
-  `);
-  setTimeout(() => document.getElementById("dailySearchInput")?.focus(), 80);
+  `, sid)) return;
+  setTimeout(() => { if (isProModalSessionActive(sid)) document.getElementById("dailySearchInput")?.focus(); }, 80);
 }
 
 function onDailySearchInput(val) {
@@ -11507,8 +12479,8 @@ async function showDailyTextView(dayOffset = 0, fromBack = false) {
   stopAllAudio();
   clearSpeechContext();
   currentDailyOffset = dayOffset;
-  setActiveTab("", "dailyTabBtn");
   currentViewContext = { type: "daily", offset: dayOffset };
+  setActiveTab("", "dailyTabBtn");
   const main = document.getElementById("mainContainer");
   const targetDate = new Date();
   targetDate.setDate(targetDate.getDate() + currentDailyOffset);
@@ -11928,8 +12900,8 @@ async function showInsightView(selectedIndex = null, fromBack = false) {
   closeActionBar();
   stopAllAudio();
   clearSpeechContext();
-  setActiveTab("", "insightTabBtn");
   currentViewContext = { type: "insight", idx: selectedIndex, title: (selectedIndex !== null && insightMemCache?.entries?.[selectedIndex]) ? insightMemCache.entries[selectedIndex].title : "" };
+  setActiveTab("", "insightTabBtn");
   const main = document.getElementById("mainContainer");
   const data = await getInsightData();
   if (reqId !== currentViewReqId) return;
@@ -12337,8 +13309,8 @@ async function showSiView(fromBack = false) {
   closeActionBar();
   stopAllAudio();
   clearSpeechContext();
-  setActiveTab("", "siTabBtn");
   currentViewContext = { type: "si", mode: "index", label: "📘 Tutta la Scrittura" };
+  setActiveTab("", "siTabBtn");
   const main = document.getElementById("mainContainer");
   const data = await getSiData();
   if (reqId !== currentViewReqId) return;
@@ -12407,8 +13379,8 @@ async function showSiBook(bi, fromBack = false) {
   closeActionBar();
   stopAllAudio();
   clearSpeechContext();
-  setActiveTab("", "siTabBtn");
   currentViewContext = { type: "si", mode: "book", i: bi, label: "📘 Tutta la Scrittura" };
+  setActiveTab("", "siTabBtn");
   const main = document.getElementById("mainContainer");
   const data = await getSiData();
   if (reqId !== currentViewReqId) return;
@@ -12453,8 +13425,8 @@ async function showSiReader(kind, i, ci, fromBack = false, scrollToSectionIdx = 
   closeActionBar();
   stopAllAudio();
   clearSpeechContext();
-  setActiveTab("", "siTabBtn");
   currentViewContext = { type: "si", mode: "reader", kind, i, ci, label: "📘 Tutta la Scrittura" };
+  setActiveTab("", "siTabBtn");
   const main = document.getElementById("mainContainer");
   const data = await getSiData();
   if (reqId !== currentViewReqId) return;
@@ -12761,8 +13733,8 @@ async function showMapsView(selectedIdx = null, fromBack = false) {
   closeActionBar();
   stopAllAudio();
   clearSpeechContext();
-  setActiveTab("", "mapsTabBtn");
   currentViewContext = { type: "maps", mapIdx: null, label: "🗺️ Cartine Bibliche" };
+  setActiveTab("", "mapsTabBtn");
   const main = document.getElementById("mainContainer");
   const meta = await bpGetMeta();
   if (reqId !== currentViewReqId) return;
@@ -13237,6 +14209,7 @@ function setReadingPlanStartDate(isoDateStr) {
   rpState.startDate = isoDateStr;
   safeSaveStorage("bm_reading_plan_v1", JSON.stringify(rpState));
   updateReadingPlanHeaderBtn();
+  syncChapterReadingPlanFooterBtn();
   renderReadingPlanModalContent(true);
 }
 function confirmResetReadingPlanModal() {
@@ -13251,6 +14224,7 @@ function confirmResetReadingPlanModal() {
       rpState.startDate = getLocalIsoDateStr();
       safeSaveStorage("bm_reading_plan_v1", JSON.stringify(rpState));
       updateReadingPlanHeaderBtn();
+      syncChapterReadingPlanFooterBtn();
       renderReadingPlanModalContent(true);
     }
   );
@@ -13268,22 +14242,32 @@ function renderChapterReadingPlanFooterHtml(bookId, chapter) {
   const isDone = Boolean(rpState.checked[`${rpState.planId}_${dayIdx}`]);
   return `
     <div style="margin-top:16px; display:flex; justify-content:center;">
-      <button type="button" id="bmChapterRpToggleBtn" class="nav-btn bm-rp-footer-btn ${isDone ? 'done' : ''}" style="width:100%; max-width:380px; padding:10px 12px; font-weight:800;" onclick="toggleReadingPlanDayFromChapter(${dayIdx})">
+      <button type="button" id="bmChapterRpToggleBtn" class="nav-btn bm-rp-footer-btn ${isDone ? 'done' : ''}" style="width:100%; max-width:380px; padding:10px 12px; font-weight:800;" onclick="toggleReadingPlanDayFromChapter()">
         ${isDone ? `✔ Piano Annuale · Giorno ${dayIdx + 1} completato (${escapeHtml(dayItem.label)})` : `📅 Segna Giorno ${dayIdx + 1} come letto (${escapeHtml(dayItem.label)})`}
       </button>
     </div>`;
 }
-function toggleReadingPlanDayFromChapter(dayIdx) {
-  toggleReadingPlanDay(dayIdx);
+function syncChapterReadingPlanFooterBtn() {
   const btn = document.getElementById("bmChapterRpToggleBtn");
-  if (!btn) return;
+  if (!btn || currentViewContext.type !== "bible") return;
+  const dayIdx = findReadingPlanDayForChapter(state.bookId, state.chapter);
+  if (dayIdx < 0) {
+    btn.style.display = "none";
+    return;
+  }
   const schedule = buildYearlySchedule(rpState.planId);
   const dayItem = schedule[dayIdx];
   const isDone = Boolean(rpState.checked[`${rpState.planId}_${dayIdx}`]);
+  btn.style.display = "";
   btn.textContent = isDone
     ? `✔ Piano Annuale · Giorno ${dayIdx + 1} completato (${dayItem.label})`
     : `📅 Segna Giorno ${dayIdx + 1} come letto (${dayItem.label})`;
   btn.classList.toggle("done", isDone);
+}
+function toggleReadingPlanDayFromChapter() {
+  const dayIdx = findReadingPlanDayForChapter(state.bookId, state.chapter);
+  if (dayIdx < 0) return;
+  toggleReadingPlanDay(dayIdx);
 }
 function updateReadingPlanHeaderBtn() {
   const el = document.getElementById("readingPlanHeaderLabel");
@@ -13311,6 +14295,7 @@ function toggleReadingPlanDay(dayIdx) {
   else rpState.checked[key] = true;
   safeSaveStorage("bm_reading_plan_v1", JSON.stringify(rpState));
   updateReadingPlanHeaderBtn();
+  syncChapterReadingPlanFooterBtn();
   if (document.getElementById("proModal")?.style.display === "flex") {
     renderReadingPlanModalContent(false);
   }
@@ -13326,10 +14311,12 @@ function selectReadingPlanType(newPlanId) {
   rpPickerOpen = false;
   safeSaveStorage("bm_reading_plan_v1", JSON.stringify(rpState));
   updateReadingPlanHeaderBtn();
+  syncChapterReadingPlanFooterBtn();
   renderReadingPlanModalContent(true);
 }
 
 function openReadingPlanModal() {
+  proModalSessionId++;
   rpPickerOpen = false;
   document.getElementById("proModalTitle").textContent = "📅 Lettura Quotidiana (Bibbia in un Anno)";
   document.getElementById("proModal").style.display = "flex";
@@ -13445,7 +14432,7 @@ function scrollRpToToday(smooth = false) {
 function buildStudioBackupObject() {
   return {
     app: "BibbiaMultilingue_PRO",
-    version: "PRO_v15.0.1",
+    version: "PRO_v16.0.7",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
@@ -13591,6 +14578,7 @@ function applyStudioBackupObject(parsed) {
     rpState = { planId: validPlanId, startDate: validStart, checked: validChecked };
     safeSaveStorage("bm_reading_plan_v1", JSON.stringify(rpState));
     updateReadingPlanHeaderBtn();
+    syncChapterReadingPlanFooterBtn();
   }
 }
 
@@ -13619,11 +14607,46 @@ async function deliverJsonBlobFile(blob, fileName, shareTitle) {
   return "downloaded";
 }
 
-function exportBackupJson() {
+function recordStudioDataEditedNow() {
+  const now = Date.now();
+  safeSaveStorage("bm_last_studio_edit_ts_v1", String(now));
+  if (!safeGetStorage("bm_first_studio_edit_ts_v1")) {
+    safeSaveStorage("bm_first_studio_edit_ts_v1", String(now));
+  }
+}
+
+function recordStudioBackupDoneNow() {
+  safeSaveStorage("bm_last_backup_ts_v1", String(Date.now()));
+}
+
+function getBackupReminderInfo() {
+  const hasStudioData = (state.notes && state.notes.length > 0) ||
+    (state.bookmarks && state.bookmarks.length > 0) ||
+    Object.keys(state.highlights || {}).length > 0;
+  if (!hasStudioData) return { due: false, daysAgo: 0, neverBackedUp: false };
+  const lastBackup = Number(safeGetStorage("bm_last_backup_ts_v1")) || 0;
+  const lastEdit = Number(safeGetStorage("bm_last_studio_edit_ts_v1")) || 0;
+  const firstEdit = Number(safeGetStorage("bm_first_studio_edit_ts_v1")) || 0;
+  const DAY_MS = 86400000;
+  if (lastBackup > 0) {
+    const daysAgo = Math.floor((Date.now() - lastBackup) / DAY_MS);
+    return { due: daysAgo >= 30 && lastEdit > lastBackup, daysAgo, neverBackedUp: false };
+  }
+  if (firstEdit > 0) {
+    const daysSinceFirst = Math.floor((Date.now() - firstEdit) / DAY_MS);
+    return { due: daysSinceFirst >= 30, daysAgo: daysSinceFirst, neverBackedUp: true };
+  }
+  return { due: false, daysAgo: 0, neverBackedUp: true };
+}
+
+async function exportBackupJson() {
   const jsonStr = JSON.stringify(buildStudioBackupObject(), null, 2);
   const fileName = `BM_PRO_Backup_${getLocalIsoDateStr()}.json`;
   const blob = new Blob([jsonStr], { type: "application/json" });
-  deliverJsonBlobFile(blob, fileName, "Backup Bibbia Multilingue PRO");
+  const outcome = await deliverJsonBlobFile(blob, fileName, "Backup Bibbia Multilingue PRO");
+  if (outcome !== "cancelled") {
+    recordStudioBackupDoneNow();
+  }
 }
 let pendingBackupRawText = null;
 
@@ -13730,6 +14753,7 @@ async function getBmStorageSummaryHtml() {
   } catch (_e) { return ""; }
 }
 async function openLibraryMigrationModal() {
+  const sid = ++proModalSessionId;
   bmChimeHaptic();
   closeActionBar();
   document.getElementById("proModalTitle").textContent = "📦 Migra Libreria Offline";
@@ -13739,6 +14763,7 @@ async function openLibraryMigrationModal() {
   document.getElementById("proModal").style.display = "flex";
 
   const [modules, storageHtml] = await Promise.all([scanOfflineLibraryModules(), getBmStorageSummaryHtml()]);
+  if (!isProModalSessionActive(sid)) return;
   const totalCount = modules.length;
 
   const listHtml = totalCount > 0
@@ -13787,7 +14812,7 @@ function setMigrationStatus(htmlMsg) {
 
 async function buildAndDeliverLibraryBundle(keysList, includeStudio, fileName, shareTitle) {
   const parts = [
-    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v15.0.1","date":',
+    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v16.0.7","date":',
     JSON.stringify(new Date().toISOString())
   ];
   if (includeStudio) {
@@ -13812,6 +14837,7 @@ async function buildAndDeliverLibraryBundle(keysList, includeStudio, fileName, s
   if (outcome === "cancelled") {
     setMigrationStatus(`ℹ️ Esportazione annullata (${sizeMb} MB).`);
   } else {
+    if (includeStudio) recordStudioBackupDoneNow();
     setMigrationStatus(`✔ Esportato <b>${escapeHtml(fileName)}</b> (${sizeMb} MB, ${written} blocchi)! Salvalo in Download o condividilo con Files/X-Plore.`);
   }
 }
@@ -13948,10 +14974,16 @@ function bpComputeMapScore(results) {
   bpUi.bestMapId = bestId;
 }
 
-function bpModalOpen(title, html) {
-  document.getElementById("proModalTitle").textContent = title;
-  document.getElementById("proModalBody").innerHTML = html;
-  document.getElementById("proModal").style.display = "flex";
+function bpModalOpen(title, html, expectedSid = null) {
+  if (expectedSid !== null && expectedSid !== proModalSessionId) return false;
+  if (expectedSid === null) proModalSessionId++;
+  const titleEl = document.getElementById("proModalTitle");
+  const bodyEl = document.getElementById("proModalBody");
+  const modalEl = document.getElementById("proModal");
+  if (titleEl) titleEl.textContent = title;
+  if (bodyEl) bodyEl.innerHTML = html;
+  if (modalEl) modalEl.style.display = "flex";
+  return true;
 }
 function bpKeyOf(txt) {
   return (String(txt || "").replace(/[\u2010\u2011]/g, "-").match(BP_WORD) || []).map(w => w.toLowerCase()).join(" ");
@@ -14243,9 +15275,11 @@ function bpCopyGeoDossier(btnEl) {
 
 // ---------- 📍 Dove? — Console Geografica Intelligente ----------
 async function openWhereIsItModal() {
+  const sid = ++proModalSessionId;
   bmChimeHaptic();
   closeActionBar();
   const meta = await bpGetMeta();
+  if (sid !== proModalSessionId) return;
   if (!meta) {
     bpModalOpen("📍 Atlante & Luoghi Biblici", `
       <div class="result-card" style="cursor:default; text-align:center; padding:18px 12px;">
@@ -14259,7 +15293,7 @@ async function openWhereIsItModal() {
           <input type="file" accept=".json,application/json" style="display:none;" onchange="importMapsArchive(event)">
         </label>
         <div class="epub-import-status" style="margin-top:12px; font-size:13px; font-weight:700; color:var(--primary-light);"></div>
-      </div>`);
+      </div>`, sid);
     return;
   }
   const src = bpGetViewText();
@@ -14284,7 +15318,7 @@ async function openWhereIsItModal() {
         </button>
       </div>
     ` : ""}
-    <div id="bpBody"></div>`);
+    <div id="bpBody"></div>`, sid);
   bpRenderBody("");
 }
 
@@ -14350,8 +15384,8 @@ function bpRenderBody(q) {
 function extractActiveViewTextForAnalysis() {
   return bpGetViewText().full.replace(/\s+/g, " ").trim();
 }
-function bpCitedRefs(text) {
-  const html = formatNoteLinks(String(text || ""));
+function bpCitedRefs(text, defaultBookId = null) {
+  const html = formatNoteLinks(String(text || ""), defaultBookId);
   const out = [], seen = new Set();
   const re = /jumpToRefString\('([^']*)'\)/g;
   let m;
@@ -14369,11 +15403,12 @@ function searchWordInInsight(word) {
   return showInsightView(null);
 }
 async function openDeepenDailyModal() {
-  const reqId = ++deepenReqId;
+  const sid = ++proModalSessionId;
+  const targetDailyOffset = currentDailyOffset;
   const savedDaily = await getOfflineBible("bm:daily_text");
-  if (reqId !== deepenReqId) return;
+  if (sid !== proModalSessionId) return;
   const targetDate = new Date();
-  targetDate.setDate(targetDate.getDate() + currentDailyOffset);
+  targetDate.setDate(targetDate.getDate() + targetDailyOffset);
   const mm = String(targetDate.getMonth() + 1).padStart(2, "0");
   const dd = String(targetDate.getDate()).padStart(2, "0");
   const dayKey = `${mm}-${dd}`;
@@ -14449,7 +15484,7 @@ async function openDeepenDailyModal() {
   // luoghi citati, con rimando alla cartina (solo se le cartine sono state caricate)
   let placesHtml = "";
   const meta = await bpGetMeta();
-  if (reqId !== deepenReqId) return;
+  if (sid !== proModalSessionId) return;
   if (meta) {
     const places = bpScanText(rawTheme + "\n" + rawComment);
     bpComputeMapScore(places);
@@ -14473,7 +15508,7 @@ async function openDeepenDailyModal() {
     ${placesHtml}
     <button class="myread-action-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,176,255,0.75); background:#0d47a1; margin-top:12px;" onclick="exportDailyDossierNow(this)">
       📋 Copia Dossier di Studio del Giorno
-    </button>`);
+    </button>`, sid);
 }
 
 function exportSingleNoteDossier(noteId, refFallback) {
@@ -14534,12 +15569,13 @@ function dismissSplashScreen() {
   if (splashDismissed) return;
   const splash = document.getElementById("splashScreen");
   if (!splash) return;
-  if (!window.__splashShownAt) { setTimeout(dismissSplashScreen, 80); return; }
-  splashDismissed = true;
   if (splashSkipRequested) {
+    splashDismissed = true;
     fadeOutSplashNow();
     return;
   }
+  if (!window.__splashShownAt) { setTimeout(dismissSplashScreen, 80); return; }
+  splashDismissed = true;
   const prefersReduced = Boolean(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   // 3 pulsazioni sincronizzate (3 x 1280ms); un tocco salta subito a boot completato
   const minDisplayMs = prefersReduced ? 400 : 3850;
@@ -15170,7 +16206,8 @@ function setBmTtsRate(newRate, refreshTarget = "modal") {
   if (bmAudioPlayer) {
     try { bmAudioPlayer.playbackRate = bmTtsRate; } catch (e) { console.debug(e); }
   }
-  if (!bmAudioPlaying) {
+  updateAudioMiniPlayerUI();
+  if (!bmAudioPlaying && !bmAudioPaused) {
     const btn = document.getElementById("ttsChapterBtn");
     if (btn) btn.innerHTML = `<span class="tab-icon">🔊</span><span>${bmTtsRate !== 1 ? "Ascolta " + bmTtsRate + "x" : "Ascolta"}</span>`;
   }
@@ -15180,7 +16217,7 @@ function setBmTtsRate(newRate, refreshTarget = "modal") {
 
 function setBmTtsAutoNext(val, refreshTarget = "modal") {
   bmTtsAutoNextPref = Boolean(val);
-  if (bmAudioPlaying && bmQueueSupportsAutoNext && !bmSelectionReadingActive) {
+  if (bmAudioPlaying && bmQueueSupportsAutoNext && bmAudioMediaMeta.kind === "chapter") {
     bmAutoNextChapter = bmTtsAutoNextPref;
   }
   safeSaveStorage("bm_tts_autonext", bmTtsAutoNextPref ? "1" : "0");
@@ -15189,7 +16226,7 @@ function setBmTtsAutoNext(val, refreshTarget = "modal") {
 }
 
 // ============================================================================
-// 4. OMNISEARCH SUI 4 PILASTRI (Perspicacia, Tutta la Scrittura, Cartine, Bibbia)
+// 4. OMNISEARCH SUI 6 PILASTRI (Appunti/Preferiti, Perspicacia, Cartine, Tutta la Scrittura, Giorno, Bibbia)
 // ============================================================================
 async function executeOmniSearch() {
   const reqId = ++omniReqId;
@@ -15197,14 +16234,48 @@ async function executeOmniSearch() {
   const rawQuery = inpEl ? inpEl.value.trim() : "";
   const resDiv = document.getElementById("searchResults");
   if (!rawQuery || !resDiv) return;
-  resDiv.innerHTML = `<div class="loader">🌐 Ricerca globale in tutta la Biblioteca per "<b>${escapeHtml(rawQuery)}</b>" in corso...</div>`;
+  recordRecentSearchQuery(rawQuery);
+  resDiv.innerHTML = `<div class="loader">🌐 Ricerca globale sui 6 Pilastri per "<b>${escapeHtml(rawQuery)}</b>" in corso...</div>`;
   await new Promise(r => setTimeout(r, 30));
   if (reqId !== omniReqId || currentViewContext.type !== "search") return;
 
   const qNorm = normalizeForSearch(rawQuery);
+  const qTokens = qNorm.split(/\s+/).filter(Boolean);
+  const matchesAll = (str) => {
+    const h = normalizeForSearch(str);
+    return qTokens.length > 0 && qTokens.every(t => h.includes(t));
+  };
   let html = "";
 
-  // 1. PERSPICACIA
+  // 1. APPUNTI STUDIO & PREFERITI PERSONALI (6° Pilastro)
+  const noteHits = (state.notes || []).filter(n =>
+    matchesAll(`${n.ref || ""} ${n.text || ""} ${n.verseText || ""} ${(n.tags || []).join(" ")}`)
+  );
+  const bmHits = (state.bookmarks || []).filter(b =>
+    matchesAll(`${b.ref || ""} ${b.text || ""}`)
+  );
+  if (noteHits.length > 0 || bmHits.length > 0) {
+    html += `<div class="section-title"><span>📝 I tuoi Appunti & Preferiti (${noteHits.length + bmHits.length})</span></div>`;
+    html += noteHits.slice(0, 4).map(n => {
+      const sn = (n.text || "").slice(0, 140).replace(/\s+/g, " ");
+      return `
+      <div class="result-card" onclick="openStudioNoteEntry(${Number(n.id)})">
+        <div class="result-ref">📝 ${escapeHtml(n.ref)} <small style="color:var(--text-muted); font-weight:normal;">(${isFreeStudioNote(n) ? "Nota libera" : "Appunto"})</small></div>
+        <div class="bm-justify-text" style="font-size:13px; color:var(--text-muted);">${highlightSnippetSafe(sn, rawQuery)}${(n.text || "").length > 140 ? "…" : ""}</div>
+      </div>`;
+    }).join("");
+    html += bmHits.slice(0, 3).map(b => {
+      const vArg = b.verseSpec ? `'${escapeJsStr(b.verseSpec)}'` : `${Number(b.verse) || 0}`;
+      const sn = (b.text || "").slice(0, 140).replace(/\s+/g, " ");
+      return `
+      <div class="result-card" onclick="openRef(${Number(b.bookId) || 1}, ${Number(b.chapter) || 1}, ${vArg})">
+        <div class="result-ref">🔖 ${escapeHtml(b.ref)} <small style="color:var(--text-muted); font-weight:normal;">(Preferito)</small></div>
+        <div class="bm-justify-text" style="font-size:13px; color:var(--text-muted);">${highlightSnippetSafe(sn, rawQuery)}${(b.text || "").length > 140 ? "…" : ""}</div>
+      </div>`;
+    }).join("");
+  }
+
+  // 2. PERSPICACIA
   const insData = await getInsightData();
   if (reqId !== omniReqId || currentViewContext.type !== "search") return;
   if (insData && Array.isArray(insData.entries)) {
@@ -15222,8 +16293,8 @@ async function executeOmniSearch() {
     if (topIns.length) {
       html += topIns.map(h => `
         <div class="result-card" onclick="insightSearchQuery='${escapeJsStr(rawQuery)}'; showInsightView(${h.idx})">
-          <div class="result-ref">📘 ${escapeHtml(h.entry.title)}</div>
-          <div class="bm-justify-text" style="font-size:13px; color:var(--text-muted);">${escapeHtml(h.entry.body.slice(0, 130).replace(/\s+/g, " "))}…</div>
+          <div class="result-ref">📘 ${highlightSnippetSafe(h.entry.title, rawQuery)}</div>
+          <div class="bm-justify-text" style="font-size:13px; color:var(--text-muted);">${highlightSnippetSafe(h.entry.body.slice(0, 140).replace(/\s+/g, " "), rawQuery)}…</div>
         </div>
       `).join("");
     } else {
@@ -15231,7 +16302,7 @@ async function executeOmniSearch() {
     }
   }
 
-  // 2. CARTINE BIBLICHE HD
+  // 3. CARTINE BIBLICHE HD
   const mapsMeta = await bpGetMeta();
   if (reqId !== omniReqId || currentViewContext.type !== "search") return;
   if (mapsMeta) {
@@ -15244,7 +16315,7 @@ async function executeOmniSearch() {
     }
   }
 
-  // 3. TUTTA LA SCRITTURA
+  // 4. TUTTA LA SCRITTURA
   const siData = await getSiData();
   if (reqId !== omniReqId || currentViewContext.type !== "search") return;
   if (siData && Array.isArray(siData.books)) {
@@ -15255,7 +16326,7 @@ async function executeOmniSearch() {
         const hay = normalizeForSearch(`${bTitle} ${c.title} ${c.content}`);
         const pos = hay.indexOf(qNorm);
         if (pos !== -1) {
-          siHits.push({ kind: "b", i: bi, ci, title: `${bTitle} — ${c.title}`, snippet: siSnippet(c.content, 130) });
+          siHits.push({ kind: "b", i: bi, ci, title: `${bTitle} — ${c.title}`, snippet: siSnippet(c.content, 140) });
         }
       });
     });
@@ -15263,7 +16334,7 @@ async function executeOmniSearch() {
     extras.forEach((x, xi) => {
       const c = x.chapters[0];
       if (c && normalizeForSearch(`${x.title} ${c.content}`).includes(qNorm)) {
-        siHits.push({ kind: "x", i: xi, ci: 0, title: x.title, snippet: siSnippet(c.content, 130) });
+        siHits.push({ kind: "x", i: xi, ci: 0, title: x.title, snippet: siSnippet(c.content, 140) });
       }
     });
     html += `<div class="section-title"><span>📘 Tutta la Scrittura (${siHits.length} sezioni)</span></div>`;
@@ -15272,8 +16343,8 @@ async function executeOmniSearch() {
         const openCi = (h.kind === "b" && siViewMode === "full") ? "'all'" : h.ci;
         return `
         <div class="result-card" onclick="siSearchQuery='${escapeJsStr(rawQuery)}'; showSiReader('${h.kind}', ${h.i}, ${openCi}, false, ${h.ci})">
-          <div class="result-ref">📘 ${escapeHtml(h.title)}</div>
-          <div class="bm-justify-text" style="font-size:13px; color:var(--text-muted);">${escapeHtml(h.snippet)}</div>
+          <div class="result-ref">📘 ${highlightSnippetSafe(h.title, rawQuery)}</div>
+          <div class="bm-justify-text" style="font-size:13px; color:var(--text-muted);">${highlightSnippetSafe(h.snippet, rawQuery)}</div>
         </div>`;
       }).join("");
     } else {
@@ -15281,7 +16352,7 @@ async function executeOmniSearch() {
     }
   }
 
-  // 4. SCRITTURA DEL GIORNO (365 commenti giornalieri)
+  // 5. SCRITTURA DEL GIORNO (365 commenti giornalieri)
   const dailyData = await getOfflineBible("bm:daily_text");
   if (reqId !== omniReqId || currentViewContext.type !== "search") return;
   if (dailyData && dailyData.days) {
@@ -15301,7 +16372,7 @@ async function executeOmniSearch() {
         return `
         <div class="result-card" onclick="showDailyTextView(${off})">
           <div class="result-ref">☀️ ${escapeHtml(h.e.dateTitle || `${h.dd}/${h.mm}`)}</div>
-          <div class="bm-justify-text" style="font-size:13px; color:var(--text-muted);">${escapeHtml((h.e.theme || "").slice(0, 140))}</div>
+          <div class="bm-justify-text" style="font-size:13px; color:var(--text-muted);">${highlightSnippetSafe((h.e.theme || "").slice(0, 150), rawQuery)}</div>
         </div>`;
       }).join("");
     } else {
@@ -15309,7 +16380,7 @@ async function executeOmniSearch() {
     }
   }
 
-  // 5. RIMANDO IMMEDIATO CONCORDANZA BIBLICA
+  // 6. RIMANDO IMMEDIATO CONCORDANZA BIBLICA
   html += `
     <div class="section-title"><span>📖 Concordanza Biblica</span></div>
     <button class="search-btn" style="width:100%; padding:12px;" onclick="executeSearch(1)">
@@ -16222,9 +17293,7 @@ function openInsightFromXRay(word) {
   });
 }
 
-async function openStrongCodeFromXRay(codeStr, fallbackWord) {
-  bmHaptic(14);
-  prepareXRayJumpContext("search");
+async function searchStrongCodeInConcordance(codeStr, fallbackWord) {
   const cleanCode = String(codeStr || "").trim().toUpperCase();
   closeProModal();
   showSearchView();
@@ -16261,6 +17330,12 @@ async function openStrongCodeFromXRay(codeStr, fallbackWord) {
   Promise.resolve(executeSearch(1)).finally(() => {
     if (bmXRayReturnState) injectXRayReturnBanner();
   });
+}
+
+async function openStrongCodeFromXRay(codeStr, fallbackWord) {
+  bmHaptic(14);
+  prepareXRayJumpContext("search");
+  return searchStrongCodeInConcordance(codeStr, fallbackWord);
 }
 
 async function stepXRayVerse(delta) {
@@ -16316,7 +17391,7 @@ function toggleXRayRootsLens() {
   openVerseXRayModal(curV);
 }
 
-function showXRayRootPopup(dictKey, contextBookId = null) {
+function showXRayRootPopup(dictKey, contextBookId = null, fromXRay = true) {
   bmChimeHaptic();
   const d = PRO_STRONG_DICT[dictKey];
   if (!d) return;
@@ -16324,9 +17399,20 @@ function showXRayRootPopup(dictKey, contextBookId = null) {
   const body = document.getElementById("myReadModalBody");
   if (!modal || !body) return;
   // Le voci possono avere più codici (es. "H7225 / G746"): si usa quello del testamento del versetto o capitolo aperto
-  const refBookId = contextBookId !== null ? Number(contextBookId) : (lastXRayData ? lastXRayData.bookId : state.bookId);
+  const refBookId = contextBookId !== null ? Number(contextBookId) : (fromXRay && lastXRayData ? lastXRayData.bookId : state.bookId);
   const codes = String(d.code).toUpperCase().match(/[HG]\d{1,4}/g) || [];
   const strongCode = codes.find(c => c[0] === (refBookId >= 40 ? "G" : "H")) || codes[0] || d.code;
+  const safeDictJs = escapeJsStr(dictKey);
+  const safeStrongJs = escapeJsStr(strongCode);
+  const insAction = fromXRay
+    ? `openInsightFromXRay('${safeDictJs}')`
+    : `bmXRayReturnState = null; searchWordInInsight('${safeDictJs}')`;
+  const concAction = fromXRay
+    ? `openConcordanceFromXRay('${safeDictJs}')`
+    : `bmXRayReturnState = null; searchWordInConcordance('${safeDictJs}')`;
+  const strongAction = fromXRay
+    ? `openStrongCodeFromXRay('${safeStrongJs}', '${safeDictJs}')`
+    : `bmXRayReturnState = null; searchStrongCodeInConcordance('${safeStrongJs}', '${safeDictJs}')`;
   body.innerHTML = `
     <div style="text-align:center; padding:4px 0 12px 0;">
       <div style="font-size:28px; margin-bottom:4px;">🏛️📜</div>
@@ -16340,9 +17426,9 @@ function showXRayRootPopup(dictKey, contextBookId = null) {
       </div>
     </div>
     <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
-      <button type="button" class="myread-action-btn" style="flex:1 1 auto; width:auto; background:#1565c0; font-size:12px; padding:9px 6px; white-space:nowrap;" onclick="document.getElementById('myReadModal').style.display='none'; openInsightFromXRay('${escapeJsStr(dictKey)}');">📚 Perspicacia</button>
-      <button type="button" class="myread-action-btn" style="flex:1 1 auto; width:auto; background:#0d47a1; font-size:12px; padding:9px 6px; white-space:nowrap;" onclick="document.getElementById('myReadModal').style.display='none'; openConcordanceFromXRay('${escapeJsStr(dictKey)}');">🔍 Concordanza</button>
-      <button type="button" class="myread-action-btn" style="flex:1 1 auto; width:auto; background:#b45309; font-size:12px; padding:9px 6px; white-space:nowrap;" onclick="document.getElementById('myReadModal').style.display='none'; openStrongCodeFromXRay('${escapeJsStr(strongCode)}', '${escapeJsStr(dictKey)}');">🏺 Strong</button>
+      <button type="button" class="myread-action-btn" style="flex:1 1 auto; width:auto; background:#1565c0; font-size:12px; padding:9px 6px; white-space:nowrap;" onclick="document.getElementById('myReadModal').style.display='none'; ${insAction};">📚 Perspicacia</button>
+      <button type="button" class="myread-action-btn" style="flex:1 1 auto; width:auto; background:#0d47a1; font-size:12px; padding:9px 6px; white-space:nowrap;" onclick="document.getElementById('myReadModal').style.display='none'; ${concAction};">🔍 Concordanza</button>
+      <button type="button" class="myread-action-btn" style="flex:1 1 auto; width:auto; background:#b45309; font-size:12px; padding:9px 6px; white-space:nowrap;" onclick="document.getElementById('myReadModal').style.display='none'; ${strongAction};">🏺 Strong</button>
     </div>
     <button type="button" class="myread-action-btn" style="background:var(--bg-main);" onclick="document.getElementById('myReadModal').style.display='none'">Chiudi</button>
   `;
@@ -16379,12 +17465,12 @@ function decorateXRayInterlinearRoots(htmlText) {
 function formatXRayDiffWords(baseText, targetText, isPrimary = false) {
   let outHtml = escapeHtml(targetText);
   if (!isPrimary && bmXRayDiffActive && baseText && targetText && baseText !== targetText) {
-    const baseWords = new Set(
-      String(baseText).toLowerCase().replace(/[.,;:!?"'«»()\[\]—–-]/g, " ").split(/\s+/).filter(w => w.length > 2)
-    );
+    const isDiff = computeLcsDiffFlags(baseText, targetText);
+    let wIdx = 0;
     outHtml = String(targetText).split(/(\s+)/).map(tok => {
-      const cleanW = tok.toLowerCase().replace(/[.,;:!?"'«»()\[\]—–-]/g, "");
-      if (cleanW.length > 2 && !baseWords.has(cleanW)) {
+      if (!tok || /^\s+$/.test(tok)) return escapeHtml(tok);
+      const flagged = isDiff[wIdx++];
+      if (flagged) {
         return `<span class="diff-word" style="font-weight:800; color:#ffd54f; background:rgba(255,213,79,0.24); padding:0 3px; border-radius:4px;">${escapeHtml(tok)}</span>`;
       }
       return escapeHtml(tok);
@@ -16436,14 +17522,16 @@ function saveXRayDossierAsNote(btnEl) {
   if (existingIdx > -1) state.notes[existingIdx] = noteObj;
   else state.notes.unshift(noteObj);
   safeSaveStorage("bm_notes", JSON.stringify(state.notes));
+  recordStudioDataEditedNow();
   if (btnEl) btnEl.textContent = "✔ Salvato in Appunti!";
 }
 
 async function openVerseXRayModal(forcedVerseNum) {
-  const reqId = ++currentXRayReqId;
+  const sid = ++proModalSessionId;
   bmHaptic(14);
   const targetBookId = state.bookId;
   const targetChapter = state.chapter;
+  const targetTrans = state.trans1;
   const book = getBook(targetBookId);
   const vNum = (typeof forcedVerseNum === "number" && forcedVerseNum > 0)
     ? forcedVerseNum
@@ -16465,12 +17553,12 @@ async function openVerseXRayModal(forcedVerseNum) {
   body.innerHTML = `<div class="loader">🔬 Scansione poliglotta ed esegetica di <b>${escapeHtml(refStr)}</b> in corso...</div>`;
   document.getElementById("proModal").style.display = "flex";
 
-  const candidateIds = [...new Set([state.trans1, state.trans2, state.trans3, ...state.downloadedBibles])];
+  const candidateIds = [...new Set([targetTrans, state.trans2, state.trans3, ...state.downloadedBibles])];
   const storedIdbKeys = new Set(await idbGetAllKeys());
-  if (reqId !== currentXRayReqId) return;
+  if (!isProModalSessionActive(sid)) return;
   const resolvedRows = [];
   for (const tId of candidateIds) {
-    if (reqId !== currentXRayReqId) return;
+    if (!isProModalSessionActive(sid)) return;
     const bMeta = dynamicCatalog.find(b => b.id === tId) || CORE_BIBLES.find(b => b.id === tId);
     if (!bMeta) continue;
     let vTxt = "";
@@ -16478,7 +17566,7 @@ async function openVerseXRayModal(forcedVerseNum) {
     let fullOff = memoryBibleCache.has(tId) ? memoryBibleCache.get(tId) : null;
     if (!fullOff && storedIdbKeys.has(tId)) {
       fullOff = await idbGet(tId);
-      if (reqId !== currentXRayReqId) return;
+      if (!isProModalSessionActive(sid)) return;
     }
     if (fullOff && Array.isArray(fullOff.books)) {
       const bObj = fullOff.books.find(b => Number(b.nr) === Number(targetBookId));
@@ -16497,37 +17585,39 @@ async function openVerseXRayModal(forcedVerseNum) {
     }
     if (vTxt) resolvedRows.push({ id: tId, name: bMeta.name, lang: bMeta.lang || "Global", text: vTxt });
   }
-  if (reqId !== currentXRayReqId) return;
+  if (!isProModalSessionActive(sid)) return;
   const rawLoadedList = resolvedRows.filter(Boolean);
 
   const sortedVersions = sortXRayBiblesHierarchy(rawLoadedList);
-  const baseTextForDiff = (rawLoadedList.find(r => r.id === state.trans1) || sortedVersions[0] || {}).text || rawVerse;
+  const baseTextForDiff = (rawLoadedList.find(r => r.id === targetTrans) || sortedVersions[0] || {}).text || rawVerse;
   lastXRayDossier = { ref: refStr, rows: sortedVersions };
 
   const versionsHtml = sortedVersions.map(r => `
-    <div class="result-card" style="cursor:default; margin-bottom:7px; padding:10px; ${r.id === state.trans1 ? 'border-left:3.5px solid #00e5ff;' : ''}">
+    <div class="result-card" style="cursor:default; margin-bottom:7px; padding:10px; ${r.id === targetTrans ? 'border-left:3.5px solid #00e5ff;' : ''}">
       <div style="font-size:12px; font-weight:800; color:#84ffff; margin-bottom:3px; display:flex; justify-content:space-between; align-items:center;">
         <span>${escapeHtml(r.name)}</span>
-        ${r.id === state.trans1 ? '<span style="font-size:10px; background:#00e5ff; color:#041a42; padding:1px 6px; border-radius:8px; font-weight:900;">ATTIVA</span>' : ''}
+        ${r.id === targetTrans ? '<span style="font-size:10px; background:#00e5ff; color:#041a42; padding:1px 6px; border-radius:8px; font-weight:900;">ATTIVA</span>' : ''}
       </div>
-      <div style="font-size:14.5px; line-height:1.58; color:#ffffff;">${formatXRayDiffWords(baseTextForDiff, r.text, r.id === state.trans1)}</div>
+      <div style="font-size:14.5px; line-height:1.58; color:#ffffff;">${formatXRayDiffWords(baseTextForDiff, r.text, r.id === targetTrans)}</div>
     </div>
   `).join("");
 
   const stopSet = new Set(["della","delle","dello","degli","nella","nelle","nello","negli","sulla","sulle","dalla","dalle","alla","alle","questo","questa","questi","queste","quello","quella","quelli","quelle","essere","avere","tutto","tutti","tutte","altro","altri","anche","ancora","perche","quando","quindi","contro","sempre","prima","dopo","sopra","sotto","dentro","fuori","presso","verso","secondo","nostro","nostra","vostro","vostra","stesso","stessa","proprio","propria","quale","quali","quanto","molto","molti","ogni","alcuni","nessuno","mentre","invece","allora","insieme","attraverso","durante","mediante","coloro","colui","hanno","aveva","avevano","sara","saranno","fosse","sono","erano","stato","stata","disse","dice","detto","fece","fatto"]);
   const words = [...new Set(baseTextForDiff.replace(/[^a-zA-ZÀ-ÿ\s]/g, " ").split(/\s+/).filter(w => w.length >= 4 && !stopSet.has(w.toLowerCase())))].slice(0, 10);
 
-  const refs = buildUniversalRefsForVerse(targetBookId, targetChapter, vNum, baseTextForDiff);
-  const xrayFnMap = await fetchChapterFootnotes(state.trans1, targetBookId, targetChapter);
-  if (reqId !== currentXRayReqId) return;
+  const [xrayFnMap, xrayInsRefs] = await Promise.all([
+    fetchChapterFootnotes(targetTrans, targetBookId, targetChapter),
+    findInsightRefsForVerse(targetBookId, targetChapter, vNum, 10)
+  ]);
+  if (!isProModalSessionActive(sid)) return;
   const xrayFns = xrayFnMap[String(vNum)] || xrayFnMap[vNum] || [];
+  const { refs, sourceLabel: xrayRefsLabel } = await buildDynamicCrossRefsForVerse(targetBookId, targetChapter, vNum, baseTextForDiff, xrayFns, xrayInsRefs);
+  if (!isProModalSessionActive(sid)) return;
   const xrayFnHtml = xrayFns.length ? `
     <div class="section-title"><span>📌 Note in Calce Ufficiali (${xrayFns.length})</span></div>
     <div style="margin-bottom:12px;">
       ${xrayFns.map((t, i) => `<div style="background:var(--bg-main); border-left:3px solid #ffd54f; border-radius:7px; padding:7px 10px; margin-bottom:6px; font-size:13px; line-height:1.5;"><b style="color:#ffd54f;">*${xrayFns.length > 1 ? i + 1 : ""}</b> ${formatNoteLinks(t, targetBookId)}</div>`).join("")}
     </div>` : "";
-  const xrayInsRefs = await findInsightRefsForVerse(targetBookId, targetChapter, vNum, 10);
-  if (reqId !== currentXRayReqId) return;
   const xrayInsHtml = xrayInsRefs.length ? `
     <div class="section-title"><span>📚 Citato in Perspicacia (${xrayInsRefs.length} voci)</span></div>
     <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
@@ -16536,7 +17626,7 @@ async function openVerseXRayModal(forcedVerseNum) {
 
   let placesHtml = "";
   const mapMeta = await bpGetMeta();
-  if (reqId !== currentXRayReqId) return;
+  if (!isProModalSessionActive(sid)) return;
   if (mapMeta && baseTextForDiff) {
     const foundPlaces = bpScanText(baseTextForDiff);
     if (foundPlaces.length > 0) {
@@ -16587,7 +17677,7 @@ async function openVerseXRayModal(forcedVerseNum) {
     </div>
 
     ${xrayFnHtml}
-    <div class="section-title"><span>${PRO_CROSS_REFS[`${targetBookId}_${targetChapter}_${vNum}`]?.length ? "🔗 Passi Paralleli Esegetici" : "🔗 Suggerimenti Tematici Automatici"}</span></div>
+    <div class="section-title"><span>🔗 ${escapeHtml(xrayRefsLabel)}</span></div>
     <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
       ${refs.map(r => `<span class="tag-badge" style="padding:6px 10px; font-size:13px;" onclick="closeProModal(); jumpToRefString('${escapeJsStr(r)}')">📖 ${escapeHtml(r)}</span>`).join("")}
     </div>
@@ -16605,6 +17695,8 @@ let bmLastActivityAt = Date.now();
 const markBmUserActive = () => { bmLastActivityAt = Date.now(); };
 ["pointerdown", "keydown", "touchstart"].forEach(ev => document.addEventListener(ev, markBmUserActive, { passive: true }));
 document.getElementById("mainContainer")?.addEventListener("scroll", markBmUserActive, { passive: true });
+document.getElementById("mainContainer")?.addEventListener("scroll", scheduleBmReadProgressUpdate, { passive: true });
+window.addEventListener("resize", scheduleBmReadProgressUpdate, { passive: true });
 
 function recordActiveStudyDay() {
   const today = getLocalIsoDateStr();
@@ -16665,6 +17757,7 @@ function openStudyAnalyticsModal() {
     }
   });
   (state.notes || []).forEach(n => {
+    if (isFreeStudioNote(n)) return;
     const bId = Number(n.bookId);
     if (bookStats.has(bId)) {
       const s = bookStats.get(bId);
@@ -16719,6 +17812,7 @@ function openStudyAnalyticsModal() {
     </button>`;
   }).join("");
 
+  proModalSessionId++;
   document.getElementById("proModalTitle").textContent = "📊 Statistiche & Heatmap Studio PRO";
   document.getElementById("proModalBody").innerHTML = `
     <div style="background:linear-gradient(135deg, var(--primary-dark), var(--bg-main)); border:1px solid #00e5ff; border-radius:9px; padding:8px 12px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
@@ -16768,6 +17862,8 @@ function toggleBmZenMode() {
   if (transBar) transBar.style.display = bmZenModeActive ? "none" : "";
   if (quickBar) quickBar.style.display = bmZenModeActive ? "none" : "";
   if (botNav) botNav.style.display = bmZenModeActive ? "none" : "";
+  document.body.classList.toggle("bm-zen-on", bmZenModeActive);
+  scheduleBmReadProgressUpdate();
 
   let zenExitBtn = document.getElementById("bmZenExitFloatingBtn");
   if (bmZenModeActive) {
@@ -17381,10 +18477,12 @@ let bmMessianicFilterMode = "all"; // "all" | "curated" | "ntCited"
 let bmMessianicSearchQ = "";
 
 async function openMessianicCatalogModal(onlyNtCited = false) {
+  const sid = ++proModalSessionId;
   bmChimeHaptic();
   bmMessianicFilterMode = onlyNtCited ? "ntCited" : "all";
   if (!bmDynamicCatalogEnriched) {
     try { await enrichMessianicPropheciesFromOfflineDB(); } catch (e) { console.debug(e); }
+    if (sid !== proModalSessionId) return;
   }
   const curatedCnt = bmProphecyList.filter(x => x.isCurated !== false).length;
   document.getElementById("proModalTitle").textContent = `💡 Profezie Messianiche (${curatedCnt} curate · ${bmProphecyList.length} tot.)`;
@@ -17606,20 +18704,20 @@ async function evaluateMessianicBulbForCurrentView() {
 // 💎 MODULO REGALO PRO: DOSSIER ESEGETICO COMPLETO DEL CAPITOLO (100% OFFLINE)
 // Sintetizza in un unico pannello Sommario, Profezie, Luoghi HD, Strong, Note & SI
 // ============================================================================
-let chapterDossierReqId = 0;
 let lastChapterDossier = null;
 
 async function openChapterDossierModal() {
-  const reqId = ++chapterDossierReqId;
+  const sid = ++proModalSessionId;
   bmChimeHaptic();
   closeActionBar();
 
   const targetBookId = state.bookId;
   const targetChapter = state.chapter;
+  const targetTrans = state.trans1;
   const book = getBook(targetBookId);
   const titleStr = `${book.name} ${targetChapter}`;
-  const activeTransMeta = dynamicCatalog.find(b => b.id === state.trans1) || CORE_BIBLES.find(b => b.id === state.trans1);
-  const activeTransName = activeTransMeta ? activeTransMeta.name : state.trans1;
+  const activeTransMeta = dynamicCatalog.find(b => b.id === targetTrans) || CORE_BIBLES.find(b => b.id === targetTrans);
+  const activeTransName = activeTransMeta ? activeTransMeta.name : targetTrans;
 
   document.getElementById("proModalTitle").textContent = `💎 Dossier del Capitolo — ${titleStr}`;
   const body = document.getElementById("proModalBody");
@@ -17638,21 +18736,22 @@ async function openChapterDossierModal() {
   }
   if (!verses.length) {
     try {
-      const fetched = await fetchChapterData(state.trans1, targetBookId, targetChapter);
+      const fetched = await fetchChapterData(targetTrans, targetBookId, targetChapter);
       verses = (fetched || []).map(v => ({ verse: Number(v.verse), text: stripTagsToPlainText(v.text) }));
     } catch (e) { console.debug(e); }
   }
-  if (reqId !== chapterDossierReqId) return;
+  if (!isProModalSessionActive(sid)) return;
 
   // 2. Interroga in parallelo tutti i moduli offline
   const [outline, footnotesMap, mapMeta, siData] = await Promise.all([
-    fetchChapterOutline(state.trans1, targetBookId, targetChapter),
-    fetchChapterFootnotes(state.trans1, targetBookId, targetChapter),
+    fetchChapterOutline(targetTrans, targetBookId, targetChapter),
+    fetchChapterFootnotes(targetTrans, targetBookId, targetChapter),
     bpGetMeta(),
     getSiData()
   ]);
+  if (!isProModalSessionActive(sid)) return;
   await enrichMessianicPropheciesFromOfflineDB();
-  if (reqId !== chapterDossierReqId) return;
+  if (!isProModalSessionActive(sid)) return;
 
   // 3. Statistiche di lettura & studio personale nel capitolo
   const fullPlainText = verses.map(v => v.text).join(" ");
@@ -17660,7 +18759,7 @@ async function openChapterDossierModal() {
   const estMinutes = Math.max(1, Math.round(wordCount / 175));
   const hlPrefix = `${targetBookId}_${targetChapter}_`;
   const chapterHighlights = Object.keys(state.highlights || {}).filter(k => k.startsWith(hlPrefix));
-  const chapterNotes = (state.notes || []).filter(n => Number(n.bookId) === targetBookId && Number(n.chapter) === targetChapter);
+  const chapterNotes = (state.notes || []).filter(n => !isFreeStudioNote(n) && Number(n.bookId) === targetBookId && Number(n.chapter) === targetChapter);
   const chapterBookmarks = (state.bookmarks || []).filter(b => Number(b.bookId) === targetBookId && Number(b.chapter) === targetChapter);
 
   // 4. Profezie Messianiche nel capitolo
@@ -17778,7 +18877,7 @@ async function openChapterDossierModal() {
   const rootsHtml = topRoots.length ? `
     <div class="section-title"><span>🏺 Radici Strong Principali</span><span>${topRoots.length}</span></div>
     <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;">
-      ${topRoots.map(r => `<span class="tag-badge" style="background:rgba(255,213,79,0.14); color:#ffd54f; border-color:rgba(255,213,79,0.65); padding:4px 9px; font-size:12px;" onclick="showXRayRootPopup('${escapeJsStr(r.dictKey)}', ${targetBookId})" title="${escapeHtml(r.orig)}">
+      ${topRoots.map(r => `<span class="tag-badge" style="background:rgba(255,213,79,0.14); color:#ffd54f; border-color:rgba(255,213,79,0.65); padding:4px 9px; font-size:12px;" onclick="showXRayRootPopup('${escapeJsStr(r.dictKey)}', ${targetBookId}, false)" title="${escapeHtml(r.orig)}">
         ${escapeHtml(r.dictKey)} · ${escapeHtml(r.code)}${r.count > 1 ? ` ×${r.count}` : ""}
       </span>`).join("")}
     </div>` : "";
@@ -17890,6 +18989,7 @@ function saveChapterDossierAsNote(btnEl) {
   if (existingIdx > -1) state.notes[existingIdx] = noteObj;
   else state.notes.unshift(noteObj);
   safeSaveStorage("bm_notes", JSON.stringify(state.notes));
+  recordStudioDataEditedNow();
   if (btnEl) btnEl.textContent = "✔ Salvato in Appunti!";
 }
 // ============================================================================
@@ -17916,11 +19016,52 @@ try {
 } catch (e) { console.debug(e); }
 try { initBmServiceWorker(); } catch (e) { console.debug(e); }
 populateSelects(false).catch(() => {});
-showDailyTextView(0, true)
-  .catch(() => {})
-  .finally(() => {
+(async function bootInitialRoute() {
+  let launchMode = "";
+  try {
+    const params = new URLSearchParams(window.location.search || "");
+    launchMode = (params.get("launch") || "").toLowerCase().trim();
+    if (launchMode && window.history && typeof window.history.replaceState === "function") {
+      params.delete("launch");
+      const cleanQs = params.toString();
+      const cleanUrl = window.location.pathname + (cleanQs ? "?" + cleanQs : "") + (window.location.hash || "");
+      window.history.replaceState(window.history.state, "", cleanUrl);
+    }
+  } catch (e) { console.debug(e); }
+
+  if (launchMode) {
+    splashSkipRequested = true;
+  }
+  try {
+    if (launchMode === "myread") {
+      if (hasSavedPersonalReading()) {
+        const pers = getPersonalReadingState();
+        state.bookId = pers.bookId;
+        state.chapter = pers.chapter;
+        await loadChapterView();
+        const savedScroll = Number(safeGetStorage("bm_pers_scroll")) || 0;
+        const mainEl = document.getElementById("mainContainer");
+        if (mainEl && savedScroll > 20) mainEl.scrollTop = savedScroll;
+      } else {
+        await showDailyTextView(0, true);
+        openMyReading();
+      }
+    } else if (launchMode === "search") {
+      showSearchView(true);
+    } else if (launchMode === "notes") {
+      showNotesView(true);
+    } else {
+      await showDailyTextView(0, true);
+    }
+  } catch (e) {
+    console.debug(e);
+  } finally {
     dismissSplashScreen();
-  });
+    if (launchMode === "search") {
+      setTimeout(() => document.getElementById("searchInput")?.focus(), 140);
+    }
+  }
+})();
 </script>
 </body>
 </html>

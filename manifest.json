@@ -40,5 +40,59 @@
       "type": "image/png",
       "purpose": "maskable"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Scrittura del Giorno",
+      "short_name": "Giorno",
+      "description": "Apri subito la Scrittura del Giorno offline",
+      "url": "./?launch=daily",
+      "icons": [
+        {
+          "src": "./icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Mia Lettura",
+      "short_name": "Mia Lettura",
+      "description": "Riprendi dal tuo segnalibro di lettura personale",
+      "url": "./?launch=myread",
+      "icons": [
+        {
+          "src": "./icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Cerca & Salto Rapido",
+      "short_name": "Cerca",
+      "description": "Cerca nella Concordanza, 6 Pilastri o salta a un passo",
+      "url": "./?launch=search",
+      "icons": [
+        {
+          "src": "./icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Appunti Studio",
+      "short_name": "Appunti",
+      "description": "Apri i tuoi appunti di studio, tag e dossier",
+      "url": "./?launch=notes",
+      "icons": [
+        {
+          "src": "./icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
   ]
 }
