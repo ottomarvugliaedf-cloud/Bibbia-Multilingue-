@@ -1540,7 +1540,7 @@ body.oled-mode .pub-ref-badge {
       box-shadow: 0 0 20px var(--btn-glow, rgba(0, 229, 255, 0.85)), inset 0 0 14px rgba(2, 11, 28, 0.85) !important;
       transform: scale(0.95) !important;
     }
-    /* Fase 2 Modale Uscita: Manina animata con dito indice a sinistra, pollice raccolto, polsino e manica */
+    /* Fase 2 Modale Uscita: Manina Anatomica Realistica & Rotolo Biblico Antico 3D (120Hz Compositor-Only) */
     #bmExitModal.bm-exit-step2-active,
     #bmExitModal.bm-exit-step2-active .modal-card {
       touch-action: none;
@@ -1557,11 +1557,13 @@ body.oled-mode .pub-ref-badge {
     .bm-exit-swipe-stage {
       position: relative;
       width: 100%;
-      height: 118px;
+      height: 126px;
       border-radius: 16px;
-      background: radial-gradient(circle at 78% 50%, rgba(21, 101, 192, 0.42) 0%, rgba(6, 35, 86, 0.94) 55%, rgba(4, 20, 56, 0.98) 100%);
+      background:
+        radial-gradient(ellipse 64% 48% at 78% 44%, rgba(41, 182, 246, 0.24) 0%, transparent 70%),
+        linear-gradient(180deg, rgba(14, 62, 138, 0.92) 0%, rgba(6, 33, 84, 0.96) 68%, rgba(3, 16, 46, 0.99) 100%);
       border: 1.5px solid rgba(79, 195, 247, 0.58);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 8px 22px rgba(0, 0, 0, 0.48), 0 0 18px rgba(0, 229, 255, 0.18);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24), inset 0 -18px 24px rgba(1, 8, 24, 0.52), 0 8px 22px rgba(0, 0, 0, 0.48), 0 0 18px rgba(0, 229, 255, 0.18);
       overflow: hidden;
       cursor: grab;
       padding: 0;
@@ -1571,6 +1573,13 @@ body.oled-mode .pub-ref-badge {
       -webkit-user-select: none;
       transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
+    .bm-exit-swipe-stage::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(118deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 34%, transparent 52%);
+      pointer-events: none;
+    }
     .bm-exit-swipe-stage.dragging {
       cursor: grabbing;
     }
@@ -1578,7 +1587,7 @@ body.oled-mode .pub-ref-badge {
     .bm-exit-swipe-stage.dragging,
     .bm-exit-swipe-stage.swiping {
       border-color: #00e5ff;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 24px rgba(0, 229, 255, 0.55);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -18px 24px rgba(1, 8, 24, 0.45), 0 0 24px rgba(0, 229, 255, 0.55);
     }
     .bm-swipe-edge-bar {
       position: absolute;
@@ -1587,24 +1596,25 @@ body.oled-mode .pub-ref-badge {
       bottom: 16px;
       width: 4px;
       border-radius: 4px 0 0 4px;
-      background: linear-gradient(180deg, rgba(0, 229, 255, 0.25) 0%, #00e5ff 50%, rgba(0, 229, 255, 0.25) 100%);
-      box-shadow: 0 0 12px rgba(0, 229, 255, 0.85);
+      background: linear-gradient(180deg, rgba(0, 229, 255, 0.22) 0%, #84ffff 48%, #00e5ff 64%, rgba(0, 229, 255, 0.22) 100%);
+      box-shadow: 0 0 12px rgba(0, 229, 255, 0.88);
       pointer-events: none;
     }
     .bm-swipe-chevrons {
       position: absolute;
-      left: 22px;
+      left: 18px;
       top: 50%;
       transform: translateY(-50%);
       display: flex;
-      gap: 4px;
+      gap: 3px;
       pointer-events: none;
     }
     .bm-swipe-chevrons span {
-      font-size: 26px;
+      font-size: 27px;
       font-weight: 900;
       line-height: 1;
       color: #4fc3f7;
+      text-shadow: 0 0 10px rgba(0, 229, 255, 0.45);
       opacity: 0.2;
       animation: bmExitChevronWave 2.4s ease-in-out infinite;
     }
@@ -1613,13 +1623,13 @@ body.oled-mode .pub-ref-badge {
     .bm-swipe-chevrons span:nth-child(1) { animation-delay: 0.28s; }
     .bm-swipe-trail {
       position: absolute;
-      right: 112px;
-      top: 42px;
-      height: 16px;
-      width: 58px;
+      right: 126px;
+      top: 43px;
+      height: 14px;
+      width: 62px;
       border-radius: 999px;
-      background: linear-gradient(270deg, rgba(0, 229, 255, 0.04) 0%, rgba(0, 229, 255, 0.46) 54%, rgba(180, 248, 255, 0.9) 100%);
-      filter: blur(4px);
+      background: linear-gradient(270deg, rgba(0, 229, 255, 0.03) 0%, rgba(0, 229, 255, 0.46) 54%, rgba(208, 252, 255, 0.94) 100%);
+      filter: blur(3.5px);
       transform-origin: right center;
       transform: scaleX(0);
       opacity: 0;
@@ -1628,10 +1638,10 @@ body.oled-mode .pub-ref-badge {
     }
     .bm-exit-hand-wrap {
       position: absolute;
-      right: 12px;
+      right: 6px;
       top: 50%;
-      width: 118px;
-      height: 76px;
+      width: 138px;
+      height: 78px;
       transform: translate3d(0, -50%, 0);
       pointer-events: none;
       will-change: transform;
@@ -1641,17 +1651,17 @@ body.oled-mode .pub-ref-badge {
       width: 100%;
       height: 100%;
       display: block;
-      filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.52));
+      filter: drop-shadow(0 9px 12px rgba(0, 0, 0, 0.62));
     }
     .bm-swipe-ripple {
       position: absolute;
-      left: 6px;
-      top: 16px;
-      width: 24px;
-      height: 24px;
+      left: 1px;
+      top: 13px;
+      width: 26px;
+      height: 26px;
       border-radius: 50%;
       border: 2px solid #84ffff;
-      background: radial-gradient(circle, rgba(132, 255, 255, 0.55) 0%, rgba(0, 229, 255, 0) 72%);
+      background: radial-gradient(circle, rgba(164, 255, 255, 0.6) 0%, rgba(0, 229, 255, 0) 72%);
       opacity: 0;
       transform: scale3d(0.45, 0.45, 1);
       pointer-events: none;
@@ -1680,7 +1690,7 @@ body.oled-mode .pub-ref-badge {
       animation: bmExitHandActive 0.78s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     }
     .bm-exit-swipe-stage.swiping .bm-swipe-trail {
-      width: var(--bm-trail-width, min(156px, calc(100% - 122px)));
+      width: var(--bm-trail-width, min(156px, calc(100% - 134px)));
       animation: bmExitTrailActive 0.78s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     }
     .bm-exit-swipe-stage.swiping .bm-swipe-ripple {
@@ -1732,11 +1742,11 @@ body.oled-mode .pub-ref-badge {
       38% { opacity: 0.86; transform: scale3d(1.72, 1.72, 1); }
       72%, 100% { opacity: 0; transform: scale3d(2.3, 2.3, 1); }
     }
-    /* Modalità Rotolo Biblico Antico 3D (Senza card d'appoggio, 120Hz Compositor-Only con Umbilicus & Cornua) */
+    /* Modalità Rotolo Biblico Antico 3D (Legno Tornito, Ghiera in Bronzo, Pergamena di Pelle con Fibra Organica — 120Hz) */
     #bmExitModal.bm-exit-scroll-mode {
-      background: radial-gradient(circle at 50% 44%, rgba(5, 18, 44, 0.56) 0%, rgba(1, 6, 18, 0.84) 100%);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
+      background: radial-gradient(circle at 50% 42%, rgba(10, 26, 56, 0.62) 0%, rgba(2, 7, 20, 0.88) 100%);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
     }
     #bmExitModal.bm-exit-scroll-mode #bmExitCard {
       display: none !important;
@@ -1786,9 +1796,9 @@ body.oled-mode .pub-ref-badge {
       background: rgba(13, 71, 161, 0.9);
     }
     .bm-biblical-scroll {
-      --bm-parch-h: clamp(188px, 34dvh, 252px);
-      --bm-roll-base: clamp(44px, 12vw, 56px);
-      --bm-sheet-max: 180px;
+      --bm-parch-h: clamp(192px, 35dvh, 256px);
+      --bm-roll-base: clamp(46px, 12.4vw, 58px);
+      --bm-sheet-max: 184px;
       --bm-sheet-clip: 0px;
       --bm-roll-tx-l: 0px;
       --bm-roll-tx-r: 0px;
@@ -1803,14 +1813,14 @@ body.oled-mode .pub-ref-badge {
       touch-action: none;
       user-select: none;
       -webkit-user-select: none;
-      transform: perspective(1000px) rotateX(4deg);
-      filter: drop-shadow(0 24px 28px rgba(0, 0, 0, 0.82));
+      transform: perspective(1100px) rotateX(4.5deg);
+      filter: drop-shadow(0 28px 34px rgba(0, 0, 0, 0.86)) drop-shadow(0 6px 12px rgba(24, 12, 4, 0.55));
       transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
       will-change: transform;
     }
     .bm-biblical-scroll.dragging {
       cursor: grabbing;
-      transform: perspective(1000px) rotateX(2deg) scale(1.015);
+      transform: perspective(1100px) rotateX(2deg) scale(1.018);
     }
     .bm-scroll-roller {
       position: relative;
@@ -1828,12 +1838,12 @@ body.oled-mode .pub-ref-badge {
     .bm-scroll-roller.right {
       transform: translate3d(var(--bm-roll-tx-r), 0, 0);
     }
-    /* Ombra curva proiettata dal cilindro sulla pergamena: viaggia 1:1 col rullo senza reflow */
+    /* Ombra profonda e realistica proiettata dai rulli sulla pergamena (1:1 con il movimento) */
     .bm-scroll-roller::after {
       content: "";
       position: absolute;
       top: 50%;
-      width: 22px;
+      width: 28px;
       height: calc(var(--bm-parch-h) - 8px);
       transform: translate3d(0, -50%, 0);
       pointer-events: none;
@@ -1842,28 +1852,28 @@ body.oled-mode .pub-ref-badge {
     }
     .bm-scroll-roller.left::after {
       left: calc(100% - 1px);
-      background: linear-gradient(90deg, rgba(42, 22, 6, 0.62) 0%, rgba(72, 44, 16, 0.24) 48%, transparent 100%);
+      background: linear-gradient(90deg, rgba(28, 13, 3, 0.74) 0%, rgba(56, 30, 10, 0.42) 34%, rgba(92, 56, 22, 0.14) 68%, transparent 100%);
     }
     .bm-scroll-roller.right::after {
       right: calc(100% - 1px);
-      background: linear-gradient(270deg, rgba(42, 22, 6, 0.62) 0%, rgba(72, 44, 16, 0.24) 48%, transparent 100%);
+      background: linear-gradient(270deg, rgba(26, 12, 3, 0.78) 0%, rgba(54, 28, 10, 0.44) 36%, rgba(88, 52, 20, 0.14) 70%, transparent 100%);
     }
-    /* Cornua tornite + disco + Umbilicus ligneo sporgente che entra nel cuore del cilindro di pergamena */
+    /* Cornua tornite in legno d'ulivo/noce + ghiera in bronzo + disco + Umbilicus con spirale multi-strato */
     .bm-scroll-finial {
-      width: calc(var(--bm-roll-base) + 8px);
-      aspect-ratio: 88 / 108;
+      width: calc(var(--bm-roll-base) + 10px);
+      aspect-ratio: 88 / 112;
       height: auto;
-      max-height: 82px;
+      max-height: 86px;
       display: block;
       flex-shrink: 0;
       pointer-events: none;
     }
     .bm-scroll-finial.top {
-      margin-bottom: -6px;
+      margin-bottom: -8px;
       z-index: 3;
     }
     .bm-scroll-finial.bottom {
-      margin-top: -6px;
+      margin-top: -8px;
       transform: scaleY(-1);
       z-index: 3;
     }
@@ -1871,85 +1881,100 @@ body.oled-mode .pub-ref-badge {
       position: relative;
       width: 100%;
       height: var(--bm-parch-h);
-      border-radius: 7px / 5px;
+      border-radius: 9px / 6px;
       overflow: hidden;
       z-index: 2;
       transform: scaleX(var(--bm-cyl-scale));
       will-change: transform;
       box-shadow:
-        inset 0 7px 11px rgba(48, 28, 10, 0.5),
-        inset 0 -7px 11px rgba(40, 22, 8, 0.56);
+        inset 0 9px 13px rgba(34, 18, 6, 0.56),
+        inset 0 -9px 13px rgba(28, 14, 4, 0.64);
     }
     .bm-scroll-roller.left .bm-scroll-cylinder {
       transform-origin: center center;
-      background:
-        radial-gradient(ellipse 68% 36% at 32% 24%, rgba(164, 126, 74, 0.22) 0%, transparent 72%),
-        radial-gradient(ellipse 60% 42% at 62% 76%, rgba(132, 96, 52, 0.2) 0%, transparent 74%),
+      background-image:
+        repeating-linear-gradient(180deg, transparent 0px, transparent 13px, rgba(96, 62, 24, 0.08) 13.5px, transparent 14px),
+        radial-gradient(ellipse 72% 34% at 28% 20%, rgba(146, 102, 48, 0.26) 0%, transparent 72%),
+        radial-gradient(ellipse 66% 42% at 64% 78%, rgba(118, 78, 36, 0.24) 0%, transparent 74%),
+        radial-gradient(ellipse 46% 30% at 48% 48%, rgba(255, 250, 236, 0.34) 0%, transparent 75%),
         linear-gradient(
           90deg,
-          #8b6d45 0%,
-          #caa977 14%,
-          #ebdcba 36%,
-          #f8eed6 54%,
-          #e3cfa8 78%,
-          #b89564 93%,
-          #7b5b34 100%
+          #5e4223 0%,
+          #9f7c4c 9%,
+          #d7bc8e 22%,
+          #f5e9ce 40%,
+          #fdf6e6 52%,
+          #e8d5af 68%,
+          #be9a68 85%,
+          #7f5c34 95%,
+          #472d14 100%
         );
       box-shadow:
-        inset 0 7px 11px rgba(48, 28, 10, 0.5),
-        inset 0 -7px 11px rgba(40, 22, 8, 0.56),
-        4px 0 12px rgba(24, 14, 4, 0.44);
+        inset 0 9px 13px rgba(34, 18, 6, 0.56),
+        inset 0 -9px 13px rgba(28, 14, 4, 0.64),
+        inset 2px 0 4px rgba(255, 236, 198, 0.2),
+        5px 0 14px rgba(18, 9, 2, 0.56);
     }
     .bm-scroll-roller.right .bm-scroll-cylinder {
       transform-origin: center center;
-      background:
-        radial-gradient(ellipse 64% 38% at 68% 28%, rgba(154, 118, 68, 0.2) 0%, transparent 72%),
-        radial-gradient(ellipse 58% 40% at 38% 72%, rgba(138, 100, 56, 0.18) 0%, transparent 74%),
+      background-image:
+        repeating-linear-gradient(180deg, transparent 0px, transparent 13px, rgba(96, 62, 24, 0.08) 13.5px, transparent 14px),
+        radial-gradient(ellipse 68% 36% at 68% 24%, rgba(140, 98, 46, 0.24) 0%, transparent 72%),
+        radial-gradient(ellipse 62% 40% at 36% 74%, rgba(124, 84, 38, 0.24) 0%, transparent 74%),
+        radial-gradient(ellipse 44% 28% at 46% 46%, rgba(255, 250, 236, 0.32) 0%, transparent 75%),
         linear-gradient(
           90deg,
-          #7b5b34 0%,
-          #b89564 8%,
-          #e6d4b0 24%,
-          #f8eed6 48%,
-          #e8d5af 70%,
-          #c6a472 88%,
-          #82643d 100%
+          #472d14 0%,
+          #89653a 8%,
+          #cfb081 20%,
+          #f3e6ca 38%,
+          #fbf3e0 49%,
+          #e4cfa6 66%,
+          #b99361 84%,
+          #7a5831 94%,
+          #4d3218 100%
         );
       box-shadow:
-        inset 0 7px 11px rgba(48, 28, 10, 0.5),
-        inset 0 -7px 11px rgba(40, 22, 8, 0.56),
-        -4px 0 12px rgba(24, 14, 4, 0.44);
+        inset 0 9px 13px rgba(34, 18, 6, 0.56),
+        inset 0 -9px 13px rgba(28, 14, 4, 0.64),
+        inset -2px 0 4px rgba(255, 236, 198, 0.16),
+        -5px 0 14px rgba(18, 9, 2, 0.56);
     }
+    /* Bordi superiori e inferiori del cilindro: strati concentrici di pergamena arrotolata + occlusione del perno */
     .bm-scroll-cylinder::before,
     .bm-scroll-cylinder::after {
       content: "";
       position: absolute;
       left: 0;
       right: 0;
-      height: 8px;
+      height: 11px;
       pointer-events: none;
     }
     .bm-scroll-cylinder::before {
       top: 0;
       background:
-        radial-gradient(ellipse 26% 78% at 50% 0%, rgba(44, 22, 8, 0.72) 0%, rgba(78, 46, 18, 0.35) 55%, transparent 100%),
+        radial-gradient(ellipse 30% 82% at 50% 0%, rgba(26, 12, 4, 0.82) 0%, rgba(64, 36, 14, 0.42) 55%, transparent 100%),
         repeating-linear-gradient(
           90deg,
-          rgba(86, 56, 22, 0.34) 0px,
-          rgba(248, 238, 214, 0.18) 2px,
-          rgba(86, 56, 22, 0.34) 4px
+          rgba(70, 42, 16, 0.44) 0px,
+          rgba(250, 240, 216, 0.28) 1.5px,
+          rgba(164, 128, 76, 0.3) 2.5px,
+          rgba(70, 42, 16, 0.44) 4px
         );
+      border-bottom: 1px solid rgba(92, 58, 22, 0.22);
     }
     .bm-scroll-cylinder::after {
       bottom: 0;
       background:
-        radial-gradient(ellipse 26% 78% at 50% 100%, rgba(38, 18, 6, 0.74) 0%, rgba(72, 42, 16, 0.36) 55%, transparent 100%),
+        radial-gradient(ellipse 30% 82% at 50% 100%, rgba(22, 10, 3, 0.84) 0%, rgba(58, 32, 12, 0.44) 55%, transparent 100%),
         repeating-linear-gradient(
           90deg,
-          rgba(70, 44, 16, 0.38) 0px,
-          rgba(248, 238, 214, 0.15) 2px,
-          rgba(70, 44, 16, 0.38) 4px
+          rgba(58, 34, 12, 0.48) 0px,
+          rgba(248, 236, 210, 0.24) 1.5px,
+          rgba(148, 112, 64, 0.3) 2.5px,
+          rgba(58, 34, 12, 0.48) 4px
         );
+      border-top: 1px solid rgba(76, 46, 18, 0.22);
     }
     .bm-scroll-ghost-ink {
       position: absolute;
@@ -1957,11 +1982,32 @@ body.oled-mode .pub-ref-badge {
       font-family: "Frank Ruhl Libre", "SBL Hebrew", "Noto Serif Hebrew", "Noto Sans Hebrew", "Times New Roman", Georgia, serif;
       font-size: 6px;
       line-height: 1.45;
-      color: rgba(54, 34, 14, 0.13);
+      color: rgba(46, 26, 10, 0.14);
       direction: rtl;
       text-align: justify;
       overflow: hidden;
       pointer-events: none;
+    }
+    /* Cucitura verticale tradizionale tra le pelli (gidim) visibile sul cilindro */
+    .bm-scroll-seam {
+      position: absolute;
+      top: 10px;
+      bottom: 10px;
+      width: 2px;
+      left: 26%;
+      background: repeating-linear-gradient(
+        180deg,
+        rgba(84, 52, 22, 0.45) 0px,
+        rgba(84, 52, 22, 0.45) 3px,
+        transparent 3px,
+        transparent 6px
+      );
+      opacity: 0.55;
+      pointer-events: none;
+    }
+    .bm-scroll-roller.right .bm-scroll-seam {
+      left: auto;
+      right: 26%;
     }
     .bm-scroll-sheet-window {
       position: relative;
@@ -1970,39 +2016,62 @@ body.oled-mode .pub-ref-badge {
       overflow: hidden;
       flex-shrink: 0;
       z-index: 2;
-      margin: 0 -1px;
-      background: #efe2c4;
+      margin: 0 -2px;
+      background: #ece0c2;
       clip-path: inset(0 var(--bm-sheet-clip) 0 var(--bm-sheet-clip));
       will-change: clip-path;
       box-shadow:
-        inset 0 6px 10px rgba(72, 46, 18, 0.28),
-        inset 0 -6px 10px rgba(64, 40, 14, 0.34);
+        inset 0 8px 12px rgba(62, 36, 12, 0.34),
+        inset 0 -8px 12px rgba(52, 30, 10, 0.4);
     }
     .bm-scroll-sheet-inner {
       position: absolute;
       inset: 0;
-      padding: 11px 8px 11px 8px;
+      padding: 12px 10px 12px 10px;
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      background:
-        radial-gradient(ellipse 75% 32% at 24% 16%, rgba(168, 128, 72, 0.18) 0%, transparent 72%),
-        radial-gradient(ellipse 68% 36% at 78% 82%, rgba(146, 108, 58, 0.2) 0%, transparent 74%),
-        radial-gradient(ellipse 52% 45% at 50% 48%, rgba(255, 250, 236, 0.45) 0%, transparent 76%),
-        linear-gradient(90deg, #dfcca6 0%, #f1e4c6 14%, #f7edd4 50%, #f0e2c2 86%, #d9c39a 100%);
+      background-color: #f2e5c6;
+      background-image:
+        radial-gradient(ellipse 68% 28% at 22% 14%, rgba(160, 114, 54, 0.24) 0%, transparent 72%),
+        radial-gradient(ellipse 64% 34% at 80% 84%, rgba(140, 96, 44, 0.26) 0%, transparent 74%),
+        radial-gradient(ellipse 40% 24% at 72% 24%, rgba(176, 132, 68, 0.14) 0%, transparent 70%),
+        radial-gradient(ellipse 56% 48% at 48% 46%, rgba(255, 251, 238, 0.58) 0%, transparent 76%),
+        linear-gradient(
+          90deg,
+          #b89866 0%,
+          #dec99e 7%,
+          #f1e4c4 17%,
+          #f9f0da 46%,
+          #f5e9cc 70%,
+          #e0cba2 88%,
+          #b69462 100%
+        );
     }
+    /* Rigatura a secco dello scriba (sirtut: righe orizzontali + margini verticali incisi nella pelle) */
     .bm-scroll-sheet-inner::before {
       content: "";
       position: absolute;
       inset: 0;
-      background-image: repeating-linear-gradient(
-        180deg,
-        transparent 0px,
-        transparent 11px,
-        rgba(128, 92, 46, 0.08) 11.5px,
-        transparent 12px
-      );
+      background-image:
+        linear-gradient(90deg, transparent 7px, rgba(114, 78, 36, 0.16) 7.5px, transparent 8px, transparent calc(100% - 8px), rgba(114, 78, 36, 0.16) calc(100% - 7.5px), transparent calc(100% - 7px)),
+        repeating-linear-gradient(
+          180deg,
+          transparent 0px,
+          transparent 11px,
+          rgba(118, 82, 38, 0.1) 11.5px,
+          transparent 12px
+        );
+      pointer-events: none;
+    }
+    /* Patina d'usura ambrata lungo i bordi superiore e inferiore della pergamena */
+    .bm-scroll-sheet-inner::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(102, 66, 26, 0.26) 0%, transparent 10%, transparent 90%, rgba(88, 54, 20, 0.3) 100%);
       pointer-events: none;
     }
     .bm-scroll-hebrew {
@@ -2011,13 +2080,13 @@ body.oled-mode .pub-ref-badge {
       direction: rtl;
       unicode-bidi: isolate;
       font-family: "Frank Ruhl Libre", "SBL Hebrew", "Ezra SIL", "Noto Serif Hebrew", "Noto Sans Hebrew", "Times New Roman", Georgia, serif;
-      color: #24170c;
-      opacity: 0.9;
+      color: #261509;
+      opacity: 0.92;
       font-size: clamp(5.8px, 1.55vw, 7.6px);
       line-height: 1.44;
       font-weight: 700;
       letter-spacing: 0.15px;
-      text-shadow: 0 0.4px 0.6px rgba(48, 28, 10, 0.22);
+      text-shadow: 0 0.5px 0.8px rgba(72, 40, 14, 0.28);
       display: flex;
       flex-direction: column;
       gap: 2.2px;
@@ -2088,10 +2157,10 @@ body.oled-mode .pub-ref-badge {
         --bm-parch-h: clamp(148px, 40dvh, 184px);
       }
       .bm-scroll-finial {
-        max-height: 54px;
+        max-height: 56px;
       }
       .bm-scroll-sheet-inner {
-        padding: 6px 6px 6px 6px;
+        padding: 6px 7px 6px 7px;
       }
       .bm-scroll-hebrew {
         font-size: 5.2px;
@@ -3165,50 +3234,6 @@ body.oled-mode .pub-ref-badge {
     color: #5c3a10;
   }
 
-  /* ===== Toast Non Invasivo Aggiornamento PWA (OLED & Carta Native) ===== */
-  .bm-sw-update-toast {
-    position: fixed;
-    top: max(12px, env(safe-area-inset-top, 12px));
-    left: 50%;
-    transform: translate3d(-50%, 0, 0);
-    z-index: 1500;
-    display: none;
-    align-items: center;
-    gap: 8px;
-    max-width: min(calc(100vw - 24px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)), 420px);
-    padding: 8px 12px;
-    border-radius: 999px;
-    background: linear-gradient(135deg, #0d47a1 0%, #041a42 100%);
-    color: #ffffff;
-    border: 1.5px solid #00e5ff;
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.65), 0 0 18px rgba(0, 229, 255, 0.4);
-    font-size: 12.5px;
-    font-weight: 800;
-  }
-  .bm-sw-update-toast.visible { display: inline-flex; }
-  body.oled-mode .bm-sw-update-toast {
-    background: #000000;
-    border-color: #38bdf8;
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.95), 0 0 14px rgba(56, 189, 248, 0.4);
-  }
-  body.bm-paper-on .bm-sw-update-toast {
-    background: #ebe3d1;
-    color: #2c2216;
-    border-color: #8c5818;
-    box-shadow: 0 8px 24px rgba(40, 26, 8, 0.25);
-  }
-  body.bm-paper-on .bm-sw-update-toast .bp-chip {
-    background: #8c5818;
-    border-color: #6b4c24;
-    color: #fff8e8;
-    box-shadow: none;
-  }
-  body.bm-paper-on .bm-sw-update-toast .bm-pb-close {
-    background: #f5efe2;
-    border-color: #b59469;
-    color: #3b2a14;
-  }
-
   /* ===== Pulsante Flottante Uscita Modalità Focus (Zen) — Safe-Area Pixel ===== */
   .bm-zen-exit-btn {
     position: fixed;
@@ -3450,52 +3475,146 @@ body.oled-mode .pub-ref-badge {
           <span class="bm-swipe-trail" aria-hidden="true"></span>
           <span class="bm-exit-hand-wrap" aria-hidden="true">
             <span class="bm-swipe-ripple"></span>
-            <svg viewBox="0 0 128 76" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg viewBox="0 0 156 88" fill="none" xmlns="http://www.w3.org/2000/svg">
               <defs>
-                <linearGradient id="bmHandSkin" x1="14" y1="18" x2="86" y2="62" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stop-color="#FFE0C2"/>
-                  <stop offset="52%" stop-color="#F6BE92"/>
-                  <stop offset="100%" stop-color="#DC9568"/>
+                <!-- Pelle volumetrica realistica con sfumatura calda e ombreggiatura cilindrica -->
+                <linearGradient id="bmHandSkinMain" x1="20" y1="16" x2="88" y2="70" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#FFE6CE"/>
+                  <stop offset="28%" stop-color="#F8C8A2"/>
+                  <stop offset="68%" stop-color="#E7A57A"/>
+                  <stop offset="100%" stop-color="#C87E55"/>
                 </linearGradient>
-                <linearGradient id="bmHandShade" x1="42" y1="36" x2="84" y2="62" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stop-color="#E5A276"/>
-                  <stop offset="100%" stop-color="#C67C52"/>
+                <linearGradient id="bmHandIndexCyl" x1="38" y1="20" x2="38" y2="39" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#FFECD8"/>
+                  <stop offset="32%" stop-color="#F8C7A0"/>
+                  <stop offset="76%" stop-color="#E09A6E"/>
+                  <stop offset="100%" stop-color="#BA7049"/>
                 </linearGradient>
-                <linearGradient id="bmShirtCuff" x1="82" y1="16" x2="97" y2="60" gradientUnits="userSpaceOnUse">
+                <linearGradient id="bmHandThumbGrad" x1="58" y1="32" x2="86" y2="56" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#FFE2C8"/>
+                  <stop offset="48%" stop-color="#F2BA90"/>
+                  <stop offset="100%" stop-color="#CA7F55"/>
+                </linearGradient>
+                <linearGradient id="bmHandCurlTop" x1="54" y1="36" x2="78" y2="50" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#E8A67C"/>
+                  <stop offset="55%" stop-color="#D38B62"/>
+                  <stop offset="100%" stop-color="#A8613E"/>
+                </linearGradient>
+                <linearGradient id="bmHandCurlMid" x1="58" y1="45" x2="82" y2="60" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#DC956B"/>
+                  <stop offset="55%" stop-color="#C27850"/>
+                  <stop offset="100%" stop-color="#945032"/>
+                </linearGradient>
+                <linearGradient id="bmHandCurlLow" x1="64" y1="54" x2="86" y2="68" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#CE855C"/>
+                  <stop offset="58%" stop-color="#B06843"/>
+                  <stop offset="100%" stop-color="#834227"/>
+                </linearGradient>
+                <radialGradient id="bmKnuckleGlow" cx="50%" cy="42%" r="55%">
+                  <stop offset="0%" stop-color="#FFF4E8" stop-opacity="0.72"/>
+                  <stop offset="100%" stop-color="#F5BE95" stop-opacity="0"/>
+                </radialGradient>
+                <linearGradient id="bmNailBed" x1="12" y1="24" x2="25" y2="33" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#FFF9F3"/>
+                  <stop offset="32%" stop-color="#FFE4D6"/>
+                  <stop offset="78%" stop-color="#F4C2AE"/>
+                  <stop offset="100%" stop-color="#DFA08A"/>
+                </linearGradient>
+                <!-- Tessuto manica blu sartoriale + micro-trama -->
+                <linearGradient id="bmShirtSleeve" x1="114" y1="14" x2="114" y2="70" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#367CE6"/>
+                  <stop offset="28%" stop-color="#1E58BD"/>
+                  <stop offset="74%" stop-color="#103682"/>
+                  <stop offset="100%" stop-color="#071B4A"/>
+                </linearGradient>
+                <pattern id="bmSleeveWeave" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(14)">
+                  <line x1="0" y1="0" x2="0" y2="6" stroke="rgba(180,224,255,0.12)" stroke-width="1"/>
+                  <line x1="0" y1="3" x2="6" y2="3" stroke="rgba(4,16,44,0.14)" stroke-width="0.8"/>
+                </pattern>
+                <!-- Polsino bianco satinato + gemello oro 3D -->
+                <linearGradient id="bmShirtCuff" x1="97" y1="17" x2="97" y2="67" gradientUnits="userSpaceOnUse">
                   <stop offset="0%" stop-color="#FFFFFF"/>
-                  <stop offset="58%" stop-color="#E3F2FD"/>
-                  <stop offset="100%" stop-color="#B9D9F8"/>
+                  <stop offset="30%" stop-color="#F4F9FF"/>
+                  <stop offset="74%" stop-color="#D2E4F8"/>
+                  <stop offset="100%" stop-color="#9EBCE0"/>
                 </linearGradient>
-                <linearGradient id="bmShirtSleeve" x1="95" y1="14" x2="128" y2="62" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stop-color="#286AD4"/>
-                  <stop offset="52%" stop-color="#14459B"/>
-                  <stop offset="100%" stop-color="#092459"/>
+                <linearGradient id="bmCuffInner" x1="94" y1="20" x2="103" y2="64" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#8FAED1"/>
+                  <stop offset="100%" stop-color="#537299"/>
                 </linearGradient>
-                <linearGradient id="bmCuffGold" x1="86" y1="42" x2="92" y2="49" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stop-color="#FFF5C3"/>
-                  <stop offset="55%" stop-color="#E7B73C"/>
-                  <stop offset="100%" stop-color="#A6740C"/>
-                </linearGradient>
+                <radialGradient id="bmCuffGold" cx="35%" cy="30%" r="70%">
+                  <stop offset="0%" stop-color="#FFFBE0"/>
+                  <stop offset="38%" stop-color="#F6C94E"/>
+                  <stop offset="76%" stop-color="#C68E17"/>
+                  <stop offset="100%" stop-color="#7D5406"/>
+                </radialGradient>
               </defs>
-              <!-- Pezzo di manica di camicia -->
-              <path d="M95 16 H124 C126.2 16 128 17.8 128 20 V56 C128 58.2 126.2 60 124 60 H95 Z" fill="url(#bmShirtSleeve)" stroke="#64B5F6" stroke-width="1.2"/>
-              <path d="M99 23 H126 M99 53 H126" stroke="rgba(180,224,255,0.22)" stroke-width="1.2" stroke-linecap="round"/>
-              <!-- Polsino bianco con gemello oro -->
-              <rect x="81" y="18" width="16" height="40" rx="4.5" fill="url(#bmShirtCuff)" stroke="#90CAF9" stroke-width="1.2"/>
-              <line x1="94" y1="19.5" x2="94" y2="56.5" stroke="rgba(13,71,161,0.22)" stroke-width="1.2"/>
-              <circle cx="89" cy="46" r="3.1" fill="url(#bmCuffGold)" stroke="#7A5207" stroke-width="0.9"/>
-              <!-- Dita medie/anulare/mignolo raccolte sotto il palmo -->
-              <rect x="44" y="34" width="23" height="9.5" rx="4.7" fill="url(#bmHandShade)" stroke="#9E5B37" stroke-width="1.2"/>
-              <rect x="47" y="42.5" width="21" height="9" rx="4.5" fill="url(#bmHandShade)" stroke="#9E5B37" stroke-width="1.2"/>
-              <rect x="52" y="50.5" width="18" height="8" rx="4" fill="url(#bmHandShade)" stroke="#9E5B37" stroke-width="1.2"/>
-              <!-- Corpo della mano e dito indice teso verso sinistra -->
-              <path d="M81 23.5 C76 21 67 20.5 58 21.2 L19.5 21.8 C15.2 21.9 12 24.7 12 28.1 C12 31.5 15.2 34.2 19.5 34.3 L50 34.3 C48.5 39.5 52 46.5 57.5 51.5 C63 56.2 71.5 57 81 53.5 Z" fill="url(#bmHandSkin)" stroke="#9E5B37" stroke-width="1.35" stroke-linejoin="round"/>
-              <!-- Unghia delicata sul dito indice -->
-              <path d="M16.5 24.4 C14.5 24.7 13.8 26.2 13.8 27.9 C13.8 29.5 14.6 31 16.5 31.3 L20.6 31 C21.8 30.8 22.3 29.4 22.3 27.9 C22.3 26.4 21.8 25 20.6 24.7 Z" fill="#FFF3E6" opacity="0.88"/>
-              <!-- Pollice raccolto con eleganza lungo il palmo -->
-              <path d="M68.5 32.5 C61 31.5 52.5 33.8 49.5 38.6 C47.6 41.6 49.5 45.2 53.6 45.6 C59.8 46.2 66.5 43.2 71.8 39.5" fill="url(#bmHandSkin)" stroke="#9E5B37" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
-              <!-- Linea di piega morbida sul dorso -->
-              <path d="M56 26.5 C61 26.2 66 26.5 70 27.5" stroke="rgba(158,91,55,0.34)" stroke-width="1.1" stroke-linecap="round"/>
+
+              <!-- Ombra morbida proiettata sul vetro -->
+              <ellipse cx="66" cy="76" rx="50" ry="5.5" fill="rgba(2, 10, 28, 0.42)"/>
+
+              <!-- Dita raccolte sotto il palmo (anatomiche e digradanti in prospettiva) -->
+              <!-- Mignolo -->
+              <path d="M84 55.5 C78 55 70 55.8 66.5 59.2 C64.2 61.5 65.2 65.4 69 66.4 C74.5 67.8 81.5 66.6 87 63.8 Z" fill="url(#bmHandCurlLow)" stroke="#7F4326" stroke-width="1"/>
+              <!-- Anulare -->
+              <path d="M83 46.5 C75 45.8 64.5 46.8 60 50.6 C57.2 53 58.2 57.5 62.8 58.6 C69.5 60.2 78.5 58.4 85 55 Z" fill="url(#bmHandCurlMid)" stroke="#854729" stroke-width="1.05"/>
+              <path d="M67 49.6 C66 51.8 66.2 54.4 67.2 56.2" stroke="rgba(115, 58, 30, 0.34)" stroke-width="1" stroke-linecap="round"/>
+              <!-- Medio -->
+              <path d="M80 36.8 C70 36.2 58.2 37.4 53.5 41.4 C50.6 43.9 51.6 48.8 56.6 49.9 C64.2 51.5 74.5 49.5 82.5 45.8 Z" fill="url(#bmHandCurlTop)" stroke="#8B4B2C" stroke-width="1.1"/>
+              <path d="M62 40.4 C61 42.8 61.2 45.8 62.2 47.8" stroke="rgba(115, 58, 30, 0.36)" stroke-width="1" stroke-linecap="round"/>
+
+              <!-- Mano, polso e dito indice anatomico teso verso sinistra -->
+              <path d="M100 24.5 C92 22.8 82.5 21.4 72 21.8 C66.5 22 61.5 21.2 55.5 21.6 L38.5 22.2 C32.5 22.4 26.5 22.6 20 23.1 C14.4 23.5 11.2 26.2 11.2 29.6 C11.2 33.2 14.8 36 20.4 36.2 C28.5 36.5 39 36.4 52.5 36.6 C51.2 41.2 53.8 48.4 60 54.4 C66.4 60.5 76.5 62.8 87.5 60.8 C92.5 59.9 96.5 58.6 100 57.2 Z" fill="url(#bmHandSkinMain)" stroke="#8F4E2F" stroke-width="1.2" stroke-linejoin="round"/>
+
+              <!-- Modellazione cilindrica del dito indice e riflesso ciano del vetro sul polpastrello -->
+              <path d="M58 22.4 L20.5 23.8 C15.4 24.1 12.2 26.5 12.2 29.6 C12.2 32.7 15.6 35.1 20.6 35.3 L54 35.6 Z" fill="url(#bmHandIndexCyl)" opacity="0.72"/>
+              <path d="M14.2 33.4 C18.5 35.3 25.5 35.5 33 35.4" stroke="rgba(132, 255, 255, 0.45)" stroke-width="1.35" stroke-linecap="round"/>
+
+              <!-- Nocca dell'indice, tendini dorsali e pieghe articolari delicate -->
+              <ellipse cx="64" cy="27.5" rx="10" ry="6.2" fill="url(#bmKnuckleGlow)"/>
+              <path d="M41.5 23.6 C40.7 26.2 40.7 29.6 41.5 32.2 M43.4 24.4 C42.8 26.6 42.8 29.2 43.4 31.4" stroke="rgba(148, 82, 48, 0.34)" stroke-width="1" stroke-linecap="round"/>
+              <path d="M27.6 24.4 C27 26.6 27 29.4 27.6 31.4" stroke="rgba(148, 82, 48, 0.32)" stroke-width="0.95" stroke-linecap="round"/>
+              <path d="M72 28.2 C79 27.4 86.5 27.4 93 28.4 M75 34.4 C82 34 89 34.4 94.5 35.6" stroke="rgba(148, 82, 48, 0.22)" stroke-width="1.05" stroke-linecap="round"/>
+
+              <!-- Unghia realistica sull'indice (letto rosato, lunula, bordo avorio, riflesso speculare) -->
+              <path d="M17.2 24.5 C14.6 24.9 13.1 26.8 13.1 29.2 C13.1 31.4 14.5 33.1 17.2 33.4 L21.8 33.1 C23.4 32.8 24.1 31.2 24.1 29.2 C24.1 27.1 23.4 25.4 21.8 25 Z" fill="url(#bmNailBed)" stroke="rgba(164, 98, 70, 0.52)" stroke-width="0.85"/>
+              <!-- Lunula chiara alla base dell'unghia -->
+              <path d="M21.4 25.8 C20.1 26.9 20.1 31.4 21.4 32.4 C22.8 32 23.3 30.8 23.3 29.1 C23.3 27.4 22.8 26.2 21.4 25.8 Z" fill="rgba(255, 252, 248, 0.78)"/>
+              <!-- Riflesso lucido lungo l'unghia -->
+              <path d="M15.4 26.8 C17.4 26.2 19.6 26.1 21.2 26.3" stroke="rgba(255, 255, 255, 0.85)" stroke-width="1.05" stroke-linecap="round"/>
+
+              <!-- Ombra morbida del pollice sul palmo -->
+              <path d="M58 43.2 C64.5 47.4 73.5 47.4 81.5 43.4" stroke="rgba(96, 44, 22, 0.34)" stroke-width="3.2" stroke-linecap="round"/>
+
+              <!-- Pollice anatomico raccolto con eleganza lungo il palmo -->
+              <path d="M84.5 34.4 C76.5 32.2 66.2 33.2 60.4 37.8 C56.8 40.7 57.6 45.8 62.6 47.2 C69.8 49.2 79.2 46.8 87.2 42.4" fill="url(#bmHandThumbGrad)" stroke="#8A4A2B" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M62.4 39.2 C61.2 40.6 61.3 43.1 63 44.2 C64.8 44.6 66.2 43.8 66.4 42.1 C66.6 40.5 65.2 39 62.4 39.2 Z" fill="#FFEFE4" opacity="0.58"/>
+              <path d="M72.5 36.2 C71.6 38.6 71.8 41.2 72.8 43.2" stroke="rgba(146, 80, 48, 0.32)" stroke-width="1" stroke-linecap="round"/>
+
+              <!-- Ombra proiettata dal bordo del polsino sul polso -->
+              <path d="M97 23.2 C95.2 34 95.2 46.5 97 58.2" stroke="rgba(68, 32, 16, 0.38)" stroke-width="3.2" stroke-linecap="round"/>
+
+              <!-- Spessore interno del polsino bianco -->
+              <path d="M99 18.8 C95.5 28 95.5 56 99 65.2 L103 64.5 C99.8 55.5 99.8 28.5 103 19.5 Z" fill="url(#bmCuffInner)"/>
+
+              <!-- Manica di camicia sartoriale con trama e drappeggio -->
+              <path d="M115 15.5 L151 14.5 C153.8 14.5 156 16.7 156 19.5 V64.5 C156 67.3 153.8 69.5 151 69.5 L115 68.5 Z" fill="url(#bmShirtSleeve)" stroke="#5CA8F6" stroke-width="1.15"/>
+              <path d="M115 15.5 L151 14.5 C153.8 14.5 156 16.7 156 19.5 V64.5 C156 67.3 153.8 69.5 151 69.5 L115 68.5 Z" fill="url(#bmSleeveWeave)"/>
+              <!-- Pieghe del tessuto della manica -->
+              <path d="M120 22.5 C132 23.5 144 22.5 154 21.5 M120 38.5 C133 39.2 145 38.6 154 38 M120 57.5 C133 56.8 145 57.8 154 58.6" stroke="rgba(180, 224, 255, 0.22)" stroke-width="1.25" stroke-linecap="round"/>
+              <path d="M119 49.5 C132 50.8 144 49.6 154 48.5" stroke="rgba(4, 15, 42, 0.36)" stroke-width="1.5" stroke-linecap="round"/>
+
+              <!-- Polsino bianco sagomato con impuntura sartoriale e lembo sovrapposto -->
+              <path d="M99.5 18.2 C104 17.5 111.5 17.2 116.5 17.6 C118.2 17.8 119.5 19.2 119.5 21 V63 C119.5 64.8 118.2 66.2 116.5 66.4 C111.5 66.8 104 66.5 99.5 65.8 C97.4 55.5 97.4 28.5 99.5 18.2 Z" fill="url(#bmShirtCuff)" stroke="#98C8F6" stroke-width="1.15"/>
+              <!-- Cucitura ribattuta sul polsino -->
+              <path d="M101.6 20.6 C100 30 100 54 101.6 63.4 M116.6 20 V64" stroke="rgba(21, 90, 175, 0.24)" stroke-width="0.95" stroke-dasharray="2.1 1.7" stroke-linecap="round"/>
+              <!-- Sottile ombra del lembo inferiore del polsino -->
+              <path d="M100.5 46.5 L117.5 46.2" stroke="rgba(14, 52, 118, 0.16)" stroke-width="1.2" stroke-linecap="round"/>
+              <!-- Gemello 3D in oro spazzolato con micro-ombra e riflesso -->
+              <circle cx="109.4" cy="54.2" r="4.3" fill="rgba(12, 34, 78, 0.24)"/>
+              <circle cx="108.8" cy="53.4" r="4.1" fill="url(#bmCuffGold)" stroke="#704906" stroke-width="0.85"/>
+              <circle cx="108.8" cy="53.4" r="2.6" fill="none" stroke="rgba(255, 248, 212, 0.52)" stroke-width="0.65"/>
+              <circle cx="107.6" cy="52.1" r="0.95" fill="#FFFFFF" opacity="0.9"/>
             </svg>
           </span>
         </button>
@@ -3509,67 +3628,96 @@ body.oled-mode .pub-ref-badge {
     <div id="bmExitScrollStage" class="bm-exit-scroll-stage">
       <svg style="position:absolute; width:0; height:0; overflow:hidden;" aria-hidden="true" focusable="false">
         <defs>
+          <!-- Legno d'ulivo/noce antico tornito con luce radente da alto-sinistra -->
           <linearGradient id="bmScrollWoodH" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stop-color="#221006"/>
-            <stop offset="22%" stop-color="#5d3317"/>
-            <stop offset="46%" stop-color="#9b6234"/>
-            <stop offset="68%" stop-color="#6a3b1a"/>
-            <stop offset="88%" stop-color="#35190a"/>
-            <stop offset="100%" stop-color="#190a03"/>
+            <stop offset="0%" stop-color="#1b0b04"/>
+            <stop offset="16%" stop-color="#4c2610"/>
+            <stop offset="36%" stop-color="#8e542a"/>
+            <stop offset="50%" stop-color="#b97b46"/>
+            <stop offset="68%" stop-color="#6b3a19"/>
+            <stop offset="86%" stop-color="#331608"/>
+            <stop offset="100%" stop-color="#140702"/>
           </linearGradient>
           <linearGradient id="bmScrollUmbilicus" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stop-color="#1b0c04"/>
-            <stop offset="18%" stop-color="#4e2912"/>
-            <stop offset="44%" stop-color="#a86d3b"/>
-            <stop offset="62%" stop-color="#c98b52"/>
-            <stop offset="82%" stop-color="#522b13"/>
-            <stop offset="100%" stop-color="#160802"/>
+            <stop offset="0%" stop-color="#150802"/>
+            <stop offset="15%" stop-color="#48230f"/>
+            <stop offset="38%" stop-color="#9c6132"/>
+            <stop offset="52%" stop-color="#ca8c52"/>
+            <stop offset="72%" stop-color="#603316"/>
+            <stop offset="90%" stop-color="#2b1206"/>
+            <stop offset="100%" stop-color="#110602"/>
           </linearGradient>
           <linearGradient id="bmScrollWoodDisc" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stop-color="#261207"/>
-            <stop offset="24%" stop-color="#6c3e1d"/>
-            <stop offset="50%" stop-color="#b47743"/>
-            <stop offset="76%" stop-color="#683a1a"/>
-            <stop offset="100%" stop-color="#1d0d04"/>
+            <stop offset="0%" stop-color="#1d0c04"/>
+            <stop offset="20%" stop-color="#5d3216"/>
+            <stop offset="44%" stop-color="#b2743f"/>
+            <stop offset="58%" stop-color="#c98c53"/>
+            <stop offset="78%" stop-color="#5e3216"/>
+            <stop offset="100%" stop-color="#180903"/>
           </linearGradient>
-          <linearGradient id="bmScrollWoodTop" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#b87b46"/>
-            <stop offset="48%" stop-color="#7c4823"/>
-            <stop offset="100%" stop-color="#3b1d0c"/>
+          <linearGradient id="bmScrollWoodTop" x1="0" y1="0" x2="0.2" y2="1">
+            <stop offset="0%" stop-color="#c98d56"/>
+            <stop offset="42%" stop-color="#885028"/>
+            <stop offset="78%" stop-color="#532b12"/>
+            <stop offset="100%" stop-color="#2d1407"/>
           </linearGradient>
-          <!-- Simbolo unico (Cornua tornita + Disco + Umbilicus / ombelico ligneo centrale con imbocco pergamena) -->
-          <symbol id="bmScrollFinialSym" viewBox="0 0 88 108">
-            <!-- Cornua (impugnatura superiore tornita) -->
-            <ellipse cx="44" cy="10" rx="7.2" ry="8.5" fill="url(#bmScrollWoodH)"/>
-            <ellipse cx="44" cy="19.5" rx="10.2" ry="4.2" fill="url(#bmScrollWoodH)"/>
-            <path d="M36.5 22.5 C34.5 30 39 36.5 39 45 H49 C49 36.5 53.5 30 51.5 22.5 Z" fill="url(#bmScrollWoodH)"/>
-            <ellipse cx="44" cy="46.2" rx="10.8" ry="4" fill="url(#bmScrollWoodH)"/>
-            <path d="M36.5 49 C34.8 55.5 35.5 62 34.5 68 H53.5 C52.5 62 53.2 55.5 51.5 49 Z" fill="url(#bmScrollWoodH)"/>
-            <!-- Disco paracolpi ligneo (collegato all'umbilicus) -->
-            <ellipse cx="44" cy="74.5" rx="40.5" ry="9.6" fill="url(#bmScrollWoodDisc)" stroke="#231005" stroke-width="1"/>
-            <ellipse cx="44" cy="72" rx="39" ry="7.6" fill="url(#bmScrollWoodTop)"/>
-            <ellipse cx="44" cy="72" rx="22" ry="3.8" fill="none" stroke="rgba(255,220,175,0.22)" stroke-width="1"/>
-            <!-- Ombelico / Umbilicus (perno cilindrico in legno su cui scorre e si avvolge il rotolo) -->
-            <rect x="33.5" y="79" width="21" height="26" rx="2.5" fill="url(#bmScrollUmbilicus)" stroke="#200e04" stroke-width="1"/>
-            <!-- Ombra proiettata dal disco sull'umbilicus + ghiera tornita di fissaggio -->
-            <rect x="33.5" y="79.5" width="21" height="5.5" fill="rgba(18,7,2,0.52)"/>
-            <ellipse cx="44" cy="87.5" rx="12.2" ry="3.1" fill="url(#bmScrollWoodDisc)" stroke="#231005" stroke-width="0.9"/>
-            <ellipse cx="44" cy="86.6" rx="11.2" ry="2.1" fill="url(#bmScrollWoodTop)"/>
-            <!-- Anello d'innesto dell'umbilicus nel cuore della pergamena arrotolata -->
-            <ellipse cx="44" cy="102.5" rx="18" ry="4.4" fill="none" stroke="rgba(218,191,142,0.55)" stroke-width="1.4"/>
-            <ellipse cx="44" cy="102.5" rx="13.5" ry="3.3" fill="none" stroke="rgba(96,62,24,0.68)" stroke-width="1.2"/>
-            <ellipse cx="44" cy="102.5" rx="10.2" ry="2.7" fill="url(#bmScrollUmbilicus)" stroke="#261105" stroke-width="0.9"/>
+          <!-- Ghiera decorativa in bronzo antico -->
+          <linearGradient id="bmScrollBrass" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#4a310a"/>
+            <stop offset="24%" stop-color="#a87c2a"/>
+            <stop offset="46%" stop-color="#f5d57a"/>
+            <stop offset="66%" stop-color="#b88930"/>
+            <stop offset="88%" stop-color="#5c3e0d"/>
+            <stop offset="100%" stop-color="#382306"/>
+          </linearGradient>
+          <!-- Simbolo unico realistico: Cornua tornita + Disco biconvesso + Ghiera in bronzo + Umbilicus + Spirale multi-strato -->
+          <symbol id="bmScrollFinialSym" viewBox="0 0 88 112">
+            <!-- Pomello sommitale (Cornua) con riflesso speculare morbido -->
+            <ellipse cx="44" cy="9.5" rx="7.6" ry="8.4" fill="url(#bmScrollWoodH)" stroke="#1e0c04" stroke-width="0.7"/>
+            <ellipse cx="41.5" cy="7.5" rx="2.4" ry="3.2" fill="rgba(255, 224, 180, 0.24)"/>
+            <!-- Collarino tornito superiore -->
+            <ellipse cx="44" cy="19.2" rx="10.6" ry="3.8" fill="url(#bmScrollWoodH)" stroke="#1d0b04" stroke-width="0.6"/>
+            <path d="M36 18.6 Q44 16.8 52 18.6" stroke="rgba(255, 224, 178, 0.26)" stroke-width="0.8" fill="none"/>
+            <!-- Stelo sagomato dell'impugnatura -->
+            <path d="M36.5 22 C34 29.5 38.6 36.2 38.8 44.5 H49.2 C49.4 36.2 54 29.5 51.5 22 Z" fill="url(#bmScrollWoodH)"/>
+            <path d="M40.5 24 V43.5 M46.5 24 V43.5" stroke="rgba(34, 14, 5, 0.24)" stroke-width="0.7"/>
+            <!-- Anello intermedio con ghiera di bronzo -->
+            <ellipse cx="44" cy="45.6" rx="11.2" ry="3.6" fill="url(#bmScrollBrass)" stroke="#382206" stroke-width="0.65"/>
+            <path d="M36 48.2 C34.4 54.8 35.2 61.5 34 67.5 H54 C52.8 61.5 53.6 54.8 52 48.2 Z" fill="url(#bmScrollWoodH)"/>
+            <path d="M39.5 50 V66 M48.5 50 V66" stroke="rgba(28, 11, 4, 0.22)" stroke-width="0.7"/>
+            <!-- Disco paracolpi biconvesso in legno tornito -->
+            <ellipse cx="44" cy="74.8" rx="41.5" ry="9.8" fill="url(#bmScrollWoodDisc)" stroke="#1b0a03" stroke-width="1"/>
+            <ellipse cx="44" cy="72" rx="40" ry="7.8" fill="url(#bmScrollWoodTop)"/>
+            <!-- Anelli di tornitura e riflesso sul bordo del disco -->
+            <ellipse cx="44" cy="72" rx="31" ry="5.5" fill="none" stroke="rgba(255, 224, 180, 0.2)" stroke-width="0.9"/>
+            <ellipse cx="44" cy="72" rx="19" ry="3.3" fill="none" stroke="rgba(34, 14, 5, 0.28)" stroke-width="0.9"/>
+            <path d="M12 70.5 Q44 65 76 70.5" stroke="rgba(255, 232, 192, 0.24)" stroke-width="0.9" fill="none"/>
+            <!-- Ombelico / Umbilicus (perno cilindrico in legno su cui si avvolge la pergamena) -->
+            <rect x="33.5" y="79" width="21" height="27" rx="2.5" fill="url(#bmScrollUmbilicus)" stroke="#1a0a03" stroke-width="0.95"/>
+            <!-- Ombra profonda proiettata dal disco sull'umbilicus -->
+            <rect x="33.5" y="79.2" width="21" height="6.2" fill="rgba(14, 5, 1, 0.62)"/>
+            <!-- Ghiera in bronzo antico sull'umbilicus -->
+            <ellipse cx="44" cy="87.8" rx="12.4" ry="3" fill="url(#bmScrollBrass)" stroke="#2e1c05" stroke-width="0.8"/>
+            <path d="M34 87.2 Q44 85.4 54 87.2" stroke="rgba(255, 244, 198, 0.55)" stroke-width="0.8" fill="none"/>
+            <!-- Spirale concentrica multi-strato della pergamena arrotolata vista di taglio -->
+            <ellipse cx="44" cy="105.2" rx="28" ry="6.2" fill="#d9be8e" stroke="#603e18" stroke-width="1"/>
+            <ellipse cx="44" cy="105.2" rx="24.2" ry="5.3" fill="none" stroke="#855b2a" stroke-width="1"/>
+            <ellipse cx="44" cy="105.2" rx="20.6" ry="4.5" fill="none" stroke="#f4e6c4" stroke-width="1.2"/>
+            <ellipse cx="44" cy="105.2" rx="17.2" ry="3.8" fill="none" stroke="#6d471d" stroke-width="1"/>
+            <ellipse cx="44" cy="105.2" rx="13.8" ry="3.1" fill="none" stroke="#ecd9b0" stroke-width="1.1"/>
+            <ellipse cx="44" cy="105.2" rx="10.4" ry="2.6" fill="url(#bmScrollUmbilicus)" stroke="#220e04" stroke-width="0.95"/>
           </symbol>
         </defs>
       </svg>
       <div id="bmBiblicalScroll" class="bm-biblical-scroll" role="button" tabindex="0" aria-label="Rotolo biblico antico interattivo: tocca o trascina per chiudere e aprire" aria-pressed="false" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault(); toggleBmBiblicalScroll();}">
-        <!-- Rullo Sinistro (Cornua + Umbilicus ligneo + cilindro pergamena) -->
+        <!-- Rullo Sinistro (Cornua + Ghiera Bronzo + Umbilicus ligneo + cilindro pergamena cucita) -->
         <div class="bm-scroll-roller left">
-          <svg class="bm-scroll-finial top" viewBox="0 0 88 108" preserveAspectRatio="xMidYMax meet" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#bmScrollFinialSym"/></svg>
+          <svg class="bm-scroll-finial top" viewBox="0 0 88 112" preserveAspectRatio="xMidYMax meet" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#bmScrollFinialSym"/></svg>
           <div class="bm-scroll-cylinder">
+            <div class="bm-scroll-seam" aria-hidden="true"></div>
             <div class="bm-scroll-ghost-ink" aria-hidden="true">ויושע יהוה ביום ההוא את ישראל מיד מצרים וירא ישראל את היד הגדלה אשר עשה יהוה אשירה ליהוה כי גאה גאה סוס ורכבו רמה בים עזי וזמרת יה ויהי לי לישועה</div>
           </div>
-          <svg class="bm-scroll-finial bottom" viewBox="0 0 88 108" preserveAspectRatio="xMidYMax meet" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#bmScrollFinialSym"/></svg>
+          <svg class="bm-scroll-finial bottom" viewBox="0 0 88 112" preserveAspectRatio="xMidYMax meet" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#bmScrollFinialSym"/></svg>
         </div>
         <!-- Pergamena Centrale con Testo Ebraico Antico (Cantico del Mare, Esodo 15 — impaginazione tradizionale a mattoni) -->
         <div class="bm-scroll-sheet-window">
@@ -3592,13 +3740,14 @@ body.oled-mode .pub-ref-badge {
             </div>
           </div>
         </div>
-        <!-- Rullo Destro (Cornua + Umbilicus ligneo + cilindro pergamena) -->
+        <!-- Rullo Destro (Cornua + Ghiera Bronzo + Umbilicus ligneo + cilindro pergamena cucita) -->
         <div class="bm-scroll-roller right">
-          <svg class="bm-scroll-finial top" viewBox="0 0 88 108" preserveAspectRatio="xMidYMax meet" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#bmScrollFinialSym"/></svg>
+          <svg class="bm-scroll-finial top" viewBox="0 0 88 112" preserveAspectRatio="xMidYMax meet" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#bmScrollFinialSym"/></svg>
           <div class="bm-scroll-cylinder">
+            <div class="bm-scroll-seam" aria-hidden="true"></div>
             <div class="bm-scroll-ghost-ink" aria-hidden="true">ובני ישראל הלכו ביבשה בתוך הים והמים להם חמה מימינם ומשמאלם ויאמינו ביהוה ובמשה עבדו יהוה ימלך לעלם ועד</div>
           </div>
-          <svg class="bm-scroll-finial bottom" viewBox="0 0 88 108" preserveAspectRatio="xMidYMax meet" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#bmScrollFinialSym"/></svg>
+          <svg class="bm-scroll-finial bottom" viewBox="0 0 88 112" preserveAspectRatio="xMidYMax meet" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#bmScrollFinialSym"/></svg>
         </div>
       </div>
       <div id="bmExitScrollCaption" class="bm-scroll-caption-3d">
@@ -3743,11 +3892,6 @@ body.oled-mode .pub-ref-badge {
       </defs>
     </svg>
   </button>
-</div>
-<div id="bmSwUpdateToast" class="bm-sw-update-toast" role="status" aria-live="polite">
-  <span>🚀 Nuova versione pronta</span>
-  <button type="button" class="bp-chip" style="padding:4px 10px; font-size:12px;" onclick="applyPendingBmSwUpdate()">🔄 Ricarica Ora</button>
-  <button type="button" class="bm-pb-close" onclick="dismissBmSwUpdateToast()" aria-label="Chiudi avviso aggiornamento">✕</button>
 </div>
 
   <script>
@@ -6771,13 +6915,13 @@ function makeInsightPeekExcerpt(bodyText, maxChars = 480) {
 
 // Mini-scheda Peek di Perspicacia direttamente dal versetto biblico (senza perdere il punto di lettura)
 async function openNameLinkPeekModal(idx, verseNum, displayTitle = "") {
-  const reqId = ++peekReqId;
   const link = BM_NAME_LINKS[idx];
   const shownName = displayTitle || (link ? link.names[0] : "");
   if (!link || !openDialogModal(`<div class="loader" style="color:#cfe3ff; padding:18px 8px;">📚 Anteprima Perspicacia per <b>${escapeHtml(shownName)}</b>...</div>`)) {
     openNameLinkTarget(idx, "ins", verseNum);
     return;
   }
+  const reqId = peekReqId;
 
   const [insData, target] = await Promise.all([getInsightData(), resolveInsightTarget(link.ins)]);
   if (reqId !== peekReqId || !isDialogModalOpen()) return;
@@ -7384,6 +7528,7 @@ function openSettingsDrawer() {
 function closeSettingsDrawer() {
   const dr = document.getElementById("bmSettingsDrawer");
   if (dr) dr.classList.remove("open");
+  schedulePendingBmSwUpdateFlush();
 }
 
 // Pulsanti rapidi del cassetto (Heatmap Studio, Modalità Focus): si illuminano, poi chiudono il cassetto ed eseguono l'azione (un solo avvio anche con tocchi ripetuti)
@@ -8055,6 +8200,7 @@ function openNewFreeNoteModal() {
 }
 function closeNoteModal() {
   document.getElementById("noteModal").style.display = "none";
+  schedulePendingBmSwUpdateFlush();
 }
 function saveNoteFromModal() {
   bmChimeHaptic();
@@ -8645,6 +8791,7 @@ function openDialogModal(bodyHtml, keepPendingBackup = false) {
   const modal = document.getElementById("myReadModal");
   const body = document.getElementById("myReadModalBody");
   if (!modal || !body) return false;
+  peekReqId++;
   window.__bmPendingDeleteFn = null;
   if (!keepPendingBackup) pendingBackupRawText = null;
   body.innerHTML = bodyHtml;
@@ -8652,10 +8799,12 @@ function openDialogModal(bodyHtml, keepPendingBackup = false) {
   return true;
 }
 function closeMyReadModal() {
+  peekReqId++;
   window.__bmPendingDeleteFn = null;
   pendingBackupRawText = null;
   const modal = document.getElementById("myReadModal");
   if (modal) modal.style.display = "none";
+  schedulePendingBmSwUpdateFlush();
 }
 function showBlueDeleteConfirmModal(titleTxt, msgHtml, onConfirm) {
   const opened = openDialogModal(`
@@ -10092,7 +10241,10 @@ function openRef(bookId, chapter, verseSpec = 0) {
   });
 }
 function changeFontSize(delta) {
-  state.fontSize = Math.min(30, Math.max(14, state.fontSize + delta));
+  const d = Number(delta);
+  if (!Number.isFinite(d)) return;
+  const base = Number.isFinite(Number(state.fontSize)) ? Number(state.fontSize) : 18;
+  state.fontSize = Math.min(30, Math.max(14, base + d));
   document.documentElement.style.setProperty("--font-size-verse", state.fontSize + "px");
   safeSaveStorage("bm_font_size", String(state.fontSize));
 }
@@ -10122,6 +10274,7 @@ function closeProModal() {
     state.selectedVerse = null;
     state.selectedVerseText = "";
   }
+  schedulePendingBmSwUpdateFlush();
 }
 
 const bmSearchLP = createLongPressHandlers(() => showSearchView(), () => { bmChimeHaptic(); openQuickJumpModal(); }, 550);
@@ -10239,13 +10392,13 @@ function executeDirectRefJump(bookId, targetCh, vSpec = "") {
   });
 }
 async function openVersePeekModal(bookId, chapter, vSpec = "") {
-  const reqId = ++peekReqId;
   const book = getBook(bookId);
   const refTitle = `${book.name} ${chapter}${vSpec ? ":" + vSpec : ""}`;
   if (!openDialogModal(`<div class="loader" style="color:#cfe3ff; padding:18px 8px;">📖 Caricamento anteprima di <b>${escapeHtml(refTitle)}</b>...</div>`)) {
     executeDirectRefJump(bookId, chapter, vSpec);
     return;
   }
+  const reqId = peekReqId;
   try {
     const data = await fetchChapterData(state.trans1, bookId, chapter);
     if (reqId !== peekReqId || !isDialogModalOpen()) return;
@@ -10273,6 +10426,7 @@ async function openVersePeekModal(bookId, chapter, vSpec = "") {
     `);
   } catch (e) {
     console.debug(e);
+    if (reqId !== peekReqId || !isDialogModalOpen()) return;
     executeDirectRefJump(bookId, chapter, vSpec);
   }
 }
@@ -14296,6 +14450,7 @@ function closeMapViewer() {
   if (currentViewContext && currentViewContext.type === "maps") {
     currentViewContext.mapIdx = null;
   }
+  schedulePendingBmSwUpdateFlush();
 }
 function bpStepAdjacentMap(delta) {
   if (!bpMeta || !Array.isArray(bpMeta.maps) || !bpV.map) return;
@@ -14877,7 +15032,7 @@ function scrollRpToToday(smooth = false) {
 function buildStudioBackupObject() {
   return {
     app: "BibbiaMultilingue_PRO",
-    version: "PRO_v17.0.5",
+    version: "PRO_v17.0.8",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
@@ -14919,8 +15074,9 @@ function applyStudioBackupObject(parsed) {
     state.chapter = Math.min(getBook(state.bookId).ch, Math.max(1, Number(parsed.chapter) || 1));
     safeSaveStorage("bm_last_ch", String(state.chapter));
   }
-  if (parsed.fontSize) {
-    changeFontSize(Number(parsed.fontSize) - state.fontSize);
+  if (parsed.fontSize !== undefined && parsed.fontSize !== null && typeof parsed.fontSize !== "boolean" && String(parsed.fontSize).trim() !== "") {
+    const nextFs = Number(parsed.fontSize);
+    if (Number.isFinite(nextFs) && nextFs > 0) changeFontSize(nextFs - state.fontSize);
   }
   if (parsed.themeMode && ["light", "dark", "oled"].includes(parsed.themeMode)) {
     state.themeMode = parsed.themeMode;
@@ -15310,7 +15466,7 @@ function setMigrationStatus(htmlMsg) {
 
 async function buildAndDeliverLibraryBundle(keysList, includeStudio, fileName, shareTitle) {
   const parts = [
-    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v17.0.5","date":',
+    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v17.0.8","date":',
     JSON.stringify(new Date().toISOString())
   ];
   if (includeStudio) {
@@ -16074,7 +16230,10 @@ function fadeOutSplashNow() {
   splashDismissTimer = null;
   splash.style.pointerEvents = "none";
   splash.style.opacity = "0";
-  setTimeout(() => splash.remove(), 400);
+  setTimeout(() => {
+    splash.remove();
+    schedulePendingBmSwUpdateFlush(160);
+  }, 400);
 }
 
 function dismissSplashScreen() {
@@ -16138,24 +16297,80 @@ document.addEventListener("selectionchange", () => {
 // ============================================================================
 let bmSwReloading = false;
 let bmLastSwCheckAt = 0;
-function dismissBmSwUpdateToast() {
-  const t = document.getElementById("bmSwUpdateToast");
-  if (t) t.classList.remove("visible");
+let bmSwUpdatePendingPrompt = false;
+let bmSwUpdateDismissed = false;
+let bmSwUpdateFlushTimer = null;
+let bmSwManualCheckInFlight = false;
+
+function clearBmSwUpdatePendingQueue() {
+  bmSwUpdatePendingPrompt = false;
+  clearTimeout(bmSwUpdateFlushTimer);
+  bmSwUpdateFlushTimer = null;
 }
-function showBmSwUpdatePrompt() {
-  const toast = document.getElementById("bmSwUpdateToast");
-  if (toast) {
-    toast.classList.add("visible");
+
+function isAnyBmOverlayBlockingUpdate() {
+  if (bmSwManualCheckInFlight) return true;
+  if (document.getElementById("splashScreen")) return true;
+  const drawer = document.getElementById("bmSettingsDrawer");
+  if (drawer && drawer.classList.contains("open")) return true;
+  const modalIds = ["myReadModal", "noteModal", "proModal", "bmSelectModal", "bmExitModal", "mapsViewer"];
+  return modalIds.some(id => {
+    const el = document.getElementById(id);
+    return Boolean(el && el.style.display === "flex");
+  });
+}
+
+function dismissBmSwUpdatePrompt() {
+  bmSwUpdateDismissed = true;
+  clearBmSwUpdatePendingQueue();
+  closeMyReadModal();
+}
+
+function renderBmSwUpdateCenteredModal() {
+  clearBmSwUpdatePendingQueue();
+  openDialogModal(`
+    <div style="text-align:center; padding:6px 2px 14px 2px;">
+      <div style="font-size:34px; line-height:1.1; margin-bottom:8px;">🚀</div>
+      <div style="font-size:17px; font-weight:900; color:#ffffff; margin-bottom:7px;">Aggiornamento Pronto</div>
+      <div style="font-size:13.8px; color:#cfe3ff; line-height:1.5;">
+        È disponibile una nuova versione di <b>Bibbia Multilingue PRO</b>.<br>I tuoi appunti, preferiti e Bibbie offline restano al sicuro.
+      </div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00e5ff; --btn-glow:rgba(0,229,255,0.88); background:linear-gradient(135deg, #0288d1, #1565c0); border-color:#84ffff;" onclick="applyPendingBmSwUpdate()">🔄 Ricarica Ora</button>
+      <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#1565c0; --btn-glow:rgba(41,182,246,0.65); background:var(--bg-main);" onclick="dismissBmSwUpdatePrompt()">Più tardi</button>
+    </div>
+  `);
+}
+
+function showBmSwUpdatePrompt(forceImmediate = false) {
+  if (bmSwReloading) return;
+  if (!forceImmediate && bmSwUpdateDismissed) return;
+  if (!forceImmediate && isAnyBmOverlayBlockingUpdate()) {
+    bmSwUpdatePendingPrompt = true;
     return;
   }
-  if (!isDialogModalOpen()) {
-    showBlueInfoModal(
-      "🚀 Aggiornamento Pronto",
-      `È disponibile una nuova versione di <b>Bibbia Multilingue PRO</b>.<br><br><button type="button" class="myread-action-btn" onclick="applyPendingBmSwUpdate()">🔄 Ricarica Ora</button>`
-    );
-  }
+  renderBmSwUpdateCenteredModal();
 }
+
+function schedulePendingBmSwUpdateFlush(delayMs = 180) {
+  if (!bmSwUpdatePendingPrompt || bmSwUpdateDismissed || bmSwReloading || bmSwManualCheckInFlight) return;
+  clearTimeout(bmSwUpdateFlushTimer);
+  bmSwUpdateFlushTimer = setTimeout(() => {
+    bmSwUpdateFlushTimer = null;
+    if (!bmSwUpdatePendingPrompt || bmSwUpdateDismissed || bmSwReloading || bmSwManualCheckInFlight) return;
+    if (!(bmSwReg && bmSwReg.waiting)) {
+      bmSwUpdatePendingPrompt = false;
+      return;
+    }
+    if (!isAnyBmOverlayBlockingUpdate()) {
+      renderBmSwUpdateCenteredModal();
+    }
+  }, delayMs);
+}
+
 function applyPendingBmSwUpdate() {
+  clearBmSwUpdatePendingQueue();
   try {
     if (bmSwReg && bmSwReg.waiting) {
       bmSwReg.waiting.postMessage({ type: "SKIP_WAITING" });
@@ -16170,9 +16385,15 @@ function applyPendingBmSwUpdate() {
   } catch (e) { console.debug(e); }
   window.location.reload();
 }
+
 function initBmServiceWorker() {
   if (!("serviceWorker" in navigator) || !/^https?:$/i.test(window.location.protocol)) return;
+  let bmSwHasController = Boolean(navigator.serviceWorker.controller);
   navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!bmSwHasController) {
+      bmSwHasController = true;
+      return;
+    }
     if (bmSwReloading) return;
     bmSwReloading = true;
     window.location.reload();
@@ -16197,12 +16418,14 @@ function initBmServiceWorker() {
 
 async function checkBmPwaUpdates() {
   bmChimeHaptic();
+  bmSwManualCheckInFlight = true;
+  clearBmSwUpdatePendingQueue();
   closeSettingsDrawer();
-  if (!("serviceWorker" in navigator) || !/^https?:$/i.test(window.location.protocol)) {
-    showBlueInfoModal("📦 Modalità Locale", "L'app è aperta in locale senza server HTTPS: il Service Worker offline si attiva automaticamente quando pubblicata su GitHub Pages.");
-    return;
-  }
   try {
+    if (!("serviceWorker" in navigator) || !/^https?:$/i.test(window.location.protocol)) {
+      showBlueInfoModal("📦 Modalità Locale", "L'app è aperta in locale senza server HTTPS: il Service Worker offline si attiva automaticamente quando pubblicata su GitHub Pages.");
+      return;
+    }
     const reg = bmSwReg || await navigator.serviceWorker.getRegistration();
     let statusLine = "Service Worker non ancora attivo.";
     if (reg && reg.active) {
@@ -16224,6 +16447,7 @@ async function checkBmPwaUpdates() {
     }
     const hasWaitingUpdate = Boolean(reg && reg.waiting);
     if (reg) bmSwReg = reg;
+    if (hasWaitingUpdate) clearBmSwUpdatePendingQueue();
     const stHtml = await getBmStorageSummaryHtml();
     const actionBtnHtml = hasWaitingUpdate
       ? `<button type="button" class="myread-action-btn" style="background:linear-gradient(135deg,#00838f,#00acc1);border-color:#84ffff;" onclick="applyPendingBmSwUpdate()">🚀 Applica Nuovo Aggiornamento Ora</button>`
@@ -16234,6 +16458,8 @@ async function checkBmPwaUpdates() {
     );
   } catch (err) {
     showBlueInfoModal("⚠️ Verifica PWA", escapeHtml(err.message || "Impossibile contattare il Service Worker."));
+  } finally {
+    bmSwManualCheckInFlight = false;
   }
 }
 
@@ -16420,6 +16646,7 @@ function closeBmSelectModal() {
   const m = document.getElementById("bmSelectModal");
   if (m) m.style.display = "none";
   activeCustomSelectEl = null;
+  schedulePendingBmSwUpdateFlush();
 }
 
 function openCustomSelectMenu(selectEl) {
@@ -16966,8 +17193,8 @@ function setBmScrollProgress(prog, animate = false) {
   if (!scrollEl) return;
   const maxSheetW = getBmScrollMaxSheetWidth();
   const halfClip = (maxSheetW * 0.5) * clamped;
-  const rollShiftPx = Math.max(0, halfClip - 1.5 * clamped);
-  const cylScale = 1 + clamped * 0.04;
+  const rollShiftPx = Math.max(0, halfClip - 2.2 * clamped);
+  const cylScale = 1 + clamped * 0.09;
   const castOp = Math.max(0, 1 - clamped * 1.18);
   clearTimeout(bmScrollAnimTimer);
   bmScrollAnimTimer = null;
@@ -17128,6 +17355,7 @@ function closeBmExitModal(rearmGuard = true) {
   bmExitActionLock = false;
   bmExitingApp = false;
   if (rearmGuard) armBmBackGuard(true);
+  schedulePendingBmSwUpdateFlush();
 }
 
 function tryNativePwaExitNow() {
@@ -17330,7 +17558,7 @@ function initBmExitHandDrag() {
     startTime = Date.now();
     maxDrag = (activeMode === "scroll")
       ? Math.max(120, getBmScrollMaxSheetWidth())
-      : Math.max(116, (handBtn.clientWidth || 300) - 134);
+      : Math.max(116, (handBtn.clientWidth || 300) - 148);
     releaseBmExitDragPointer();
     bmExitActivePid = e.pointerId;
     if (startedOnHand) {
