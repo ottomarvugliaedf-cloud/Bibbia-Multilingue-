@@ -1,5 +1,5 @@
-// Service Worker — Bibbia Multilingue PRO (v17.0.11 — App Shell 100% Atomica Immutabile, Guardie Redirect & Bulk JSON, Icone Maskable)
-const BM_SW_VERSION = "bm-pro-shell-v17-0-11";
+// Service Worker — Bibbia Multilingue PRO (v17.0.12 — App Shell 100% Atomica Immutabile, Guardie Redirect & Bulk JSON, Icone Maskable)
+const BM_SW_VERSION = "bm-pro-shell-v17-0-12";
 const BM_API_CACHE = "bm-pro-api-v1";
 const BM_API_CACHE_MAX = 150;
 const BM_CRITICAL_SHELL = [
