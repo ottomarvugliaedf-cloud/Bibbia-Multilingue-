@@ -1,5 +1,5 @@
-// Service Worker — Bibbia Multilingue PRO (v17.0.0 — SWR Istantaneo, Guardie Redirect & Bulk JSON, Icone Maskable)
-const BM_SW_VERSION = "bm-pro-shell-v17-0-0";
+// Service Worker — Bibbia Multilingue PRO (v17.0.4 — App Shell 100% Atomica Immutabile, Guardie Redirect & Bulk JSON, Icone Maskable)
+const BM_SW_VERSION = "bm-pro-shell-v17-0-4";
 const BM_API_CACHE = "bm-pro-api-v1";
 const BM_API_CACHE_MAX = 150;
 const BM_CRITICAL_SHELL = [
@@ -17,6 +17,15 @@ const BM_OPTIONAL_SHELL = [
 function safeCachePut(cache, req, res) {
   if (!res || !res.ok || res.redirected) return Promise.resolve();
   return cache.put(req, res).catch(() => {});
+}
+
+async function precacheExact(cache, url) {
+  const req = new Request(url, { cache: "reload" });
+  const res = await fetch(req);
+  if (!res || !res.ok || res.redirected) {
+    throw new Error(`Precache non valida per ${url}`);
+  }
+  await cache.put(req, res);
 }
 
 function getCanonicalIndexUrl() {
@@ -51,10 +60,10 @@ self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(BM_SW_VERSION);
     await Promise.all(
-      BM_CRITICAL_SHELL.map((url) => cache.add(new Request(url, { cache: "reload" })))
+      BM_CRITICAL_SHELL.map((url) => precacheExact(cache, url))
     );
     await Promise.allSettled(
-      BM_OPTIONAL_SHELL.map((url) => cache.add(new Request(url, { cache: "reload" })))
+      BM_OPTIONAL_SHELL.map((url) => precacheExact(cache, url))
     );
   })());
 });
@@ -146,51 +155,43 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 2. Navigazione App Shell (HTML principale): Stale-While-Revalidate istantaneo (<50ms) con chiave canonica ./index.html
-  // Gli aggiornamenti di release attivano automaticamente il modale "Aggiornamento Pronto" in initBmServiceWorker().
+  // 2. Navigazione App Shell (HTML principale): Cache-First atomico dalla precache immutabile della release attiva.
+  // Evita qualsiasi mismatch tra un index.html nuovo e jszip.min.js della release precedente: il cambio avviene atomicamente col nuovo SW.
   if (url.origin === self.location.origin && req.mode === "navigate") {
     const indexKey = getCanonicalIndexUrl();
-    let bgWork = Promise.resolve();
-    const resPromise = (async () => {
+    event.respondWith((async () => {
       const cache = await caches.open(BM_SW_VERSION);
       const cached = await cache.match(indexKey) || await cache.match("./index.html");
-      const fetchPromise = fetch(indexKey, { cache: "no-cache" }).then((net) => {
+      if (cached) return cached;
+      try {
+        const net = await fetch(indexKey, { cache: "no-cache" });
         if (net && net.ok && !net.redirected) {
-          return safeCachePut(cache, indexKey, net.clone()).then(() => net);
+          await safeCachePut(cache, indexKey, net.clone());
         }
         return net;
-      }).catch(() => null);
-      if (cached) {
-        bgWork = fetchPromise;
-        return cached;
+      } catch (_e) {
+        return new Response("Offline", { status: 503 });
       }
-      return (await fetchPromise) || new Response("Offline", { status: 503 });
-    })();
-    event.respondWith(resPromise);
-    event.waitUntil(resPromise.then(() => bgWork).catch(() => {}));
+    })());
     return;
   }
 
-  // 3. Risorse statiche same-origin (jszip.min.js, manifest.json, icone): Stale-While-Revalidate con chiave canonica
+  // 3. Risorse statiche same-origin (jszip.min.js, manifest.json, icone): Cache-First atomico dalla precache immutabile della release attiva
   if (url.origin === self.location.origin) {
-    let bgWork = Promise.resolve();
     const canonicalShellKey = url.pathname.endsWith("/") ? getCanonicalIndexUrl() : (url.origin + url.pathname);
-    const resPromise = (async () => {
+    event.respondWith((async () => {
       const cache = await caches.open(BM_SW_VERSION);
       const cached = await cache.match(canonicalShellKey) || await cache.match(req, { ignoreSearch: true });
-      const fetchPromise = fetch(canonicalShellKey, { cache: "no-cache" }).then((net) => {
+      if (cached) return cached;
+      try {
+        const net = await fetch(canonicalShellKey, { cache: "no-cache" });
         if (net && net.ok && !net.redirected) {
-          return safeCachePut(cache, canonicalShellKey, net.clone()).then(() => net);
+          await safeCachePut(cache, canonicalShellKey, net.clone());
         }
         return net;
-      }).catch(() => null);
-      if (cached) {
-        bgWork = fetchPromise;
-        return cached;
+      } catch (_e) {
+        return new Response("Offline", { status: 503 });
       }
-      return (await fetchPromise) || new Response("Offline", { status: 503 });
-    })();
-    event.respondWith(resPromise);
-    event.waitUntil(resPromise.then(() => bgWork).catch(() => {}));
+    })());
   }
 });
