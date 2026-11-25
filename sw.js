@@ -1,5 +1,5 @@
-// Service Worker — Bibbia Multilingue PRO (v17.1.15 — App Shell 100% Atomica Immutabile, Guardie Redirect & Bulk JSON, Icone Maskable)
-const BM_SW_VERSION = "bm-pro-shell-v17-1-15";
+// Service Worker — Bibbia Multilingue PRO (v17.2.4 — App Shell 100% Atomica Whitelist, Protezione Cataloghi API & Guardie Redirect/Type)
+const BM_SW_VERSION = "bm-pro-shell-v17-2-4";
 const BM_API_CACHE = "bm-pro-api-v1";
 const BM_API_CACHE_MAX = 150;
 const BM_CRITICAL_SHELL = [
@@ -14,32 +14,19 @@ const BM_OPTIONAL_SHELL = [
   "./icon-512-maskable.png"
 ];
 
-function safeCachePut(cache, req, res) {
-  if (!res || !res.ok || res.redirected) return Promise.resolve();
-  return cache.put(req, res).catch(() => {});
-}
-
-async function precacheExact(cache, url) {
-  const req = new Request(url, { cache: "reload" });
-  const res = await fetch(req);
-  if (!res || !res.ok || res.redirected) {
-    throw new Error(`Precache non valida per ${url}`);
-  }
-  await cache.put(req, res);
+function getCanonicalUrl(relPath) {
+  return new URL(relPath, self.registration.scope).href;
 }
 
 function getCanonicalIndexUrl() {
-  return new URL("./index.html", self.registration.scope).href;
+  return getCanonicalUrl("./index.html");
 }
 
-async function pruneApiCache(cache) {
-  try {
-    const keys = await cache.keys();
-    if (keys.length > BM_API_CACHE_MAX) {
-      const excess = keys.length - BM_API_CACHE_MAX;
-      await Promise.all(keys.slice(0, excess).map((k) => cache.delete(k)));
-    }
-  } catch (_e) {}
+function getAllowedShellUrlSet() {
+  const allowed = new Set();
+  for (const path of BM_CRITICAL_SHELL) allowed.add(getCanonicalUrl(path));
+  for (const path of BM_OPTIONAL_SHELL) allowed.add(getCanonicalUrl(path));
+  return allowed;
 }
 
 function isExactOrSubHost(hostname, domain) {
@@ -48,12 +35,51 @@ function isExactOrSubHost(hostname, domain) {
   return h === d || h.endsWith("." + d);
 }
 
+function isProtectedCatalogApiUrl(urlStr) {
+  try {
+    const u = new URL(urlStr);
+    if (isExactOrSubHost(u.hostname, "api.getbible.net") && /^\/v2\/translations\.json$/i.test(u.pathname)) {
+      return true;
+    }
+    if (isExactOrSubHost(u.hostname, "bible.helloao.org") && /^\/api\/available_translations\.json$/i.test(u.pathname)) {
+      return true;
+    }
+  } catch (_e) {}
+  return false;
+}
+
 // Esclude i download integrali GetBible (~5 MB: /v2/{code}.json) da BM_API_CACHE
 // perché vengono già salvati in IndexedDB dall'app (mantiene in cache solo translations.json e i singoli capitoli).
 function isBulkGetBibleJson(url) {
   return isExactOrSubHost(url.hostname, "api.getbible.net")
     && /^\/v2\/[^/]+\.json$/i.test(url.pathname)
     && !/^\/v2\/translations\.json$/i.test(url.pathname);
+}
+
+function safeCachePut(cache, key, res) {
+  if (!res || !res.ok || res.redirected) return Promise.resolve();
+  if (res.type && res.type !== "basic" && res.type !== "cors") return Promise.resolve();
+  return cache.put(key, res).catch(() => {});
+}
+
+async function precacheExact(cache, relPath) {
+  const canonicalUrl = getCanonicalUrl(relPath);
+  const res = await fetch(new Request(canonicalUrl, { cache: "reload" }));
+  if (!res || !res.ok || res.redirected || (res.type && res.type !== "basic" && res.type !== "cors")) {
+    throw new Error(`Precache non valida per ${relPath}`);
+  }
+  await cache.put(canonicalUrl, res);
+}
+
+async function pruneApiCache(cache) {
+  try {
+    const keys = await cache.keys();
+    const evictable = keys.filter((k) => !isProtectedCatalogApiUrl(k.url));
+    if (evictable.length > BM_API_CACHE_MAX) {
+      const excess = evictable.length - BM_API_CACHE_MAX;
+      await Promise.all(evictable.slice(0, excess).map((k) => cache.delete(k)));
+    }
+  } catch (_e) {}
 }
 
 self.addEventListener("install", (event) => {
@@ -96,13 +122,15 @@ self.addEventListener("message", (event) => {
           caches.open(BM_SW_VERSION),
           caches.open(BM_API_CACHE)
         ]);
-        const [shellReqs, apiReqs, criticalChecks] = await Promise.all([
+        const jszipCanonical = getCanonicalUrl("./jszip.min.js");
+        const [shellReqs, apiReqs, criticalChecks, jszipHit] = await Promise.all([
           shellCache.keys(),
           apiCache.keys(),
-          Promise.all(BM_CRITICAL_SHELL.map((u) => shellCache.match(u, { ignoreSearch: true })))
+          Promise.all(BM_CRITICAL_SHELL.map((u) => shellCache.match(getCanonicalUrl(u)))),
+          shellCache.match(jszipCanonical)
         ]);
         const hasCoreShell = criticalChecks.every(Boolean);
-        const hasJszip = shellReqs.some((r) => new URL(r.url).pathname.endsWith("/jszip.min.js") || r.url.endsWith("jszip.min.js"));
+        const hasJszip = Boolean(jszipHit);
         port.postMessage({
           version: BM_SW_VERSION,
           cachedCount: shellReqs.length,
@@ -130,10 +158,10 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
 
   if (!url.protocol.startsWith("http")) return;
-  if (isExactOrSubHost(url.hostname, "wol.jw.org") || isExactOrSubHost(url.hostname, "jw.org") || isExactOrSubHost(url.hostname, "translate.googleapis.com")) return;
+  if (isExactOrSubHost(url.hostname, "jw.org") || isExactOrSubHost(url.hostname, "translate.googleapis.com")) return;
   if (isBulkGetBibleJson(url)) return;
 
-  // 1. API Bibbie online (GetBible capitoli/catalogo & HelloAO): Network-First con cache API separata e cap FIFO
+  // 1. API Bibbie online (GetBible capitoli/catalogo & HelloAO): Network-First con cache API separata e cataloghi protetti
   if (isExactOrSubHost(url.hostname, "api.getbible.net") || isExactOrSubHost(url.hostname, "bible.helloao.org")) {
     let bgWork = Promise.resolve();
     const resPromise = (async () => {
@@ -161,12 +189,11 @@ self.addEventListener("fetch", (event) => {
   }
 
   // 2. Navigazione App Shell (HTML principale): Cache-First atomico dalla precache immutabile della release attiva.
-  // Evita qualsiasi mismatch tra un index.html nuovo e jszip.min.js della release precedente: il cambio avviene atomicamente col nuovo SW.
   if (url.origin === self.location.origin && req.mode === "navigate") {
     const indexKey = getCanonicalIndexUrl();
     event.respondWith((async () => {
       const cache = await caches.open(BM_SW_VERSION);
-      const cached = await cache.match(indexKey) || await cache.match("./index.html");
+      const cached = await cache.match(indexKey);
       if (cached) return cached;
       try {
         const net = await fetch(indexKey, { cache: "no-cache" });
@@ -181,12 +208,14 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 3. Risorse statiche same-origin (jszip.min.js, manifest.json, icone): Cache-First atomico dalla precache immutabile della release attiva
+  // 3. Risorse statiche same-origin (whitelist App Shell immutabile della release attiva)
   if (url.origin === self.location.origin) {
     const canonicalShellKey = url.pathname.endsWith("/") ? getCanonicalIndexUrl() : (url.origin + url.pathname);
+    const allowedShell = getAllowedShellUrlSet();
+    if (!allowedShell.has(canonicalShellKey)) return;
     event.respondWith((async () => {
       const cache = await caches.open(BM_SW_VERSION);
-      const cached = await cache.match(canonicalShellKey) || await cache.match(req, { ignoreSearch: true });
+      const cached = await cache.match(canonicalShellKey);
       if (cached) return cached;
       try {
         const net = await fetch(canonicalShellKey, { cache: "no-cache" });
