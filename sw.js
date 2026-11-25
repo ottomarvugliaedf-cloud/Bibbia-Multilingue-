@@ -1,5 +1,5 @@
-// Service Worker — Bibbia Multilingue PRO (v17.1.6 — App Shell 100% Atomica Immutabile, Guardie Redirect & Bulk JSON, Icone Maskable)
-const BM_SW_VERSION = "bm-pro-shell-v17-1-6";
+// Service Worker — Bibbia Multilingue PRO (v17.1.15 — App Shell 100% Atomica Immutabile, Guardie Redirect & Bulk JSON, Icone Maskable)
+const BM_SW_VERSION = "bm-pro-shell-v17-1-15";
 const BM_API_CACHE = "bm-pro-api-v1";
 const BM_API_CACHE_MAX = 150;
 const BM_CRITICAL_SHELL = [
@@ -142,6 +142,11 @@ self.addEventListener("fetch", (event) => {
         const net = await fetch(req);
         if (net && net.ok && !net.redirected) {
           bgWork = safeCachePut(cache, req, net.clone()).then(() => pruneApiCache(cache));
+          return net;
+        }
+        if (net && net.status >= 500) {
+          const cached = await cache.match(req);
+          if (cached) return cached;
         }
         return net;
       } catch (_e) {

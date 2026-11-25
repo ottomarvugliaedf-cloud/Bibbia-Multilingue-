@@ -1992,20 +1992,43 @@ body.oled-mode .pub-ref-badge {
       flex-shrink: 0;
       transition: all 0.18s ease;
     }
-    .jw-btn .jw-circle svg { width: 20px; height: 20px; fill: #ffffff; transition: fill 0.18s ease; }
-    .jw-btn .jw-circle.jw-org-circle {
-      background-color: #4a6da7;
-      overflow: hidden;
-      padding: 0;
-      box-shadow: 0 2px 6px rgba(74, 109, 167, 0.48);
+    .jw-tower-svg {
+      width: 20px;
+      height: 20px;
+      fill: #ffffff;
+      display: block;
+      flex-shrink: 0;
+      transition: fill 0.18s ease;
     }
-    .jw-btn .jw-circle.jw-org-circle img {
+    .jw-org-logo-img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       display: block;
       border-radius: 50%;
       pointer-events: none;
+    }
+    .jw-modal-circle {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      overflow: hidden;
+      margin: 0 auto 8px auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1.5px solid #84ffff;
+      box-shadow: 0 4px 14px rgba(0, 229, 255, 0.35);
+    }
+    .jw-modal-circle .jw-tower-svg {
+      width: 24px;
+      height: 24px;
+    }
+    .jw-btn .jw-circle.jw-org-circle {
+      background-color: #4a6da7;
+      overflow: hidden;
+      padding: 0;
+      box-shadow: 0 2px 6px rgba(74, 109, 167, 0.48);
     }
 
     .jw-btn:active,
@@ -2051,7 +2074,7 @@ body.oled-mode .pub-ref-badge {
     main.bm-paper-reading .jw-btn-lang {
       color: #6b4c24;
     }
-    body.oled-mode .jw-btn.bm-jw-current {
+    body.oled-mode:not(.bm-paper-on) .jw-btn.bm-jw-current {
       border-color: #38bdf8;
       box-shadow: 0 0 10px rgba(56, 189, 248, 0.35);
     }
@@ -3352,6 +3375,33 @@ body.oled-mode .pub-ref-badge {
     vertical-align: top;
   }
   .bm-study-table tr:last-child td { border-bottom: none; }
+  .bm-study-doc-kicker {
+    font-size: 11.5px;
+    font-weight: 900;
+    letter-spacing: 0.6px;
+    color: #ffd54f;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .bm-study-doc-subhead {
+    font-size: 14px;
+    font-weight: 800;
+    color: #ffd54f;
+    margin: 11px 0 4px 0;
+  }
+  .bm-study-doc-fn-card {
+    background: var(--bg-card);
+    border-left: 3px solid #ffd54f;
+    border-radius: 7px;
+    padding: 7px 10px;
+    margin-bottom: 6px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .bm-study-doc-fn-mark {
+    color: #ffd54f;
+    font-weight: 800;
+  }
   main.bm-paper-reading .bm-study-doc-cat-btn {
     background: #e8dec8;
     color: #2c2216;
@@ -3386,11 +3436,21 @@ body.oled-mode .pub-ref-badge {
     color: #1e1b16;
     border-bottom-color: #d8ccb4;
   }
+  main.bm-paper-reading .bm-study-doc-kicker,
+  main.bm-paper-reading .bm-study-doc-subhead,
+  main.bm-paper-reading .bm-study-doc-fn-mark {
+    color: #7c2d12;
+  }
+  main.bm-paper-reading .bm-study-doc-fn-card {
+    background: #ebe3d1;
+    border-left-color: #8c5818;
+    color: #1e1b16;
+  }
   /* Visualizzatore Immagini & Mappe HD Studio (Lightbox Fullscreen con Pinch-to-Zoom & Pan) */
   .bm-study-lightbox {
     position: fixed;
     inset: 0;
-    z-index: 1380;
+    z-index: 1150;
     display: none;
     flex-direction: column;
     background: #020b1c;
@@ -3436,8 +3496,8 @@ body.oled-mode .pub-ref-badge {
     background: #000000;
     border-color: #1f1f1f;
   }
-  body.oled-mode .bm-study-doc-cat-btn:not(.active),
-  body.oled-mode .bm-study-table th {
+  body.oled-mode:not(.bm-paper-on) .bm-study-doc-cat-btn:not(.active),
+  body.oled-mode:not(.bm-paper-on) .bm-study-table th {
     background: #0a0a0a;
     border-color: #1f1f1f;
   }
@@ -5959,6 +6019,37 @@ async function idbPut(key, value) {
     }
   });
 }
+async function idbPutBatch(entries) {
+  if (!Array.isArray(entries) || entries.length === 0) return;
+  let db;
+  try {
+    db = await openDB();
+  } catch (e) {
+    dbInstancePromise = null;
+    throw e;
+  }
+  return new Promise((res, rej) => {
+    try {
+      const tx = db.transaction("bibles", "readwrite");
+      const store = tx.objectStore("bibles");
+      for (let i = 0; i < entries.length; i++) {
+        const it = entries[i];
+        if (it && typeof it.key === "string" && it.key) {
+          store.put(it.value, it.key);
+        }
+      }
+      tx.oncomplete = () => res();
+      tx.onerror = () => rej(tx.error || new Error("Errore di scrittura batch"));
+      tx.onabort = () => {
+        dbInstancePromise = null;
+        rej(tx.error || new Error("Spazio insufficiente o scrittura batch annullata"));
+      };
+    } catch (e) {
+      dbInstancePromise = null;
+      rej(e);
+    }
+  });
+}
 async function idbDelete(key) {
   try {
     const db = await openDB();
@@ -6030,6 +6121,7 @@ async function saveOfflineBible(id, data) {
   cacheBibleInMemory(id, data);
   bmSearchNormCache.delete(id);
   clearXRayChapterCache(id);
+  if (BM_STUDY_BIBLE_REGISTRY[id]) resetStudyBibleCaches();
 }
 async function removeOfflineBible(id) {
   await idbDelete(id);
@@ -6037,6 +6129,7 @@ async function removeOfflineBible(id) {
   memoryBibleCache.delete(id);
   bmSearchNormCache.delete(id);
   clearXRayChapterCache(id);
+  if (BM_STUDY_BIBLE_REGISTRY[id]) resetStudyBibleCaches();
 }
 function fetchWithTimeout(url, ms = 3500) {
   if (typeof AbortController === "undefined") return fetch(url);
@@ -6251,13 +6344,15 @@ function showBooksView() {
   const main = document.getElementById("mainContainer");
   const ot = BIBLE_BOOKS.filter(b => b.sec === "OT");
   const nt = BIBLE_BOOKS.filter(b => b.sec === "NT");
-  const isStudyActive = Boolean(BM_STUDY_BIBLE_REGISTRY[state.trans1]) && (state.downloadedBibles || []).includes(state.trans1);
+  const activeStudyBibleId = getActiveStudyBibleId();
+  const isStudyActive = Boolean(activeStudyBibleId) && (state.downloadedBibles || []).includes(activeStudyBibleId);
+  const safeStudyId = escapeJsStr(activeStudyBibleId);
   const studyTopBar = isStudyActive ? `
     <div class="bm-study-ribbon" style="margin-top:0;">
-      <button type="button" class="bm-study-ribbon-btn accent" onclick="openStudyDocsCategory('intro')">❓ Intro & 20 Domande</button>
-      <button type="button" class="bm-study-ribbon-btn accent" onclick="openStudyDocsCategory('appendices')">📑 Appendici A/B/C</button>
-      <button type="button" class="bm-study-ribbon-btn" onclick="openStudyDocsCategory('media')">🖼️ Galleria & Temi</button>
-      <button type="button" class="bm-study-ribbon-btn" onclick="openStudyDocsCategory('all')">📚 Indice Studio</button>
+      <button type="button" class="bm-study-ribbon-btn accent" onclick="openStudyDocsCategory('intro', 0, '${safeStudyId}')">❓ Intro & 20 Domande</button>
+      <button type="button" class="bm-study-ribbon-btn accent" onclick="openStudyDocsCategory('appendices', 0, '${safeStudyId}')">📑 Appendici A/B/C</button>
+      <button type="button" class="bm-study-ribbon-btn" onclick="openStudyDocsCategory('media', 0, '${safeStudyId}')">🖼️ Galleria & Temi</button>
+      <button type="button" class="bm-study-ribbon-btn" onclick="openStudyDocsCategory('all', 0, '${safeStudyId}')">📚 Indice Studio</button>
     </div>` : "";
   main.innerHTML = `
     ${studyTopBar}
@@ -6308,7 +6403,7 @@ function showChaptersView(bookId) {
     getStudyBibleDocsData(activeStudyBibleId).then(docsData => {
       if (reqId !== currentViewReqId || !docsData) return;
       const slot = document.getElementById("bmChaptersStudyRibbon");
-      if (slot) slot.innerHTML = renderBookStudyRibbonHtml(docsData, pendingGridBookId);
+      if (slot) slot.innerHTML = renderBookStudyRibbonHtml(docsData, pendingGridBookId, activeStudyBibleId);
     }).catch(() => {});
   }
   syncBmPaperMode(true);
@@ -7070,7 +7165,7 @@ async function openNameLinkPeekModal(idx, verseNum, displayTitle = "") {
     const excerpt = makeInsightPeekExcerpt(ent.body, 480);
     previewHtml = `
       <div style="font-size:12px; font-weight:800; color:#ffd54f; margin-bottom:6px; letter-spacing:0.3px;">📘 ${escapeHtml(ent.title)}</div>
-      <div class="bm-justify-text" style="max-height:38vh; overflow-y:auto; font-size:14px; line-height:1.55; color:#eef6ff; white-space:pre-wrap; background:var(--bg-main); border:1px solid rgba(41,182,246,0.45); border-radius:9px; padding:10px 11px; margin-bottom:10px;">${formatNoteLinks(excerpt)}</div>
+      <div class="bm-justify-text" style="max-height:38vh; overflow-y:auto; font-size:14px; line-height:1.55; color:#eef6ff; white-space:pre-wrap; background:var(--bg-main); border:1px solid rgba(41,182,246,0.45); border-radius:9px; padding:10px 11px; margin-bottom:10px;">${formatNoteLinks(excerpt, null, "it")}</div>
     `;
   } else if (target.hits && target.hits.length > 1) {
     const firstEnt = entries[target.hits[0]];
@@ -7082,7 +7177,7 @@ async function openNameLinkPeekModal(idx, verseNum, displayTitle = "") {
     previewHtml = `
       <div style="font-size:12px; color:#84ffff; font-weight:800; margin-bottom:6px;">Più voci omonime in Perspicacia (${target.hits.length}):</div>
       <div style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:8px;">${homonymChips}</div>
-      ${excerpt ? `<div class="bm-justify-text" style="max-height:26vh; overflow-y:auto; font-size:13.5px; line-height:1.5; color:#e3f2fd; background:var(--bg-main); border:1px solid rgba(41,182,246,0.4); border-radius:9px; padding:9px 10px; margin-bottom:10px;">${formatNoteLinks(excerpt)}</div>` : ""}
+      ${excerpt ? `<div class="bm-justify-text" style="max-height:26vh; overflow-y:auto; font-size:13.5px; line-height:1.5; color:#e3f2fd; background:var(--bg-main); border:1px solid rgba(41,182,246,0.4); border-radius:9px; padding:9px 10px; margin-bottom:10px;">${formatNoteLinks(excerpt, null, "it")}</div>` : ""}
     `;
   } else if (!entries.length) {
     previewHtml = `<div style="font-size:13px; color:#cfe3ff; background:var(--bg-main); border:1px solid rgba(41,182,246,0.4); border-radius:9px; padding:10px; margin-bottom:10px; text-align:center;">Importa <b>Perspicacia (it)</b> una sola volta da ⚙️ ➔ Moduli per vedere qui l'anteprima enciclopedica istantanea.</div>`;
@@ -7251,15 +7346,18 @@ async function renderChapterView(preserveAudio = false) {
   main.innerHTML = `<div class="loader">Caricamento di <b>${escapeHtml(book.name)} ${state.chapter}</b>...</div>`;
   syncBmPaperMode();
   try {
+    const activeStudyBibleId = getActiveStudyBibleId();
     const [data1, footnotes1, outline1, studyExtras1, studyDocsData1, data2, data3] = await Promise.all([
       fetchChapterData(state.trans1, state.bookId, state.chapter),
       fetchChapterFootnotes(state.trans1, state.bookId, state.chapter).catch(() => ({})),
       bmSettings.showOutlines !== false
         ? fetchChapterOutline(state.trans1, state.bookId, state.chapter).catch(() => [])
         : Promise.resolve([]),
-      fetchChapterStudyExtras(state.trans1, state.bookId, state.chapter).catch(() => null),
-      BM_STUDY_BIBLE_REGISTRY[state.trans1]
-        ? getStudyBibleDocsData(state.trans1).catch(() => null)
+      activeStudyBibleId
+        ? fetchChapterStudyExtras(activeStudyBibleId, state.bookId, state.chapter).catch(() => null)
+        : Promise.resolve(null),
+      activeStudyBibleId
+        ? getStudyBibleDocsData(activeStudyBibleId).catch(() => null)
         : Promise.resolve(null),
       state.parallelCount >= 2
         ? fetchChapterData(state.trans2, state.bookId, state.chapter).catch(() => [])
@@ -7294,10 +7392,11 @@ async function renderChapterView(preserveAudio = false) {
         const sMedia = (studyExtras1.media && (studyExtras1.media[vKey] || studyExtras1.media[vNum])) || [];
         const hasStudy = Array.isArray(sNotes) && sNotes.length > 0;
         const hasMedia = Array.isArray(sMedia) && sMedia.length > 0;
+        const safeSBId = escapeJsStr(studyExtras1.bibleId || activeStudyBibleId);
         if (hasStudy) {
-          studyBadge = ` <span class="bm-study-badge" title="Apri Note di Studio${hasMedia ? ' e Media' : ''} ufficiali" onclick="event.stopPropagation(); openStudyNoteModal(${vNum})">🎓${hasMedia ? '🖼️' : ''}</span>`;
+          studyBadge = ` <span class="bm-study-badge" title="Apri Note di Studio${hasMedia ? ' e Media' : ''} ufficiali" onclick="event.stopPropagation(); openStudyNoteModal(${vNum}, '${safeSBId}')">🎓${hasMedia ? '🖼️' : ''}</span>`;
         } else if (hasMedia) {
-          mediaBadge = ` <span class="bm-study-media-badge" title="Apri Immagini e Video del versetto" onclick="event.stopPropagation(); openStudyNoteModal(${vNum})">🖼️</span>`;
+          mediaBadge = ` <span class="bm-study-media-badge" title="Apri Immagini e Video del versetto" onclick="event.stopPropagation(); openStudyNoteModal(${vNum}, '${safeSBId}')">🖼️</span>`;
         }
       }
       const hasNote = Boolean(findNoteForVerse(state.bookId, state.chapter, vNum));
@@ -7368,7 +7467,6 @@ async function renderChapterView(preserveAudio = false) {
       }).join("");
     }
     const backBtnHtml = getBackBtnHtml();
-    const activeStudyBibleId = getActiveStudyBibleId();
     const studyRibbonHtml = renderChapterStudyRibbonHtml(studyExtras1, studyDocsData1, state.bookId, state.chapter);
     const jwOrgStudyPillsHtml = activeStudyBibleId ? renderJwOrgStudyPillsHtml(state.bookId, state.chapter, activeStudyBibleId) : "";
     const outlineHtml = renderChapterOutlineHtml(outline1, book.name, state.chapter);
@@ -8466,50 +8564,79 @@ const SI_ABBR_MAP = {
   "giuda": 65, "gda": 65, "riv": 66, "ri": 66,
   // English (full names + official NWT Study Edition abbreviations)
   "genesis": 1, "ge": 1, "exodus": 2, "ex": 2, "leviticus": 3, "numbers": 4, "deuteronomy": 5,
-  "joshua": 6, "jos": 6, "judges": 7, "jg": 7, "ruth": 8, "1samuel": 9, "2samuel": 10,
-  "1kings": 11, "1ki": 11, "2kings": 12, "2ki": 12, "1chronicles": 13, "1ch": 13, "2chronicles": 14, "2ch": 14,
-  "ezra": 15, "ezr": 15, "nehemiah": 16, "esther": 17, "job": 18, "psalm": 19, "psalms": 19, "ps": 19,
-  "proverbs": 20, "ecclesiastes": 21, "songofsolomon": 22, "isaiah": 23, "jeremiah": 24, "jer": 24,
-  "lamentations": 25, "ezekiel": 26, "daniel": 27, "hosea": 28, "hos": 28, "ho": 28, "joel": 29, "joe": 29,
-  "obadiah": 31, "ob": 31, "jonah": 32, "jon": 32, "micah": 33, "nahum": 34,
-  "habakkuk": 35, "hab": 35, "zephaniah": 36, "zep": 36, "haggai": 37, "hag": 37, "zechariah": 38, "zec": 38,
+  "joshua": 6, "josh": 6, "jos": 6, "judges": 7, "judg": 7, "jg": 7, "ruth": 8, "1samuel": 9, "2samuel": 10,
+  "1kings": 11, "1ki": 11, "2kings": 12, "2ki": 12, "1chronicles": 13, "1chron": 13, "1ch": 13, "2chronicles": 14, "2chron": 14, "2ch": 14,
+  "ezra": 15, "ezr": 15, "nehemiah": 16, "neh": 16, "esther": 17, "esth": 17, "job": 18, "psalm": 19, "psalms": 19, "ps": 19,
+  "proverbs": 20, "ecclesiastes": 21, "songofsolomon": 22, "songofsol": 22, "song": 22, "isaiah": 23, "jeremiah": 24, "jer": 24,
+  "lamentations": 25, "ezekiel": 26, "ezek": 26, "daniel": 27, "hosea": 28, "hos": 28, "ho": 28, "joel": 29, "joe": 29,
+  "obadiah": 31, "obad": 31, "ob": 31, "jonah": 32, "jon": 32, "micah": 33, "nahum": 34, "nah": 34,
+  "habakkuk": 35, "hab": 35, "zephaniah": 36, "zeph": 36, "zep": 36, "haggai": 37, "hag": 37, "zechariah": 38, "zech": 38, "zec": 38,
   "malachi": 39, "matthew": 40, "mark": 41, "luke": 42, "john": 43, "joh": 43, "acts": 44, "ac": 44,
   "romans": 45, "1corinthians": 46, "2corinthians": 47, "galatians": 48, "ga": 48,
-  "ephesians": 49, "eph": 49, "philippians": 50, "php": 50, "colossians": 51,
-  "1thessalonians": 52, "1th": 52, "2thessalonians": 53, "2th": 53, "1timothy": 54, "1ti": 54,
-  "2timothy": 55, "2ti": 55, "titus": 56, "philemon": 57, "phm": 57, "hebrews": 58, "heb": 58,
-  "james": 59, "jas": 59, "1peter": 60, "1pe": 60, "2peter": 61, "2pe": 61,
+  "ephesians": 49, "eph": 49, "philippians": 50, "phil": 50, "php": 50, "colossians": 51,
+  "1thessalonians": 52, "1thess": 52, "1th": 52, "2thessalonians": 53, "2thess": 53, "2th": 53, "1timothy": 54, "1ti": 54,
+  "2timothy": 55, "2ti": 55, "titus": 56, "philemon": 57, "philem": 57, "phm": 57, "hebrews": 58, "heb": 58,
+  "james": 59, "jas": 59, "1peter": 60, "1pet": 60, "1pe": 60, "2peter": 61, "2pet": 61, "2pe": 61,
   "1john": 62, "1jo": 62, "2john": 63, "2jo": 63, "3john": 64, "3jo": 64,
   "jude": 65, "revelation": 66, "re": 66, "rev": 66,
   // Español (66 nombres completos + siglas oficiales TNM edición de estudio)
   "exodo": 2, "levitico": 3, "numeros": 4, "deuteronomio": 5, "dt": 5,
-  "josue": 6, "jueces": 7, "jue": 7, "1reyes": 11, "2reyes": 12,
+  "josue": 6, "jueces": 7, "juec": 7, "jue": 7, "1reyes": 11, "1rey": 11, "2reyes": 12, "2rey": 12,
   "1cronicas": 13, "2cronicas": 14, "esdras": 15, "nehemias": 16, "ester": 17,
-  "salmo": 19, "salmos": 19, "proverbios": 20, "eclesiastes": 21,
+  "salmo": 19, "salmos": 19, "proverbios": 20, "eclesiastes": 21, "ecl": 21,
   "elcantardeloscantares": 22, "cantardeloscantares": 22,
-  "isaias": 23, "is": 23, "jeremias": 24, "lamentaciones": 25, "ezequiel": 26,
+  "isaias": 23, "is": 23, "jeremias": 24, "lamentaciones": 25, "ezequiel": 26, "ezeq": 26,
   "oseas": 28, "abdias": 31, "jonas": 32, "miqueas": 33, "miq": 33,
-  "nahum": 34, "habacuc": 35, "sofonias": 36, "ageo": 37, "zacarias": 38, "malaquias": 39,
-  "mateo": 40, "marcos": 41, "lucas": 42, "juan": 43, "jn": 43, "hechos": 44, "hch": 44,
+  "habacuc": 35, "sofonias": 36, "ageo": 37, "zacarias": 38, "malaquias": 39,
+  "mateo": 40, "marcos": 41, "lucas": 42, "juan": 43, "jn": 43, "hechos": 44, "hech": 44, "hch": 44,
   "romanos": 45, "1corintios": 46, "2corintios": 47, "galatas": 48, "efesios": 49,
-  "filipenses": 50, "colosenses": 51, "1tesalonicenses": 52, "1te": 52, "2tesalonicenses": 53, "2te": 53,
+  "filipenses": 50, "filip": 50, "colosenses": 51, "1tesalonicenses": 52, "1tes": 52, "1te": 52, "2tesalonicenses": 53, "2tes": 53, "2te": 53,
   "1timoteo": 54, "2timoteo": 55, "filemon": 57, "hebreos": 58,
-  "santiago": 59, "snt": 59, "1pedro": 60, "2pedro": 61,
+  "santiago": 59, "sant": 59, "snt": 59, "1pedro": 60, "1ped": 60, "2pedro": 61, "2ped": 61,
   "1juan": 62, "1jn": 62, "2juan": 63, "2jn": 63, "3juan": 64, "3jn": 64,
-  "judas": 65, "jud": 65, "apocalipsis": 66, "ap": 66,
+  "judas": 65, "jud": 65, "apocalipsis": 66, "apoc": 66, "ap": 66,
   // Português (66 livros completos + siglas oficiais TNM Edição de Estudo TPO)
-  "juizes": 7, "jz": 7, "rute": 8, "1reis": 11, "1rs": 11, "2reis": 12, "2rs": 12,
-  "neemias": 16, "canticodesalomao": 22, "canticodoscanticos": 22,
-  "lamentacoes": 25, "je": 24, "oseias": 28, "jl": 29, "obadias": 31, "miqueias": 33,
-  "naum": 34, "habacuque": 35, "sofonias": 36, "ageu": 37, "zacarias": 38, "za": 38, "malaquias": 39,
-  "mateus": 40, "joao": 43, "jo": 43, "atos": 44, "efesios": 49, "colossenses": 51,
+  "exo": 2, "juizes": 7, "jui": 7, "jz": 7, "rute": 8, "1reis": 11, "1rs": 11, "2reis": 12, "2rs": 12,
+  "1cro": 13, "2cro": 14, "neemias": 16, "ocanticodesalomao": 22, "canticodesalomao": 22, "canticodoscanticos": 22,
+  "lamentacoes": 25, "je": 24, "oseias": 28, "jl": 29, "obadias": 31, "oba": 31, "miqueias": 33,
+  "habacuque": 35, "ageu": 37, "za": 38,
+  "mateus": 40, "joao": 43, "jo": 43, "atos": 44, "colossenses": 51,
   "1tessalonicenses": 52, "2tessalonicenses": 53, "hebreus": 58, "he": 58,
-  "tiago": 59, "tg": 59, "1joao": 62, "2joao": 63, "3joao": 64, "apocalipse": 66
+  "tiago": 59, "tia": 59, "tg": 59, "1joao": 62, "2joao": 63, "3joao": 64, "ju": 65, "apocalipse": 66, "apo": 66
 };
-const BM_REQUIRE_COLON_SHORT_BOOKS = new Set(["es", "la", "le", "da", "de", "ne", "re", "am", "ho", "is", "he", "je", "jo", "at"]);
+const BM_REQUIRE_COLON_SHORT_BOOKS = new Set(["es", "la", "le", "da", "de", "ne", "re", "am", "ho", "is", "he", "je", "jo", "at", "os", "na"]);
 
-const BM_BIBLE_CHAIN_RE = /\b(?:(?:([1-3]\s*)?((?:(?:El|O)\s+)?[A-ZÀ-Ý][A-Za-zÀ-ÖØ-öø-ÿ]{1,18}(?:\s+(?:dei|of|de|dos)\s+(?:los\s+)?[A-Za-zÀ-ÖØ-öø-ÿ]{1,18})?)\.?\s+(\d{1,3})(?::(\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?(?::\d{1,3}[a-z]?)?)?(?:\s*,\s*(?!\d{1,3}\s*:)\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?)*))?)|(?:(\d{1,3}):(\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?(?::\d{1,3}[a-z]?)?)?(?:\s*,\s*(?!\d{1,3}\s*:)\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?)*)))((?:\s*[;,]\s*(?![1-3]?\s*[A-Za-zÀ-ÖØ-öø-ÿ]{2})\d{1,3}[a-z]?(?::\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?(?::\d{1,3}[a-z]?)?)?(?:\s*,\s*(?!\d{1,3}\s*:)\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?)*)?(?:\s*[–-]\s*\d{1,3}[a-z]?(?::\d{1,3}[a-z]?)?)?)*)/g;
-const BM_BIBLE_TAIL_SEG_RE = /(\s*([;,])\s*)(\d{1,3}[a-z]?)(?::(\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?(?:\s*,\s*(?!\d{1,3}\s*:)\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?)*))?(?:\s*[–-]\s*(\d{1,3}[a-z]?))?/g;
+const BM_SINGLE_CH_MAX_VERSE = { 31: 21, 57: 25, 63: 13, 64: 15, 65: 25 };
+
+const BM_BIBLE_CHAIN_RE = (() => {
+  const NUM = String.raw`\d{1,3}(?!\d|\.\d|[°ªº])`;
+  const VTOK = NUM + String.raw`(?:[a-z](?![A-Za-zÀ-ÖØ-öø-ÿ]))?`;
+  const NOT_CH_OR_CROSS = String.raw`(?!\d{1,3}\s*:|\d{1,3}(?:[a-z](?![A-Za-zÀ-ÖØ-öø-ÿ]))?\s*[–-]\s*\d{1,3}\s*:)`;
+  const VSPEC = String.raw`(?:` + VTOK + String.raw`\s*[–-]\s*` + NUM + String.raw`:` + VTOK +
+    `|` + VTOK + String.raw`(?:\s*[–-]\s*` + VTOK + String.raw`(?!\s*:))?(?:\s*,\s*` + NOT_CH_OR_CROSS + VTOK + String.raw`(?:\s*[–-]\s*` + VTOK + String.raw`(?!\s*:))?)*)`;
+  const BOOK = String.raw`([1-3]\s*)?((?:(?:El|O)\s+)?[A-ZÀ-Ý][A-Za-zÀ-ÖØ-öø-ÿ]{1,18}(?:\s+(?:dei|of|de|dos)\s+(?:los\s+)?[A-Za-zÀ-ÖØ-öø-ÿ]{1,18})?)`;
+  const HEAD_BOOK = BOOK + String.raw`\.?\s+(` + NUM + String.raw`)(?:(?::(` + VSPEC + String.raw`))|(?:\s*[–-]\s*(` + VTOK + String.raw`)(?!\s*:)))?`;
+  const HEAD_IMPLICIT = String.raw`(` + NUM + String.raw`):(` + VSPEC + String.raw`)`;
+  const TAIL_ITEM = String.raw`\s*[;,]\s*(?![1-3]?\s*[A-Za-zÀ-ÖØ-öø-ÿ]{2})` + VTOK +
+    String.raw`(?:(?::` + VSPEC + String.raw`)|(?:\s*[–-]\s*` + VTOK + String.raw`(?::` + VTOK + String.raw`)?))?`;
+  return new RegExp(
+    String.raw`(^|[^\p{L}\p{N}])(?:(?:` + HEAD_BOOK + `)|(?:` + HEAD_IMPLICIT + `))((?:` + TAIL_ITEM + `)*)`,
+    "gu"
+  );
+})();
+
+const BM_BIBLE_TAIL_SEG_RE = (() => {
+  const NUM = String.raw`\d{1,3}(?!\d|\.\d|[°ªº])`;
+  const VTOK = NUM + String.raw`(?:[a-z](?![A-Za-zÀ-ÖØ-öø-ÿ]))?`;
+  const NOT_CH_OR_CROSS = String.raw`(?!\d{1,3}\s*:|\d{1,3}(?:[a-z](?![A-Za-zÀ-ÖØ-öø-ÿ]))?\s*[–-]\s*\d{1,3}\s*:)`;
+  const VSPEC = String.raw`(?:` + VTOK + String.raw`\s*[–-]\s*` + NUM + String.raw`:` + VTOK +
+    `|` + VTOK + String.raw`(?:\s*[–-]\s*` + VTOK + String.raw`(?!\s*:))?(?:\s*,\s*` + NOT_CH_OR_CROSS + VTOK + String.raw`(?:\s*[–-]\s*` + VTOK + String.raw`(?!\s*:))?)*)`;
+  return new RegExp(
+    String.raw`(\s*([;,])\s*)(` + VTOK + String.raw`)(?:(?::(` + VSPEC + String.raw`))|(?:\s*[–-]\s*(` + VTOK + String.raw`(?::` + VTOK + String.raw`)?)))?`,
+    "g"
+  );
+})();
+
 const BM_PUB_REF_RE = (() => {
   const N = String.raw`\d+(?:\s*[–-]\s*\d+)?(?:\s*,\s*\d+(?:\s*[–-]\s*\d+)?)*`;
   const PG = String.raw`(?:\s+(?:pp?\.|pagg?\.)\s*` + N + `)`;
@@ -8526,33 +8653,82 @@ const BM_PUB_REF_RE = (() => {
     `)`, "g");
 })();
 
+// Unità temporali/numeriche ed ere storiche IT/EN/ES/PT che escludono falsi positivi (es. "Giuda 17 anni", "Esodo 1513 a.E.V.", "Mateo 2 a. e. c.", "Judas 14 AEC")
+const BM_SINGLE_CH_NON_VERSE_UNIT_RE = /^\s+(?:anni|anno|mesi|mese|giorni|giorno|mila|citta|uomini|figli|tribu|re|volte|generazioni|principi|sacerdoti|profeti|secoli|secolo|cubiti|sicli|talenti|stadi|a\.?\s*e\.?\s*v\.?|e\.\s*v\.?|a\.?\s*e\.?\s*c\.?|e\.\s*c\.?|a\.\s*de\s+la\s+e\.\s*c\.?|a\.\s*c\.?|d\.\s*c\.?|b\.?\s*c\.?\s*e\.?|b\.\s*c\.?|c\.\s*e\.?|a\.\s*d\.?|years?|months?|days?|thousand|cities|men|sons|tribes?|kings?|anos?|meses|dias|mil|ciudades|hombres|hijos|tribus|reyes|cidades|homens|filhos|reis)(?=$|[^\p{L}\p{N}])/iu;
+const BM_ERA_AFTER_NUM_RE = /^\s+(?:a\.?\s*e\.?\s*v\.?|e\.\s*v\.?|a\.?\s*e\.?\s*c\.?|e\.\s*c\.?|a\.\s*de\s+la\s+e\.\s*c\.?|a\.\s*c\.?|d\.\s*c\.?|b\.?\s*c\.?\s*e\.?|b\.\s*c\.?|c\.\s*e\.?|a\.\s*d\.?)(?=$|[^\p{L}\p{N}])/iu;
+const BM_ERA_RAW_UPPER_RE = /^\s+(?:AEV|EV|AEC|EC|AC|DC|BCE|CE|BC|AD)(?=$|[^\p{L}\p{N}])/u;
+
+function isFollowedByNonVerseUnit(str, endIdx) {
+  if (!str || endIdx >= str.length) return false;
+  const rawSlice = str.slice(endIdx, endIdx + 28);
+  return BM_ERA_RAW_UPPER_RE.test(rawSlice) || BM_SINGLE_CH_NON_VERSE_UNIT_RE.test(normalizeForSearch(rawSlice));
+}
+
+function isFollowedByHistoricalEra(str, endIdx) {
+  if (!str || endIdx >= str.length) return false;
+  const rawSlice = str.slice(endIdx, endIdx + 24);
+  return BM_ERA_RAW_UPPER_RE.test(rawSlice) || BM_ERA_AFTER_NUM_RE.test(normalizeForSearch(rawSlice));
+}
+
+function isFollowedByThousandsContinuation(str, endIdx, cap) {
+  if (!str || endIdx >= str.length) return false;
+  const after = str.slice(endIdx, endIdx + 10);
+  const grpM = after.match(/^(?:,|[ \t\u00A0\u202F]+)(\d{3})(?!\d)/);
+  if (!grpM) return false;
+  const g3 = grpM[1];
+  return g3.startsWith("0") || parseInt(g3, 10) > cap;
+}
+
+function isValidSingleChVerseSpec(bId, specStr) {
+  const maxV = BM_SINGLE_CH_MAX_VERSE[Number(bId)];
+  if (!maxV) return true;
+  const nums = String(specStr || "").match(/\d+/g);
+  if (!nums || !nums.length) return false;
+  return nums.every(s => {
+    if (s.length > 1 && s.startsWith("0")) return false;
+    const n = parseInt(s, 10);
+    return n >= 1 && n <= maxV;
+  });
+}
+
+// Risolve in modo coerente la sigla ambigua "Es" (Ester in inglese vs Esodo in italiano) usando sempre il contesto visivo
+function resolveAmbiguousEsBookId(langHint = "") {
+  const resolvedLang = langHint || ((currentViewContext && currentViewContext.type === "study_docs")
+    ? getStudyBibleConfig(bmStudyDocsActiveBibleId).langCode
+    : getActiveTTSLangCode(false, false));
+  return resolvedLang === "en" ? 17 : 2;
+}
+
 // Parser puro di citazioni bibliche (condiviso tra formatNoteLinks() e bpCitedRefs() senza overhead HTML)
-function transformBibleRefChain(plainSegment, defaultBookId, renderTokenFn) {
+function transformBibleRefChain(plainSegment, defaultBookId, renderTokenFn, langHint = "") {
   if (!plainSegment) return "";
   BM_BIBLE_CHAIN_RE.lastIndex = 0;
-  return plainSegment.replace(BM_BIBLE_CHAIN_RE, (fullMatch, numPrefix, wordPart, chWithBook, vListWithBook, chImplicit, vListImplicit, tailPart) => {
+  return plainSegment.replace(BM_BIBLE_CHAIN_RE, (fullMatch, prefix, numPrefix, wordPart, chWithBook, vListWithBook, rangeEndNoColonWithBook, chImplicit, vListImplicit, tailPart, matchOffset, wholeStr) => {
+    const pfx = prefix || "";
+    const coreMatch = fullMatch.slice(pfx.length);
+    const coreOffset = matchOffset + pfx.length;
+
     let bId = null;
     let firstCh = "";
     let firstVList = "";
+    let firstRangeEndNoColon = "";
 
     if (wordPart) {
       const key = normalizeForSearch((numPrefix || "") + wordPart).replace(/\s+/g, "");
       const isPtJob = !numPrefix && /^j[óò]$/i.test(String(wordPart || "").trim());
-      // Evita falsi positivi in prosa IT/EN/ES/PT (es. "La 2", "Le 12", "Da 20", "He 10", "Es. 12"): per le sigle brevi ambigue richiede ":versetto" esplicito
+      // Evita falsi positivi in prosa IT/EN/ES/PT (es. "La 2", "Le 12", "Da 20", "Os 12", "Na 1ª", "He 10"): per le sigle brevi ambigue richiede ":versetto" esplicito
       if (!isPtJob && BM_REQUIRE_COLON_SHORT_BOOKS.has(key) && !vListWithBook) return fullMatch;
       if (isPtJob) {
         bId = 18;
       } else if (key === "es") {
-        const isEnCtx = (currentViewContext && currentViewContext.type === "study_docs")
-          ? (getStudyBibleConfig(bmStudyDocsActiveBibleId).langCode === "en")
-          : (getActiveTTSLangCode(false) === "en");
-        bId = isEnCtx ? 17 : 2;
+        bId = resolveAmbiguousEsBookId(langHint);
       } else {
         bId = SI_ABBR_MAP[key] || (BIBLE_BOOKS.find(b => normalizeForSearch(b.name).replace(/\s+/g, "") === key)?.id);
       }
       if (!bId) return fullMatch;
       firstCh = chWithBook;
       firstVList = vListWithBook || "";
+      firstRangeEndNoColon = rangeEndNoColonWithBook ? rangeEndNoColonWithBook.replace(/\D/g, "") : "";
     } else {
       if (!defaultBookId || !chImplicit || !vListImplicit) return fullMatch;
       bId = defaultBookId;
@@ -8563,33 +8739,119 @@ function transformBibleRefChain(plainSegment, defaultBookId, renderTokenFn) {
     const bookObj = getBook(bId);
     const bookName = bookObj.name;
     const isSingleChBook = bookObj.ch === 1;
-    let curCh = isSingleChBook ? "1" : firstCh;
+    const capNum = isSingleChBook ? (BM_SINGLE_CH_MAX_VERSE[bId] || 25) : bookObj.ch;
+    const headEndIdx = coreMatch.length - (tailPart ? tailPart.length : 0);
 
-    const headEndIdx = fullMatch.length - (tailPart ? tailPart.length : 0);
-    const firstToken = fullMatch.slice(0, headEndIdx);
+    // Blocca numeri con separatore di migliaia (es. "Judah 10,000" o "Giuda 12 000")
+    if (!firstVList && isFollowedByThousandsContinuation(wholeStr, coreOffset + headEndIdx, capNum)) {
+      return fullMatch;
+    }
+
+    if (isSingleChBook) {
+      if (firstVList && (Number(firstCh) !== 1 || /:/.test(firstVList))) return fullMatch;
+      const singleChCheck = firstVList || (firstRangeEndNoColon ? `${firstCh}-${firstRangeEndNoColon}` : firstCh);
+      if (!isValidSingleChVerseSpec(bId, singleChCheck)) return fullMatch;
+      if (!firstVList && isFollowedByNonVerseUnit(wholeStr, coreOffset + headEndIdx)) {
+        return fullMatch;
+      }
+    } else {
+      if (firstCh.length > 1 && firstCh.startsWith("0")) return fullMatch;
+      const chNum = parseInt(firstCh, 10);
+      if (!Number.isFinite(chNum) || chNum < 1 || chNum > bookObj.ch) return fullMatch;
+      if (firstVList) {
+        const headCrossCheck = firstVList.match(/[–-]\s*(\d{1,3}):\d{1,3}/);
+        if (headCrossCheck) {
+          const c2 = parseInt(headCrossCheck[1], 10);
+          if (!Number.isFinite(c2) || c2 < 1 || c2 > bookObj.ch) return fullMatch;
+        }
+      } else {
+        if (firstRangeEndNoColon) {
+          const endCh = parseInt(firstRangeEndNoColon, 10);
+          if (!Number.isFinite(endCh) || endCh < 1 || endCh > bookObj.ch) return fullMatch;
+        }
+        if (isFollowedByHistoricalEra(wholeStr, coreOffset + headEndIdx)) {
+          return fullMatch;
+        }
+      }
+    }
+
+    let curCh = isSingleChBook ? "1" : firstCh;
+    const firstToken = coreMatch.slice(0, headEndIdx);
+    const singleChSpec = firstVList || (firstRangeEndNoColon ? `${firstCh}-${firstRangeEndNoColon}` : firstCh);
     const firstRef = isSingleChBook
-      ? `${bookName} 1:${firstVList || firstCh}`
+      ? `${bookName} 1:${singleChSpec}`
       : `${bookName} ${curCh}${firstVList ? ":" + firstVList : ""}`;
 
-    let outSeg = renderTokenFn(firstRef, firstToken);
+    let outSeg = pfx + renderTokenFn(firstRef, firstToken);
     if (!tailPart) return outSeg;
     const crossChMatch = firstToken.match(/[–-]\s*(\d{1,3}):\d{1,3}/);
-    if (crossChMatch) curCh = crossChMatch[1];
+    if (crossChMatch) {
+      const c2 = parseInt(crossChMatch[1], 10);
+      if (Number.isFinite(c2) && c2 >= 1 && c2 <= bookObj.ch) curCh = crossChMatch[1];
+    } else if (!isSingleChBook && !firstVList && firstRangeEndNoColon) {
+      curCh = firstRangeEndNoColon;
+    }
     let hasColons = Boolean(firstVList) || isSingleChBook;
 
     BM_BIBLE_TAIL_SEG_RE.lastIndex = 0;
-    outSeg += tailPart.replace(BM_BIBLE_TAIL_SEG_RE, (segMatch, sepFull, sepChar, n1, vListAfterColon, rangeEndNoColon) => {
+    outSeg += tailPart.replace(BM_BIBLE_TAIL_SEG_RE, (segMatch, sepFull, sepChar, n1, vListAfterColon, rangeEndNoColon, tailOffset) => {
       const cleanN1 = n1.replace(/\D/g, "");
+      if (!cleanN1 || (cleanN1.length > 1 && cleanN1.startsWith("0"))) return segMatch;
+      const num1 = parseInt(cleanN1, 10);
+      const absSegEnd = coreOffset + headEndIdx + tailOffset + segMatch.length;
       let targetRef = "";
       if (vListAfterColon) {
-        curCh = isSingleChBook ? "1" : cleanN1; hasColons = true;
-        targetRef = `${bookName} ${curCh}:${vListAfterColon}`;
+        if (isSingleChBook) {
+          if (num1 !== 1 || /:/.test(vListAfterColon) || !isValidSingleChVerseSpec(bId, vListAfterColon)) return segMatch;
+          curCh = "1";
+          hasColons = true;
+          targetRef = `${bookName} 1:${vListAfterColon}`;
+        } else {
+          if (num1 < 1 || num1 > bookObj.ch) return segMatch;
+          const tailCross = vListAfterColon.match(/[–-]\s*(\d{1,3}):\d{1,3}/);
+          let nextCh = cleanN1;
+          if (tailCross) {
+            const c2 = parseInt(tailCross[1], 10);
+            if (!Number.isFinite(c2) || c2 < 1 || c2 > bookObj.ch) return segMatch;
+            nextCh = tailCross[1];
+          }
+          targetRef = `${bookName} ${cleanN1}:${vListAfterColon}`;
+          curCh = nextCh;
+          hasColons = true;
+        }
       } else if (isSingleChBook || (sepChar === "," && hasColons)) {
-        const vRange = rangeEndNoColon ? `${cleanN1}-${rangeEndNoColon.replace(/\D/g, "")}` : cleanN1;
-        targetRef = `${bookName} ${curCh}:${vRange}`;
+        if (isFollowedByThousandsContinuation(wholeStr, absSegEnd, capNum)) return segMatch;
+        if (isFollowedByNonVerseUnit(wholeStr, absSegEnd) || isFollowedByHistoricalEra(wholeStr, absSegEnd)) return segMatch;
+        if (rangeEndNoColon && /:/.test(rangeEndNoColon)) {
+          if (isSingleChBook) return segMatch;
+          const mCross = rangeEndNoColon.match(/^(\d{1,3}):(\d{1,3}[a-z]?)/);
+          if (!mCross) return segMatch;
+          const c2 = parseInt(mCross[1], 10);
+          if (!Number.isFinite(c2) || c2 < 1 || c2 > bookObj.ch) return segMatch;
+          targetRef = `${bookName} ${curCh}:${cleanN1}-${mCross[1]}:${mCross[2]}`;
+          curCh = mCross[1];
+        } else {
+          const cleanEnd = rangeEndNoColon ? rangeEndNoColon.replace(/\D/g, "") : "";
+          const vRange = cleanEnd ? `${cleanN1}-${cleanEnd}` : cleanN1;
+          if (isSingleChBook && !isValidSingleChVerseSpec(bId, vRange)) return segMatch;
+          if (num1 < 1) return segMatch;
+          targetRef = `${bookName} ${curCh}:${vRange}`;
+        }
       } else {
-        curCh = cleanN1; hasColons = false;
-        targetRef = `${bookName} ${curCh}`;
+        if (num1 < 1 || num1 > bookObj.ch) return segMatch;
+        if (isFollowedByThousandsContinuation(wholeStr, absSegEnd, bookObj.ch)) return segMatch;
+        if (isFollowedByHistoricalEra(wholeStr, absSegEnd) || isFollowedByNonVerseUnit(wholeStr, absSegEnd)) return segMatch;
+        if (rangeEndNoColon) {
+          if (/:/.test(rangeEndNoColon)) return segMatch;
+          const eNum = parseInt(rangeEndNoColon.replace(/\D/g, ""), 10);
+          if (!Number.isFinite(eNum) || eNum < 1 || eNum > bookObj.ch) return segMatch;
+          curCh = String(eNum);
+          targetRef = `${bookName} ${cleanN1}`;
+        } else {
+          curCh = cleanN1;
+          targetRef = `${bookName} ${curCh}`;
+        }
+        hasColons = false;
       }
       const labelPart = segMatch.slice(sepFull.length);
       return `${sepFull}${renderTokenFn(targetRef, labelPart)}`;
@@ -8599,7 +8861,7 @@ function transformBibleRefChain(plainSegment, defaultBookId, renderTokenFn) {
   });
 }
 
-function formatNoteLinks(txt, defaultBookId = null) {
+function formatNoteLinks(txt, defaultBookId = null, langHint = "") {
   if (!txt) return "";
   let out = escapeHtml(txt);
 
@@ -8615,7 +8877,8 @@ function formatNoteLinks(txt, defaultBookId = null) {
     return transformBibleRefChain(
       plainSeg,
       defaultBookId,
-      (refStr, labelStr) => `<span class="tag-badge" onclick="event.stopPropagation(); jumpToRefString('${escapeJsStr(refStr)}')">📖 ${labelStr}</span>`
+      (refStr, labelStr) => `<span class="tag-badge" onclick="event.stopPropagation(); jumpToRefString('${escapeJsStr(refStr)}')">📖 ${labelStr}</span>`,
+      langHint
     );
   });
 
@@ -8757,16 +9020,13 @@ function pubRefTarget(ref) {
 // Apertura esterna unificata compatibile con PWA Chrome Android e browser desktop
 function pubRefOpenApp(url) {
   try {
-    const win = window.open(String(url), "_blank", "noopener,noreferrer");
-    if (!win) {
-      const a = document.createElement("a");
-      a.href = String(url);
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    }
+    const a = document.createElement("a");
+    a.href = String(url);
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   } catch (e) { console.debug(e); }
   closeMyReadModal();
 }
@@ -8774,6 +9034,8 @@ function pubRefOpenApp(url) {
 async function openLocalPubBridge(code, rawRest, fullRef) {
   bmChimeHaptic();
   closeMyReadModal();
+  closeStudyImageLightbox();
+  closeProModal();
   if (code === "si") {
     const m = String(rawRest || "").match(/(?:pp?\.|pagg?\.)\s*(\d+)/i) || String(rawRest || "").match(/(\d+)/);
     const targetNum = m ? parseInt(m[1], 10) : 0;
@@ -9024,19 +9286,26 @@ function openDialogModal(bodyHtml, keepPendingBackup = false) {
   const body = document.getElementById("myReadModalBody");
   if (!modal || !body) return false;
   peekReqId++;
-  window.__bmPendingDeleteFn = null;
+  bmPendingDeleteFn = null;
   if (!keepPendingBackup) pendingBackupRawText = null;
   body.innerHTML = bodyHtml;
   modal.style.display = "flex";
   return true;
 }
+let bmPendingDeleteFn = null;
 function closeMyReadModal() {
   peekReqId++;
-  window.__bmPendingDeleteFn = null;
+  bmPendingDeleteFn = null;
   pendingBackupRawText = null;
   const modal = document.getElementById("myReadModal");
   if (modal) modal.style.display = "none";
   schedulePendingBmSwUpdateFlush();
+}
+function confirmBlueDeleteAction() {
+  const fn = bmPendingDeleteFn;
+  bmPendingDeleteFn = null;
+  closeMyReadModal();
+  if (typeof fn === "function") fn();
 }
 function showBlueDeleteConfirmModal(titleTxt, msgHtml, onConfirm) {
   const opened = openDialogModal(`
@@ -9047,11 +9316,11 @@ function showBlueDeleteConfirmModal(titleTxt, msgHtml, onConfirm) {
     </div>
     <div style="display:flex; gap:10px;">
       <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#062356; --btn-glow:rgba(41,182,246,0.6); background:var(--bg-main); flex:1;" onclick="closeMyReadModal()">Annulla</button>
-      <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#c62828; --btn-glow:rgba(239,83,80,0.75); background:#b71c1c; flex:1.2;" onclick="const fn=window.__bmPendingDeleteFn; window.__bmPendingDeleteFn=null; closeMyReadModal(); if(typeof fn==='function') fn();">🗑️ Elimina</button>
+      <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#c62828; --btn-glow:rgba(239,83,80,0.75); background:#b71c1c; flex:1.2;" onclick="confirmBlueDeleteAction()">🗑️ Elimina</button>
     </div>
   `);
   if (!opened) { onConfirm(); return; }
-  window.__bmPendingDeleteFn = onConfirm;
+  bmPendingDeleteFn = onConfirm;
 }
 function deleteNoteById(noteId, refFallback) {
   let idx = state.notes.findIndex(n => Number(n.id) === Number(noteId));
@@ -9284,9 +9553,9 @@ function showSearchView(fromBack = false) {
   }
   syncBmPaperMode(true);
 }
-const JW_TOWER_SVG = `<svg viewBox="0 0 1000 1000"><path d="M200 200H334V267H367V200H434V267H467V200H534V267H566V200H633V267H666V200H800V433H767V467H734V800H266V467H233V433H200Z"/></svg>`;
+const JW_TOWER_SVG = `<svg class="jw-tower-svg" viewBox="0 0 1000 1000" aria-hidden="true"><path d="M200 200H334V267H367V200H434V267H467V200H534V267H566V200H633V267H666V200H800V433H767V467H734V800H266V467H233V433H200Z"/></svg>`;
 const JW_ORG_LOGO_DATA_URI = "data:image/webp;base64,UklGRiQOAABXRUJQVlA4TBcOAAAvf8AfAFVh2bZ/lWw5X3MYDsPGw8zMzMzMzMzMzMzMIKpW9cxVa0iNOnJa7pGzvsBw+B+QWwVaJhIH5bRMyeQrMHMqIM+RHVltj42c/QUiT8tgy6CskbtkGCwzpwJyRyYyum3Ls2XkCpwS4aTCHBu7vkLs2W5d4+oqGWYmO7rlOXLslrXllM1XKLUCFuVsmy2nZBgsWnrN/skwrPCxR87vC4SZmVNhOteWWTI29h9m2jbM2KGv0HK3nFhmZvgHZF9HnpZHOAwAIGn8/8JNujssbJEgAGAZyZKmtq1BbSupDv2fgKYIXvS1zTEgomYI+hARNUfg/KWIiJohoDN9o6NncPc83l64T3BI5iYQemEv3Cu4iiCVUoHJPtEZ9rxwn/CUumINQLYZQ1Q1Q4iqRhR9uhmGVn9ku8uqGUJcNZnNmiAYWN/wSN9hugk6ApHpYdhQdY1rVA3Dx7TUEdUHPIcXw5HDC8A85dPT+LTAwOoXbwd9GIBDO9o/2QoygNoByDoYm7t1o3wA1NN4L1o9ABhTNb2BS+jKsGI8/EMO78ghHbVnT98wiV7Avdaq2mWHdeSI/hpNtb3BS2jJvuCx+SE0HPDhh3zotD7uZbxIy+kdnBvust1g7/5QLfFey/pyZH/hsAHBHOkbJuoJPHPnD2wbM4cwTBoqNiwfjhheSGGtVTOERlMMrf7wts9LIIJ1NjUk9En0Cq9xdIWUjRUXy9Oi8KwxhJ1Bu2OshD8nOYpsccSARDBn+rqkTzI7EF0P/DAcPiDY9uIKrOk03ghMZDCeLkPCH4VnCiHsHEZXTVzoE6s+4bHFIcDGwR86KJ2z0o/M/tVBHcMXwMbi1XVJw1tpMRFFu2OshE6Ru+Tkwk5hXFOFhB+qnMqlMPEFGWx/shZrWttfLKJYvylxwXpVOYXLYNr4d5f8GautOmwAMIfjQ0z5qPTgbG5AFPOmt0t6pWLXtGHj+0PCJ2G9Wjvk7IM7ChuzxDBMPiI0oS1hpjC2quJCr7gphGqXi4aNXW7GyfuI0PimhI1tT27x6qIM6zWlV3gLH3IXLAGi2P/FOxSkbpGx+qLDRmRoPsYUM1N46clBAxav7giih4kDXmxAuvaFDsnMTnyDJuPQAcXGTUo6rF/h2eIPtolJbW4QM7Pc5aZh42uz7WBjIlsYgjlhPczeD4EoFiiBS/olGkeXDXIRLFI8l5idxlFliwzadXDXWDUc2hEsM9lhYnaSI4sOuQz+MCT0Sxba7/sRiOBGGh1mcufPARqw2qLHQ9P5GFHsfDPMzOTNEGJEcNrJWalf7CQ33iVEcOLDWAmW6a1OHlF0DhWGYuOhHUUuN5Lseoenw+StsFgow2aHGFOsY+QuXH1E8AUjyr7EUbFh+BDJ4bSByVLhpD8ZZZgrflxiLmx3cijDItVzSc+EMbHJYdqY1iceUXiWEKI11m1qSJC7cPHRGk+cdFS6WwNMTGiKkNAzlR6CTa0RwTKzHSYnvkGTcWhHMYOPPBLxsXQNE281CFuyLRAIXRUmrjYonbNSz5it4xDFlodQLbKD0OXAjgENpWmVsB7mREQwucuMfvDuPgfKsOUppCXrGnkrziaieM8nyhudcRVsskslDjMZq686WmPFxfSK4xs0Ga2xRHVd0ru7hJ3DmKqOhVZddDRg9vRziZm8YxHF7jdVX+gX7yfisAHFpDY3dM4pGUl0X/AFEXz7ecen/d4vgZT9JDHFrKqf+ipIYQzVnGd8RlEdcmi4eFrpW6K2zZ4vhSju9Rz/vxPoAhFsffJ3KJmZ5R1udQo4tKN4k7P8/s0cQ5Rhm5OvSLC+segNnL+GKHa6mX9+ADRg/hy45EPuH6IMWx38uf/PyouBBiw9O2HSoeHEAETwrhrkzpfeiKJhcDptd3Ewc6OINun4iPjYqkYGrbudgSg6G/rjJD8FX2BjxhBpiNB4ukQGmC8FB3cM2PFm8+w3YT3M3g8JE/OV9z4PAUSfuk94KJ1wAhDG5DaDaWISmxvCj8z+QCvk8P2wsXh1XfLDZJwEG/t/uJnC9hfXBELWSVnCQqMF3t2OOGxAkDu1d3g5flimPxkmgBSeMC40vOlCDBuAjeVnyyN9kBUvy433rXyE1S/Z28HEHg/VEu017J/CHWEjl8LP1tewf/V+Q/ExCuRgYxqX6IRKdzM3bPKQfOoJ3LGEINE3hF2Wmy2YNm7TIy1vKp/CBGwsN9seabC8wzNgArA7xZQuUPcVZhN45MWqd80Ko/Ke218PGZgYTbWNjoaKDSsGE0AGE5oiJLTIXbj4sJHCCayPTvIeEX1oINN2jU0/c/1NfgmkEMVJIcHaebHrTSOVw74vcYyV0BK9wmtsXSMFGysvhke6oNKdzgAiUfg1U1FcvX2FDEAYj/kFtp27V4NYO2E9z94viYyN6UOsE+yU5/99v48AEG3dUGYD+NPScsEBkvulOKIjOXSuDITJeExkgOHFUO7oAzsc/oFr73gxKfjd4WKPopjgQEV8dNVGW0dOOrlCBuRN6+PIR0VOEHnWTcqG5QtNbIuq2eP3lz5jBNlLrwmCDgd+BfHUT/3Ug9G5hgPPt8DgqU9/6pesYR1VxH2A0/DCYaOcKcFFrq6uznJR89XV1VnWWSWIiBw+XyqlVJFYKSX15iKBinydgJSjqWTRFPk6eiKcPuBZ6YZdr1yKANLJ3uGZ9C2JWYICE061EXZdL8mU0AuKJ4dm45QunTe/Fy3eAjk49tR0SEg/CWtINt3X5d7Nd0TRv/7zxHsBFztaCRFPnj6Zy4/6+HnS+8xRZCu9vNAFyZUvvG5TPwq+kU0P8f9DNcqH6lZbDWhe5WfXbtpULq0pF/5U3njCL20F3y84btYYOiGlA5LfYJHqAXj6V7zBJrt0rwA+5woF5WfVxcBhHbV9TQC4jU6NwkdZ1tLVBvBWbTfdxW1Obr8PB/CnY6v6DqUONK40m8B+Lz5r/A1Elup4rD+yTeOTnwU22JVCPuGzymJgz4ccnvdPPTQfX//1h+HDPc6Zvl2Bkx415jDLmiYQ3jJw3aO61casz/ir6wCLVdcQQUfe3OmDL9jpYh61+9sroayexrvDtwLLznad8LfbQzeDINkHOmOxWOM/0xqrDmyyi+WSWYQeELhOafc7ZMUVnvXkGzQ5xkGvYlVXMdt1CxVLZpb15f2SfbebyuAJ48LPzz7PFRyllKjPFo7LYVTVNjpkTGFTZK4+AN3i9YqZ5X1bJWzJoCNvxcUEpvbpPxez/3pvAl0CGzep0fHXpjbBvvXuzCEEZo8/977zapeHyaXG0ZVXz/6lw5KDXWYHpst7fsFxBcnaIrnpIcHu8gZOEUT8CYFFq+e2MX4SuEEdsZ5S5SnAQ7kUAHnHAke5VKSxVQ38odsSg9Bam5bD+LoMCX0JLzU7yI0q26QTgKo+vQFrbpohilDc/Q+AaX1SKfsh+99hr4d8mNqErjiNGzYZ1x2QrhUyAL6Cs/PFoK3Ffl5NNieAiOi+P6UlAT0yVxuUzYXYL5koiwv2lZpBx1ZbnKCuwIGqN3hT/Oxt1TbHsO4BsdtDpXser17gbRiVYWMoPr0isGAJvOLQuLoCXitMPvmsZtBdQZ2AthYHLOLrbQr2foj+8Wbdd90Dot0pk5psMpt17HjKHOn79I8MrLbqWSbjAYBFqu8Ss9MHuu7pEr5b7fzWJ7/5IQ5C5qwKsmYIPALuoLYot4zjX82677oXQQ7aPWYJYaxGCmNim2v1Bu/7guYQdEwHWaLiDOz60PU1AanqD0JXqqG6F8GhH9qja4+db+ZoRB9hXF09j9cMAcniU8bWNbDcbHnEnCjcW2lp6Y9MbrOVFjNz4IcPTqdgE/H1moJWd3qHKpAmCBb/LD6oWlHdA+JnP6w5BPVEWx88Wo3Ae6OYmVXsXmw8WaPDzGx5nvcpZ/n9n9bHaBV05C4+ecB4pgqJAJw36GLjXbzmGPgpfvsmGMrQKLIzcf0rMDMnatscjb1e8nlqE8zMRNSS7L2C61p6YEzmcmDJ6rgUALlzxC9QqtGmNsH1N7vE5AILZv+fW6CdmUVo7U3NYXxThoQPM1P4zXRAZk8+4MNxyZ+rlVqy8KRf0GpQtmRVALK2freHTh3a0S4lgpm8qXwKrLspBukKk7fSYgLz5+A841OsUdx9eh8DD1hJHACTMZEtgA+KSWauqb/FFG7bLdaovFaQ1VRUVOSdWKeoWTaGarrXO8ysir3Xfwkz2inmBMRkrLFqwKnu7TCTVwrz+Dutq3cSzLLNef/PdC7GaUEkQh23ufgtT+G7x9VVvNibJ39g7/cRY+u6e0kTBDkf6z68GD4nhbny1yMOTN3hD7xE5rTB2dwnPBxmJ/6YSF1sJNmfFzwltcxZ7wrfaEaHpGOf4AwaCs8cQwA/aVAzBBrfBbCXnuwRRV9cQ1XP0Qr4trhin1VmI/c5/vh23JlCCKzbVMNhlrW8QZOBhpsZSXRtauRLHrvjxQJdH8YKoplihBw+wxCSS64dAfA5bbuaQHS+/E6y9PPa2PMlNViVb7aLQKlHzE6hsFh1IwD2uMk/fYS3ArDmqg1EljtUHDTGKT2u1+Nrf1+wlN4/n3k8fC955oii86Rkn17B+VrffwdaoqTL8Q96/Q4FyazY++flZvti8D36AcfRVWNWcRBLIYRkXyox2o+umhecxiWdx1BNB6Oc2H/+lgYka/90Y21Vccw7nNymhpk5QSWVP3e5iUzxghPbYhTZ9Uc241McxUGdz+fZvyMKjXVeZbwgHNa23r4QAEurkK1h/w7VlhiVRtISgnVUCiISkgNNSBkISyk5wIQjSDiSLwpaAA==";
-const JW_ORG_LOGO_IMG = `<img src="${JW_ORG_LOGO_DATA_URI}" alt="JW.ORG" draggable="false" decoding="async">`;
+const JW_ORG_LOGO_IMG = `<img class="jw-org-logo-img" src="${JW_ORG_LOGO_DATA_URI}" alt="JW.ORG" draggable="false" decoding="async">`;
 const CHROME_LOGO_SVG = `<svg viewBox="0 0 48 48" width="20" height="20" style="vertical-align:middle; margin-right:8px; flex-shrink:0;"><path fill="#EA4335" d="M24 24 4.95 13A22 22 0 0 1 43.05 13Z"/><path fill="#FBBC05" d="M24 24l19.05-11A22 22 0 0 1 24 46Z"/><path fill="#34A853" d="M24 24v22A22 22 0 0 1 4.95 13Z"/><circle cx="24" cy="24" r="11" fill="#4285F4"/><circle cx="24" cy="24" r="11" fill="none" stroke="#fff" stroke-width="2.5"/></svg>`;
 
 // Registri ufficiali multilingue (ordine alfabetico: English, Español, Italiano, Português)
@@ -9377,7 +9646,7 @@ function openJwOrgStudyModal(langCode, bookId, chapter = 0) {
 
   if (!openDialogModal(`
     <div style="text-align:center; padding:4px 0 12px 0;">
-      <div style="width:46px; height:46px; border-radius:50%; overflow:hidden; margin:0 auto 8px auto; background:#4a6da7; border:1.5px solid #84ffff; box-shadow:0 4px 14px rgba(0,229,255,0.35);">${JW_ORG_LOGO_IMG}</div>
+      <div class="jw-modal-circle" style="background:#4a6da7;">${JW_ORG_LOGO_IMG}</div>
       <div style="font-size:16px; font-weight:900; color:#ffffff; margin-bottom:4px;">${escapeHtml(entry.fullName)}</div>
       <div style="font-size:14.5px; font-weight:800; color:#84ffff; margin-bottom:4px;">📖 ${escapeHtml(refLabel)} · ${escapeHtml(entry.langName)}</div>
       <div style="font-size:12.5px; color:#cfe3ff; line-height:1.45;">Accedi all'edizione online su <b>JW.org</b> con i contenuti multimediali e le note di studio aggiornati.</div>
@@ -9387,7 +9656,7 @@ function openJwOrgStudyModal(langCode, bookId, chapter = 0) {
       ${urls.chapterUrl ? `<button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#03a9f4; --btn-glow:rgba(3,169,244,0.65); background:#1565c0;" onclick="pubRefOpenApp('${escapeJsStr(urls.chapterUrl)}')">${CHROME_LOGO_SVG}Apri ${escapeHtml(refLabel)} su JW.org</button>` : ""}
       <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#0288d1; --btn-glow:rgba(2,136,209,0.65); background:#0d47a1;" onclick="pubRefOpenApp('${escapeJsStr(urls.bookUrl)}')">${CHROME_LOGO_SVG}Apri libro di ${escapeHtml(book.name)} su JW.org</button>
       <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00897b; --btn-glow:rgba(0,137,123,0.65); background:#00695c;" onclick="pubRefOpenApp('${escapeJsStr(urls.introUrl)}')">🎬 Introduzione & Video (${escapeHtml(book.abbr)}) su JW.org</button>
-      <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00acc1; --btn-glow:rgba(0,172,193,0.65); background:#062356;" onclick="copyJwExternalLink('${escapeJsStr(primaryUrl)}', this)">📋 Copia link JW.org (${escapeHtml(copyLabel)})</button>
+      <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00acc1; --btn-glow:rgba(0,172,193,0.65); background:var(--bg-main);" onclick="copyJwExternalLink('${escapeJsStr(primaryUrl)}', this)">📋 Copia link JW.org (${escapeHtml(copyLabel)})</button>
       <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#7b1fa2; --btn-glow:rgba(156,39,176,0.7); background:#1a0033; margin-top:4px;" onclick="closeMyReadModal()">Chiudi</button>
     </div>
   `)) {
@@ -9411,7 +9680,7 @@ function openJwLibrary(lang, searchInputId = "searchInput", directQuery) {
 
   if (!openDialogModal(`
     <div style="text-align:center; padding:4px 0 12px 0;">
-      <div style="width:44px; height:44px; border-radius:50%; margin:0 auto 8px auto; background:var(--cat-3); display:flex; align-items:center; justify-content:center; border:1.5px solid #84ffff; box-shadow:0 4px 14px rgba(0,229,255,0.35);"><span style="width:24px; height:24px; fill:#ffffff; display:inline-flex;">${JW_TOWER_SVG}</span></div>
+      <div class="jw-modal-circle" style="background:var(--cat-3);">${JW_TOWER_SVG}</div>
       <div style="font-size:16px; font-weight:800; color:#ffffff; margin-bottom:4px;">${escapeHtml(title)}</div>
       <div style="font-size:12px; color:#9ec9ff; margin-bottom:6px;">${escapeHtml(entry.fullName)}</div>
       <div style="font-size:14px; color:#e3f2fd; line-height:1.5;">${queryDisplay}</div>
@@ -9419,7 +9688,7 @@ function openJwLibrary(lang, searchInputId = "searchInput", directQuery) {
     </div>
     <div style="display:flex; flex-direction:column; gap:8px;">
       <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#03a9f4; --btn-glow:rgba(3,169,244,0.65); background:#1565c0;" onclick="pubRefOpenApp('${safeUrl}')">${CHROME_LOGO_SVG}Apri in ${escapeHtml(entry.label)}</button>
-      <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00acc1; --btn-glow:rgba(0,172,193,0.65); background:#062356;" onclick="copyJwExternalLink('${safeUrl}', this)">📋 Copia link ${escapeHtml(entry.label)}</button>
+      <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00acc1; --btn-glow:rgba(0,172,193,0.65); background:var(--bg-main);" onclick="copyJwExternalLink('${safeUrl}', this)">📋 Copia link ${escapeHtml(entry.label)}</button>
       <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#7b1fa2; --btn-glow:rgba(156,39,176,0.7); background:#1a0033; margin-top:4px;" onclick="closeMyReadModal()">Chiudi</button>
     </div>
   `)) {
@@ -9846,20 +10115,46 @@ function resetInsightLookupCaches() {
   bmInsightNormBodies = null;
 }
 
+// Mappa italiana pulita per la scansione citazioni in Perspicacia (it): esclude sigle straniere e 2-lettere ambigue
+const BM_INSIGHT_IT_ABBR_BY_BOOK = {
+  1: ["Gen"], 2: ["Eso", "Es"], 3: ["Lev", "Le"], 4: ["Num", "Nu"], 5: ["Deut", "Deu", "De"],
+  6: ["Gios", "Gse"], 7: ["Giud", "Gdc"], 8: ["Rut", "Ru"], 9: ["1Sam", "1Sa"], 10: ["2Sam", "2Sa"],
+  11: ["1Re"], 12: ["2Re"], 13: ["1Cron", "1Cr"], 14: ["2Cron", "2Cr"], 15: ["Esd"], 16: ["Nee", "Ne"],
+  17: ["Est"], 18: ["Giob", "Gb"], 19: ["Salmo", "Salmi", "Sal", "Sl"], 20: ["Prov", "Pro", "Pr"],
+  21: ["Eccl", "Ecc", "Ec"], 22: ["Cantico dei Cantici", "Cantico", "Cant", "Can", "Ca"], 23: ["Isa"],
+  24: ["Ger"], 25: ["Lam", "La"], 26: ["Ezec", "Eze", "Ez"], 27: ["Dan", "Da"], 28: ["Osea", "Ose", "Os"],
+  29: ["Gioe", "Gle", "Gl"], 30: ["Amos", "Amo", "Am"], 31: ["Abd"], 32: ["Giona", "Gna", "Gio"],
+  33: ["Mic"], 34: ["Naum", "Na"], 35: ["Abac", "Aba"], 36: ["Sof"], 37: ["Agg", "Ag"], 38: ["Zacc", "Zac"],
+  39: ["Mal"], 40: ["Matt", "Mat", "Mt"], 41: ["Mar", "Mr"], 42: ["Luca", "Luc", "Lu"], 43: ["Giov", "Gv"],
+  44: ["Atti", "At"], 45: ["Rom", "Ro"], 46: ["1Cor", "1Co"], 47: ["2Cor", "2Co"], 48: ["Gal"],
+  49: ["Efes", "Efe", "Ef"], 50: ["Fil", "Flp"], 51: ["Col"], 52: ["1Tess", "1Ts"], 53: ["2Tess", "2Ts"],
+  54: ["1Tim", "1Tm"], 55: ["2Tim", "2Tm"], 56: ["Tito", "Tit"], 57: ["Filem", "Flm"], 58: ["Ebr", "Eb"],
+  59: ["Giac", "Gc"], 60: ["1Piet", "1Pt"], 61: ["2Piet", "2Pt"], 62: ["1Giov", "1Gv"], 63: ["2Giov", "2Gv"],
+  64: ["3Giov", "3Gv"], 65: ["Giuda", "Gda"], 66: ["Rivelazione", "Apocalisse", "Riv", "Ri"]
+};
+const BM_SINGLE_CHAPTER_BOOKS = new Set([31, 57, 63, 64, 65]);
+
+function isPrecededByBookOrdinal(normBody, tokenStartIdx) {
+  if (tokenStartIdx <= 0) return false;
+  const before = normBody.slice(Math.max(0, tokenStartIdx - 6), tokenStartIdx);
+  return /(?:^|[^\p{L}\p{N}])[1-3]\s+$/u.test(before);
+}
+
 function buildBookInsightCitationPattern(bookId) {
-  const b = getBook(bookId);
+  const bId = Number(bookId);
+  const b = getBook(bId);
   const alts = new Set([b.name, b.abbr]);
-  if (bookId === 19) { alts.add("Salmo"); alts.add("Salmi"); }
-  if (bookId === 22) { alts.add("Cantico"); alts.add("Cantico dei Cantici"); }
-  if (bookId === 66) { alts.add("Rivelazione"); alts.add("Apocalisse"); }
-  Object.keys(SI_ABBR_MAP).forEach(k => {
-    if (SI_ABBR_MAP[k] === Number(bookId) && k.length >= 2) {
-      alts.add(k.replace(/^([1-3])/, "$1\\s*"));
-    }
-  });
+  (BM_INSIGHT_IT_ABBR_BY_BOOK[bId] || []).forEach(a => alts.add(a));
   return [...alts]
+    .map(a => normalizeForSearch(a))
+    .filter(Boolean)
     .sort((a, c) => c.length - a.length)
-    .map(a => a.includes("\\s*") ? a : normalizeForSearch(a).replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s+"))
+    .map(a => {
+      const escaped = a.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      return /^[1-3]/.test(a)
+        ? escaped.replace(/^([1-3])\s*/, "$1\\s*")
+        : escaped.replace(/\s+/g, "\\s+");
+    })
     .join("|");
 }
 
@@ -9869,10 +10164,37 @@ function getInsightEntriesForBook(ins, bookId, bookPat) {
   if (!bmInsightNormBodies || bmInsightNormBodies.length !== ins.entries.length) {
     bmInsightNormBodies = ins.entries.map(e => normalizeForSearch(e.body));
   }
-  const bookFilterRgx = new RegExp(`(?:^|[^\\p{L}\\p{N}])(?:${bookPat})\\.?\\s+\\d`, "iu");
+  const bObj = getBook(bId);
+  const hasNumPrefix = /^[1-3]/.test(bObj.name);
+  const isSingleCh = BM_SINGLE_CHAPTER_BOOKS.has(bId);
+  const numTok = "\\d{1,3}(?!\\d|\\.\\d|[°ªº])";
+  // Sui libri multi-capitolo richiede ":" nel pre-filtro + validazione range; sui libri 1-cap blocca migliaia, ordinali, ere e ":" improprio
+  const bookFilterRgx = isSingleCh
+    ? new RegExp(`(^|[^\\p{L}\\p{N}])(?:${bookPat})\\.?\\s+(1:)?(${numTok})(?:\\s*[–-]\\s*(${numTok}))?(?!:)`, "giu")
+    : new RegExp(`(^|[^\\p{L}\\p{N}])(?:${bookPat})\\.?\\s+(${numTok}):(?=\\d)`, "giu");
   const idxs = [];
   for (let i = 0; i < bmInsightNormBodies.length; i++) {
-    if (bookFilterRgx.test(bmInsightNormBodies[i])) idxs.push(i);
+    const normBody = bmInsightNormBodies[i];
+    bookFilterRgx.lastIndex = 0;
+    let m;
+    let foundValid = false;
+    while ((m = bookFilterRgx.exec(normBody)) !== null) {
+      const tokenStart = m.index + (m[1] ? m[1].length : 0);
+      const tokenEnd = m.index + m[0].length;
+      if (!hasNumPrefix && isPrecededByBookOrdinal(normBody, tokenStart)) continue;
+      if (isSingleCh) {
+        const specCheck = m[4] ? `${m[3]}-${m[4]}` : m[3];
+        if (!isValidSingleChVerseSpec(bId, specCheck)) continue;
+        if (!m[2] && isFollowedByNonVerseUnit(normBody, tokenEnd)) continue;
+        if (!m[2] && isFollowedByThousandsContinuation(normBody, tokenEnd, BM_SINGLE_CH_MAX_VERSE[bId] || 25)) continue;
+      } else {
+        const chNum = parseInt(m[2], 10);
+        if (!Number.isFinite(chNum) || chNum < 1 || chNum > bObj.ch) continue;
+      }
+      foundValid = true;
+      break;
+    }
+    if (foundValid) idxs.push(i);
   }
   bmInsightBookIndex.set(bId, idxs);
   return idxs;
@@ -9899,13 +10221,20 @@ async function findInsightRefsForVerse(bookId, chapter, verseNum, maxHits = 14) 
   const ins = await getInsightData();
   if (!ins || !Array.isArray(ins.entries) || ins.entries.length === 0) return [];
   const bId = Number(bookId);
+  const bObj = getBook(bId);
+  const ch = Number(chapter), v = Number(verseNum);
+  const isSingleCh = BM_SINGLE_CHAPTER_BOOKS.has(bId);
+  if (ch < 1 || ch > bObj.ch || v < 1) return [];
+  if (isSingleCh && (ch !== 1 || v > (BM_SINGLE_CH_MAX_VERSE[bId] || 25))) return [];
+
+  const hasNumPrefix = /^[1-3]/.test(bObj.name);
   const bookPat = buildBookInsightCitationPattern(bId);
   const candidateIdxs = getInsightEntriesForBook(ins, bId, bookPat);
-  const ch = Number(chapter), v = Number(verseNum);
-  const singleChapterBooks = new Set([31, 57, 63, 64, 65]);
-  const chVerseRgx = singleChapterBooks.has(bId)
-    ? new RegExp(`(?:^|[^\\p{L}\\p{N}])(?:${bookPat})\\.?\\s+(?:1:)?(\\d{1,3}(?:\\s*[–-]\\s*\\d{1,3})?(?:\\s*,\\s*\\d{1,3}(?:\\s*[–-]\\s*\\d{1,3})?)*)`, "giu")
-    : new RegExp(`(?:^|[^\\p{L}\\p{N}])(?:${bookPat})\\.?\\s+${ch}:(\\d{1,3}(?:\\s*[–-]\\s*\\d{1,3})?(?:\\s*,\\s*\\d{1,3}(?:\\s*[–-]\\s*\\d{1,3})?)*)`, "giu");
+  const numTok = "\\d{1,3}(?!\\d|\\.\\d|[°ªº])";
+  const chVerseRgx = isSingleCh
+    ? new RegExp(`(^|[^\\p{L}\\p{N}])(?:${bookPat})\\.?\\s+(1:)?(${numTok}(?!:)(?:\\s*[–-]\\s*${numTok}(?!:))?(?:\\s*,\\s*${numTok}(?!:)(?:\\s*[–-]\\s*${numTok}(?!:))?)*)`, "giu")
+    : new RegExp(`(^|[^\\p{L}\\p{N}])(?:${bookPat})\\.?\\s+${ch}:(${numTok}(?:\\s*[–-]\\s*${numTok}(?!:))?(?:\\s*,\\s*${numTok}(?!:)(?:\\s*[–-]\\s*${numTok}(?!:))?)*)`, "giu");
+  const literalChVRe = new RegExp(`(?:^|\\D)${ch}:${v}(?!\\d)`);
   const matches = [];
   for (let k = 0; k < candidateIdxs.length; k++) {
     const i = candidateIdxs[k];
@@ -9913,19 +10242,35 @@ async function findInsightRefsForVerse(bookId, chapter, verseNum, maxHits = 14) 
     chVerseRgx.lastIndex = 0;
     let m;
     let matchedNormPos = -1;
+    let matchedNormEnd = -1;
     while ((m = chVerseRgx.exec(normBody)) !== null) {
-      const vList = parseVerseSpecToArray(m[1]);
+      const tokenStart = m.index + (m[1] ? m[1].length : 0);
+      const tokenEnd = m.index + m[0].length;
+      if (!hasNumPrefix && isPrecededByBookOrdinal(normBody, tokenStart)) continue;
+      if (isSingleCh && !m[2] && (isFollowedByNonVerseUnit(normBody, tokenEnd) || isFollowedByThousandsContinuation(normBody, tokenEnd, BM_SINGLE_CH_MAX_VERSE[bId] || 25))) continue;
+      const vSpec = isSingleCh ? m[3] : m[2];
+      if (isSingleCh && !isValidSingleChVerseSpec(bId, vSpec)) continue;
+      const vList = parseVerseSpecToArray(vSpec);
       if (vList.includes(v)) {
-        matchedNormPos = m.index;
+        matchedNormPos = tokenStart;
+        matchedNormEnd = tokenEnd;
         break;
       }
     }
     if (matchedNormPos >= 0) {
       const rawBody = ins.entries[i].body || "";
-      const rawPos = rawBody.length === normBody.length
-        ? matchedNormPos
-        : mapNormalizedOffsetToRaw(rawBody, matchedNormPos);
-      matches.push({ idx: i, title: ins.entries[i].title, query: `${ch}:${v}`, matchPos: rawPos });
+      const sameLen = rawBody.length === normBody.length;
+      const rawPos = sameLen ? matchedNormPos : mapNormalizedOffsetToRaw(rawBody, matchedNormPos);
+      let queryStr = `${ch}:${v}`;
+      if (matchedNormEnd > matchedNormPos) {
+        const rawEnd = sameLen ? matchedNormEnd : mapNormalizedOffsetToRaw(rawBody, matchedNormEnd);
+        const rawFullSnippet = rawBody.slice(rawPos, rawEnd).trim();
+        if (isSingleCh || !literalChVRe.test(rawFullSnippet)) {
+          const rawSnippet = rawFullSnippet.split(",")[0].trim();
+          if (rawSnippet.length >= 2) queryStr = rawSnippet;
+        }
+      }
+      matches.push({ idx: i, title: ins.entries[i].title, query: queryStr, matchPos: rawPos });
       if (matches.length >= maxHits) break;
     }
   }
@@ -10039,29 +10384,31 @@ async function buildDynamicCrossRefsForVerse(bookId, chapter, verseNum, rawText,
   const ch = Number(chapter);
   const v = Number(verseNum);
   const key = `${bId}_${ch}_${v}`;
-  const curBook = getBook(bId);
-  const selfNorm = normalizeForSearch(`${curBook.name} ${ch}:${v}`);
   const out = [];
   const seen = new Set();
-  const addRef = (r) => {
+  const addRef = (r, refLang = "") => {
     const clean = String(r || "").replace(/\s+/g, " ").trim();
     if (!clean) return;
-    if (!parseRefStringToTarget(clean, true)) return;
-    const norm = normalizeForSearch(clean);
-    if (norm === selfNorm || norm === normalizeForSearch(`${curBook.name} ${ch}`) || seen.has(norm)) return;
+    const parsed = parseRefStringToTarget(clean, true, refLang);
+    if (!parsed) return;
+    const norm = normalizeForSearch(`${parsed.bookId}:${parsed.chapter}:${parsed.vSpec || ""}`);
+    const selfCanonical = normalizeForSearch(`${bId}:${ch}:${v}`);
+    if (norm === selfCanonical || norm === normalizeForSearch(`${bId}:${ch}:`) || seen.has(norm)) return;
     seen.add(norm);
-    out.push(clean);
+    out.push({ label: clean, lang: refLang });
   };
 
   const curated = Array.isArray(PRO_CROSS_REFS[key]) ? PRO_CROSS_REFS[key] : [];
-  curated.forEach(addRef);
-  const studyXrefs = await getStudyBibleXrefsForKey(key);
-  studyXrefs.forEach(addRef);
+  curated.forEach(r => addRef(r, "it"));
+  const studyXrefResult = await getStudyBibleXrefsForKey(key);
+  const studyXrefs = studyXrefResult.refs;
+  const studyXrefLang = studyXrefResult.langCode;
+  studyXrefs.forEach(r => addRef(r, studyXrefLang));
 
   const beforeDyn = out.length;
   // 1. Estrae riferimenti biblici dalle Note in Calce ufficiali (legate esplicitamente al libro bId)
   (footnotesArr || []).forEach(fnTxt => {
-    bpCitedRefs(fnTxt, bId).forEach(addRef);
+    bpCitedRefs(fnTxt, bId).forEach(r => addRef(r, ""));
   });
 
   // 2. Estrae passi paralleli espliciti dai paragrafi di Perspicacia centrati sul match esatto (libro + capitolo + intervallo/1-cap.)
@@ -10074,9 +10421,9 @@ async function buildDynamicCrossRefsForVerse(bookId, chapter, verseNum, rawText,
         if (!ent || !ent.body || typeof refHit.matchPos !== "number" || refHit.matchPos < 0) continue;
         const pos = refHit.matchPos;
         const win = ent.body.slice(Math.max(0, pos - 240), Math.min(ent.body.length, pos + 260));
-        // defaultBookId = null: estrae solo citazioni complete con nome libro esplicito
-        bpCitedRefs(win, null).forEach(r => {
-          if (out.length < 12) addRef(r);
+        // defaultBookId = null: estrae solo citazioni complete con nome libro esplicito (Perspicacia IT)
+        bpCitedRefs(win, null, "it").forEach(r => {
+          if (out.length < 12) addRef(r, "it");
         });
       }
     }
@@ -10085,7 +10432,7 @@ async function buildDynamicCrossRefsForVerse(bookId, chapter, verseNum, rawText,
 
   if (out.length < 4) {
     buildUniversalRefsForVerse(bId, ch, v, rawText).forEach(r => {
-      if (out.length < 8) addRef(r);
+      if (out.length < 8) addRef(r, "it");
     });
   }
 
@@ -10151,7 +10498,7 @@ async function openCrossRefsModalForVerse() {
     ${fnHtml}
     <div class="section-title"><span>${escapeHtml(sourceLabel)}</span></div>
     <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
-      ${refs.map(r => `<span class="tag-badge" style="font-size:14px; padding:7px 12px;" onclick="jumpToRefString('${escapeJsStr(r)}')">📖${escapeHtml(r)}</span>`).join("")}
+      ${refs.map(r => `<span class="tag-badge" style="font-size:14px; padding:7px 12px;" onclick="jumpToRefString('${escapeJsStr(r.label)}', false, '${escapeJsStr(r.lang || "")}')">📖${escapeHtml(r.label)}</span>`).join("")}
     </div>
     ${insHtml}
     <div class="section-title"><span>Concordanza Parallela per Parola Chiave</span></div>
@@ -10449,6 +10796,7 @@ function saveCurrentPositionToHistory(targetBookId = null, targetCh = null) {
     snap = {
       type: "study_docs",
       docId: currentViewContext.docId ?? null,
+      bibleId: currentViewContext.bibleId || bmStudyDocsActiveBibleId,
       scrollTop: scrollPos,
       label: currentViewContext.label || "🎓 Studio"
     };
@@ -10475,7 +10823,18 @@ function saveCurrentPositionToHistory(targetBookId = null, targetCh = null) {
   }
   if (snap) {
     const prev = navHistory[navHistory.length - 1];
-    if (!prev || prev.type !== snap.type || prev.label !== snap.label || prev.idx !== snap.idx || prev.i !== snap.i || prev.ci !== snap.ci) {
+    const isSameSnap = Boolean(prev)
+      && prev.type === snap.type
+      && prev.label === snap.label
+      && prev.idx === snap.idx
+      && prev.i === snap.i
+      && prev.ci === snap.ci
+      && prev.docId === snap.docId
+      && prev.bibleId === snap.bibleId
+      && prev.bookId === snap.bookId
+      && prev.chapter === snap.chapter
+      && prev.verse === snap.verse;
+    if (!isSameSnap) {
       navHistory.push(snap);
       if (navHistory.length > 30) navHistory.shift();
     }
@@ -10543,7 +10902,7 @@ function goBackHistory() {
     return;
   }
   if (prev.type === "study_docs") {
-    showStudyDocsView(prev.docId !== undefined ? prev.docId : null, true).then(() => { if (main && prev.scrollTop) main.scrollTop = prev.scrollTop; });
+    showStudyDocsView(prev.docId !== undefined ? prev.docId : null, true, prev.bibleId || "").then(() => { if (main && prev.scrollTop) main.scrollTop = prev.scrollTop; });
     return;
   }
     if (prev.type === "search") {
@@ -10602,7 +10961,6 @@ function applySavedTheme() {
   if (metaTheme) metaTheme.setAttribute("content", themeHex);
 }
 function closeProModal() {
-  window.__bmStudyModalSpeaking = false;
   proModalSessionId++;
   clearXRayChapterCache();
   const modalEl = document.getElementById("proModal");
@@ -10646,7 +11004,7 @@ function runQuickJump() {
   jumpToRefString(raw, true);
 }
 
-function parseRefStringToTarget(str, strict = false) {
+function parseRefStringToTarget(str, strict = false, langHint = "") {
   const cleanStr = String(str || "").trim().replace(/\s+/g, " ");
   const m = cleanStr.match(/^([1-3]?\s*(?:(?:El|O)\s+)?[a-zA-ZÀ-ÿ]+(?:\s+(?:dei|of|de|dos)\s+(?:los\s+)?[a-zA-ZÀ-ÿ]+)?)\.?\s*(\d{1,3})(?:([:.,\s–-])\s*(\d.*))?$/i);
   if (!m) return null;
@@ -10657,6 +11015,8 @@ function parseRefStringToTarget(str, strict = false) {
   let found = null;
   if (/^j[óò]$/i.test(String(m[1] || "").trim())) {
     found = getBook(18);
+  } else if (qBook === "es") {
+    found = getBook(resolveAmbiguousEsBookId(langHint));
   } else if (SI_ABBR_MAP[qBook]) {
     found = getBook(SI_ABBR_MAP[qBook]);
   }
@@ -10710,8 +11070,8 @@ function parseRefStringToTarget(str, strict = false) {
   };
 }
 
-function jumpToRefString(str, forceDirectJump = false) {
-  const target = parseRefStringToTarget(str);
+function jumpToRefString(str, forceDirectJump = false, langHint = "") {
+  const target = parseRefStringToTarget(str, false, langHint);
   if (!target) return;
   const proModalEl = document.getElementById("proModal");
   const isProModalOpen = proModalEl && proModalEl.style.display === "flex";
@@ -11008,59 +11368,78 @@ function clearSpeechContext(preservePausedAudio = false) {
     stopAllAudio();
   }
 }
-function getActiveTTSLangCode(fullLocale = false) {
-  const studyModalEl = document.getElementById("proModal");
-  if (studyModalEl && studyModalEl.style.display === "flex" && window.__bmLastStudyModalLang && window.__bmStudyModalSpeaking) {
-    const ml = String(window.__bmLastStudyModalLang);
-    const lMap = { it: "it-IT", en: "en-US", es: "es-ES", pt: "pt-BR" };
-    return fullLocale ? (lMap[ml] || "it-IT") : ml;
+function resolveStudyLangPair(langCode) {
+  const code = String(langCode || "it").toLowerCase();
+  const map = {
+    it: { locale: "it-IT", tl: "it" },
+    en: { locale: "en-US", tl: "en" },
+    es: { locale: "es-ES", tl: "es" },
+    pt: { locale: "pt-BR", tl: "pt" }
+  };
+  return map[code] || { locale: "it-IT", tl: "it" };
+}
+
+function resolveViewTTSLangPair(sourceKind = "text") {
+  if (sourceKind === "study_modal") {
+    return resolveStudyLangPair(bmStudyModalLangCode || "it");
   }
-  if (currentViewContext && currentViewContext.type === "study_docs") {
+  const ctxType = currentViewContext ? currentViewContext.type : "";
+  if (ctxType === "study_docs") {
     const scfg = getStudyBibleConfig(bmStudyDocsActiveBibleId);
-    const lMap = { it: "it-IT", en: "en-US", es: "es-ES", pt: "pt-BR" };
-    return fullLocale ? (lMap[scfg.langCode] || "it-IT") : (scfg.langCode || "it");
+    return resolveStudyLangPair(scfg.langCode || "it");
+  }
+  if (ctxType === "insight" || ctxType === "daily" || ctxType === "si" || ctxType === "maps") {
+    return { locale: "it-IT", tl: "it" };
   }
   if ((typeof currentInsightSpeechText === "string" && currentInsightSpeechText.trim()) ||
       (typeof currentDailySpeechText === "string" && currentDailySpeechText.trim())) {
     const hasVerseRows = document.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3").length > 0;
-    if (!hasVerseRows) return fullLocale ? "it-IT" : "it";
+    if (!hasVerseRows) return { locale: "it-IT", tl: "it" };
   }
   const t = (state.trans1 || "").toLowerCase();
   const activeObj = dynamicCatalog.find(b => b.id === state.trans1);
   const langName = activeObj ? (activeObj.lang || "").toLowerCase() : "";
-  if (t === "gb:nwtsty" || t === "gb:nwt" || t === "gb:bi12" || t.includes("riveduta") || t.includes("giovanni") || t.startsWith("epub:") || langName.includes("ital")) return fullLocale ? "it-IT" : "it";
-  if (t.endsWith("_s") || t.includes("valera") || t.includes("sagradas") || t.includes("rvg") || langName.includes("span")) return fullLocale ? "es-ES" : "es";
-  if (t.endsWith("_tpo") || t.includes("almeida") || langName.includes("port")) return fullLocale ? "pt-BR" : "pt";
-  if (t.endsWith("_e") || langName.includes("engl")) return fullLocale ? "en-US" : "en";
-  if (t.includes("luther") || t.includes("schlachter") || t.includes("elberfelder") || langName.includes("germ")) return fullLocale ? "de-DE" : "de";
-  if (t.includes("ls1910") || t.includes("martin") || t.includes("ostervald") || langName.includes("fren")) return fullLocale ? "fr-FR" : "fr";
-  if (t.includes("synodal") || t.includes("makarij") || langName.includes("russ")) return fullLocale ? "ru-RU" : "ru";
-  if (langName.includes("greek") || t.includes("lxx") || t.includes("textus")) return fullLocale ? "el-GR" : "el";
-  if (langName.includes("hebrew") || t.includes("wlc") || t.includes("aleppo")) return fullLocale ? "he-IL" : "iw";
-  if (langName.includes("arab") || t.includes("svd")) return fullLocale ? "ar-SA" : "ar";
-  if (t.includes("cnt")) return fullLocale ? "zh-TW" : "zh-TW";
-  if (langName.includes("chin") || t.includes("cns")) return fullLocale ? "zh-CN" : "zh";
-  if (langName.includes("japa") || t.includes("kougo")) return fullLocale ? "ja-JP" : "ja";
-  if (langName.includes("kore")) return fullLocale ? "ko-KR" : "ko";
-  if (langName.includes("roma") || t.includes("cornilescu")) return fullLocale ? "ro-RO" : "ro";
-  if (langName.includes("dutch") || t.includes("staten")) return fullLocale ? "nl-NL" : "nl";
-  if (langName.includes("poli") || t.includes("polish")) return fullLocale ? "pl-PL" : "pl";
-  if (langName.includes("ukra") || t.includes("ukrainian")) return fullLocale ? "uk-UA" : "uk";
-  if (langName.includes("bulg") || t.includes("bulgarian")) return fullLocale ? "bg-BG" : "bg";
-  if (langName.includes("hung") || t.includes("hungarian")) return fullLocale ? "hu-HU" : "hu";
-  if (langName.includes("czec") || t.includes("czech")) return fullLocale ? "cs-CZ" : "cs";
-  if (langName.includes("swed") || t.includes("swedish")) return fullLocale ? "sv-SE" : "sv";
-  if (langName.includes("finn") || t.includes("finnish")) return fullLocale ? "fi-FI" : "fi";
-  if (langName.includes("dani") || t.includes("danish")) return fullLocale ? "da-DK" : "da";
-  if (langName.includes("norw") || t.includes("norwegian")) return fullLocale ? "nb-NO" : "nb";
-  if (langName.includes("turk") || t.includes("turkish")) return fullLocale ? "tr-TR" : "tr";
-  if (langName.includes("swah") || t.includes("swahili")) return fullLocale ? "sw-KE" : "sw";
-  if (langName.includes("taga") || langName.includes("filip") || t.includes("tagalog")) return fullLocale ? "fil-PH" : "tl";
-  if (langName.includes("viet") || t.includes("vietnamese")) return fullLocale ? "vi-VN" : "vi";
-  if (langName.includes("syri") || langName.includes("aram") || t.includes("peshitta")) return fullLocale ? "ar-SA" : "ar";
-  if (langName.includes("lati") || t.includes("vulgate")) return fullLocale ? "la" : "la";
-  if (langName.includes("espe") || t.includes("esperanto")) return fullLocale ? "eo" : "eo";
-  return fullLocale ? "en-US" : "en";
+  if (t === "gb:nwtsty" || t === "gb:nwt" || t === "gb:bi12" || t.includes("riveduta") || t.includes("giovanni") || t.startsWith("epub:") || langName.includes("ital")) return { locale: "it-IT", tl: "it" };
+  if (t.endsWith("_s") || t.includes("valera") || t.includes("sagradas") || t.includes("rvg") || langName.includes("span")) return { locale: "es-ES", tl: "es" };
+  if (t.endsWith("_tpo") || t.includes("almeida") || langName.includes("port")) return { locale: "pt-BR", tl: "pt" };
+  if (t.endsWith("_e") || langName.includes("engl")) return { locale: "en-US", tl: "en" };
+  if (t.includes("luther") || t.includes("schlachter") || t.includes("elberfelder") || langName.includes("germ")) return { locale: "de-DE", tl: "de" };
+  if (t.includes("ls1910") || t.includes("martin") || t.includes("ostervald") || langName.includes("fren")) return { locale: "fr-FR", tl: "fr" };
+  if (t.includes("synodal") || t.includes("makarij") || langName.includes("russ")) return { locale: "ru-RU", tl: "ru" };
+  if (langName.includes("greek") || t.includes("lxx") || t.includes("textus")) return { locale: "el-GR", tl: "el" };
+  if (langName.includes("hebrew") || t.includes("wlc") || t.includes("aleppo")) return { locale: "he-IL", tl: "iw" };
+  if (langName.includes("arab") || t.includes("svd")) return { locale: "ar-SA", tl: "ar" };
+  if (t.includes("cnt")) return { locale: "zh-TW", tl: "zh-TW" };
+  if (langName.includes("chin") || t.includes("cns")) return { locale: "zh-CN", tl: "zh" };
+  if (langName.includes("japa") || t.includes("kougo")) return { locale: "ja-JP", tl: "ja" };
+  if (langName.includes("kore")) return { locale: "ko-KR", tl: "ko" };
+  if (langName.includes("roma") || t.includes("cornilescu")) return { locale: "ro-RO", tl: "ro" };
+  if (langName.includes("dutch") || t.includes("staten")) return { locale: "nl-NL", tl: "nl" };
+  if (langName.includes("poli") || t.includes("polish")) return { locale: "pl-PL", tl: "pl" };
+  if (langName.includes("ukra") || t.includes("ukrainian")) return { locale: "uk-UA", tl: "uk" };
+  if (langName.includes("bulg") || t.includes("bulgarian")) return { locale: "bg-BG", tl: "bg" };
+  if (langName.includes("hung") || t.includes("hungarian")) return { locale: "hu-HU", tl: "hu" };
+  if (langName.includes("czec") || t.includes("czech")) return { locale: "cs-CZ", tl: "cs" };
+  if (langName.includes("swed") || t.includes("swedish")) return { locale: "sv-SE", tl: "sv" };
+  if (langName.includes("finn") || t.includes("finnish")) return { locale: "fi-FI", tl: "fi" };
+  if (langName.includes("dani") || t.includes("danish")) return { locale: "da-DK", tl: "da" };
+  if (langName.includes("norw") || t.includes("norwegian")) return { locale: "nb-NO", tl: "nb" };
+  if (langName.includes("turk") || t.includes("turkish")) return { locale: "tr-TR", tl: "tr" };
+  if (langName.includes("swah") || t.includes("swahili")) return { locale: "sw-KE", tl: "sw" };
+  if (langName.includes("taga") || langName.includes("filip") || t.includes("tagalog")) return { locale: "fil-PH", tl: "tl" };
+  if (langName.includes("viet") || t.includes("vietnamese")) return { locale: "vi-VN", tl: "vi" };
+  if (langName.includes("syri") || langName.includes("aram") || t.includes("peshitta")) return { locale: "ar-SA", tl: "ar" };
+  if (langName.includes("lati") || t.includes("vulgate")) return { locale: "la", tl: "la" };
+  if (langName.includes("espe") || t.includes("esperanto")) return { locale: "eo", tl: "eo" };
+  return { locale: "en-US", tl: "en" };
+}
+
+function getActiveTTSLangCode(fullLocale = false, useActiveAudioLock = true) {
+  if (useActiveAudioLock && (bmAudioPlaying || bmAudioPaused) && bmAudioMediaMeta.locale && bmAudioMediaMeta.tl) {
+    return fullLocale ? bmAudioMediaMeta.locale : bmAudioMediaMeta.tl;
+  }
+  const pair = resolveViewTTSLangPair("text");
+  return fullLocale ? pair.locale : pair.tl;
 }
 // Simboli tecnici/tipografici e parentesi svuotate che la voce non deve mai leggere (definiti una sola volta)
 const SPEECH_SYMBOLS_RE = /[\^*+#~_|\\/<>«»"“”{}\u02C6\u0302`´§°•♦▪▸►★☆†‡※]/g;
@@ -11136,7 +11515,7 @@ function clearTtsKaraokeHighlight() {
 let bmCurrentSpokenVerse = 0;
 let bmCurrentSpokenIdx = 0;
 let bmAudioPaused = false;
-let bmAudioMediaMeta = { title: "", sub: "", autoNext: false, kind: "text", bookId: null, chapter: null };
+let bmAudioMediaMeta = { title: "", sub: "", autoNext: false, kind: "text", bookId: null, chapter: null, locale: "", tl: "", studyKey: "" };
 
 function isActiveBibleChapterAudio() {
   return (bmAudioPlaying || bmAudioPaused)
@@ -11262,6 +11641,9 @@ function resumeAudioFromCurrentPosition() {
   }
   const remQueue = Array.isArray(activeTtsQueue) ? activeTtsQueue.slice(Math.max(0, bmCurrentSpokenIdx)) : [];
   if (remQueue.length > 0) {
+    const lockedPair = (bmAudioMediaMeta.locale && bmAudioMediaMeta.tl)
+      ? { locale: bmAudioMediaMeta.locale, tl: bmAudioMediaMeta.tl }
+      : null;
     startQueueSpeech(
       remQueue,
       true,
@@ -11271,7 +11653,9 @@ function resumeAudioFromCurrentPosition() {
       bmAudioMediaMeta.kind,
       true,
       bmAudioMediaMeta.bookId,
-      bmAudioMediaMeta.chapter
+      bmAudioMediaMeta.chapter,
+      lockedPair,
+      bmAudioMediaMeta.studyKey || ""
     );
   } else {
     stopAllAudio();
@@ -11311,6 +11695,7 @@ function toggleMiniPlayerPauseResume() {
   }
   updateMediaSessionMetadata(bmAudioMediaMeta.title, bmAudioMediaMeta.sub, "paused");
   updateAudioMiniPlayerUI();
+  syncStudyModalSpeakBtnUI();
 }
 
 function stepMiniPlayerVerse(delta) {
@@ -11422,8 +11807,9 @@ function stopAllAudio(preserveSleep = false) {
     clearBmAudioSleepTimer(true);
     bmCurrentSpokenVerse = 0;
     bmCurrentSpokenIdx = 0;
-    bmAudioMediaMeta = { title: "", sub: "", autoNext: false, kind: "text", bookId: null, chapter: null };
+    bmAudioMediaMeta = { title: "", sub: "", autoNext: false, kind: "text", bookId: null, chapter: null, locale: "", tl: "", studyKey: "" };
   }
+  syncStudyModalSpeakBtnUI();
   if (bmAudioPlayer) {
     try {
       bmAudioPlayer.onended = null;
@@ -11568,20 +11954,26 @@ function playWebViewStreamQueue(queueItems, idx, sessionId, consecutiveErrors = 
   tryNextUrl();
 }
 
-function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, mediaTitle = "", mediaSub = "", sourceKind = "text", preserveSleep = false, sourceBookId = null, sourceChapter = null) {
+function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, mediaTitle = "", mediaSub = "", sourceKind = "text", preserveSleep = false, sourceBookId = null, sourceChapter = null, lockedLangPair = null, studyKey = "") {
   stopAllAudio(preserveSleep);
   if (!queueItems || !queueItems.length) return;
   activeTtsQueue = queueItems;
   bmCurrentSpokenIdx = 0;
   bmAudioPaused = false;
   const resolvedKind = sourceKind === true ? "selection" : (sourceKind || "text");
+  const frozenPair = (lockedLangPair && lockedLangPair.locale && lockedLangPair.tl)
+    ? lockedLangPair
+    : resolveViewTTSLangPair(resolvedKind);
   bmAudioMediaMeta = {
     title: mediaTitle || "",
     sub: mediaSub || "",
     autoNext: Boolean(autoNext),
     kind: resolvedKind,
     bookId: sourceBookId !== null && sourceBookId !== undefined ? Number(sourceBookId) : null,
-    chapter: sourceChapter !== null && sourceChapter !== undefined ? Number(sourceChapter) : null
+    chapter: sourceChapter !== null && sourceChapter !== undefined ? Number(sourceChapter) : null,
+    locale: frozenPair.locale,
+    tl: frozenPair.tl,
+    studyKey: studyKey || ""
   };
   bmSelectionReadingActive = resolvedKind === "selection";
   bmQueueSupportsAutoNext = Boolean(autoNext) && resolvedKind === "chapter";
@@ -11592,6 +11984,7 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
   requestAudioWakeLock();
   updateMediaSessionMetadata(mediaTitle, mediaSub, true);
   updateAudioMiniPlayerUI();
+  syncStudyModalSpeakBtnUI();
   const btn = document.getElementById("ttsChapterBtn");
   if (updateMainBtn && btn) {
     btn.classList.add("active");
@@ -11714,18 +12107,22 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
   }
 }
 
-function startUniversalSpeech(rawText, updateMainBtn = true, autoNext = false) {
+function startUniversalSpeech(rawText, updateMainBtn = true, autoNext = false, sourceKind = "text", studyKey = "") {
   const chunks = splitTextForAudio(rawText, 165).map(c => ({ text: c, verseNum: null }));
   const curBook = getBook(state.bookId);
   const ctxType = currentViewContext ? currentViewContext.type : "";
-  const titleStr = ctxType === "insight"
-    ? (currentViewContext.title ? `Perspicacia — ${currentViewContext.title}` : "Perspicacia (it)")
-    : (ctxType === "daily"
-      ? "Scrittura del Giorno"
-      : (ctxType === "si"
-        ? (currentViewContext.label ? String(currentViewContext.label).replace(/^📘\s*/, "") : "Tutta la Scrittura")
-        : (ctxType === "maps" ? "Cartine Bibliche" : `${curBook.name} ${state.chapter}`)));
-  startQueueSpeech(chunks, updateMainBtn, autoNext, titleStr, "Bibbia Multilingue PRO", "text", false, null, null);
+  const titleStr = sourceKind === "study_modal"
+    ? `🎓 Studio · ${curBook.abbr} ${state.chapter}`
+    : (ctxType === "study_docs"
+      ? (currentViewContext.title || (currentViewContext.label ? String(currentViewContext.label).replace(/^🎓\s*/, "") : "Bibbia per lo Studio"))
+      : (ctxType === "insight"
+        ? (currentViewContext.title ? `Perspicacia — ${currentViewContext.title}` : "Perspicacia (it)")
+        : (ctxType === "daily"
+          ? "Scrittura del Giorno"
+          : (ctxType === "si"
+            ? (currentViewContext.label ? String(currentViewContext.label).replace(/^📘\s*/, "") : "Tutta la Scrittura")
+            : (ctxType === "maps" ? "Cartine Bibliche" : `${curBook.name} ${state.chapter}`)))));
+  startQueueSpeech(chunks, updateMainBtn, autoNext, titleStr, "Bibbia Multilingue PRO", sourceKind, false, null, null, null, studyKey);
 }
 
 // Costruisce e avvia la lettura intelligente dei versetti selezionati:
@@ -11733,20 +12130,14 @@ function startUniversalSpeech(rawText, updateMainBtn = true, autoNext = false) {
 // - Altrimenti legge tutti i versetti selezionati (e segna che sono in lettura, così se ne aggiungi altri in corsa vengono accodati!).
 function startSelectedVersesSmartSpeech() {
   const curBook = getBook(state.bookId);
-  let targetVerses = [];
-
-  if (pendingOrangeOrder.length > 0) {
-    // Legge solo i versetti arancioni nell'ordine in cui li hai selezionati (o in ordine di versetto)
-    targetVerses = [...pendingOrangeOrder];
-  } else {
-    targetVerses = Array.from(selectedVersesMap.keys()).sort((a, b) => a - b);
-  }
+  const targetVerses = pendingOrangeOrder.length > 0
+    ? [...pendingOrangeOrder]
+    : Array.from(selectedVersesMap.keys()).sort((a, b) => a - b);
 
   if (!targetVerses.length) return false;
 
   const queue = [];
   targetVerses.forEach(vNum => {
-    spokenVersesSet.add(vNum);
     const vTxt = selectedVersesMap.get(vNum) || "";
     const subChunks = splitTextForAudio(vTxt, 165);
     subChunks.forEach(sc => queue.push({ text: sc, verseNum: vNum }));
@@ -11763,6 +12154,43 @@ function startSelectedVersesSmartSpeech() {
   return false;
 }
 
+const BM_TTS_BOOK_ACCENTS_ES = {
+  1: "Génesis", 2: "Éxodo", 3: "Levítico", 4: "Números", 6: "Josué", 13: "1 Crónicas", 14: "2 Crónicas",
+  16: "Nehemías", 21: "Eclesiastés", 23: "Isaías", 24: "Jeremías", 30: "Amós", 31: "Abdías", 32: "Jonás",
+  34: "Nahúm", 36: "Sofonías", 38: "Zacarías", 39: "Malaquías", 48: "Gálatas", 57: "Filemón"
+};
+const BM_TTS_BOOK_ACCENTS_PT = {
+  1: "Gênesis", 2: "Êxodo", 3: "Levítico", 4: "Números", 5: "Deuteronômio", 6: "Josué", 7: "Juízes",
+  13: "1 Crônicas", 14: "2 Crônicas", 18: "Jó", 20: "Provérbios", 22: "Cântico de Salomão", 23: "Isaías",
+  25: "Lamentações", 28: "Oseias", 30: "Amós", 33: "Miqueias", 43: "João", 46: "1 Coríntios", 47: "2 Coríntios",
+  48: "Gálatas", 49: "Efésios", 54: "1 Timóteo", 55: "2 Timóteo", 57: "Filêmon", 62: "1 João", 63: "2 João", 64: "3 João"
+};
+
+function buildLocalizedChapterAnnouncement(bookId, chapter) {
+  const bId = Number(bookId) || 1;
+  const ch = Number(chapter) || 1;
+  const lang = resolveViewTTSLangPair("chapter").tl;
+  if (lang === "it") {
+    return bId === 19 ? `Salmo ${ch}.` : `${getBook(bId).name}, capitolo ${ch}.`;
+  }
+  if (lang === "en") {
+    const n = BM_STUDY_BOOK_NAMES_EN[bId];
+    if (!n) return "";
+    return bId === 19 ? `Psalm ${ch}.` : `${n}, chapter ${ch}.`;
+  }
+  if (lang === "es") {
+    if (bId === 19) return `Salmo ${ch}.`;
+    const n = BM_TTS_BOOK_ACCENTS_ES[bId] || BM_STUDY_BOOK_NAMES_ES[bId];
+    return n ? `${n}, capítulo ${ch}.` : "";
+  }
+  if (lang === "pt") {
+    if (bId === 19) return `Salmo ${ch}.`;
+    const n = BM_TTS_BOOK_ACCENTS_PT[bId] || BM_STUDY_BOOK_NAMES_PT[bId];
+    return n ? `${n}, capítulo ${ch}.` : "";
+  }
+  return "";
+}
+
 function startChapterKaraokeSpeech(startFromVerse = 1, preserveSleep = false) {
   const rows = [...document.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3")];
   if (!rows.length) {
@@ -11772,7 +12200,8 @@ function startChapterKaraokeSpeech(startFromVerse = 1, preserveSleep = false) {
   const curBook = getBook(state.bookId);
   const queue = [];
   if (startFromVerse <= 1) {
-    queue.push({ text: `${curBook.name}, capitolo ${state.chapter}.`, verseNum: 1 });
+    const announcement = buildLocalizedChapterAnnouncement(state.bookId, state.chapter);
+    if (announcement) queue.push({ text: announcement, verseNum: 1 });
   }
   rows.forEach(r => {
     const idAttr = r.id || "";
@@ -13493,10 +13922,10 @@ async function showDailyTextView(dayOffset = 0, fromBack = false) {
     ${yearNoticeHtml}
     <div class="result-card bm-justify-text" style="cursor:default; border-left:4px solid var(--primary-light); padding:14px; margin-bottom:12px; font-size:var(--font-size-verse); line-height:1.55;">
       <div style="font-style:italic; font-weight:700; color:var(--primary-light);">
-        ${formatNoteLinks(entry.theme)}
+        ${formatNoteLinks(entry.theme, null, "it")}
       </div>
     </div>
-    <div class="result-card bm-justify-text" style="cursor:default; padding:14px; font-size:var(--font-size-verse); line-height:1.62; white-space:pre-wrap;">${formatNoteLinks(entry.comment)}</div>
+    <div class="result-card bm-justify-text" style="cursor:default; padding:14px; font-size:var(--font-size-verse); line-height:1.62; white-space:pre-wrap;">${formatNoteLinks(entry.comment, null, "it")}</div>
     <div style="display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;">
       <button class="search-btn" style="flex:1; padding:12px;" onclick="loadChapterView()">
         📖 Apri la Bibbia (${escapeHtml(getBook(state.bookId).name)} ${state.chapter})
@@ -13915,7 +14344,7 @@ async function showInsightView(selectedIndex = null, fromBack = false) {
     setHeaderCenterPill(item.title, "insight");
     currentInsightSpeechText = `${item.title}. ${item.body}`;
 
-    const baseHtml = linkInsightSeeRefs(formatNoteLinks(item.body), data.entries);
+    const baseHtml = linkInsightSeeRefs(formatNoteLinks(item.body, null, "it"), data.entries);
     const { html: highlightedBody, count: hitCount } = highlightHtmlSafe(baseHtml, insightSearchQuery);
     currentHitIdx = 0;
     const hitNavBar = hitCount > 0 ? `
@@ -14107,7 +14536,7 @@ function siExtraItems(data) {
 function siRenderParas(text, defaultBookId = null, fnPrefix = "") {
   const pfx = fnPrefix ? `${fnPrefix}_` : "";
   return String(text || "").split(/\n{2,}/).map(p => p.trim()).filter(Boolean).map(p => {
-    const html = formatNoteLinks(p, defaultBookId).replace(
+    const html = formatNoteLinks(p, defaultBookId, "it").replace(
       /\[([a-z]{1,2})\]/g,
       `<sup onclick="document.getElementById('si_fn_${pfx}$1')?.scrollIntoView({behavior:'smooth',block:'center'})" style="color:var(--primary-light); font-weight:800; cursor:pointer; padding:0 2px;">[$1]</sup>`
     );
@@ -14470,7 +14899,7 @@ async function showSiReader(kind, i, ci, fromBack = false, scrollToSectionIdx = 
         <div style="margin-top:10px; padding-top:8px; border-top:1px dashed var(--border-color); font-size:13px; line-height:1.5; color:var(--text-muted);">
           ${notes.map(n => `
             <div id="si_fn_${secIdx}_${escapeHtml(n.label)}" style="margin-bottom:5px;">
-              <sup style="color:var(--primary-light); font-weight:800;">[${escapeHtml(n.label)}]</sup> ${formatNoteLinks(n.text, defaultBookId)}
+              <sup style="color:var(--primary-light); font-weight:800;">[${escapeHtml(n.label)}]</sup> ${formatNoteLinks(n.text, defaultBookId, "it")}
             </div>
           `).join("")}
         </div>
@@ -14569,7 +14998,7 @@ async function showSiReader(kind, i, ci, fromBack = false, scrollToSectionIdx = 
     <div class="result-card bm-justify-text" style="cursor:default; padding:12px; font-size:13.5px; line-height:1.5; color:var(--text-muted);">
       ${notes.map(n => `
         <div id="si_fn_${escapeHtml(n.label)}" style="margin-bottom:6px;">
-          <sup style="color:var(--primary-light); font-weight:800;">[${escapeHtml(n.label)}]</sup> ${formatNoteLinks(n.text, defaultBookId)}
+          <sup style="color:var(--primary-light); font-weight:800;">[${escapeHtml(n.label)}]</sup> ${formatNoteLinks(n.text, defaultBookId, "it")}
         </div>
       `).join("")}
     </div>
@@ -15453,7 +15882,7 @@ function scrollRpToToday(smooth = false) {
 function buildStudioBackupObject() {
   return {
     app: "BibbiaMultilingue_PRO",
-    version: "PRO_v17.1.6",
+    version: "PRO_v17.1.15",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
@@ -15528,7 +15957,7 @@ function applyStudioBackupObject(parsed) {
   if (parsed.ttsRate) {
     bmTtsRate = Math.min(1.5, Math.max(0.75, Number(parsed.ttsRate) || 1.0));
     safeSaveStorage("bm_tts_rate", String(bmTtsRate));
-    if (!bmAudioPlaying) {
+    if (!bmAudioPlaying && !bmAudioPaused) {
       const ttsBtn = document.getElementById("ttsChapterBtn");
       if (ttsBtn) ttsBtn.innerHTML = `<span class="tab-icon">🔊</span><span>${bmTtsRate !== 1 ? "Ascolta " + bmTtsRate + "x" : "Ascolta"}</span>`;
     }
@@ -15784,6 +16213,21 @@ function describeIdbMigrationModule(id, extraCount = 0) {
   if (id === "bm:strong_ext") return { icon: "🏺", title: "Lessico Strong Esteso", fileSlug: "strong_esteso", prio: 5 };
   if (id === "bm:xrefs_ext") return { icon: "🔗", title: "Riferimenti Incrociati Estesi", fileSlug: "riferimenti_estesi", prio: 6 };
   if (id === "bm:nwtsty_media_bundle") return { icon: "🖼️", title: `Immagini & Mappe Studio${extraCount ? ` (${extraCount} file)` : ""}`, fileSlug: "nwtsty_media", prio: 7 };
+  if (id.startsWith("bm:nwtsty_media_part:")) {
+    const [pIdx, pTot] = id.slice("bm:nwtsty_media_part:".length).split("/");
+    return {
+      icon: "🖼️",
+      title: `Immagini & Mappe Studio · Parte ${pIdx}/${pTot}${extraCount ? ` (${extraCount} file)` : ""}`,
+      fileSlug: `nwtsty_media_parte${pIdx}_di_${pTot}`,
+      prio: 7 + Number(pIdx) * 0.01
+    };
+  }
+  if (id.startsWith("bm:nwtsty_status:")) {
+    const bId = id.slice("bm:nwtsty_status:".length);
+    const cfg = BM_STUDY_BIBLE_REGISTRY[bId];
+    const tag = cfg ? cfg.langCode.toUpperCase() : "IT";
+    return { icon: "📊", title: `Stato Installazione Studio (${tag})`, fileSlug: `nwtsty_status_${tag.toLowerCase()}`, prio: 9.5 };
+  }
   if (id.startsWith("bm:nwtsty_docs:")) {
     const bId = id.slice("bm:nwtsty_docs:".length);
     const cfg = BM_STUDY_BIBLE_REGISTRY[bId];
@@ -15802,11 +16246,14 @@ function describeIdbMigrationModule(id, extraCount = 0) {
   return { icon: "📖", title: label, fileSlug: `bibbia_${slug}`, prio: 10 };
 }
 
+const BM_MIGRATION_MEDIA_CHUNK_SIZE = 180;
+
 async function scanOfflineLibraryModules() {
   const allKeys = await idbGetAllKeys();
+  const keySet = new Set(allKeys);
   const mapImgKeys = allKeys.filter(k => k.startsWith(BP_DB_IMG));
-  const hasMapsMeta = allKeys.includes(BP_DB_META);
-  const studyImgKeys = allKeys.filter(k => k.startsWith("bm:nwtsty_img:"));
+  const hasMapsMeta = keySet.has(BP_DB_META);
+  const studyImgKeys = allKeys.filter(k => k.startsWith("bm:nwtsty_img:")).sort();
   const modules = [];
 
   if (hasMapsMeta || mapImgKeys.length > 0) {
@@ -15817,12 +16264,36 @@ async function scanOfflineLibraryModules() {
     modules.push({ id: "bm:maps_bundle", keys, ...desc });
   }
   if (studyImgKeys.length > 0) {
-    const desc = describeIdbMigrationModule("bm:nwtsty_media_bundle", studyImgKeys.length);
-    modules.push({ id: "bm:nwtsty_media_bundle", keys: studyImgKeys, ...desc });
+    if (studyImgKeys.length <= BM_MIGRATION_MEDIA_CHUNK_SIZE) {
+      const desc = describeIdbMigrationModule("bm:nwtsty_media_bundle", studyImgKeys.length);
+      modules.push({ id: "bm:nwtsty_media_bundle", keys: studyImgKeys, ...desc });
+    } else {
+      const totalParts = Math.ceil(studyImgKeys.length / BM_MIGRATION_MEDIA_CHUNK_SIZE);
+      for (let p = 0; p < totalParts; p++) {
+        const chunk = studyImgKeys.slice(p * BM_MIGRATION_MEDIA_CHUNK_SIZE, (p + 1) * BM_MIGRATION_MEDIA_CHUNK_SIZE);
+        const modId = `bm:nwtsty_media_part:${p + 1}/${totalParts}`;
+        const desc = describeIdbMigrationModule(modId, chunk.length);
+        modules.push({ id: modId, keys: chunk, ...desc });
+      }
+    }
   }
 
+  const attachedStatusKeys = new Set();
   for (const k of allKeys) {
     if (k === BP_DB_META || k.startsWith(BP_DB_IMG) || k.startsWith("bm:nwtsty_img:") || k.startsWith("bm:nwtsty_status:") || k === "bm:maps_it" || k === "bm:messianic_enriched_v1") continue;
+    const desc = describeIdbMigrationModule(k);
+    const modKeys = [k];
+    if (BM_STUDY_BIBLE_REGISTRY[k]) {
+      const stKey = `bm:nwtsty_status:${k}`;
+      if (keySet.has(stKey)) {
+        modKeys.push(stKey);
+        attachedStatusKeys.add(stKey);
+      }
+    }
+    modules.push({ id: k, keys: modKeys, ...desc });
+  }
+  for (const k of allKeys) {
+    if (!k.startsWith("bm:nwtsty_status:") || attachedStatusKeys.has(k)) continue;
     const desc = describeIdbMigrationModule(k);
     modules.push({ id: k, keys: [k], ...desc });
   }
@@ -15905,7 +16376,7 @@ function setMigrationStatus(htmlMsg) {
 
 async function buildAndDeliverLibraryBundle(keysList, includeStudio, fileName, shareTitle) {
   const parts = [
-    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v17.1.6","date":',
+    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v17.1.15","date":',
     JSON.stringify(new Date().toISOString())
   ];
   if (includeStudio) {
@@ -15994,18 +16465,28 @@ async function importLibraryMigrationFiles(event) {
       if (!parsed || typeof parsed !== "object") continue;
 
       if (parsed.bmLibraryBundle === true && Array.isArray(parsed.entries)) {
+        const validEntries = [];
         for (let eIdx = 0; eIdx < parsed.entries.length; eIdx++) {
           const item = parsed.entries[eIdx];
           if (!item || typeof item.key !== "string" || !item.key.trim() || item.value === undefined) continue;
           const k = item.key.trim();
           if (!/^(?:bm:|gb:|epub:|helloao:)/.test(k)) continue;
-          setMigrationStatus(`💾 Salvataggio offline (${fIdx + 1}/${files.length}) · blocco ${eIdx + 1}/${parsed.entries.length}...`);
-          await idbPut(k, item.value);
-          if (k === "bm:insight_it") safeSaveStorage("bm_insight_ts", String(Number(item.value?.updated) || 0));
-          if (k === "bm:si_it") safeSaveStorage("bm_si_ts", String(Number(item.value?.updated) || 0));
-          importedBlocks++;
-          if (k.startsWith("gb:") || k.startsWith("epub:") || k.startsWith("helloao:")) {
-            importedBibleIds.push(k);
+          validEntries.push({ key: k, value: item.value });
+        }
+        const MIG_BATCH = 40;
+        for (let start = 0; start < validEntries.length; start += MIG_BATCH) {
+          const slice = validEntries.slice(start, start + MIG_BATCH);
+          const doneTo = Math.min(start + slice.length, validEntries.length);
+          setMigrationStatus(`💾 Salvataggio offline (${fIdx + 1}/${files.length}) · blocchi ${doneTo}/${validEntries.length}...`);
+          await idbPutBatch(slice);
+          for (let j = 0; j < slice.length; j++) {
+            const { key: k, value: val } = slice[j];
+            if (k === "bm:insight_it") safeSaveStorage("bm_insight_ts", String(Number(val?.updated) || 0));
+            if (k === "bm:si_it") safeSaveStorage("bm_si_ts", String(Number(val?.updated) || 0));
+            importedBlocks++;
+            if (k.startsWith("gb:") || k.startsWith("epub:") || k.startsWith("helloao:")) {
+              importedBibleIds.push(k);
+            }
           }
         }
         if (parsed.studioBackup && typeof parsed.studioBackup === "object") {
@@ -16514,7 +16995,7 @@ function bpRenderBody(q) {
 }
 
 // ---------- 💎 Approfondisci (Scrittura del Giorno) ----------
-function bpCitedRefs(text, defaultBookId = null) {
+function bpCitedRefs(text, defaultBookId = null, langHint = "") {
   const raw = String(text || "");
   if (!raw) return [];
   const out = [], seen = new Set();
@@ -16524,7 +17005,7 @@ function bpCitedRefs(text, defaultBookId = null) {
       out.push(refStr);
     }
     return labelStr;
-  });
+  }, langHint);
   return out;
 }
 function searchWordInInsight(word) {
@@ -16607,8 +17088,8 @@ async function openDeepenDailyModal() {
         </div>
       </div>`;
   }).join("");
-  // versetti citati nel tema e nel commento
-  const refs = bpCitedRefs(rawTheme + "\n" + rawComment);
+  // versetti citati nel tema e nel commento (Scrittura del Giorno IT)
+  const refs = bpCitedRefs(rawTheme + "\n" + rawComment, null, "it");
   const refsHtml = refs.length
     ? `<div class="section-title"><span>Versetti citati</span><span>${refs.length}</span></div>
        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">` +
@@ -16733,7 +17214,7 @@ function handlePortionTextSelection() {
   const sel = window.getSelection ? window.getSelection() : null;
   if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
   const anchor = sel.anchorNode ? (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement) : null;
-  if (!anchor || anchor.closest("#bmExitModal, #proModal, #noteModal, #myReadModal, #bmSelectModal, #mapsViewer, #bmSettingsDrawer, #bmProphecyWidget")) return;
+  if (!anchor || anchor.closest("#bmExitModal, #proModal, #noteModal, #myReadModal, #bmSelectModal, #mapsViewer, #bmStudyLightbox, #bmSettingsDrawer, #bmProphecyWidget")) return;
   const vRow = anchor.closest(".verse-row, .parallel-row, .parallel-row-3");
   if (!vRow || !vRow.id || !vRow.id.startsWith("v_")) return;
   const txt = extractCleanSelectedText();
@@ -17243,6 +17724,7 @@ document.addEventListener("keydown", function(e) {
   if (document.getElementById("bmSelectModal")?.style.display === "flex") { closeBmSelectModal(); return; }
   if (document.getElementById("myReadModal")?.style.display === "flex") { closeMyReadModal(); return; }
   if (document.getElementById("bmSettingsDrawer")?.classList.contains("open")) { closeSettingsDrawer(); return; }
+  if (document.getElementById("bmStudyLightbox")?.style.display === "flex") { closeStudyImageLightbox(); return; }
   if (document.getElementById("mapsViewer")?.style.display === "flex") {
     const bpSh = document.getElementById("bpSheet");
     if (bpSh && bpSh.classList.contains("open")) { bpSh.classList.remove("open"); return; }
@@ -17282,7 +17764,7 @@ function isInRightEdgeExitZone(clientX) {
 
 function isAnyBmOverlayOpen() {
   const drawerOpen = document.getElementById("bmSettingsDrawer")?.classList.contains("open");
-  return Boolean(drawerOpen || ["bmExitModal", "proModal", "noteModal", "myReadModal", "bmSelectModal", "mapsViewer"].some(id => {
+  return Boolean(drawerOpen || ["bmExitModal", "proModal", "noteModal", "myReadModal", "bmSelectModal", "mapsViewer", "bmStudyLightbox"].some(id => {
     const el = document.getElementById(id);
     return el && el.style.display === "flex";
   }));
@@ -17565,6 +18047,59 @@ async function executeOmniSearch() {
       }).join("");
     } else {
       html += `<div style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">Nessun commento giornaliero corrispondente.</div>`;
+    }
+  }
+
+  // 5b. BIBBIA PER LO STUDIO (Documenti, Introduzioni, 20 Domande & Appendici — solo se importata offline)
+  const studyDocsHits = [];
+  const studyCandidateIds = [...new Set([
+    resolveStudyBibleIdForUi(),
+    ...Object.keys(BM_STUDY_BIBLE_REGISTRY)
+  ])];
+  const allIdbKeys = await idbGetAllKeys();
+  if (reqId !== omniReqId || currentViewContext.type !== "search") return;
+  const installedDocIds = studyCandidateIds.filter(id => allIdbKeys.includes(`bm:nwtsty_docs:${id}`));
+  if (installedDocIds.length > 0) {
+    for (let sIdx = 0; sIdx < installedDocIds.length; sIdx++) {
+      const bId = installedDocIds[sIdx];
+      const docsArchive = await getStudyBibleDocsData(bId);
+      if (reqId !== omniReqId || currentViewContext.type !== "search") return;
+      if (!docsArchive || !Array.isArray(docsArchive.documents)) continue;
+      const langBadge = (getStudyBibleConfig(bId).langCode || "it").toUpperCase();
+      for (let dIdx = 0; dIdx < docsArchive.documents.length; dIdx++) {
+        const d = docsArchive.documents[dIdx];
+        if (!d || !d.title || isStudyDocEmptyShell(d)) continue;
+        const nTitle = normalizeForSearch(d.title);
+        const titleHit = matchesAll(d.title);
+        let snippetTxt = "";
+        if (!titleHit) {
+          const paras = Array.isArray(d.paragraphs) ? d.paragraphs : [];
+          for (let pIdx = 0; pIdx < paras.length; pIdx++) {
+            const pt = paras[pIdx] && paras[pIdx].t ? paras[pIdx].t : "";
+            if (pt && matchesAll(pt)) {
+              snippetTxt = pt.slice(0, 150).replace(/\s+/g, " ");
+              break;
+            }
+          }
+          if (!snippetTxt) continue;
+        } else {
+          const firstPara = (Array.isArray(d.paragraphs) ? d.paragraphs : []).find(p => p && p.t && p.c !== "contextTtl" && p.c !== "h1");
+          snippetTxt = firstPara ? String(firstPara.t).slice(0, 150).replace(/\s+/g, " ") : "";
+        }
+        const prio = nTitle === qNorm ? 1 : (nTitle.startsWith(qNorm) ? 2 : (titleHit ? 3 : 4));
+        studyDocsHits.push({ docId: Number(d.id), bibleId: bId, langBadge, title: d.title, snippet: snippetTxt, prio });
+      }
+    }
+    studyDocsHits.sort((a, b) => a.prio - b.prio || a.title.length - b.title.length);
+    html += `<div class="section-title"><span>🎓 Bibbia per lo Studio (${studyDocsHits.length} documenti)</span></div>`;
+    if (studyDocsHits.length) {
+      html += studyDocsHits.slice(0, 5).map(h => `
+        <div class="result-card" onclick="showStudyDocsView(${h.docId}, false, '${escapeJsStr(h.bibleId)}')">
+          <div class="result-ref">🎓 ${highlightSnippetSafe(h.title, rawQuery)} <small style="color:var(--text-muted); font-weight:700;">(${escapeHtml(h.langBadge)})</small></div>
+          ${h.snippet ? `<div class="bm-justify-text" style="font-size:13px; color:var(--text-muted);">${highlightSnippetSafe(h.snippet, rawQuery)}…</div>` : ""}
+        </div>`).join("");
+    } else {
+      html += `<div style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">Nessun documento o appendice corrispondente nella Bibbia per lo Studio.</div>`;
     }
   }
 
@@ -18249,7 +18784,7 @@ function onBmExitChoice(shouldExit, btnEl) {
     if (!e.touches || e.touches.length !== 1) return;
     if (bmExitConfirmOpen || bmExitingApp || isAnyBmOverlayOpen()) return;
     const t = e.target;
-    if (t && t.closest("#splashScreen, #bmExitModal, #bmProphecyWidget, #mapsViewer, input, textarea, select, .quick-menu-bar, .verse-action-bar, .rp-scroll-window")) return;
+    if (t && t.closest("#splashScreen, #bmExitModal, #bmProphecyWidget, #mapsViewer, #bmStudyLightbox, input, textarea, select, .quick-menu-bar, .verse-action-bar, .rp-scroll-window")) return;
     const sel = window.getSelection ? window.getSelection() : null;
     if (sel && !sel.isCollapsed) return;
     const x = e.touches[0].clientX;
@@ -18300,13 +18835,6 @@ function onBmExitChoice(shouldExit, btnEl) {
       return false;
     };
 
-    // 0. Visualizzatore Fullscreen Immagini HD Studio (z-index 1380)
-    if (closeIfFlex("bmStudyLightbox", closeStudyImageLightbox)) {
-      bmHaptic(10);
-      armBmBackGuard(true);
-      return;
-    }
-
     // 1. Tendina Blu PRO (z-index 1350)
     if (closeIfFlex("bmSelectModal", closeBmSelectModal)) {
       bmHaptic(10);
@@ -18330,7 +18858,14 @@ function onBmExitChoice(shouldExit, btnEl) {
       return;
     }
 
-    // 4. Visualizzatore Cartine HD (z-index 1100: prima elenco luoghi #bpSheet, poi cartina)
+    // 4. Visualizzatore Fullscreen Immagini HD Studio (z-index 1150)
+    if (closeIfFlex("bmStudyLightbox", closeStudyImageLightbox)) {
+      bmHaptic(10);
+      armBmBackGuard(true);
+      return;
+    }
+
+    // 5. Visualizzatore Cartine HD (z-index 1100: prima elenco luoghi #bpSheet, poi cartina)
     const mapsEl = document.getElementById("mapsViewer");
     if (mapsEl && mapsEl.style.display === "flex") {
       const bpSh = document.getElementById("bpSheet");
@@ -18944,7 +19479,7 @@ async function openVerseXRayModal(forcedVerseNum) {
     ${xrayFnHtml}
     <div class="section-title"><span>🔗 ${escapeHtml(xrayRefsLabel)}</span></div>
     <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
-      ${refs.map(r => `<span class="tag-badge" style="padding:6px 10px; font-size:13px;" onclick="closeProModal(); jumpToRefString('${escapeJsStr(r)}')">📖 ${escapeHtml(r)}</span>`).join("")}
+      ${refs.map(r => `<span class="tag-badge" style="padding:6px 10px; font-size:13px;" onclick="closeProModal(); jumpToRefString('${escapeJsStr(r.label)}', false, '${escapeJsStr(r.lang || "")}')">📖 ${escapeHtml(r.label)}</span>`).join("")}
     </div>
     ${xrayInsHtml}
     ${placesHtml}
@@ -19328,7 +19863,7 @@ function getFirstVerseNumFromSpec(vSpec) {
 
 // Auto-Arricchimento che conserva SEMPRE il testo INTEGRALE (fullDesc) oltre all'anteprima breve (desc)
 const BM_MESSIANIC_CACHE_KEY = "bm:messianic_enriched_v1";
-const BM_MESSIANIC_SCHEMA_VER = 1;
+const BM_MESSIANIC_SCHEMA_VER = 2;
 async function enrichMessianicPropheciesFromOfflineDB() {
   if (bmDynamicCatalogEnriched) return bmProphecyList;
   if (bmEnrichPromise) return bmEnrichPromise;
@@ -19392,9 +19927,9 @@ async function enrichMessianicPropheciesFromOfflineDB() {
         const lines = String(art.body || "").split(/\n+/);
         lines.forEach(line => {
           if (line.length < 15 || !/\d+:\d+/.test(line)) return;
-          const refs = bpCitedRefs(line);
+          const refs = bpCitedRefs(line, null, "it");
           if (refs.length >= 2) {
-            const parsedRefs = refs.map(r => ({ raw: r, t: parseRefStringToTarget(r) })).filter(x => x.t);
+            const parsedRefs = refs.map(r => ({ raw: r, t: parseRefStringToTarget(r, false, "it") })).filter(x => x.t);
             const otRefs = parsedRefs.filter(x => isValidMessianicOtCoordinate(x.t.bookId, x.t.chapter, getFirstVerseNumFromSpec(x.t.vSpec)));
             const ntRefs = parsedRefs.filter(x => x.t.bookId >= 40 && x.t.bookId <= 66).map(x => `${x.t.book.name} ${x.t.chapter}${x.t.vSpec ? ":" + x.t.vSpec : ""}`);
             if (otRefs.length > 0 && otRefs.length <= 4 && ntRefs.length > 0) {
@@ -19427,8 +19962,8 @@ async function enrichMessianicPropheciesFromOfflineDB() {
           paras.forEach(p => {
             if (!/\d+:\d+/.test(p)) return;
             if (!/(?:\b(?:messia\w*|ademp\w*|profetizz\w*|profezi\w*|prefigur\w*)\b)/i.test(p) || !/(?:\b(?:ges[ùu]|cristo|messia\w*)\b)/i.test(p)) return;
-            const refs = bpCitedRefs(p);
-            const parsedRefs = refs.map(r => ({ raw: r, t: parseRefStringToTarget(r) })).filter(x => x.t);
+            const refs = bpCitedRefs(p, null, "it");
+            const parsedRefs = refs.map(r => ({ raw: r, t: parseRefStringToTarget(r, false, "it") })).filter(x => x.t);
             const otRefs = parsedRefs.filter(x => isValidMessianicOtCoordinate(x.t.bookId, x.t.chapter, getFirstVerseNumFromSpec(x.t.vSpec)));
             const ntRefs = parsedRefs.filter(x => x.t.bookId >= 40 && x.t.bookId <= 66).map(x => `${x.t.book.name} ${x.t.chapter}${x.t.vSpec ? ":" + x.t.vSpec : ""}`);
             if (otRefs.length > 0 && otRefs.length <= 4 && ntRefs.length > 0) {
@@ -19733,7 +20268,7 @@ function openGreekFulfillmentAction() {
   const ntList = Array.isArray(p.nt) ? p.nt : [];
   const fullText = p.fullDesc || p.desc || "";
 
-  const formattedFullNote = formatNoteLinks(fullText, p.b);
+  const formattedFullNote = formatNoteLinks(fullText, p.b, "it");
 
   const sourceBtnHtml = p.sourceMeta ? `
     <button type="button" class="myread-action-btn btn-color-anim"
@@ -20359,38 +20894,85 @@ function saveChapterDossierAsNote(btnEl) {
 const BM_STUDY_IMG_PREFIX = "bm:nwtsty_img:";
 let bmStudyDocsCache = { id: "", data: null };
 let bmStudyXrefsCache = { id: "", data: null };
+const bmStudyDocsMissingIds = new Set();
+const bmStudyXrefsMissingIds = new Set();
+const bmStudyExtrasMissingIds = new Set();
 let bmStudyImgCache = new Map();
-let bmStudyMediaPool = [];
+let bmStudyDocMediaPool = [];
+let bmStudyModalMediaPool = [];
 let bmStudyDocsFilterCat = "all";
 let bmStudyDocsSearchQuery = "";
+let bmStudyDocsSearchTimer = null;
 let bmStudyDocsFilterBook = 0;
 let bmStudyDocsActiveBibleId = "gb:nwtsty";
-let bmStudyLbState = { scale: 1, minScale: 0.5, maxScale: 6, x: 0, y: 0, nw: 0, nh: 0, active: false, bound: false };
+let bmStudyModalSpeechText = "";
+let bmStudyModalLangCode = "it";
+let bmStudyModalCurrentKey = "";
+let bmStudyLbReqId = 0;
+let bmStudyLbState = { scale: 1, fitScale: 1, minScale: 0.5, maxScale: 6, x: 0, y: 0, nw: 0, nh: 0, active: false, bound: false, ptrs: new Map() };
+
+const BM_STUDY_BOOK_NAMES_EN = [
+  "", "genesis", "exodus", "leviticus", "numbers", "deuteronomy", "joshua", "judges", "ruth",
+  "1 samuel", "2 samuel", "1 kings", "2 kings", "1 chronicles", "2 chronicles", "ezra", "nehemiah",
+  "esther", "job", "psalm", "proverbs", "ecclesiastes", "song of solomon", "isaiah", "jeremiah",
+  "lamentations", "ezekiel", "daniel", "hosea", "joel", "amos", "obadiah", "jonah", "micah",
+  "nahum", "habakkuk", "zephaniah", "haggai", "zechariah", "malachi", "matthew", "mark", "luke",
+  "john", "acts", "romans", "1 corinthians", "2 corinthians", "galatians", "ephesians", "philippians",
+  "colossians", "1 thessalonians", "2 thessalonians", "1 timothy", "2 timothy", "titus", "philemon",
+  "hebrews", "james", "1 peter", "2 peter", "1 john", "2 john", "3 john", "jude", "revelation"
+];
+const BM_STUDY_BOOK_NAMES_ES = [
+  "", "genesis", "exodo", "levitico", "numeros", "deuteronomio", "josue", "jueces", "rut",
+  "1 samuel", "2 samuel", "1 reyes", "2 reyes", "1 cronicas", "2 cronicas", "esdras", "nehemias",
+  "ester", "job", "salmos", "proverbios", "eclesiastes", "el cantar de los cantares", "isaias", "jeremias",
+  "lamentaciones", "ezequiel", "daniel", "oseas", "joel", "amos", "abdias", "jonas", "miqueas",
+  "nahum", "habacuc", "sofonias", "ageo", "zacarias", "malaquias", "mateo", "marcos", "lucas",
+  "juan", "hechos", "romanos", "1 corintios", "2 corintios", "galatas", "efesios", "filipenses",
+  "colosenses", "1 tesalonicenses", "2 tesalonicenses", "1 timoteo", "2 timoteo", "tito", "filemon",
+  "hebreos", "santiago", "1 pedro", "2 pedro", "1 juan", "2 juan", "3 juan", "judas", "apocalipsis"
+];
+const BM_STUDY_BOOK_NAMES_PT = [
+  "", "genesis", "exodo", "levitico", "numeros", "deuteronomio", "josue", "juizes", "rute",
+  "1 samuel", "2 samuel", "1 reis", "2 reis", "1 cronicas", "2 cronicas", "esdras", "neemias",
+  "ester", "jo", "salmos", "proverbios", "eclesiastes", "cantico de salomao", "isaias", "jeremias",
+  "lamentacoes", "ezequiel", "daniel", "oseias", "joel", "amos", "obadias", "jonas", "miqueias",
+  "naum", "habacuque", "sofonias", "ageu", "zacarias", "malaquias", "mateus", "marcos", "lucas",
+  "joao", "atos", "romanos", "1 corintios", "2 corintios", "galatas", "efesios", "filipenses",
+  "colossenses", "1 tessalonicenses", "2 tessalonicenses", "1 timoteo", "2 timoteo", "tito", "filemon",
+  "hebreus", "tiago", "1 pedro", "2 pedro", "1 joao", "2 joao", "3 joao", "judas", "apocalipse"
+];
 
 function resetStudyBibleCaches() {
   bmStudyDocsCache = { id: "", data: null };
   bmStudyXrefsCache = { id: "", data: null };
-  bmStudyMediaPool = [];
+  bmStudyDocsMissingIds.clear();
+  bmStudyXrefsMissingIds.clear();
+  bmStudyExtrasMissingIds.clear();
+  bmStudyDocMediaPool = [];
+  bmStudyModalMediaPool = [];
   bmStudyImgCache.forEach(url => {
     try { if (typeof url === "string" && url.startsWith("blob:")) URL.revokeObjectURL(url); } catch (_e) {}
   });
   bmStudyImgCache.clear();
 }
 
-function registerStudyMediaPoolItem(item) {
-  if (bmStudyMediaPool.length > 300) bmStudyMediaPool = [];
-  bmStudyMediaPool.push(item);
-  return bmStudyMediaPool.length - 1;
+function registerStudyMediaPoolItem(item, scope = "modal") {
+  const pool = scope === "doc" ? bmStudyDocMediaPool : bmStudyModalMediaPool;
+  pool.push(item);
+  return pool.length - 1;
 }
 
-function openStudyLightboxByPool(idx) {
-  const it = bmStudyMediaPool[Number(idx)];
+function openStudyLightboxByPool(idx, scope = "modal") {
+  const pool = scope === "doc" ? bmStudyDocMediaPool : bmStudyModalMediaPool;
+  const it = pool[Number(idx)];
   if (!it) return;
-  openStudyImageLightbox(it.file, it.label, it.caption, it.credit);
+  const ctxBookId = it.bookId !== undefined ? it.bookId : state.bookId;
+  openStudyImageLightbox(it.file, it.label, it.caption, it.credit, it.langCode || "", ctxBookId);
 }
 
-function openStudyVideoByPool(idx) {
-  const it = bmStudyMediaPool[Number(idx)];
+function openStudyVideoByPool(idx, scope = "modal") {
+  const pool = scope === "doc" ? bmStudyDocMediaPool : bmStudyModalMediaPool;
+  const it = pool[Number(idx)];
   if (!it) return;
   openStudyVideoOnline(it.video, it.label, it.wtLocale);
 }
@@ -20399,10 +20981,46 @@ function getStudyBibleConfig(transId) {
   return BM_STUDY_BIBLE_REGISTRY[transId] || BM_STUDY_BIBLE_REGISTRY["gb:nwtsty"];
 }
 
-function resolveStudyBibleIdForUi(preferredId = state.trans1) {
+function getStudyBibleIdForTransLang(transId = state.trans1) {
+  const id = String(transId || "");
+  if (BM_STUDY_BIBLE_REGISTRY[id]) return id;
+  const t = id.toLowerCase();
+  const activeObj = dynamicCatalog.find(b => b.id === id) || CORE_BIBLES.find(b => b.id === id);
+  const langName = activeObj ? (activeObj.lang || "").toLowerCase() : "";
+  if (t.endsWith("_e") || langName.includes("engl") || /^gb:(?:kjv|akjv|web|asv|ylt|bbe|darby|douayrheims|wb)$/.test(t)) return "gb:nwtsty_e";
+  if (t.endsWith("_s") || t.includes("valera") || t.includes("sagradas") || t.includes("rvg") || langName.includes("span")) return "gb:nwtsty_s";
+  if (t.endsWith("_tpo") || t.includes("almeida") || langName.includes("port")) return "gb:nwtsty_tpo";
+  if (t === "gb:nwt" || t === "gb:bi12" || t.includes("riveduta") || t.includes("giovanni") || t.startsWith("epub:") || langName.includes("ital")) return "gb:nwtsty";
+  return "";
+}
+
+function buildOrderedStudyBibleCandidates(preferredId = "") {
+  const ordered = [];
+  const pushId = (id) => {
+    if (id && BM_STUDY_BIBLE_REGISTRY[id] && !ordered.includes(id)) ordered.push(id);
+  };
+  const installed = (state.downloadedBibles || []).filter(id => Boolean(BM_STUDY_BIBLE_REGISTRY[id]));
+  pushId(preferredId);
+  const activeInView = getActiveStudyBibleId();
+  if (activeInView && installed.includes(activeInView)) pushId(activeInView);
+  const langMatched = getStudyBibleIdForTransLang(state.trans1);
+  if (langMatched && installed.includes(langMatched)) pushId(langMatched);
+  installed.forEach(pushId);
+  pushId(activeInView);
+  pushId(langMatched);
+  Object.keys(BM_STUDY_BIBLE_REGISTRY).forEach(pushId);
+  return ordered;
+}
+
+function resolveStudyBibleIdForUi(preferredId = "") {
   if (preferredId && BM_STUDY_BIBLE_REGISTRY[preferredId]) return preferredId;
-  const activeInstalled = (state.downloadedBibles || []).find(id => Boolean(BM_STUDY_BIBLE_REGISTRY[id]));
-  return activeInstalled || "gb:nwtsty";
+  const installed = (state.downloadedBibles || []).filter(id => Boolean(BM_STUDY_BIBLE_REGISTRY[id]));
+  const activeInView = getActiveStudyBibleId();
+  if (activeInView && installed.includes(activeInView)) return activeInView;
+  const langMatched = getStudyBibleIdForTransLang(state.trans1);
+  if (langMatched && installed.includes(langMatched)) return langMatched;
+  if (installed.length > 0) return installed[0];
+  return activeInView || langMatched || "gb:nwtsty";
 }
 
 function buildStudyMediaLookup(mediaArr) {
@@ -20425,48 +21043,82 @@ function buildStudyMediaLookup(mediaArr) {
   return map;
 }
 
-async function getStudyBibleDocsData(bibleId = resolveStudyBibleIdForUi()) {
-  if (bmStudyDocsCache.id === bibleId && bmStudyDocsCache.data) return bmStudyDocsCache.data;
-  const data = await idbGet(`bm:nwtsty_docs:${bibleId}`);
-  if (data && Array.isArray(data.documents)) {
-    bmStudyDocsCache = { id: bibleId, data };
-    return data;
+async function getStudyBibleDocsData(bibleId = resolveStudyBibleIdForUi(), allowFallback = false) {
+  const candidates = allowFallback ? buildOrderedStudyBibleCandidates(bibleId) : [bibleId];
+  for (let i = 0; i < candidates.length; i++) {
+    const candId = candidates[i];
+    if (!candId || bmStudyDocsMissingIds.has(candId)) continue;
+    if (bmStudyDocsCache.id === candId && bmStudyDocsCache.data) return bmStudyDocsCache.data;
+    const data = await idbGet(`bm:nwtsty_docs:${candId}`);
+    if (data && Array.isArray(data.documents)) {
+      bmStudyDocsMissingIds.delete(candId);
+      bmStudyDocsCache = { id: candId, data };
+      return data;
+    }
+    bmStudyDocsMissingIds.add(candId);
   }
   return null;
 }
 
 async function getStudyBibleXrefsForKey(refKey) {
-  const bibleId = resolveStudyBibleIdForUi();
-  if (bmStudyXrefsCache.id !== bibleId) {
-    const data = await idbGet(`bm:nwtsty_xrefs:${bibleId}`);
-    bmStudyXrefsCache = { id: bibleId, data: (data && typeof data === "object") ? data : {} };
+  const candidates = buildOrderedStudyBibleCandidates();
+  for (let i = 0; i < candidates.length; i++) {
+    const candId = candidates[i];
+    if (!candId || bmStudyXrefsMissingIds.has(candId)) continue;
+    let xrefsData = null;
+    if (bmStudyXrefsCache.id === candId && bmStudyXrefsCache.data) {
+      xrefsData = bmStudyXrefsCache.data;
+    } else {
+      const raw = await idbGet(`bm:nwtsty_xrefs:${candId}`);
+      if (raw && typeof raw === "object" && Object.keys(raw).length > 0) {
+        bmStudyXrefsMissingIds.delete(candId);
+        bmStudyXrefsCache = { id: candId, data: raw };
+        xrefsData = raw;
+      } else {
+        bmStudyXrefsMissingIds.add(candId);
+      }
+    }
+    if (xrefsData) {
+      const arr = xrefsData[refKey];
+      return {
+        refs: Array.isArray(arr) ? arr : [],
+        bibleId: candId,
+        langCode: getStudyBibleConfig(candId).langCode || "it"
+      };
+    }
   }
-  const arr = bmStudyXrefsCache.data ? bmStudyXrefsCache.data[refKey] : null;
-  return Array.isArray(arr) ? arr : [];
+  return { refs: [], bibleId: "", langCode: "" };
 }
 
 async function fetchChapterStudyExtras(transId, bookId, chapter, allowFallbackToInstalled = false) {
-  let targetId = BM_STUDY_BIBLE_REGISTRY[transId] ? transId : "";
-  if (!targetId && allowFallbackToInstalled) {
-    targetId = resolveStudyBibleIdForUi(transId);
-  }
-  if (!targetId) return null;
+  const candidates = allowFallbackToInstalled
+    ? buildOrderedStudyBibleCandidates(BM_STUDY_BIBLE_REGISTRY[transId] ? transId : "")
+    : (BM_STUDY_BIBLE_REGISTRY[transId] ? [transId] : []);
+  if (!candidates.length) return null;
   try {
-    const fullOffline = await getOfflineBible(targetId);
-    if (!fullOffline || !Array.isArray(fullOffline.books)) return null;
-    const bObj = fullOffline.books.find(b => Number(b.nr) === Number(bookId));
-    const cObj = bObj && Array.isArray(bObj.chapters)
-      ? bObj.chapters.find(c => Number(c.chapter) === Number(chapter))
-      : null;
-    if (!cObj) return { bibleId: targetId, isStudyBible: true, studyNotes: {}, marginal: {}, media: {}, mediaById: fullOffline.mediaById || {} };
-    return {
-      bibleId: targetId,
-      isStudyBible: true,
-      studyNotes: (cObj.studyNotes && typeof cObj.studyNotes === "object") ? cObj.studyNotes : {},
-      marginal: (cObj.marginal && typeof cObj.marginal === "object") ? cObj.marginal : {},
-      media: (cObj.media && typeof cObj.media === "object") ? cObj.media : {},
-      mediaById: (fullOffline.mediaById && typeof fullOffline.mediaById === "object") ? fullOffline.mediaById : {}
-    };
+    for (let i = 0; i < candidates.length; i++) {
+      const targetId = candidates[i];
+      if (!targetId || bmStudyExtrasMissingIds.has(targetId)) continue;
+      const fullOffline = await getOfflineBible(targetId);
+      if (!fullOffline || !Array.isArray(fullOffline.books)) {
+        bmStudyExtrasMissingIds.add(targetId);
+        continue;
+      }
+      const bObj = fullOffline.books.find(b => Number(b.nr) === Number(bookId));
+      const cObj = bObj && Array.isArray(bObj.chapters)
+        ? bObj.chapters.find(c => Number(c.chapter) === Number(chapter))
+        : null;
+      if (!cObj) return { bibleId: targetId, isStudyBible: true, studyNotes: {}, marginal: {}, media: {}, mediaById: fullOffline.mediaById || {} };
+      return {
+        bibleId: targetId,
+        isStudyBible: true,
+        studyNotes: (cObj.studyNotes && typeof cObj.studyNotes === "object") ? cObj.studyNotes : {},
+        marginal: (cObj.marginal && typeof cObj.marginal === "object") ? cObj.marginal : {},
+        media: (cObj.media && typeof cObj.media === "object") ? cObj.media : {},
+        mediaById: (fullOffline.mediaById && typeof fullOffline.mediaById === "object") ? fullOffline.mediaById : {}
+      };
+    }
+    return null;
   } catch (e) {
     console.debug(e);
     return null;
@@ -20518,7 +21170,7 @@ async function hydrateStudyImagesInContainer(containerEl) {
         obs.unobserve(target);
         hydrateSingleStudyImg(target);
       });
-    }, { root: document.getElementById("mainContainer"), rootMargin: "360px 0px", threshold: 0.01 });
+    }, { root: containerEl.closest("#mainContainer, .modal-card") || null, rootMargin: "360px 0px", threshold: 0.01 });
     imgs.forEach(img => io.observe(img));
     return;
   }
@@ -20629,30 +21281,37 @@ function formatStudyNoteTextHtml(noteObj, bookId, langCode = "it") {
   return paras.map((para, idx) => {
     let lead = "";
     let rest = para;
-    if (idx === 0 && head && para.startsWith(head + " ")) {
-      lead = head;
-      rest = para.slice(head.length + 1);
-    } else if (langCode === "es") {
-      const md = para.match(dotLemmaRe);
-      if (md && md[1]) {
-        lead = md[1];
-        rest = para.slice(md[0].length);
+    if (idx === 0) {
+      if (head && para.startsWith(head)) {
+        const afterHead = para.slice(head.length);
+        const mSep = afterHead.match(/^([:.])?\s+/);
+        if (mSep) {
+          lead = mSep[1] ? `${head}${mSep[1]}` : head;
+          rest = afterHead.slice(mSep[0].length);
+        }
       }
-    } else {
-      const mc = para.match(colonLemmaRe);
-      if (mc && mc[1] && !/[.!?]$/.test(mc[1])) {
-        lead = mc[1];
-        rest = para.slice(mc[0].length);
-      } else {
-        const m = para.match(lemmaCueRe);
-        if (m && m[1] && !/[.!?]$/.test(m[1])) {
-          lead = m[1];
-          rest = para.slice(m[1].length + 1);
+      if (!lead) {
+        const mc = para.match(colonLemmaRe);
+        if (mc && mc[1] && !/[.!?](?:$|\s)/.test(mc[1]) && !/\d:$/.test(mc[1])) {
+          lead = mc[1];
+          rest = para.slice(mc[0].length);
+        } else if (langCode === "it") {
+          const m = para.match(lemmaCueRe);
+          if (m && m[1] && !/[.!?]$/.test(m[1])) {
+            lead = m[1];
+            rest = para.slice(m[1].length + 1);
+          }
+        } else if (langCode === "es") {
+          const md = para.match(dotLemmaRe);
+          if (md && md[1]) {
+            lead = md[1];
+            rest = para.slice(md[0].length);
+          }
         }
       }
     }
     const leadHtml = lead ? `<span class="bm-study-lemma">${escapeHtml(lead)}</span> ` : "";
-    return `<div class="bm-study-note-card bm-justify-text">${leadHtml}${formatNoteLinks(rest, bookId)}</div>`;
+    return `<div class="bm-study-note-card bm-justify-text">${leadHtml}${formatNoteLinks(rest, bookId, langCode)}</div>`;
   }).join("");
 }
 
@@ -20758,21 +21417,28 @@ async function importStudyBibleArchive(event, targetId = "gb:nwtsty") {
   const ingestMediaJsonObj = async (mediaObj, partLabel) => {
     const filesMap = (mediaObj && mediaObj.files && typeof mediaObj.files === "object") ? mediaObj.files : null;
     if (!filesMap) return 0;
+    const entries = [];
     const names = Object.keys(filesMap);
-    let saved = 0;
     for (let i = 0; i < names.length; i++) {
       const fname = names[i];
       const entry = filesMap[fname];
       if (!entry || typeof entry.b64 !== "string" || !entry.b64) continue;
-      await idbPut(BM_STUDY_IMG_PREFIX + fname, {
-        mime: entry.mime || (fname.toLowerCase().endsWith(".svg") ? "image/svg+xml" : "image/jpeg"),
-        b64: entry.b64
+      entries.push({
+        key: BM_STUDY_IMG_PREFIX + fname,
+        value: {
+          mime: entry.mime || (fname.toLowerCase().endsWith(".svg") ? "image/svg+xml" : "image/jpeg"),
+          b64: entry.b64
+        }
       });
-      saved++;
-      if (i % 15 === 0 || i === names.length - 1) {
-        setStatus(`🖼️ Salvataggio immagini <b>${escapeHtml(partLabel)}</b>: ${i + 1}/${names.length}...`);
-        await new Promise(r => setTimeout(r, 0));
-      }
+    }
+    const BATCH_SIZE = 40;
+    let saved = 0;
+    for (let start = 0; start < entries.length; start += BATCH_SIZE) {
+      const batch = entries.slice(start, start + BATCH_SIZE);
+      await idbPutBatch(batch);
+      saved += batch.length;
+      setStatus(`🖼️ Salvataggio immagini <b>${escapeHtml(partLabel)}</b>: ${saved}/${entries.length}...`);
+      await new Promise(r => setTimeout(r, 0));
     }
     return saved;
   };
@@ -20847,14 +21513,15 @@ async function importStudyBibleArchive(event, targetId = "gb:nwtsty") {
       }
     } catch (e) { console.debug(e); }
 
+    const hasAppNow = Boolean(prevStatus.hasApp || savedApp);
     const editionImgTotal = requiredImgFiles.length || (appStats ? appStats.imgTotal : (prevStatus.imgTotal || 744));
     const editionImgCount = requiredImgFiles.length
       ? requiredImgFiles.filter(fn => imgFileSet.has(fn)).length
-      : Math.min(editionImgTotal, imgFileSet.size);
+      : (hasAppNow ? Math.min(editionImgTotal, imgFileSet.size) : Math.min(editionImgTotal, (prevStatus.imgCount || 0) + savedImagesThisRun));
 
     const nextStatus = {
       updated: Date.now(),
-      hasApp: prevStatus.hasApp || savedApp,
+      hasApp: hasAppNow,
       verseCount: appStats ? appStats.verseCount : prevStatus.verseCount,
       studyNotesCount: appStats ? appStats.studyNotesCount : prevStatus.studyNotesCount,
       docsCount: appStats ? appStats.docsCount : prevStatus.docsCount,
@@ -20882,9 +21549,14 @@ async function importStudyBibleArchive(event, targetId = "gb:nwtsty") {
 
     const editionTitle = cfg.shortTitle || "TNM Studio";
     const missingImg = Math.max(0, editionImgTotal - editionImgCount);
-    const tailHint = missingImg > 0
-      ? `<br>📌 Immagini ${escapeHtml(editionTitle)}: <b>${editionImgCount}/${editionImgTotal}</b> — carica ora anche <b>Parte 2 (.zip)</b> per completare le restanti ${missingImg} immagini!`
-      : `<br>🏆 Archivio ${escapeHtml(editionTitle)} completo al 100%: <b>${editionImgCount}/${editionImgTotal} immagini e mappe HD</b> pronte offline!`;
+    let tailHint = "";
+    if (!nextStatus.hasApp) {
+      tailHint = `<br>📌 Immagini salvate in memoria (<b>+${savedImagesThisRun}</b>) — carica ora anche <b>Parte 1 (.zip)</b> di ${escapeHtml(editionTitle)} per completare i 66 libri, le note di studio e i documenti!`;
+    } else if (missingImg > 0) {
+      tailHint = `<br>📌 Immagini ${escapeHtml(editionTitle)}: <b>${editionImgCount}/${editionImgTotal}</b> — carica ora anche <b>Parte 2 (.zip)</b> per completare le restanti ${missingImg} immagini!`;
+    } else {
+      tailHint = `<br>🏆 Archivio ${escapeHtml(editionTitle)} completo al 100%: <b>${editionImgCount}/${editionImgTotal} immagini e mappe HD</b> pronte offline!`;
+    }
 
     setStatus(
       `✔ <b>${escapeHtml(editionTitle)} salvata!</b>` +
@@ -20908,8 +21580,7 @@ async function openStudyNoteModal(verseNum, forcedBibleId = null) {
   const vNum = Math.max(1, Number(verseNum) || state.selectedVerse || 1);
   const targetBookId = state.bookId;
   const targetChapter = state.chapter;
-  const bibleId = forcedBibleId || resolveStudyBibleIdForUi(state.trans1);
-  const cfg = getStudyBibleConfig(bibleId);
+  const bibleId = forcedBibleId || resolveStudyBibleIdForUi();
   const book = getBook(targetBookId);
   const refStr = `${book.name} ${targetChapter}:${vNum}`;
 
@@ -20927,9 +21598,17 @@ async function openStudyNoteModal(verseNum, forcedBibleId = null) {
   if (!isProModalSessionActive(sid)) return;
 
   if (!extras) {
-    if (bodyEl) bodyEl.innerHTML = `<div class="loader">Nessun dato TNM Studio trovato. Importa <b>nwtsty_I_parte1.zip</b> e <b>parte2.zip</b> da ⚙️ ➔ Moduli.</div>`;
+    const missingCfg = getStudyBibleConfig(bibleId);
+    const loc = missingCfg.wtLocale || "I";
+    if (bodyEl) bodyEl.innerHTML = `<div class="loader">Nessun dato ${escapeHtml(missingCfg.shortTitle || "TNM Studio")} trovato. Importa <b>nwtsty_${escapeHtml(loc)}_parte1.zip</b> e <b>nwtsty_${escapeHtml(loc)}_parte2.zip</b> da ⚙️ ➔ Moduli.</div>`;
     return;
   }
+  const resolvedBibleId = extras.bibleId || bibleId;
+  const resolvedCfg = getStudyBibleConfig(resolvedBibleId);
+  const resolvedFootnotesMap = resolvedBibleId !== bibleId
+    ? await fetchChapterFootnotes(resolvedBibleId, targetBookId, targetChapter).catch(() => footnotesMap)
+    : footnotesMap;
+  if (!isProModalSessionActive(sid)) return;
 
   const studyVerseSet = new Set();
   Object.keys(extras.studyNotes || {}).forEach(k => { if (Number(k) > 0) studyVerseSet.add(Number(k)); });
@@ -20943,20 +21622,21 @@ async function openStudyNoteModal(verseNum, forcedBibleId = null) {
   const sNotes = extras.studyNotes[vKey] || extras.studyNotes[vNum] || [];
   const sMarginal = extras.marginal[vKey] || extras.marginal[vNum] || [];
   const sMediaIds = extras.media[vKey] || extras.media[vNum] || [];
-  const vFootnotes = footnotesMap[vKey] || footnotesMap[vNum] || [];
+  const vFootnotes = resolvedFootnotesMap[vKey] || resolvedFootnotesMap[vNum] || [];
   const { videos, images } = resolveDeduplicatedVerseMedia(sMediaIds, extras.mediaById || {});
 
   const domRow = document.getElementById(`v_${vNum}`);
   const versePlain = domRow ? (domRow.getAttribute("data-text") || "") : "";
 
   const notesHtml = sNotes.length
-    ? `<div class="section-title"><span>🎓 Note di Studio (${sNotes.length})</span><button type="button" class="nav-btn" style="padding:2px 8px; font-size:11.5px;" onclick="speakStudyNotesForCurrentModal()">🔊 Ascolta</button></div>` +
-      sNotes.map(n => formatStudyNoteTextHtml(n, targetBookId, cfg.langCode)).join("")
+    ? `<div class="section-title"><span>🎓 Note di Studio (${sNotes.length})</span><button type="button" id="bmStudyModalSpeakBtn" class="nav-btn" style="padding:2px 8px; font-size:11.5px;" onclick="speakStudyNotesForCurrentModal()">🔊 Ascolta</button></div>` +
+      sNotes.map(n => formatStudyNoteTextHtml(n, targetBookId, resolvedCfg.langCode)).join("")
     : "";
 
+  bmStudyModalMediaPool = [];
   const fnHtml = vFootnotes.length
     ? `<div class="section-title"><span>📌 Note in Calce (${vFootnotes.length})</span></div>` +
-      vFootnotes.map((t, i) => `<div style="background:var(--bg-main); border-left:3px solid #ffd54f; border-radius:7px; padding:7px 10px; margin-bottom:6px; font-size:13px; line-height:1.5;"><b style="color:#ffd54f;">*${vFootnotes.length > 1 ? i + 1 : ""}</b> ${formatNoteLinks(t, targetBookId)}</div>`).join("")
+      vFootnotes.map((t, i) => `<div style="background:var(--bg-main); border-left:3px solid #ffd54f; border-radius:7px; padding:7px 10px; margin-bottom:6px; font-size:13px; line-height:1.5;"><b style="color:#ffd54f;">*${vFootnotes.length > 1 ? i + 1 : ""}</b> ${formatNoteLinks(t, targetBookId, resolvedCfg.langCode)}</div>`).join("")
     : "";
 
   const marginalHtml = sMarginal.length
@@ -20966,7 +21646,7 @@ async function openStudyNoteModal(verseNum, forcedBibleId = null) {
            <div class="bm-study-marginal-row">
              <span class="bm-study-marginal-mark">${escapeHtml(g.mark || "•")}</span>
              <div style="display:flex; flex-wrap:wrap; gap:4px; flex:1;">
-               ${(g.refs || []).map(r => `<span class="tag-badge" style="font-size:12px; padding:3px 8px;" onclick="closeProModal(); jumpToRefString('${escapeJsStr(r)}')">📖 ${escapeHtml(r)}</span>`).join("")}
+               ${(g.refs || []).map(r => `<span class="tag-badge" style="font-size:12px; padding:3px 8px;" onclick="closeProModal(); jumpToRefString('${escapeJsStr(r)}', false, '${escapeJsStr(resolvedCfg.langCode || "")}')">📖 ${escapeHtml(r)}</span>`).join("")}
              </div>
            </div>`).join("")}
        </div>`
@@ -20977,9 +21657,9 @@ async function openStudyNoteModal(verseNum, forcedBibleId = null) {
        <div class="bm-study-media-grid">
          ${images.map(im => {
            const isSvg = im.mime === "image/svg+xml" || /\.svg$/i.test(im.file);
-           const poolIdx = registerStudyMediaPoolItem({ file: im.file, label: im.label, caption: im.caption, credit: im.credit });
+           const poolIdx = registerStudyMediaPoolItem({ file: im.file, label: im.label, caption: im.caption, credit: im.credit, langCode: resolvedCfg.langCode, bookId: targetBookId }, "modal");
            return `
-             <div class="bm-study-media-card" onclick="openStudyLightboxByPool(${poolIdx})">
+             <div class="bm-study-media-card" onclick="openStudyLightboxByPool(${poolIdx}, 'modal')">
                <img class="bm-study-media-thumb${isSvg ? ' is-svg' : ''}" data-study-img="${escapeHtml(im.file)}" alt="${escapeHtml(im.label)}">
                <div class="bm-study-media-cap">${escapeHtml(im.label || im.file)}</div>
              </div>`;
@@ -20990,31 +21670,31 @@ async function openStudyNoteModal(verseNum, forcedBibleId = null) {
   const videosHtml = videos.length
     ? `<div class="section-title"><span>🎬 Video Correlati (${videos.length})</span></div>` +
       videos.map(v => {
-        const poolIdx = registerStudyMediaPoolItem({ video: v.file, label: v.label, wtLocale: cfg.wtLocale });
+        const poolIdx = registerStudyMediaPoolItem({ video: v.file, label: v.label, wtLocale: resolvedCfg.wtLocale }, "modal");
         return `
         <div class="bm-study-video-card">
-          <div class="bm-study-video-thumb-wrap" onclick="openStudyVideoByPool(${poolIdx})">
+          <div class="bm-study-video-thumb-wrap" onclick="openStudyVideoByPool(${poolIdx}, 'modal')">
             ${v.thumbFile ? `<img data-study-img="${escapeHtml(v.thumbFile)}" alt="${escapeHtml(v.label)}">` : ""}
             <span class="bm-study-video-play-pill">▶ Guarda su JW.org ↗</span>
           </div>
           <div style="padding:9px 11px;">
             <div style="font-size:13.5px; font-weight:900; color:#84ffff; margin-bottom:${v.caption ? '5px' : '0'};">${escapeHtml(v.label)}</div>
-            ${v.caption ? `<div class="bm-justify-text" style="font-size:12.5px; color:var(--text-muted); line-height:1.48;">${formatNoteLinks(v.caption, targetBookId)}</div>` : ""}
+            ${v.caption ? `<div class="bm-justify-text" style="font-size:12.5px; color:var(--text-muted); line-height:1.48;">${formatNoteLinks(v.caption, targetBookId, resolvedCfg.langCode)}</div>` : ""}
           </div>
         </div>`;
       }).join("")
     : "";
 
-  window.__bmLastStudyModalSpeech = sNotes.map(n => n.text).join(" ");
-  window.__bmLastStudyModalLang = cfg.langCode || "it";
-  window.__bmStudyModalSpeaking = false;
+  bmStudyModalSpeechText = sNotes.map(n => n.text).join(" ");
+  bmStudyModalLangCode = resolvedCfg.langCode || "it";
+  bmStudyModalCurrentKey = `${resolvedBibleId}|${targetBookId}|${targetChapter}|${vNum}`;
 
   if (bodyEl) {
     bodyEl.innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:10px; background:var(--primary-dark); padding:7px 9px; border-radius:10px; border:1px solid rgba(41,182,246,0.45);">
-        <button type="button" class="nav-btn" style="padding:5px 9px; ${prevV ? '' : 'opacity:0.42; pointer-events:none;'}" onclick="${prevV ? `openStudyNoteModal(${prevV}, '${escapeJsStr(bibleId)}')` : ''}">◀ ${prevV ? `v.${prevV}` : 'Inizio'}</button>
+        <button type="button" class="nav-btn" style="padding:5px 9px; ${prevV ? '' : 'opacity:0.42; pointer-events:none;'}" onclick="${prevV ? `openStudyNoteModal(${prevV}, '${escapeJsStr(resolvedBibleId)}')` : ''}">◀ ${prevV ? `v.${prevV}` : 'Inizio'}</button>
         <span style="font-size:13.5px; font-weight:900; color:#ffd54f;">🎓 ${escapeHtml(book.abbr)} ${targetChapter}:${vNum}</span>
-        <button type="button" class="nav-btn" style="padding:5px 9px; ${nextV ? '' : 'opacity:0.42; pointer-events:none;'}" onclick="${nextV ? `openStudyNoteModal(${nextV}, '${escapeJsStr(bibleId)}')` : ''}">${nextV ? `v.${nextV}` : 'Fine'} ▶</button>
+        <button type="button" class="nav-btn" style="padding:5px 9px; ${nextV ? '' : 'opacity:0.42; pointer-events:none;'}" onclick="${nextV ? `openStudyNoteModal(${nextV}, '${escapeJsStr(resolvedBibleId)}')` : ''}">${nextV ? `v.${nextV}` : 'Fine'} ▶</button>
       </div>
       ${versePlain ? `<div class="bm-justify-text" style="font-size:13px; color:var(--text-muted); font-style:italic; margin-bottom:10px; border-left:3px solid var(--primary-light); padding-left:8px;">"${escapeHtml(versePlain)}"</div>` : ""}
       ${notesHtml}
@@ -21024,20 +21704,35 @@ async function openStudyNoteModal(verseNum, forcedBibleId = null) {
       ${fnHtml}
       ${(!notesHtml && !videosHtml && !imagesHtml && !marginalHtml && !fnHtml) ? `<div class="loader">Nessuna nota di studio o media associato a <b>${escapeHtml(refStr)}</b>.</div>` : ""}
       <div style="display:flex; gap:8px; margin-top:10px;">
-        <button type="button" class="myread-action-btn" style="flex:1; background:#1565c0; font-size:13px; padding:9px;" onclick="closeProModal(); openStudyDocsForBook(${targetBookId}, ${targetChapter});">📚 Documenti ${escapeHtml(book.abbr)}</button>
+        <button type="button" class="myread-action-btn" style="flex:1; background:#1565c0; font-size:13px; padding:9px;" onclick="closeProModal(); openStudyDocsForBook(${targetBookId}, '${escapeJsStr(resolvedBibleId)}');">📚 Documenti ${escapeHtml(book.abbr)}</button>
         <button type="button" class="myread-action-btn" style="flex:0.7; background:var(--bg-main); font-size:13px; padding:9px;" onclick="closeProModal()">Chiudi</button>
       </div>
     `;
+    syncStudyModalSpeakBtnUI();
     hydrateStudyImagesInContainer(bodyEl);
   }
 }
 
+function syncStudyModalSpeakBtnUI() {
+  const btn = document.getElementById("bmStudyModalSpeakBtn");
+  if (!btn) return;
+  const isThisPlaying = (bmAudioPlaying || bmAudioPaused)
+    && bmAudioMediaMeta.kind === "study_modal"
+    && bmAudioMediaMeta.studyKey === bmStudyModalCurrentKey;
+  btn.textContent = isThisPlaying ? "⏹️ Ferma" : "🔊 Ascolta";
+  btn.style.borderColor = isThisPlaying ? "#00e5ff" : "";
+  btn.style.color = isThisPlaying ? "#84ffff" : "";
+}
+
 function speakStudyNotesForCurrentModal() {
-  const txt = String(window.__bmLastStudyModalSpeech || "").trim();
-  if (!txt) return;
   bmHaptic(12);
-  window.__bmStudyModalSpeaking = true;
-  startUniversalSpeech(txt, true, false);
+  if ((bmAudioPlaying || bmAudioPaused) && bmAudioMediaMeta.kind === "study_modal" && bmAudioMediaMeta.studyKey === bmStudyModalCurrentKey) {
+    stopAllAudio();
+    return;
+  }
+  const txt = String(bmStudyModalSpeechText || "").trim();
+  if (!txt) return;
+  startUniversalSpeech(txt, true, false, "study_modal", bmStudyModalCurrentKey);
 }
 
 // ============================================================================
@@ -21069,12 +21764,26 @@ function classifyStudyDocument(doc) {
   return "intro";
 }
 
+function extractStudyDocChapterNumber(doc) {
+  if (!doc) return 0;
+  const bId = Number(doc.chapter) || 0;
+  const bMeta = bId > 0 && bId <= 66 ? getBook(bId) : null;
+  if (String(doc.class) === "118") {
+    const m = String(doc.title || "").trim().match(/(\d+)\s*$/);
+    if (m) {
+      const ch = parseInt(m[1], 10);
+      if (ch > 0 && (!bMeta || ch <= bMeta.ch)) return ch;
+    }
+    return bMeta && bMeta.ch === 1 ? 1 : 0;
+  }
+  return 1;
+}
+
 function findBookStudyDocs(docsData, bookId, chapter = 0) {
   const res = { intro: null, overview: null, overviewIsPanoramica: false, chapDeep: null, hasAnyChapDeep: false, bookMedia: null };
   if (!docsData || !Array.isArray(docsData.documents)) return res;
   const bId = Number(bookId) || 0;
   const chNum = Number(chapter) || 0;
-  const bMeta = getBook(bId);
   for (const d of docsData.documents) {
     if (!d || Number(d.chapter) !== bId) continue;
     const cls = String(d.class);
@@ -21084,10 +21793,8 @@ function findBookStudyDocs(docsData, bookId, chapter = 0) {
     else if (cls === "1" && isStudyDocMediaGalleryOnly(d)) res.bookMedia = d;
     else if (cls === "118") {
       res.hasAnyChapDeep = true;
-      if (chNum > 0 && !res.chapDeep) {
-        const m = String(d.title || "").trim().match(/(\d+)\s*$/);
-        const docCh = m ? parseInt(m[1], 10) : (bMeta.ch === 1 ? 1 : 0);
-        if (docCh === chNum) res.chapDeep = d;
+      if (chNum > 0 && !res.chapDeep && extractStudyDocChapterNumber(d) === chNum) {
+        res.chapDeep = d;
       }
     }
   }
@@ -21119,59 +21826,60 @@ function collectChapterStudyMediaItems(studyExtras) {
 function renderChapterStudyRibbonHtml(studyExtras, docsData, bookId, chapter) {
   if (!studyExtras || !studyExtras.isStudyBible) return "";
   const book = getBook(bookId);
+  const safeBibleId = escapeJsStr(studyExtras.bibleId || resolveStudyBibleIdForUi());
   const found = findBookStudyDocs(docsData, bookId, chapter);
   const chapMedia = collectChapterStudyMediaItems(studyExtras);
   const btns = [];
   if (found.intro) {
-    btns.push(`<button type="button" class="bm-study-ribbon-btn accent" onclick="showStudyDocsView(${Number(found.intro.id)}, false)">🎬 Intro ${escapeHtml(book.abbr)}</button>`);
+    btns.push(`<button type="button" class="bm-study-ribbon-btn accent" onclick="showStudyDocsView(${Number(found.intro.id)}, false, '${safeBibleId}')">🎬 Intro ${escapeHtml(book.abbr)}</button>`);
   }
   if (found.overview) {
-    btns.push(`<button type="button" class="bm-study-ribbon-btn accent" onclick="showStudyDocsView(${Number(found.overview.id)}, false)">📋 ${found.overviewIsPanoramica ? "Panoramica" : "Sommario"}</button>`);
+    btns.push(`<button type="button" class="bm-study-ribbon-btn accent" onclick="showStudyDocsView(${Number(found.overview.id)}, false, '${safeBibleId}')">📋 ${found.overviewIsPanoramica ? "Panoramica" : "Sommario"}</button>`);
   }
   if (found.chapDeep) {
-    btns.push(`<button type="button" class="bm-study-ribbon-btn accent" onclick="showStudyDocsView(${Number(found.chapDeep.id)}, false)">🎓 Approf. Cap. ${chapter}</button>`);
+    btns.push(`<button type="button" class="bm-study-ribbon-btn accent" onclick="showStudyDocsView(${Number(found.chapDeep.id)}, false, '${safeBibleId}')">🎓 Approf. Cap. ${chapter}</button>`);
   }
   if (chapMedia.total > 0) {
-    btns.push(`<button type="button" class="bm-study-ribbon-btn accent" onclick="openChapterStudyMediaModal(${bookId}, ${chapter}, '${escapeJsStr(studyExtras.bibleId)}')">🖼️ Media Cap. ${chapter} (${chapMedia.total})</button>`);
+    btns.push(`<button type="button" class="bm-study-ribbon-btn accent" onclick="openChapterStudyMediaModal(${bookId}, ${chapter}, '${safeBibleId}')">🖼️ Media Cap. ${chapter} (${chapMedia.total})</button>`);
   }
   if (found.bookMedia) {
-    btns.push(`<button type="button" class="bm-study-ribbon-btn" onclick="showStudyDocsView(${Number(found.bookMedia.id)}, false)">🖼️ Media ${escapeHtml(book.abbr)}</button>`);
+    btns.push(`<button type="button" class="bm-study-ribbon-btn" onclick="showStudyDocsView(${Number(found.bookMedia.id)}, false, '${safeBibleId}')">🖼️ Media ${escapeHtml(book.abbr)}</button>`);
   }
-  btns.push(`<button type="button" class="bm-study-ribbon-btn" onclick="openStudyDocsCategory('appendices', ${bookId})">📑 Appendici</button>`);
-  btns.push(`<button type="button" class="bm-study-ribbon-btn" onclick="openStudyDocsCategory('intro', ${bookId})">❓ 20 Domande</button>`);
-  btns.push(`<button type="button" class="bm-study-ribbon-btn" onclick="openStudyDocsCategory('media', ${bookId})">🖼️ Galleria</button>`);
-  btns.push(`<button type="button" class="bm-study-ribbon-btn" onclick="openStudyDocsForBook(${bookId}, ${chapter})">📚 Indice</button>`);
+  btns.push(`<button type="button" class="bm-study-ribbon-btn" onclick="openStudyDocsCategory('appendices', ${bookId}, '${safeBibleId}')">📑 Appendici</button>`);
+  btns.push(`<button type="button" class="bm-study-ribbon-btn" onclick="openStudyDocsCategory('intro', ${bookId}, '${safeBibleId}')">❓ 20 Domande</button>`);
+  btns.push(`<button type="button" class="bm-study-ribbon-btn" onclick="openStudyDocsCategory('media', ${bookId}, '${safeBibleId}')">🖼️ Galleria</button>`);
+  btns.push(`<button type="button" class="bm-study-ribbon-btn" onclick="openStudyDocsForBook(${bookId}, '${safeBibleId}')">📚 Indice</button>`);
   return `<div class="bm-study-ribbon">${btns.join("")}</div>`;
 }
 
-function renderBookStudyRibbonHtml(docsData, bookId) {
+function renderBookStudyRibbonHtml(docsData, bookId, bibleId = "") {
   const book = getBook(bookId);
+  const safeBibleId = escapeJsStr(bibleId || resolveStudyBibleIdForUi());
   const found = findBookStudyDocs(docsData, bookId, 0);
   const btns = [];
   if (found.intro) {
-    btns.push(`<button type="button" class="bm-study-ribbon-btn accent" onclick="showStudyDocsView(${Number(found.intro.id)}, false)">🎬 Introduzione</button>`);
+    btns.push(`<button type="button" class="bm-study-ribbon-btn accent" onclick="showStudyDocsView(${Number(found.intro.id)}, false, '${safeBibleId}')">🎬 Introduzione</button>`);
   }
   if (found.overview) {
-    btns.push(`<button type="button" class="bm-study-ribbon-btn accent" onclick="showStudyDocsView(${Number(found.overview.id)}, false)">📋 ${found.overviewIsPanoramica ? "Panoramica" : "Sommario"}</button>`);
+    btns.push(`<button type="button" class="bm-study-ribbon-btn accent" onclick="showStudyDocsView(${Number(found.overview.id)}, false, '${safeBibleId}')">📋 ${found.overviewIsPanoramica ? "Panoramica" : "Sommario"}</button>`);
   }
   if (found.bookMedia) {
-    btns.push(`<button type="button" class="bm-study-ribbon-btn accent" onclick="showStudyDocsView(${Number(found.bookMedia.id)}, false)">🖼️ Media ${escapeHtml(book.abbr)}</button>`);
+    btns.push(`<button type="button" class="bm-study-ribbon-btn accent" onclick="showStudyDocsView(${Number(found.bookMedia.id)}, false, '${safeBibleId}')">🖼️ Media ${escapeHtml(book.abbr)}</button>`);
   }
   if (found.hasAnyChapDeep) {
-    btns.push(`<button type="button" class="bm-study-ribbon-btn" onclick="openStudyDocsForBook(${bookId}, 0)">🎓 Approfondimenti</button>`);
+    btns.push(`<button type="button" class="bm-study-ribbon-btn" onclick="openStudyDocsForBook(${bookId}, '${safeBibleId}')">🎓 Approfondimenti</button>`);
   }
-  btns.push(`<button type="button" class="bm-study-ribbon-btn" onclick="openStudyDocsCategory('appendices', ${bookId})">📑 Appendici</button>`);
-  btns.push(`<button type="button" class="bm-study-ribbon-btn" onclick="openStudyDocsCategory('all', ${bookId})">📚 Tutto lo Studio</button>`);
+  btns.push(`<button type="button" class="bm-study-ribbon-btn" onclick="openStudyDocsCategory('appendices', ${bookId}, '${safeBibleId}')">📑 Appendici</button>`);
+  btns.push(`<button type="button" class="bm-study-ribbon-btn" onclick="openStudyDocsCategory('all', ${bookId}, '${safeBibleId}')">📚 Tutto lo Studio</button>`);
   return `<div class="bm-study-ribbon" style="margin:0 0 8px 0;">${btns.join("")}</div>`;
 }
 
 async function openChapterStudyMediaModal(bookId, chapter, forcedBibleId = null) {
   bmHaptic(14);
-  const sid = beginProModalSession();
+  const sid = ++proModalSessionId;
   const targetBookId = Number(bookId) || state.bookId;
   const targetChapter = Number(chapter) || state.chapter;
-  const bibleId = forcedBibleId || resolveStudyBibleIdForUi(state.trans1);
-  const cfg = getStudyBibleConfig(bibleId);
+  const bibleId = forcedBibleId || resolveStudyBibleIdForUi();
   const book = getBook(targetBookId);
 
   const modalEl = document.getElementById("proModal");
@@ -21183,21 +21891,23 @@ async function openChapterStudyMediaModal(bookId, chapter, forcedBibleId = null)
 
   const extras = await fetchChapterStudyExtras(bibleId, targetBookId, targetChapter, true);
   if (!isProModalSessionActive(sid)) return;
+  const mediaCfg = getStudyBibleConfig((extras && extras.bibleId) || bibleId);
   const { videos, images } = collectChapterStudyMediaItems(extras);
 
+  bmStudyModalMediaPool = [];
   const videosHtml = videos.length
     ? `<div class="section-title"><span>🎬 Video del Capitolo (${videos.length})</span></div>` +
       videos.map(v => {
-        const poolIdx = registerStudyMediaPoolItem({ video: v.file, label: v.label, wtLocale: cfg.wtLocale });
+        const poolIdx = registerStudyMediaPoolItem({ video: v.file, label: v.label, wtLocale: mediaCfg.wtLocale }, "modal");
         return `
         <div class="bm-study-video-card">
-          <div class="bm-study-video-thumb-wrap" onclick="openStudyVideoByPool(${poolIdx})">
+          <div class="bm-study-video-thumb-wrap" onclick="openStudyVideoByPool(${poolIdx}, 'modal')">
             ${v.thumbFile ? `<img data-study-img="${escapeHtml(v.thumbFile)}" alt="${escapeHtml(v.label)}">` : ""}
             <span class="bm-study-video-play-pill">▶ Guarda su JW.org ↗</span>
           </div>
           <div style="padding:8px 11px;">
             <div style="font-size:13px; font-weight:900; color:#84ffff;">v.${v.verse} · ${escapeHtml(v.label)}</div>
-            ${v.caption ? `<div class="bm-justify-text" style="font-size:12px; color:var(--text-muted); margin-top:4px; line-height:1.45;">${formatNoteLinks(v.caption, targetBookId)}</div>` : ""}
+            ${v.caption ? `<div class="bm-justify-text" style="font-size:12px; color:var(--text-muted); margin-top:4px; line-height:1.45;">${formatNoteLinks(v.caption, targetBookId, mediaCfg.langCode)}</div>` : ""}
           </div>
         </div>`;
       }).join("")
@@ -21208,9 +21918,9 @@ async function openChapterStudyMediaModal(bookId, chapter, forcedBibleId = null)
        <div class="bm-study-media-grid">
          ${images.map(im => {
            const isSvg = im.mime === "image/svg+xml" || /\.svg$/i.test(im.file);
-           const poolIdx = registerStudyMediaPoolItem({ file: im.file, label: im.label, caption: im.caption, credit: im.credit });
+           const poolIdx = registerStudyMediaPoolItem({ file: im.file, label: im.label, caption: im.caption, credit: im.credit, langCode: mediaCfg.langCode, bookId: targetBookId }, "modal");
            return `
-             <div class="bm-study-media-card" onclick="openStudyLightboxByPool(${poolIdx})">
+             <div class="bm-study-media-card" onclick="openStudyLightboxByPool(${poolIdx}, 'modal')">
                <img class="bm-study-media-thumb${isSvg ? ' is-svg' : ''}" data-study-img="${escapeHtml(im.file)}" alt="${escapeHtml(im.label)}">
                <div class="bm-study-media-cap"><span style="color:#ffd54f;">v.${im.verse}</span> ${escapeHtml(im.label || im.file)}</div>
              </div>`;
@@ -21229,23 +21939,23 @@ async function openChapterStudyMediaModal(bookId, chapter, forcedBibleId = null)
   }
 }
 
-function openStudyDocsCategory(catId = "all", bookId = 0) {
+function openStudyDocsCategory(catId = "all", bookId = 0, forcedBibleId = "") {
   bmHaptic(14);
   bmStudyDocsFilterBook = Number(bookId) || state.bookId;
   bmStudyDocsFilterCat = catId || "all";
   bmStudyDocsSearchQuery = "";
-  showStudyDocsView(null, false);
+  showStudyDocsView(null, false, forcedBibleId);
 }
 
-function openStudyDocsForBook(bookId, chapter = 0) {
+function openStudyDocsForBook(bookId, forcedBibleId = "") {
   bmHaptic(14);
   bmStudyDocsFilterBook = Number(bookId) || 0;
   bmStudyDocsFilterCat = bmStudyDocsFilterBook > 0 ? "book_current" : "all";
   bmStudyDocsSearchQuery = "";
-  showStudyDocsView(null, false);
+  showStudyDocsView(null, false, forcedBibleId);
 }
 
-async function showStudyDocsView(selectedDocId = null, fromBack = false) {
+async function showStudyDocsView(selectedDocId = null, fromBack = false, forcedBibleId = "") {
   const reqId = ++currentViewReqId;
   if (!fromBack && (currentViewContext.type !== "study_docs" || (selectedDocId !== null && currentViewContext.docId !== selectedDocId))) {
     saveCurrentPositionToHistory();
@@ -21253,15 +21963,21 @@ async function showStudyDocsView(selectedDocId = null, fromBack = false) {
   closeActionBar();
   stopAllAudio();
   clearSpeechContext();
-  bmStudyDocsActiveBibleId = resolveStudyBibleIdForUi(state.trans1);
-  currentViewContext = { type: "study_docs", docId: selectedDocId, label: "🎓 Studio" };
+  bmStudyDocsActiveBibleId = resolveStudyBibleIdForUi(forcedBibleId || (fromBack ? bmStudyDocsActiveBibleId : ""));
+  currentViewContext = { type: "study_docs", docId: selectedDocId, bibleId: bmStudyDocsActiveBibleId, label: "🎓 Studio" };
   setActiveTab("", "readTabBtn");
   const main = document.getElementById("mainContainer");
 
-  const data = await getStudyBibleDocsData(bmStudyDocsActiveBibleId);
+  const data = await getStudyBibleDocsData(bmStudyDocsActiveBibleId, !forcedBibleId);
   if (reqId !== currentViewReqId) return;
+  if (data && data.bibleId && BM_STUDY_BIBLE_REGISTRY[data.bibleId]) {
+    bmStudyDocsActiveBibleId = data.bibleId;
+    currentViewContext.bibleId = bmStudyDocsActiveBibleId;
+  }
 
   if (!data || !Array.isArray(data.documents) || data.documents.length === 0) {
+    const missingCfg = getStudyBibleConfig(bmStudyDocsActiveBibleId);
+    const loc = missingCfg.wtLocale || "I";
     main.innerHTML = `
       <div class="section-title">
         <span>🎓 Bibbia per lo Studio — Documenti, Appendici & Media</span>
@@ -21269,13 +21985,13 @@ async function showStudyDocsView(selectedDocId = null, fromBack = false) {
       </div>
       <div class="result-card" style="cursor:default; padding:16px; text-align:center;">
         <div style="font-size:32px; margin-bottom:8px;">🎓</div>
-        <div style="font-size:15.5px; font-weight:900; color:#84ffff; margin-bottom:6px;">TNM Edizione per lo Studio Offline</div>
+        <div style="font-size:15.5px; font-weight:900; color:var(--primary-light); margin-bottom:6px;">${escapeHtml(missingCfg.shortTitle || "TNM Edizione per lo Studio")} Offline</div>
         <div style="font-size:13px; color:var(--text-muted); line-height:1.5; margin-bottom:12px;">
-          Importa <b>nwtsty_I_parte1.zip</b> e <b>nwtsty_I_parte2.zip</b> (insieme o uno alla volta) per sbloccare offline tutti i 66 libri, 3.729 note di studio, 720 documenti/appendici e 744 immagini & mappe HD:
+          Importa <b>nwtsty_${escapeHtml(loc)}_parte1.zip</b> e <b>nwtsty_${escapeHtml(loc)}_parte2.zip</b> (insieme o uno alla volta) per sbloccare offline tutti i 66 libri, note di studio, documenti/appendici e immagini & mappe HD:
         </div>
         <div class="epub-import-status bm-backup-status-sticky" role="status" aria-live="polite"></div>
         <label class="search-btn" style="display:block; text-align:center; padding:11px; cursor:pointer; background:linear-gradient(135deg, #0d47a1, #1565c0); margin-bottom:8px;">
-          🎓 Carica ${escapeHtml(getStudyBibleConfig(bmStudyDocsActiveBibleId).shortTitle || "TNM Studio")} (.zip Parte 1/2 o .json)
+          🎓 Carica ${escapeHtml(missingCfg.shortTitle || "TNM Studio")} (.zip Parte 1/2 o .json)
           <input type="file" accept=".zip,.json,application/zip,application/json" multiple style="display:none;" onchange="importStudyBibleArchive(event, '${escapeJsStr(bmStudyDocsActiveBibleId)}')">
         </label>
         <button type="button" class="nav-btn" style="width:100%;" onclick="openBibleTabFromMenu()">📖 Torna alla Bibbia</button>
@@ -21324,8 +22040,9 @@ async function showStudyDocsView(selectedDocId = null, fromBack = false) {
       </div>
     </div>
     ${imgInfo ? `<div style="font-size:12px; color:var(--text-muted); margin:-4px 0 8px 0; display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px;"><span>${imgInfo}</span><span>${realDocCount} documenti</span></div>` : ""}
-    <div class="search-box" style="margin-bottom:8px;">
+    <div class="search-box" style="margin-bottom:8px; flex-wrap:nowrap;">
       <input type="search" id="bmStudyDocsSearchInput" class="search-input" placeholder="🔍 Cerca appendici, domande, cartine, temi, approfondimenti..." value="${escapeHtml(bmStudyDocsSearchQuery)}" oninput="onStudyDocsSearchInput(this.value)">
+      <button type="button" id="bmStudyDocsClearBtn" class="nav-btn" style="display:${bmStudyDocsSearchQuery ? 'inline-flex' : 'none'}; align-items:center; justify-content:center; padding:0 12px; flex-shrink:0;" onclick="clearStudyDocsSearch()" title="Cancella ricerca" aria-label="Cancella ricerca">✕</button>
     </div>
     <div id="bmStudyDocsCatBar" class="bm-study-doc-cat-bar">
       ${cats.map(c => `<button type="button" class="bm-study-doc-cat-btn${bmStudyDocsFilterCat === c.id ? ' active' : ''}" data-cat="${c.id}" onclick="setStudyDocsFilterCat('${c.id}')">${escapeHtml(c.label)}</button>`).join("")}
@@ -21353,7 +22070,55 @@ function setStudyDocsFilterCat(catId) {
 
 function onStudyDocsSearchInput(val) {
   bmStudyDocsSearchQuery = String(val || "");
+  const clearBtn = document.getElementById("bmStudyDocsClearBtn");
+  if (clearBtn) clearBtn.style.display = bmStudyDocsSearchQuery ? "inline-flex" : "none";
+  clearTimeout(bmStudyDocsSearchTimer);
+  bmStudyDocsSearchTimer = setTimeout(() => {
+    getStudyBibleDocsData(bmStudyDocsActiveBibleId).then(d => { if (d) renderStudyDocsFilteredList(d); });
+  }, 160);
+}
+
+function clearStudyDocsSearch() {
+  bmHaptic(10);
+  clearTimeout(bmStudyDocsSearchTimer);
+  bmStudyDocsSearchQuery = "";
+  const inp = document.getElementById("bmStudyDocsSearchInput");
+  if (inp) { inp.value = ""; inp.focus(); }
+  const clearBtn = document.getElementById("bmStudyDocsClearBtn");
+  if (clearBtn) clearBtn.style.display = "none";
   getStudyBibleDocsData(bmStudyDocsActiveBibleId).then(d => { if (d) renderStudyDocsFilteredList(d); });
+}
+
+function matchStudyDocBookTitle(normTitle, normBookName) {
+  if (!normTitle || !normBookName) return false;
+  const escaped = normBookName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s+");
+  const rgx = new RegExp(`(^|[^\\p{L}\\p{N}])${escaped}(?=$|[^\\p{L}\\p{N}])`, "gu");
+  const hasNumPrefix = /^[1-3]/.test(normBookName);
+  let m;
+  while ((m = rgx.exec(normTitle)) !== null) {
+    const tokenStart = m.index + (m[1] ? m[1].length : 0);
+    if (!hasNumPrefix && isPrecededByBookOrdinal(normTitle, tokenStart)) continue;
+    return true;
+  }
+  return false;
+}
+
+const BM_STUDY_BOOK_TITLE_EXTRA_ALIASES = {
+  19: ["salmo", "salmi", "psalm", "psalms", "salmos"],
+  22: ["cantico", "cantico dei cantici", "song of solomon", "cantar de los cantares", "cantico de salomao"],
+  66: ["rivelazione", "apocalisse", "revelation", "apocalipsis", "apocalipse"]
+};
+
+function getStudyDocBookTitleCandidates(bookId) {
+  const bId = Number(bookId) || 1;
+  const set = new Set();
+  const add = (v) => { const n = normalizeForSearch(v); if (n) set.add(n); };
+  add(getBook(bId).name);
+  add(BM_STUDY_BOOK_NAMES_EN[bId]);
+  add(BM_STUDY_BOOK_NAMES_ES[bId]);
+  add(BM_STUDY_BOOK_NAMES_PT[bId]);
+  (BM_STUDY_BOOK_TITLE_EXTRA_ALIASES[bId] || []).forEach(add);
+  return [...set];
 }
 
 function renderStudyDocsFilteredList(data) {
@@ -21361,41 +22126,7 @@ function renderStudyDocsFilteredList(data) {
   if (!listEl || !data || !Array.isArray(data.documents)) return;
   const qNorm = normalizeForSearch(bmStudyDocsSearchQuery.trim());
   const targetBook = Number(bmStudyDocsFilterBook || state.bookId);
-  const bookMeta = getBook(targetBook);
-  const bookNameNorm = normalizeForSearch(bookMeta.name);
-  const EN_BOOK_NAMES_66 = [
-    "", "genesis", "exodus", "leviticus", "numbers", "deuteronomy", "joshua", "judges", "ruth",
-    "1 samuel", "2 samuel", "1 kings", "2 kings", "1 chronicles", "2 chronicles", "ezra", "nehemiah",
-    "esther", "job", "psalm", "proverbs", "ecclesiastes", "song of solomon", "isaiah", "jeremiah",
-    "lamentations", "ezekiel", "daniel", "hosea", "joel", "amos", "obadiah", "jonah", "micah",
-    "nahum", "habakkuk", "zephaniah", "haggai", "zechariah", "malachi", "matthew", "mark", "luke",
-    "john", "acts", "romans", "1 corinthians", "2 corinthians", "galatians", "ephesians", "philippians",
-    "colossians", "1 thessalonians", "2 thessalonians", "1 timothy", "2 timothy", "titus", "philemon",
-    "hebrews", "james", "1 peter", "2 peter", "1 john", "2 john", "3 john", "jude", "revelation"
-  ];
-  const ES_BOOK_NAMES_66 = [
-    "", "genesis", "exodo", "levitico", "numeros", "deuteronomio", "josue", "jueces", "rut",
-    "1 samuel", "2 samuel", "1 reyes", "2 reyes", "1 cronicas", "2 cronicas", "esdras", "nehemias",
-    "ester", "job", "salmos", "proverbios", "eclesiastes", "el cantar de los cantares", "isaias", "jeremias",
-    "lamentaciones", "ezequiel", "daniel", "oseas", "joel", "amos", "abdias", "jonas", "miqueas",
-    "nahum", "habacuc", "sofonias", "ageo", "zacarias", "malaquias", "mateo", "marcos", "lucas",
-    "juan", "hechos", "romanos", "1 corintios", "2 corintios", "galatas", "efesios", "filipenses",
-    "colosenses", "1 tesalonicenses", "2 tesalonicenses", "1 timoteo", "2 timoteo", "tito", "filemon",
-    "hebreos", "santiago", "1 pedro", "2 pedro", "1 juan", "2 juan", "3 juan", "judas", "apocalipsis"
-  ];
-  const PT_BOOK_NAMES_66 = [
-    "", "genesis", "exodo", "levitico", "numeros", "deuteronomio", "josue", "juizes", "rute",
-    "1 samuel", "2 samuel", "1 reis", "2 reis", "1 cronicas", "2 cronicas", "esdras", "neemias",
-    "ester", "jo", "salmos", "proverbios", "eclesiastes", "cantico de salomao", "isaias", "jeremias",
-    "lamentacoes", "ezequiel", "daniel", "oseias", "joel", "amos", "obadias", "jonas", "miqueias",
-    "naum", "habacuque", "sofonias", "ageu", "zacarias", "malaquias", "mateus", "marcos", "lucas",
-    "joao", "atos", "romanos", "1 corintios", "2 corintios", "galatas", "efesios", "filipenses",
-    "colossenses", "1 tessalonicenses", "2 tessalonicenses", "1 timoteo", "2 timoteo", "tito", "filemon",
-    "hebreus", "tiago", "1 pedro", "2 pedro", "1 joao", "2 joao", "3 joao", "judas", "apocalipse"
-  ];
-  const enBookNameNorm = EN_BOOK_NAMES_66[targetBook] || "";
-  const esBookNameNorm = ES_BOOK_NAMES_66[targetBook] || "";
-  const ptBookNameNorm = PT_BOOK_NAMES_66[targetBook] || "";
+  const titleCandidates = getStudyDocBookTitleCandidates(targetBook);
 
   const catIcons = { intro: "❓", books: "📚", appendices: "📑", media: "🖼️", chapters: "🎓" };
   const catNames = { intro: "Introduzione", books: "Intro & Sommario", appendices: "Appendice", media: "Galleria & Temi", chapters: "Approfondimenti" };
@@ -21406,7 +22137,7 @@ function renderStudyDocsFilteredList(data) {
     if (bmStudyDocsFilterCat === "book_current") {
       const matchCh = Number(d.chapter) === targetBook;
       const tNorm = normalizeForSearch(d.title);
-      const matchTitle = tNorm.includes(bookNameNorm) || (enBookNameNorm && tNorm.includes(enBookNameNorm)) || (esBookNameNorm && tNorm.includes(esBookNameNorm)) || (ptBookNameNorm && (ptBookNameNorm.length > 2 ? tNorm.includes(ptBookNameNorm) : new RegExp('\\b' + ptBookNameNorm + '\\b').test(tNorm)));
+      const matchTitle = titleCandidates.some(cand => matchStudyDocBookTitle(tNorm, cand));
       if (!matchCh && !matchTitle) return false;
     } else if (bmStudyDocsFilterCat !== "all" && cat !== bmStudyDocsFilterCat) {
       return false;
@@ -21414,7 +22145,7 @@ function renderStudyDocsFilteredList(data) {
     if (!qNorm) return true;
     if (normalizeForSearch(d.title).includes(qNorm)) return true;
     const paras = Array.isArray(d.paragraphs) ? d.paragraphs : [];
-    for (let i = 0; i < Math.min(paras.length, 25); i++) {
+    for (let i = 0; i < paras.length; i++) {
       const t = paras[i] && paras[i].t ? paras[i].t : "";
       if (t && normalizeForSearch(t).includes(qNorm)) return true;
     }
@@ -21439,21 +22170,21 @@ function renderStudyDocsFilteredList(data) {
       hasVid ? "🎬 Video" : ""
     ].filter(Boolean).join(" · ");
     return `
-      <div class="result-card" onclick="showStudyDocsView(${Number(d.id)}, false)">
+      <div class="result-card" onclick="showStudyDocsView(${Number(d.id)}, false, '${escapeJsStr(bmStudyDocsActiveBibleId)}')">
         <div class="result-ref">${isMediaBook ? "🖼️" : (catIcons[cat] || "🎓")} ${escapeHtml(displayTitle)}</div>
         <div style="font-size:11.5px; color:var(--text-muted);">${escapeHtml(badges)}</div>
       </div>`;
   }).join("") + (filtered.length > shown.length ? `<div style="text-align:center; font-size:12px; color:var(--text-muted); padding:8px;">Mostrati ${shown.length} di ${filtered.length} documenti — usa la barra di ricerca per affinare.</div>` : "");
 }
 
-function renderStudyTableHtml(rows, bookId) {
+function renderStudyTableHtml(rows, bookId, langCode = "") {
   if (!rows.length) return "";
   const parseCells = (txt) => String(txt || "").split(/\s+—\s+/).map(s => s.trim());
   let html = `<div class="bm-study-table-wrap"><table class="bm-study-table">`;
   rows.forEach(r => {
     const cells = parseCells(r.t);
     const tag = r.c === "trh" ? "th" : "td";
-    html += `<tr>${cells.map(c => `<${tag}>${formatNoteLinks(c, bookId)}</${tag}>`).join("")}</tr>`;
+    html += `<tr>${cells.map(c => `<${tag}>${formatNoteLinks(c, bookId, langCode)}</${tag}>`).join("")}</tr>`;
   });
   html += `</table></div>`;
   return html;
@@ -21462,13 +22193,16 @@ function renderStudyTableHtml(rows, bookId) {
 async function renderStudyDocReader(doc, data, reqId) {
   const main = document.getElementById("mainContainer");
   const mediaById = data.mediaById || {};
-  const wtLocale = data.wtLocale || "I";
+  const cfg = getStudyBibleConfig(bmStudyDocsActiveBibleId);
+  const wtLocale = data.wtLocale || cfg.wtLocale || "I";
+  const docLangCode = cfg.langCode || "it";
   const docBookId = Number(doc.chapter) > 0 && Number(doc.chapter) <= 66 ? Number(doc.chapter) : null;
   const isMediaOnlyBook = isStudyDocMediaGalleryOnly(doc);
   const readerTitle = isMediaOnlyBook ? `Galleria Media: ${doc.title}` : (doc.title || "Studio");
-  currentViewContext = { type: "study_docs", docId: Number(doc.id), label: `🎓 ${String(doc.title || "Studio").slice(0, 14)}` };
+  currentViewContext = { type: "study_docs", docId: Number(doc.id), bibleId: bmStudyDocsActiveBibleId, title: readerTitle, label: `🎓 ${String(doc.title || "Studio").slice(0, 14)}` };
   setHeaderCenterPill(doc.title || "Studio", "study_docs");
 
+  bmStudyDocMediaPool = [];
   const paras = Array.isArray(doc.paragraphs) ? doc.paragraphs : [];
   const renderedFiles = new Set();
   const speechChunks = [doc.title || ""];
@@ -21487,7 +22221,7 @@ async function renderStudyDocReader(doc, data, reqId) {
         if (paras[i].t) speechChunks.push(paras[i].t);
         i++;
       }
-      bodyHtml += renderStudyTableHtml(tableRows, docBookId);
+      bodyHtml += renderStudyTableHtml(tableRows, docBookId, docLangCode);
       continue;
     }
 
@@ -21495,9 +22229,9 @@ async function renderStudyDocReader(doc, data, reqId) {
       renderedFiles.add(p.file);
       const isSvg = /\.svg$/i.test(p.file);
       const altTxt = String(p.alt || "");
-      const poolIdx = registerStudyMediaPoolItem({ file: p.file, label: altTxt || doc.title, caption: "", credit: "" });
+      const poolIdx = registerStudyMediaPoolItem({ file: p.file, label: altTxt || doc.title, caption: "", credit: "", langCode: docLangCode, bookId: docBookId }, "doc");
       bodyHtml += `
-        <div class="bm-study-doc-img-block" onclick="openStudyLightboxByPool(${poolIdx})">
+        <div class="bm-study-doc-img-block" onclick="openStudyLightboxByPool(${poolIdx}, 'doc')">
           <img class="${isSvg ? 'is-svg' : ''}" data-study-img="${escapeHtml(p.file)}" alt="${escapeHtml(altTxt)}">
           ${altTxt ? `<div class="bm-study-doc-img-cap">🖼️ ${escapeHtml(altTxt)} <span style="opacity:0.7;">(tocca per ingrandire)</span></div>` : ""}
         </div>`;
@@ -21507,10 +22241,10 @@ async function renderStudyDocReader(doc, data, reqId) {
 
     if (cls === "video" && p.video) {
       if (p.image) renderedFiles.add(p.image);
-      const poolIdx = registerStudyMediaPoolItem({ video: p.video, label: doc.title, wtLocale });
+      const poolIdx = registerStudyMediaPoolItem({ video: p.video, label: doc.title, wtLocale }, "doc");
       bodyHtml += `
         <div class="bm-study-video-card">
-          <div class="bm-study-video-thumb-wrap" onclick="openStudyVideoByPool(${poolIdx})">
+          <div class="bm-study-video-thumb-wrap" onclick="openStudyVideoByPool(${poolIdx}, 'doc')">
             ${p.image ? `<img data-study-img="${escapeHtml(p.image)}" alt="${escapeHtml(doc.title)}">` : ""}
             <span class="bm-study-video-play-pill">▶ Guarda su JW.org ↗</span>
           </div>
@@ -21525,15 +22259,15 @@ async function renderStudyDocReader(doc, data, reqId) {
     const txt = String(p.t || "").trim();
     if (txt) {
       speechChunks.push(txt);
-      const linked = formatNoteLinks(txt, docBookId);
+      const linked = formatNoteLinks(txt, docBookId, docLangCode);
       if (cls === "contextTtl") {
-        bodyHtml += `<div style="font-size:11.5px; font-weight:900; letter-spacing:0.6px; color:#ffd54f; text-transform:uppercase; margin-bottom:2px;">${escapeHtml(txt)}</div>`;
+        bodyHtml += `<div class="bm-study-doc-kicker">${escapeHtml(txt)}</div>`;
       } else if (cls === "h1") {
         bodyHtml += `<h2 style="font-size:19px; font-weight:900; color:var(--primary-light); margin:2px 0 10px 0; line-height:1.3;">${escapeHtml(txt)}</h2>`;
       } else if (cls === "h2") {
         bodyHtml += `<h3 style="font-size:15.5px; font-weight:900; color:var(--primary-light); margin:14px 0 6px 0; border-bottom:1px solid var(--border-color); padding-bottom:3px;">${linked}</h3>`;
       } else if (cls === "h3" || cls === "h4") {
-        bodyHtml += `<div style="font-size:14px; font-weight:800; color:#ffd54f; margin:11px 0 4px 0;">${linked}</div>`;
+        bodyHtml += `<div class="bm-study-doc-subhead">${linked}</div>`;
       } else if (cls === "imgCredit") {
         bodyHtml += `<div style="font-size:11px; color:var(--text-muted); opacity:0.82; margin:-4px 0 10px 0; font-style:italic;">© ${escapeHtml(txt)}</div>`;
       } else if (cls === "si") {
@@ -21558,10 +22292,10 @@ async function renderStudyDocReader(doc, data, reqId) {
   if (unrenderedVids.length > 0) {
     attachedMediaHtml += (isMediaOnlyBook ? `<div class="section-title"><span>🎬 Video (${unrenderedVids.length})</span></div>` : "") +
       unrenderedVids.map(v => {
-        const poolIdx = registerStudyMediaPoolItem({ video: v.file, label: v.label || doc.title, wtLocale });
+        const poolIdx = registerStudyMediaPoolItem({ video: v.file, label: v.label || doc.title, wtLocale }, "doc");
         return `
         <div class="bm-study-video-card">
-          <div class="bm-study-video-thumb-wrap" onclick="openStudyVideoByPool(${poolIdx})">
+          <div class="bm-study-video-thumb-wrap" onclick="openStudyVideoByPool(${poolIdx}, 'doc')">
             ${v.thumbFile ? `<img data-study-img="${escapeHtml(v.thumbFile)}" alt="${escapeHtml(v.label)}">` : ""}
             <span class="bm-study-video-play-pill">▶ Guarda su JW.org ↗</span>
           </div>
@@ -21575,9 +22309,9 @@ async function renderStudyDocReader(doc, data, reqId) {
         `<div class="bm-study-media-grid">` +
         unrenderedImgs.map(im => {
           const isSvg = im.mime === "image/svg+xml" || /\.svg$/i.test(im.file);
-          const poolIdx = registerStudyMediaPoolItem({ file: im.file, label: im.label || doc.title, caption: im.caption, credit: im.credit });
+          const poolIdx = registerStudyMediaPoolItem({ file: im.file, label: im.label || doc.title, caption: im.caption, credit: im.credit, langCode: docLangCode, bookId: docBookId }, "doc");
           return `
-            <div class="bm-study-media-card" onclick="openStudyLightboxByPool(${poolIdx})">
+            <div class="bm-study-media-card" onclick="openStudyLightboxByPool(${poolIdx}, 'doc')">
               <img class="bm-study-media-thumb${isSvg ? ' is-svg' : ''}" data-study-img="${escapeHtml(im.file)}" alt="${escapeHtml(im.label || doc.title)}">
               <div class="bm-study-media-cap">${escapeHtml(im.label || im.file)}</div>
             </div>`;
@@ -21585,13 +22319,13 @@ async function renderStudyDocReader(doc, data, reqId) {
     } else {
       attachedMediaHtml += unrenderedImgs.map(im => {
         const isSvg = im.mime === "image/svg+xml" || /\.svg$/i.test(im.file);
-        const poolIdx = registerStudyMediaPoolItem({ file: im.file, label: im.label || doc.title, caption: im.caption, credit: im.credit });
+        const poolIdx = registerStudyMediaPoolItem({ file: im.file, label: im.label || doc.title, caption: im.caption, credit: im.credit, langCode: docLangCode, bookId: docBookId }, "doc");
         return `
-          <div class="bm-study-doc-img-block" onclick="openStudyLightboxByPool(${poolIdx})">
+          <div class="bm-study-doc-img-block" onclick="openStudyLightboxByPool(${poolIdx}, 'doc')">
             <img class="${isSvg ? 'is-svg' : ''}" data-study-img="${escapeHtml(im.file)}" alt="${escapeHtml(im.label || doc.title)}">
             <div class="bm-study-doc-img-cap">
               <b>${isSvg ? "🗺️" : "🖼️"} ${escapeHtml(im.label || doc.title)}</b> <span style="opacity:0.72;">(tocca per zoom HD)</span>
-              ${im.caption ? `<div style="margin-top:4px;">${formatNoteLinks(im.caption, docBookId)}</div>` : ""}
+              ${im.caption ? `<div style="margin-top:4px;">${formatNoteLinks(im.caption, docBookId, docLangCode)}</div>` : ""}
             </div>
           </div>`;
       }).join("");
@@ -21602,19 +22336,22 @@ async function renderStudyDocReader(doc, data, reqId) {
   const docFnHtml = docFnArr.length ? `
     <div class="section-title"><span>📌 Note del Documento (${docFnArr.length})</span></div>
     <div style="margin-bottom:12px;">
-      ${docFnArr.map(fn => `<div class="bm-justify-text" style="background:var(--bg-card); border-left:3px solid #ffd54f; border-radius:7px; padding:7px 10px; margin-bottom:6px; font-size:13px; line-height:1.5;"><b style="color:#ffd54f;">[${escapeHtml(fn.label || "*")}]</b> ${formatNoteLinks(fn.text || "", docBookId)}</div>`).join("")}
+      ${docFnArr.map(fn => `<div class="bm-justify-text bm-study-doc-fn-card"><b class="bm-study-doc-fn-mark">[${escapeHtml(fn.label || "*")}]</b> ${formatNoteLinks(fn.text || "", docBookId, docLangCode)}</div>`).join("")}
     </div>` : "";
 
+  const targetReadCh = docBookId ? (extractStudyDocChapterNumber(doc) || 1) : 1;
   currentInsightSpeechText = speechChunks.join(". ").slice(0, 24000);
+  const hasDocSpeech = Boolean(currentInsightSpeechText.trim()) && !isMediaOnlyBook;
 
   if (reqId !== currentViewReqId) return;
   main.innerHTML = `
     <div class="chapter-header" style="flex-wrap:wrap; gap:8px;">
       <div class="chapter-title" style="font-size:16.5px;">${isMediaOnlyBook ? "🖼️" : "🎓"} ${escapeHtml(readerTitle)}</div>
-      <div class="chapter-nav-btns">
+      <div class="chapter-nav-btns" style="flex-wrap:wrap;">
         ${getBackBtnHtml()}
-        ${docBookId ? `<button type="button" class="nav-btn" onclick="openRef(${docBookId}, 1)">📖 Leggi</button>` : ""}
-        <button type="button" class="nav-btn" onclick="showStudyDocsView(null, true)">☰ Indice</button>
+        ${docBookId ? `<button type="button" class="nav-btn" onclick="openRef(${docBookId}, ${targetReadCh})">📖 Leggi${targetReadCh > 1 ? ` ${targetReadCh}` : ""}</button>` : ""}
+        ${hasDocSpeech ? `<button type="button" class="nav-btn" onclick="toggleChapterTTS()">🔊 Ascolta</button>` : ""}
+        <button type="button" class="nav-btn" onclick="showStudyDocsView(null, true, '${escapeJsStr(bmStudyDocsActiveBibleId)}')">☰ Indice</button>
       </div>
     </div>
     ${attachedMediaHtml}
@@ -21654,7 +22391,9 @@ function bmStudyLbFit() {
   const sw = Math.max(100, stage.clientWidth || window.innerWidth || 360);
   const sh = Math.max(100, stage.clientHeight || (window.innerHeight - 120) || 480);
   const fit = Math.min(sw / bmStudyLbState.nw, sh / bmStudyLbState.nh);
-  bmStudyLbState.minScale = Math.min(fit, 1);
+  bmStudyLbState.fitScale = fit;
+  bmStudyLbState.minScale = fit * 0.9;
+  bmStudyLbState.maxScale = Math.max(fit * 8, 6);
   bmStudyLbState.scale = fit;
   bmStudyLbState.x = (sw - bmStudyLbState.nw * fit) / 2;
   bmStudyLbState.y = (sh - bmStudyLbState.nh * fit) / 2;
@@ -21668,7 +22407,7 @@ function bmStudyLbZoomBy(factor, cx = null, cy = null) {
   const sh = stage.clientHeight || 500;
   const px = cx === null ? sw / 2 : cx;
   const py = cy === null ? sh / 2 : cy;
-  const nextScale = Math.min(bmStudyLbState.maxScale, Math.max(bmStudyLbState.minScale * 0.85, bmStudyLbState.scale * factor));
+  const nextScale = Math.min(bmStudyLbState.maxScale, Math.max(bmStudyLbState.minScale, bmStudyLbState.scale * factor));
   const ratio = nextScale / bmStudyLbState.scale;
   bmStudyLbState.x = px - (px - bmStudyLbState.x) * ratio;
   bmStudyLbState.y = py - (py - bmStudyLbState.y) * ratio;
@@ -21682,43 +22421,45 @@ function bindStudyLightboxGestures() {
   const stage = document.getElementById("bmStudyLbStage");
   if (!stage) return;
   bmStudyLbState.bound = true;
-  const pointers = new Map();
+  const ptrs = bmStudyLbState.ptrs;
   let lastDist = 0;
+  let downX = 0;
+  let downY = 0;
+  let moved = false;
   let lastTapAt = 0;
+  let lastTapX = 0;
+  let lastTapY = 0;
 
   stage.addEventListener("pointerdown", e => {
     if (!bmStudyLbState.active) return;
     if (typeof stage.setPointerCapture === "function") {
       try { stage.setPointerCapture(e.pointerId); } catch (_e) {}
     }
-    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    if (pointers.size === 2) {
-      const [a, b] = [...pointers.values()];
+    ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (ptrs.size === 1) {
+      downX = e.clientX;
+      downY = e.clientY;
+      moved = false;
+    } else if (ptrs.size === 2) {
+      moved = true;
+      const [a, b] = [...ptrs.values()];
       lastDist = Math.hypot(b.x - a.x, b.y - a.y) || 1;
-    } else if (pointers.size === 1) {
-      const now = Date.now();
-      if (now - lastTapAt < 280) {
-        const rect = stage.getBoundingClientRect();
-        if (bmStudyLbState.scale > bmStudyLbState.minScale * 1.25) bmStudyLbFit();
-        else bmStudyLbZoomBy(2.2, e.clientX - rect.left, e.clientY - rect.top);
-        lastTapAt = 0;
-      } else {
-        lastTapAt = now;
-      }
     }
   });
   stage.addEventListener("pointermove", e => {
-    if (!bmStudyLbState.active || !pointers.has(e.pointerId)) return;
-    const prev = pointers.get(e.pointerId);
+    if (!bmStudyLbState.active || !ptrs.has(e.pointerId)) return;
+    const prev = ptrs.get(e.pointerId);
     const cur = { x: e.clientX, y: e.clientY };
-    pointers.set(e.pointerId, cur);
-    if (pointers.size === 1) {
+    ptrs.set(e.pointerId, cur);
+    if (ptrs.size === 1) {
+      if (Math.hypot(cur.x - downX, cur.y - downY) > 8) moved = true;
       bmStudyLbState.x += (cur.x - prev.x);
       bmStudyLbState.y += (cur.y - prev.y);
       clampStudyLbPos();
       applyStudyLbTransform();
-    } else if (pointers.size === 2) {
-      const [a, b] = [...pointers.values()];
+    } else if (ptrs.size === 2) {
+      moved = true;
+      const [a, b] = [...ptrs.values()];
       const dist = Math.hypot(b.x - a.x, b.y - a.y) || 1;
       const rect = stage.getBoundingClientRect();
       const midX = ((a.x + b.x) / 2) - rect.left;
@@ -21728,8 +22469,23 @@ function bindStudyLightboxGestures() {
     }
   });
   const endPtr = e => {
-    pointers.delete(e.pointerId);
-    if (pointers.size < 2) lastDist = 0;
+    const p = ptrs.get(e.pointerId);
+    const wasSingle = ptrs.size === 1;
+    ptrs.delete(e.pointerId);
+    if (ptrs.size < 2) lastDist = 0;
+    if (wasSingle && p && e.type === "pointerup" && bmStudyLbState.active) {
+      const now = Date.now();
+      if (!moved && now - lastTapAt < 320 && Math.hypot(p.x - lastTapX, p.y - lastTapY) < 30) {
+        const rect = stage.getBoundingClientRect();
+        if (bmStudyLbState.scale > bmStudyLbState.fitScale * 1.25) bmStudyLbFit();
+        else bmStudyLbZoomBy(2.2, p.x - rect.left, p.y - rect.top);
+        lastTapAt = 0;
+      } else if (!moved) {
+        lastTapAt = now;
+        lastTapX = p.x;
+        lastTapY = p.y;
+      }
+    }
   };
   stage.addEventListener("pointerup", endPtr);
   stage.addEventListener("pointercancel", endPtr);
@@ -21744,7 +22500,7 @@ function bindStudyLightboxGestures() {
   });
 }
 
-async function openStudyImageLightbox(fileName, label = "", caption = "", credit = "") {
+async function openStudyImageLightbox(fileName, label = "", caption = "", credit = "", langHint = "", defaultBookId = state.bookId) {
   bmHaptic(14);
   bindStudyLightboxGestures();
   const lb = document.getElementById("bmStudyLightbox");
@@ -21754,19 +22510,23 @@ async function openStudyImageLightbox(fileName, label = "", caption = "", credit
   const capBar = document.getElementById("bmStudyLbCapBar");
   if (!lb || !img) return;
 
+  const reqId = ++bmStudyLbReqId;
   const isSvg = /\.svg$/i.test(fileName);
+  bmStudyLbState.ptrs.clear();
   bmStudyLbState.active = true;
   bmStudyLbState.nw = 0;
   bmStudyLbState.nh = 0;
   if (titleEl) titleEl.textContent = `${isSvg ? "🗺️" : "🖼️"} ${label || fileName}`;
   if (msg) msg.textContent = "⏳ Caricamento immagine HD offline...";
+  img.onload = null;
+  img.onerror = null;
   img.style.display = "none";
   img.classList.toggle("is-svg", isSvg);
 
   if (capBar) {
     if (caption || credit) {
       capBar.innerHTML =
-        (caption ? `<div class="bm-justify-text" style="font-size:13px; line-height:1.48; color:#e3f2fd;">${formatNoteLinks(caption, state.bookId)}</div>` : "") +
+        (caption ? `<div class="bm-justify-text" style="font-size:13px; line-height:1.48; color:#e3f2fd;">${formatNoteLinks(caption, defaultBookId, langHint)}</div>` : "") +
         (credit ? `<div style="font-size:11px; color:#9ec9ff; opacity:0.85; margin-top:4px;">© ${escapeHtml(credit)}</div>` : "");
       capBar.style.display = "block";
     } else {
@@ -21777,13 +22537,13 @@ async function openStudyImageLightbox(fileName, label = "", caption = "", credit
   lb.style.display = "flex";
 
   const src = await loadStudyImageDataUrl(fileName);
-  if (!bmStudyLbState.active) return;
+  if (reqId !== bmStudyLbReqId || !bmStudyLbState.active) return;
   if (!src) {
-    if (msg) msg.innerHTML = "⚠️ Immagine non trovata in memoria.<br>Carica anche <b>nwtsty_I_parte2.zip</b> da ⚙️ ➔ Moduli.";
+    if (msg) msg.innerHTML = "⚠️ Immagine non trovata in memoria.<br>Carica anche <b>Parte 2 (.zip)</b> da ⚙️ ➔ Moduli.";
     return;
   }
   img.onload = () => {
-    if (!bmStudyLbState.active) return;
+    if (reqId !== bmStudyLbReqId || !bmStudyLbState.active) return;
     bmStudyLbState.nw = img.naturalWidth || (isSvg ? 1200 : 1000);
     bmStudyLbState.nh = img.naturalHeight || (isSvg ? 900 : 800);
     if (isSvg) {
@@ -21795,16 +22555,21 @@ async function openStudyImageLightbox(fileName, label = "", caption = "", credit
     }
     img.style.display = "block";
     if (msg) msg.textContent = "";
-    requestAnimationFrame(() => bmStudyLbFit());
+    requestAnimationFrame(() => {
+      if (reqId === bmStudyLbReqId && bmStudyLbState.active) bmStudyLbFit();
+    });
   };
   img.onerror = () => {
+    if (reqId !== bmStudyLbReqId || !bmStudyLbState.active) return;
     if (msg) msg.textContent = "❌ Impossibile decodificare questa immagine.";
   };
   img.src = src;
 }
 
 function closeStudyImageLightbox() {
+  bmStudyLbReqId++;
   bmStudyLbState.active = false;
+  bmStudyLbState.ptrs.clear();
   const lb = document.getElementById("bmStudyLightbox");
   const img = document.getElementById("bmStudyLbImg");
   if (lb) lb.style.display = "none";
@@ -21813,6 +22578,7 @@ function closeStudyImageLightbox() {
     img.onerror = null;
     img.removeAttribute("src");
   }
+  schedulePendingBmSwUpdateFlush();
 }
 // ============================================================================
 // AVVIO APPLICAZIONE (BOOT UNIFICATO — TUTTI I MODULI CARICATI)
