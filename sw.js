@@ -1,5 +1,5 @@
-// Service Worker — Bibbia Multilingue PRO (v17.0.12 — App Shell 100% Atomica Immutabile, Guardie Redirect & Bulk JSON, Icone Maskable)
-const BM_SW_VERSION = "bm-pro-shell-v17-0-12";
+// Service Worker — Bibbia Multilingue PRO (v17.1.0 — App Shell 100% Atomica Immutabile, Guardie Redirect & Bulk JSON, Icone Maskable)
+const BM_SW_VERSION = "bm-pro-shell-v17-1-0";
 const BM_API_CACHE = "bm-pro-api-v1";
 const BM_API_CACHE_MAX = 150;
 const BM_CRITICAL_SHELL = [
@@ -130,7 +130,7 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
 
   if (!url.protocol.startsWith("http")) return;
-  if (isExactOrSubHost(url.hostname, "wol.jw.org") || isExactOrSubHost(url.hostname, "translate.googleapis.com")) return;
+  if (isExactOrSubHost(url.hostname, "wol.jw.org") || isExactOrSubHost(url.hostname, "jw.org") || isExactOrSubHost(url.hostname, "translate.googleapis.com")) return;
   if (isBulkGetBibleJson(url)) return;
 
   // 1. API Bibbie online (GetBible capitoli/catalogo & HelloAO): Network-First con cache API separata e cap FIFO

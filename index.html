@@ -3027,6 +3027,340 @@ body.oled-mode .pub-ref-badge {
     box-shadow: 0 4px 16px rgba(40, 26, 8, 0.25);
   }
 
+
+  /* ===== Modulo TNM Edizione per lo Studio (Note di Studio, Documenti, Media, Video & Lightbox HD) ===== */
+  .bm-study-badge {
+    display: inline-block;
+    background: rgba(0, 229, 255, 0.16);
+    color: #84ffff;
+    border: 1px solid rgba(0, 229, 255, 0.72);
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 800;
+    margin: 0 2px;
+    cursor: pointer;
+    vertical-align: baseline;
+  }
+  .bm-study-media-badge {
+    display: inline-block;
+    background: rgba(129, 199, 132, 0.18);
+    color: #a5d6a7;
+    border: 1px solid rgba(102, 187, 106, 0.75);
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 800;
+    margin: 0 2px;
+    cursor: pointer;
+    vertical-align: baseline;
+  }
+  main.bm-paper-reading .bm-study-badge {
+    background: rgba(13, 71, 161, 0.10);
+    color: #154360;
+    border-color: #2e6da4;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  main.bm-paper-reading .bm-study-media-badge {
+    background: rgba(46, 125, 50, 0.12);
+    color: #1b5e20;
+    border-color: #4caf50;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .bm-study-note-card {
+    background: var(--bg-main);
+    border: 1px solid rgba(41, 182, 246, 0.45);
+    border-left: 3.5px solid #00e5ff;
+    border-radius: 9px;
+    padding: 10px 12px;
+    margin-bottom: 9px;
+    font-size: 14px;
+    line-height: 1.56;
+    color: var(--text-main);
+  }
+  .bm-study-lemma {
+    color: #ffd54f;
+    font-weight: 900;
+  }
+  .bm-study-marginal-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+  .bm-study-marginal-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(0, 229, 255, 0.18);
+    border: 1px solid #00e5ff;
+    color: #84ffff;
+    font-size: 11.5px;
+    font-weight: 900;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .bm-study-media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+    gap: 9px;
+    margin-bottom: 12px;
+  }
+  .bm-study-media-card {
+    background: var(--bg-main);
+    border: 1px solid rgba(41, 182, 246, 0.55);
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+    transition: transform 0.14s ease, border-color 0.14s ease;
+  }
+  .bm-study-media-card:active {
+    transform: scale(0.97);
+    border-color: #00e5ff;
+  }
+  .bm-study-media-thumb {
+    width: 100%;
+    height: 112px;
+    object-fit: cover;
+    background: var(--primary-dark);
+    display: block;
+  }
+  .bm-study-media-thumb.is-svg {
+    object-fit: contain;
+    background: #ffffff;
+    padding: 4px;
+  }
+  .bm-study-media-cap {
+    padding: 7px 8px;
+    font-size: 11.5px;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--text-main);
+  }
+  .bm-study-video-card {
+    background: var(--bg-main);
+    border: 1px solid rgba(41, 182, 246, 0.58);
+    border-radius: 11px;
+    overflow: hidden;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.38);
+  }
+  .bm-study-video-thumb-wrap {
+    position: relative;
+    width: 100%;
+    min-height: 118px;
+    max-height: 195px;
+    background: var(--primary-dark);
+    overflow: hidden;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .bm-study-video-thumb-wrap img {
+    width: 100%;
+    max-height: 195px;
+    object-fit: cover;
+    display: block;
+    opacity: 0.88;
+  }
+  .bm-study-video-play-pill {
+    position: absolute;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(4, 26, 66, 0.86);
+    color: #ffffff;
+    border: 1.5px solid #00e5ff;
+    border-radius: 999px;
+    padding: 7px 14px;
+    font-size: 12.5px;
+    font-weight: 900;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.72), 0 0 14px rgba(0, 229, 255, 0.5);
+  }
+  .bm-study-doc-cat-bar {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+    scrollbar-width: none;
+  }
+  .bm-study-doc-cat-bar::-webkit-scrollbar { display: none; }
+  .bm-study-doc-cat-btn {
+    background: var(--bg-card);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    padding: 5px 11px;
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .bm-study-doc-cat-btn.active {
+    background: #00e5ff;
+    color: #041a42;
+    border-color: #84ffff;
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.6);
+  }
+  .bm-study-doc-img-block {
+    margin: 10px 0 12px 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    text-align: center;
+  }
+  .bm-study-doc-img-block img {
+    max-width: 100%;
+    max-height: 360px;
+    width: auto;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+  }
+  .bm-study-doc-img-block img.is-svg {
+    width: 100%;
+    max-height: 460px;
+    background: #ffffff;
+    padding: 6px;
+  }
+  .bm-study-doc-img-cap {
+    padding: 6px 10px;
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: left;
+    line-height: 1.4;
+  }
+  .bm-study-table-wrap {
+    overflow-x: auto;
+    margin: 10px 0 12px 0;
+    border: 1px solid var(--border-color);
+    border-radius: 9px;
+    background: var(--bg-card);
+  }
+  .bm-study-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    line-height: 1.42;
+  }
+  .bm-study-table th {
+    background: var(--primary-dark);
+    color: #84ffff;
+    font-weight: 800;
+    text-align: left;
+    padding: 7px 8px;
+    border-bottom: 1.5px solid var(--border-color);
+    white-space: nowrap;
+  }
+  .bm-study-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid rgba(41, 182, 246, 0.22);
+    color: var(--text-main);
+    vertical-align: top;
+  }
+  .bm-study-table tr:last-child td { border-bottom: none; }
+  main.bm-paper-reading .bm-study-doc-cat-btn {
+    background: #e8dec8;
+    color: #2c2216;
+    border-color: #b59469;
+  }
+  main.bm-paper-reading .bm-study-doc-cat-btn.active {
+    background: #8c5818;
+    color: #fff8e8;
+    border-color: #6b4c24;
+    box-shadow: none;
+  }
+  main.bm-paper-reading .bm-study-note-card,
+  main.bm-paper-reading .bm-study-video-card,
+  main.bm-paper-reading .bm-study-media-card,
+  main.bm-paper-reading .bm-study-doc-img-block,
+  main.bm-paper-reading .bm-study-table-wrap {
+    background: #ebe3d1;
+    border-color: #cfc3a8;
+    color: #1e1b16;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  }
+  main.bm-paper-reading .bm-study-note-card {
+    border-left-color: #8c5818;
+  }
+  main.bm-paper-reading .bm-study-lemma { color: #7c2d12; }
+  main.bm-paper-reading .bm-study-table th {
+    background: #dfd3ba;
+    color: #3b2a14;
+    border-bottom-color: #b59469;
+  }
+  main.bm-paper-reading .bm-study-table td {
+    color: #1e1b16;
+    border-bottom-color: #d8ccb4;
+  }
+  /* Visualizzatore Immagini & Mappe HD Studio (Lightbox Fullscreen con Pinch-to-Zoom & Pan) */
+  .bm-study-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 1380;
+    display: none;
+    flex-direction: column;
+    background: #020b1c;
+    color: #ffffff;
+  }
+  .bm-study-lb-stage {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    touch-action: none;
+    background: radial-gradient(circle at 50% 50%, #0a2a5e 0%, #041534 65%, #020b1c 100%);
+    min-height: 0;
+  }
+  .bm-study-lb-wrap {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform-origin: 0 0;
+    will-change: transform;
+  }
+  .bm-study-lb-wrap img {
+    display: block;
+    max-width: none;
+    user-select: none;
+    -webkit-user-drag: none;
+    pointer-events: none;
+  }
+  .bm-study-lb-wrap img.is-svg {
+    background: #ffffff;
+    border-radius: 6px;
+  }
+  .bm-study-lb-capbar {
+    background: linear-gradient(180deg, rgba(10, 54, 126, 0.96) 0%, rgba(4, 26, 66, 0.99) 100%);
+    border-top: 1px solid #29b6f6;
+    padding: 8px max(14px, env(safe-area-inset-right, 14px)) max(14px, env(safe-area-inset-bottom, 14px)) max(14px, env(safe-area-inset-left, 14px));
+    max-height: 36dvh;
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+  body.oled-mode .bm-study-lightbox,
+  body.oled-mode .bm-study-lb-stage,
+  body.oled-mode .bm-study-lb-capbar {
+    background: #000000;
+    border-color: #1f1f1f;
+  }
+  body.oled-mode .bm-study-doc-cat-btn:not(.active),
+  body.oled-mode .bm-study-table th {
+    background: #0a0a0a;
+    border-color: #1f1f1f;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     #splashScreen.ready .splash-box,
     #splashScreen.ready .splash-text,
@@ -3134,6 +3468,7 @@ body.oled-mode .pub-ref-badge {
   <div class="quick-menu-bar">
     <button id="booksTabBtn" class="quick-pill" onclick="showBooksView()">🟦 Libri Biblici</button>
     <button id="readTabBtn" class="quick-pill" onclick="openBibleTabFromMenu()">📖 Lettura</button>
+    <button id="studyDocsTabBtn" class="quick-pill" onclick="showStudyDocsView()">🎓 Studio</button>
     <button id="insightTabBtn" class="quick-pill" onclick="showInsightView()">📚 Perspicacia (it)</button>
     <button id="siTabBtn" class="quick-pill" onclick="showSiView()">📘 Tutta la Scrittura</button>
     <button id="mapsTabBtn" class="quick-pill" onclick="showMapsView()">🗺️ Cartine Bibliche</button>
@@ -3293,6 +3628,26 @@ body.oled-mode .pub-ref-badge {
       <div id="bpChips" class="bp-chips"></div>
     </div>
     <div id="bpSheet" class="bp-sheet"></div>
+  </div>
+  <!-- Visualizzatore Fullscreen Immagini & Mappe HD — Bibbia per lo Studio -->
+  <div id="bmStudyLightbox" class="bm-study-lightbox" role="dialog" aria-modal="true" aria-labelledby="bmStudyLbTitle">
+    <div class="bp-vhead">
+      <div class="bp-vtitle">
+        <div id="bmStudyLbTitle" style="font-weight:900; font-size:15px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">🖼️ Immagine HD</div>
+        <div id="bmStudyLbSub" style="font-size:11.5px; color:#9ec9ff; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Pizzica con 2 dita o doppio tocco per zoomare</div>
+      </div>
+      <div class="chapter-nav-btns">
+        <button type="button" class="bp-vbtn" onclick="bmStudyLbZoomBy(1/1.45)" title="Riduci zoom">🔍−</button>
+        <button type="button" class="bp-vbtn" onclick="bmStudyLbFit()" title="Adatta allo schermo">100%</button>
+        <button type="button" class="bp-vbtn" onclick="bmStudyLbZoomBy(1.45)" title="Ingrandisci zoom">🔍+</button>
+        <button type="button" class="bp-vbtn" onclick="closeStudyImageLightbox()" title="Chiudi">✕</button>
+      </div>
+    </div>
+    <div id="bmStudyLbStage" class="bm-study-lb-stage">
+      <div id="bmStudyLbWrap" class="bm-study-lb-wrap"><img id="bmStudyLbImg" alt=""></div>
+      <div id="bmStudyLbMsg" class="bp-msg"></div>
+    </div>
+    <div id="bmStudyLbCapBar" class="bm-study-lb-capbar" style="display:none;"></div>
   </div>
   <!-- Cassetto Laterale Destro delle Impostazioni (Stile Patek Philippe a Fisarmonica) -->
   <div id="bmSettingsDrawer" class="bm-drawer-overlay" role="dialog" aria-modal="true" aria-label="Impostazioni PRO" onclick="if(event.target.id==='bmSettingsDrawer') closeSettingsDrawer()">
@@ -3473,7 +3828,14 @@ const BIBLE_BOOKS = [
   { id: 65, name: "Giuda", abbr: "Gda", ch: 1, sec: "NT", cat: 4 },
   { id: 66, name: "Rivelazione", abbr: "Riv", ch: 22, sec: "NT", cat: 4 }
 ];
+  const BM_STUDY_BIBLE_REGISTRY = {
+    "gb:nwtsty":     { langCode: "it", wtLocale: "I", name: "🇮🇹 Italiano: TNM Edizione per lo Studio (2026)", lang: "Italian" },
+    "gb:nwtsty_e":   { langCode: "en", wtLocale: "E", name: "🇬🇧 English: NWT Study Edition", lang: "English" },
+    "gb:nwtsty_s":   { langCode: "es", wtLocale: "S", name: "🇪🇸 Español: TNM Edición de estudio", lang: "Spanish" },
+    "gb:nwtsty_tpo": { langCode: "pt", wtLocale: "T", name: "🇵🇹🇧🇷 Português: TNM Edição de Estudo", lang: "Portuguese" }
+  };
   const CORE_BIBLES = [
+  { id: "gb:nwtsty", name: "🇮🇹 Italiano: TNM Edizione per lo Studio (2026)", lang: "Italian" },
   { id: "gb:nwt", name: "🇮🇹 Italiano: Traduzione del Nuovo Mondo (TNM 2017)", lang: "Italian" },
   { id: "gb:bi12", name: "🇮🇹 Italiano: Traduzione del Nuovo Mondo (TNM 1987 - bi12)", lang: "Italian" },
   { id: "gb:nwt_e", name: "🇬🇧 English: New World Translation (NWT 2013)", lang: "English" },
@@ -3542,7 +3904,7 @@ const BIBLE_BOOKS = [
   { id: "gb:vietnamese", name: "🇻🇳 Tiếng Việt: Bibbia Vietnamita (1934)", lang: "Vietnamese" }
 ];
 const LOCAL_EPUB_IDS = [
-  "gb:nwt", "gb:bi12",
+  "gb:nwtsty", "gb:nwt", "gb:bi12",
   "gb:nwt_e", "gb:bi12_e",
   "gb:nwt_s", "gb:bi12_s",
   "gb:nwt_tpo",
@@ -5680,6 +6042,8 @@ function onHeaderCenterPillClick() {
     showSiBook(currentViewContext.i, true);
   } else if (mode === "si_index") {
     showSiView(true);
+  } else if (mode === "study_docs") {
+    showStudyDocsView(null, true);
   } else {
     showChaptersView(state.bookId);
   }
@@ -5895,6 +6259,7 @@ async function fetchChapterOutline(transId, bookId, chapter) {
       const bObj = fullOffline.books.find(b => Number(b.nr) === Number(bookId));
       const cObj = bObj && bObj.chapters ? bObj.chapters.find(c => Number(c.chapter) === Number(chapter)) : null;
       if (cObj && Array.isArray(cObj.outline) && cObj.outline.length > 0) return cObj.outline;
+      if (cObj && Array.isArray(cObj.overview) && cObj.overview.length > 0) return cObj.overview;
     }
   } catch (e) { console.debug(e); }
   return [];
@@ -5907,13 +6272,22 @@ async function fetchBookOutlines(transId, bookId) {
       const bObj = fullOffline.books.find(b => Number(b.nr) === Number(bookId));
       if (bObj && Array.isArray(bObj.chapters)) {
         return bObj.chapters
-          .filter(c => Array.isArray(c.outline) && c.outline.length > 0)
-          .map(c => ({ chapter: Number(c.chapter), outline: c.outline }))
+          .filter(c => (Array.isArray(c.outline) && c.outline.length > 0) || (Array.isArray(c.overview) && c.overview.length > 0))
+          .map(c => ({ chapter: Number(c.chapter), outline: (Array.isArray(c.outline) && c.outline.length > 0) ? c.outline : c.overview }))
           .sort((a, b) => a.chapter - b.chapter);
       }
     }
   } catch (e) { console.debug(e); }
   return [];
+}
+function normalizeOutlineVerseTarget(vSpec, fallbackChapter = state.chapter) {
+  const raw = String(vSpec || "").trim();
+  if (!raw) return { chapter: Number(fallbackChapter) || 1, spec: "" };
+  const m = raw.match(/^(\d{1,3})\s*:\s*(\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?(?:\s*,\s*\d{1,3}[a-z]?)*)/i);
+  if (m) {
+    return { chapter: parseInt(m[1], 10), spec: m[2].trim() };
+  }
+  return { chapter: Number(fallbackChapter) || 1, spec: raw };
 }
 function toggleChapterOutlineBox() {
   bmHaptic(12);
@@ -5922,7 +6296,13 @@ function toggleChapterOutlineBox() {
 }
 function jumpToOutlineVerse(vSpec) {
   bmHaptic(14);
-  if (vSpec) scrollToVerseAndHighlight(vSpec);
+  if (!vSpec) return;
+  const target = normalizeOutlineVerseTarget(vSpec, state.chapter);
+  if (target.chapter !== Number(state.chapter)) {
+    openRef(state.bookId, target.chapter, target.spec);
+  } else if (target.spec) {
+    scrollToVerseAndHighlight(target.spec);
+  }
 }
 function renderChapterOutlineHtml(outlineItems, bookName, chapterNum) {
   if (!Array.isArray(outlineItems) || !outlineItems.length) return "";
@@ -5974,8 +6354,9 @@ async function openBookOutlineModal() {
       }
       const pad = it.lvl === 1 ? 4 : (it.lvl === 2 ? 15 : 25);
       const vSpec = String(it.verses || "").trim();
+      const normT = normalizeOutlineVerseTarget(vSpec, chObj.chapter);
       const vPill = vSpec ? `<span class="bm-outline-v">${escapeHtml(vSpec)}</span>` : "";
-      return `<div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px; padding:3px 4px 3px ${pad}px; font-size:13px; line-height:1.4; cursor:pointer; color:${it.lvl === 1 ? '#ffffff' : '#cfe3ff'}; font-weight:${it.lvl === 1 ? '700' : '500'};" onclick="closeMyReadModal(); openRef(${targetBookId}, ${chObj.chapter}, '${escapeJsStr(vSpec)}');"><span>${it.lvl >= 2 ? '• ' : ''}${escapeHtml(it.text)}</span>${vPill}</div>`;
+      return `<div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px; padding:3px 4px 3px ${pad}px; font-size:13px; line-height:1.4; cursor:pointer; color:${it.lvl === 1 ? '#ffffff' : '#cfe3ff'}; font-weight:${it.lvl === 1 ? '700' : '500'};" onclick="closeMyReadModal(); openRef(${targetBookId}, ${normT.chapter}, '${escapeJsStr(normT.spec)}');"><span>${it.lvl >= 2 ? '• ' : ''}${escapeHtml(it.text)}</span>${vPill}</div>`;
     }).join("");
     return `
       <div style="background:var(--bg-main); border:1px solid ${isCurr ? '#00e5ff' : 'rgba(41,182,246,0.4)'}; border-radius:9px; padding:8px 10px; margin-bottom:8px;">
@@ -6701,12 +7082,13 @@ async function renderChapterView(preserveAudio = false) {
   main.innerHTML = `<div class="loader">Caricamento di <b>${escapeHtml(book.name)} ${state.chapter}</b>...</div>`;
   syncBmPaperMode();
   try {
-    const [data1, footnotes1, outline1, data2, data3] = await Promise.all([
+    const [data1, footnotes1, outline1, studyExtras1, data2, data3] = await Promise.all([
       fetchChapterData(state.trans1, state.bookId, state.chapter),
       fetchChapterFootnotes(state.trans1, state.bookId, state.chapter).catch(() => ({})),
       bmSettings.showOutlines !== false
         ? fetchChapterOutline(state.trans1, state.bookId, state.chapter).catch(() => [])
         : Promise.resolve([]),
+      fetchChapterStudyExtras(state.trans1, state.bookId, state.chapter).catch(() => null),
       state.parallelCount >= 2
         ? fetchChapterData(state.trans2, state.bookId, state.chapter).catch(() => [])
         : Promise.resolve([]),
@@ -6728,10 +7110,24 @@ async function renderChapterView(preserveAudio = false) {
     const rtlAttr3 = rtl3 ? ' dir="rtl"' : "";
     const rtlCls3 = (rtl3 ? " bm-rtl" : "") + nonItCls3;
     const buildVerseStudyBadges = (vNum, includeCrossBadge) => {
-      const vFootnotes = (bmSettings.showFootnotes !== false) ? (footnotes1[String(vNum)] || footnotes1[vNum] || []) : [];
+      const vKey = String(vNum);
+      const vFootnotes = (bmSettings.showFootnotes !== false) ? (footnotes1[vKey] || footnotes1[vNum] || []) : [];
       const fnBadge = vFootnotes.length
         ? ` <span class="bm-footnote-badge" title="Apri ${vFootnotes.length} note in calce ufficiali" onclick="event.stopPropagation(); openVerseFootnotesModal(${vNum})">📌${vFootnotes.length > 1 ? vFootnotes.length : ""}</span>`
         : "";
+      let studyBadge = "";
+      let mediaBadge = "";
+      if (bmSettings.showStudyBadges !== false && studyExtras1) {
+        const sNotes = (studyExtras1.studyNotes && (studyExtras1.studyNotes[vKey] || studyExtras1.studyNotes[vNum])) || [];
+        const sMedia = (studyExtras1.media && (studyExtras1.media[vKey] || studyExtras1.media[vNum])) || [];
+        const hasStudy = Array.isArray(sNotes) && sNotes.length > 0;
+        const hasMedia = Array.isArray(sMedia) && sMedia.length > 0;
+        if (hasStudy) {
+          studyBadge = ` <span class="bm-study-badge" title="Apri Note di Studio${hasMedia ? ' e Media' : ''} ufficiali" onclick="event.stopPropagation(); openStudyNoteModal(${vNum})">🎓${hasMedia ? '🖼️' : ''}</span>`;
+        } else if (hasMedia) {
+          mediaBadge = ` <span class="bm-study-media-badge" title="Apri Immagini e Video del versetto" onclick="event.stopPropagation(); openStudyNoteModal(${vNum})">🖼️</span>`;
+        }
+      }
       const hasNote = Boolean(findNoteForVerse(state.bookId, state.chapter, vNum));
       const noteBadge = hasNote
         ? ` <span class="tag-badge" title="Apri il tuo Appunto" onclick="event.stopPropagation(); openVerseNoteDirectly(${vNum})">📝Nota</span>`
@@ -6739,7 +7135,7 @@ async function renderChapterView(preserveAudio = false) {
       const crossBadge = includeCrossBadge
         ? ` <span class="tag-badge bm-cross-badge" title="Apri Passi Paralleli e Concordanza" onclick="event.stopPropagation(); openVerseCrossDirectly(${vNum})">🔗Paralleli</span>`
         : "";
-      return fnBadge + noteBadge + crossBadge;
+      return fnBadge + studyBadge + mediaBadge + noteBadge + crossBadge;
     };
     let versesHtml = "";
     if (state.parallelCount === 1) {
@@ -6806,6 +7202,7 @@ async function renderChapterView(preserveAudio = false) {
         <div class="chapter-title" onclick="showChaptersView(${state.bookId})" style="cursor:pointer;">${escapeHtml(book.name)} ${state.chapter}▾</div>
         <div class="chapter-nav-btns">
           ${backBtnHtml}
+          ${studyExtras1 && studyExtras1.isStudyBible ? `<button class="nav-btn" onclick="openStudyDocsForBook(${state.bookId}, ${state.chapter})" title="Documenti, Introduzione, Appendici e Media di ${escapeHtml(book.name)}">🎓</button>` : ""}
           <button class="nav-btn" onclick="openChapterDossierModal()" title="Dossier Esegetico Completo del Capitolo">💎</button>
           <button class="nav-btn" onclick="prevChapter()">◀Prec</button>
           <button class="nav-btn" onclick="nextChapter()">Succ▶</button>
@@ -6838,12 +7235,15 @@ async function renderChapterView(preserveAudio = false) {
     if (reqId !== currentViewReqId) return false;
     if (err && err.message === "EPUB_NOT_IMPORTED") {
       const bMeta = CORE_BIBLES.find(b => b.id === state.trans1);
-      const bTitle = bMeta ? bMeta.name : "Edizione EPUB Offline";
+      const bTitle = bMeta ? bMeta.name : "Edizione Offline";
+      const isStudy = Boolean(BM_STUDY_BIBLE_REGISTRY[state.trans1]);
       main.innerHTML = `
         <div class="loader">
-          📘 <b>${escapeHtml(bTitle)}</b><br><br>
-          Per leggere questo libro offline, importa una sola volta il relativo file <b>.epub</b> (VT e/o NT) dal telefono:<br><br>
-          <button class="search-btn" onclick="openBackupModal()">📘 Apri Importazione EPUB</button>
+          ${isStudy ? "🎓" : "📘"} <b>${escapeHtml(bTitle)}</b><br><br>
+          ${isStudy
+            ? "Per leggere la Bibbia per lo Studio con note, immagini, mappe e appendici offline, importa i pacchetti <b>.zip</b> (Parte 1 e Parte 2) dal telefono:"
+            : "Per leggere questo libro offline, importa una sola volta il relativo file <b>.epub</b> (VT e/o NT) dal telefono:"}<br><br>
+          <button class="search-btn" onclick="openBackupModal()">${isStudy ? "🎓 Apri Importazione TNM Studio" : "📘 Apri Importazione EPUB"}</button>
         </div>`;
       syncBmPaperMode();
       return false;
@@ -6973,6 +7373,7 @@ const BM_DEFAULT_SETTINGS = {
   showInlineBadges: true,
   showFootnotes: true,
   showOutlines: true,
+  showStudyBadges: true,
   messianicBulb: true,
   nameLinks: false,
   paperMode: false,
@@ -7031,7 +7432,7 @@ function syncBmPaperMode(animateView = false) {
   const t = currentViewContext ? currentViewContext.type : "";
   const isGridView = Boolean(main.querySelector(".books-grid, .chapters-grid"));
   const isReading =
-    ["bible", "daily", "insight", "si", "notes", "saved", "search"].includes(t) &&
+    ["bible", "daily", "insight", "si", "study_docs", "notes", "saved", "search"].includes(t) &&
     !isGridView && main.children.length > 0;
   main.classList.toggle("bm-paper-reading", Boolean(bmSettings.paperMode && isReading));
   scheduleBmReadProgressUpdate();
@@ -7347,6 +7748,13 @@ function renderSettingsDrawerContent() {
           <span>📑 Sommari ufficiali di capitolo (TNM)</span>
           <label class="bm-switch">
             <input type="checkbox" ${bmSettings.showOutlines !== false ? 'checked' : ''} onchange="setBmSettingProp('showOutlines', this.checked, true); if (currentViewContext.type === 'bible') loadChapterView(shouldPreserveAudioOnChapterReload());">
+            <span class="bm-slider"></span>
+          </label>
+        </div>
+        <div class="bm-set-row">
+          <span>🎓 Badge Note di Studio & Media (nwtsty)</span>
+          <label class="bm-switch">
+            <input type="checkbox" ${bmSettings.showStudyBadges !== false ? 'checked' : ''} onchange="setBmSettingProp('showStudyBadges', this.checked, true); if (currentViewContext.type === 'bible') loadChapterView(shouldPreserveAudioOnChapterReload());">
             <span class="bm-slider"></span>
           </label>
         </div>
@@ -9322,6 +9730,8 @@ async function buildDynamicCrossRefsForVerse(bookId, chapter, verseNum, rawText,
 
   const curated = Array.isArray(PRO_CROSS_REFS[key]) ? PRO_CROSS_REFS[key] : [];
   curated.forEach(addRef);
+  const studyXrefs = await getStudyBibleXrefsForKey(key);
+  studyXrefs.forEach(addRef);
 
   const beforeDyn = out.length;
   // 1. Estrae riferimenti biblici dalle Note in Calce ufficiali (legate esplicitamente al libro bId)
@@ -9354,15 +9764,20 @@ async function buildDynamicCrossRefsForVerse(bookId, chapter, verseNum, rawText,
     });
   }
 
+  const totalCurated = curated.length + studyXrefs.length;
   let sourceLabel = "Suggerimenti Tematici Automatici";
-  if (curated.length > 0 && dynCount > 0) {
+  if (studyXrefs.length > 0 && dynCount > 0) {
+    sourceLabel = `Passi Paralleli Ufficiali Studio + Note (${out.length})`;
+  } else if (studyXrefs.length > 0) {
+    sourceLabel = `Passi Paralleli Ufficiali TNM Studio (${studyXrefs.length})`;
+  } else if (curated.length > 0 && dynCount > 0) {
     sourceLabel = `Passi Paralleli Esegetici (${curated.length} curati + ${dynCount} da Note/Perspicacia)`;
   } else if (curated.length > 0) {
     sourceLabel = "Passi Paralleli Esegetici";
   } else if (dynCount > 0) {
     sourceLabel = `Riferimenti Dinamici Offline (${dynCount} da Note in Calce & Perspicacia)`;
   }
-  return { refs: out.slice(0, 12), sourceLabel };
+  return { refs: out.slice(0, Math.max(12, Math.min(20, totalCurated))), sourceLabel };
 }
 
 async function openCrossRefsModalForVerse() {
@@ -9705,6 +10120,13 @@ function saveCurrentPositionToHistory(targetBookId = null, targetCh = null) {
       scrollTop: scrollPos,
       label: currentViewContext.label || "🗺️ Cartine"
     };
+  } else if (currentViewContext.type === "study_docs") {
+    snap = {
+      type: "study_docs",
+      docId: currentViewContext.docId ?? null,
+      scrollTop: scrollPos,
+      label: currentViewContext.label || "🎓 Studio"
+    };
     } else if (currentViewContext.type === "notes") {
     snap = { type: "notes", scrollTop: scrollPos, label: "📝 Appunti" };
   } else if (currentViewContext.type === "search") {
@@ -9793,6 +10215,10 @@ function goBackHistory() {
   }
   if (prev.type === "maps") {
     showMapsView(prev.mapIdx !== undefined ? prev.mapIdx : null, true).then(() => { if (main && prev.scrollTop) main.scrollTop = prev.scrollTop; });
+    return;
+  }
+  if (prev.type === "study_docs") {
+    showStudyDocsView(prev.docId !== undefined ? prev.docId : null, true).then(() => { if (main && prev.scrollTop) main.scrollTop = prev.scrollTop; });
     return;
   }
     if (prev.type === "search") {
@@ -9961,13 +10387,16 @@ function jumpToRefString(str, forceDirectJump = false) {
   if (!target) return;
   const proModalEl = document.getElementById("proModal");
   const isProModalOpen = proModalEl && proModalEl.style.display === "flex";
-  if (!forceDirectJump && !isProModalOpen && currentViewContext && ["daily", "insight", "si", "notes"].includes(currentViewContext.type)) {
+  const lbEl = document.getElementById("bmStudyLightbox");
+  const isLbOpen = lbEl && lbEl.style.display === "flex";
+  if (!forceDirectJump && !isProModalOpen && !isLbOpen && currentViewContext && ["daily", "insight", "si", "study_docs", "notes"].includes(currentViewContext.type)) {
     openVersePeekModal(target.bookId, target.chapter, target.vSpec);
     return;
   }
   executeDirectRefJump(target.bookId, target.chapter, target.vSpec);
 }
 function executeDirectRefJump(bookId, targetCh, vSpec = "") {
+  closeStudyImageLightbox();
   closeMyReadModal();
   closeProModal();
   saveCurrentPositionToHistory(bookId, targetCh);
@@ -10106,7 +10535,7 @@ function buildTtsVoiceStatusText(locale) {
     return `Chrome non espone voci aggiuntive per ${locale}: viene usata la voce di sistema.`;
   }
   if (count === 1) {
-    return `Chrome espone 1 sola voce per ${locale}. Per timbro maschile/femminile, cambialo in Android → Sintesi vocale → Servizi vocali di Google.`;
+    return `Chrome espone 1 sola voce per ${locale}: per cambiare timbro segui il percorso Android qui sotto.`;
   }
   return `${count} voci disponibili per ${locale} (fallback automatico alla voce di sistema se non risponde).`;
 }
@@ -10122,6 +10551,10 @@ function buildTtsVoiceSelectorMarkup(selectId, refreshTarget) {
     <div style="display:flex; gap:6px; margin-top:2px;">
       <button type="button" class="nav-btn" style="flex:1; padding:6px 9px; font-size:12px;" onclick="previewSelectedTtsVoice()">▶ Prova voce</button>
       <button type="button" class="nav-btn" style="padding:6px 10px; font-size:12px;" onclick="refreshTtsVoiceUi('${refreshTarget}')" title="Ricarica elenco voci da Chrome">🔄</button>
+    </div>
+    <div style="font-size:11.5px; color:var(--text-muted); background:var(--bg-main); border:1px solid var(--border-color); border-radius:8px; padding:7px 9px; line-height:1.42; margin-top:2px;">
+      <b style="color:var(--primary-light);">🎙️ Dove trovare le voci Google (Android):</b><br>
+      Impostazioni ➔ Accessibilità ➔ Sintesi vocale ➔ ⚙️ <b>Servizi vocali di Google</b> ➔ <b>Installa dati vocali</b> ➔ scegli lingua e timbro, poi tocca <b>🔄</b> qui sopra.
     </div>
   `;
 }
@@ -10256,7 +10689,7 @@ function getActiveTTSLangCode(fullLocale = false) {
   const t = (state.trans1 || "").toLowerCase();
   const activeObj = dynamicCatalog.find(b => b.id === state.trans1);
   const langName = activeObj ? (activeObj.lang || "").toLowerCase() : "";
-  if (t === "gb:nwt" || t === "gb:bi12" || t.includes("riveduta") || t.includes("giovanni") || t.startsWith("epub:") || langName.includes("ital")) return fullLocale ? "it-IT" : "it";
+  if (t === "gb:nwtsty" || t === "gb:nwt" || t === "gb:bi12" || t.includes("riveduta") || t.includes("giovanni") || t.startsWith("epub:") || langName.includes("ital")) return fullLocale ? "it-IT" : "it";
   if (t.endsWith("_s") || t.includes("valera") || t.includes("sagradas") || t.includes("rvg") || langName.includes("span")) return fullLocale ? "es-ES" : "es";
   if (t.endsWith("_tpo") || t.includes("almeida") || langName.includes("port")) return fullLocale ? "pt-BR" : "pt";
   if (t.endsWith("_e") || langName.includes("engl")) return fullLocale ? "en-US" : "en";
@@ -11342,6 +11775,10 @@ function openBackupModal() {
       <label class="search-btn" style="text-align:center; padding:10px; cursor:pointer; background:linear-gradient(135deg, #00695c, #00897b);">
       🗺️ Carica Cartine Bibliche (vedete_il_buon_paese.json)
       <input type="file" accept=".json,application/json" style="display:none;" onchange="importMapsArchive(event)">
+      </label>
+      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#1565c0;">
+        🎓🇮🇹 Carica TNM Studio (.zip Parte 1/2 o .json)
+        <input type="file" accept=".zip,.json,application/zip,application/json" multiple style="display:none;" onchange="importStudyBibleArchive(event, 'gb:nwtsty')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0d47a1;">
         🇮🇹 Carica EPUB TNM 2017 (nwt_I.epub)
@@ -14670,7 +15107,7 @@ function scrollRpToToday(smooth = false) {
 function buildStudioBackupObject() {
   return {
     app: "BibbiaMultilingue_PRO",
-    version: "PRO_v17.0.12",
+    version: "PRO_v17.1.0",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
@@ -14728,7 +15165,7 @@ function applyStudioBackupObject(parsed) {
     const validExit = ["hand", "scroll"];
     const validCards = ["", "aspetto", "backup", "feedback", "speciali", "audio", "moduli"];
     const nextSet = { ...BM_DEFAULT_SETTINGS, ...bmSettings };
-    ["haptic", "soundTick", "showInlineBadges", "showFootnotes", "showOutlines", "messianicBulb", "nameLinks", "paperMode"].forEach(k => {
+    ["haptic", "soundTick", "showInlineBadges", "showFootnotes", "showOutlines", "showStudyBadges", "messianicBulb", "nameLinks", "paperMode"].forEach(k => {
       if (typeof srcSet[k] === "boolean") nextSet[k] = srcSet[k];
     });
     if (validLH.includes(String(srcSet.lineHeight))) nextSet.lineHeight = String(srcSet.lineHeight);
@@ -15000,6 +15437,9 @@ function describeIdbMigrationModule(id, extraCount = 0) {
   if (id === "bm:maps_bundle") return { icon: "🗺️", title: `Cartine Bibliche HD${extraCount ? ` (${extraCount} tavole)` : ""}`, fileSlug: "cartine_hd", prio: 4 };
   if (id === "bm:strong_ext") return { icon: "🏺", title: "Lessico Strong Esteso", fileSlug: "strong_esteso", prio: 5 };
   if (id === "bm:xrefs_ext") return { icon: "🔗", title: "Riferimenti Incrociati Estesi", fileSlug: "riferimenti_estesi", prio: 6 };
+  if (id === "bm:nwtsty_media_bundle") return { icon: "🖼️", title: `Immagini & Mappe TNM Studio${extraCount ? ` (${extraCount} file)` : ""}`, fileSlug: "nwtsty_media", prio: 7 };
+  if (id.startsWith("bm:nwtsty_docs:")) return { icon: "🎓", title: "Documenti & Appendici TNM Studio", fileSlug: "nwtsty_documenti", prio: 8 };
+  if (id.startsWith("bm:nwtsty_xrefs:")) return { icon: "🔗", title: "Riferimenti Marginali TNM Studio", fileSlug: "nwtsty_riferimenti", prio: 9 };
   const bMeta = dynamicCatalog.find(b => b.id === id) || CORE_BIBLES.find(b => b.id === id);
   const label = bMeta ? bMeta.name : `Bibbia offline (${id})`;
   const slug = String(id).replace(/[^a-zA-Z0-9_-]+/g, "_");
@@ -15010,6 +15450,7 @@ async function scanOfflineLibraryModules() {
   const allKeys = await idbGetAllKeys();
   const mapImgKeys = allKeys.filter(k => k.startsWith(BP_DB_IMG));
   const hasMapsMeta = allKeys.includes(BP_DB_META);
+  const studyImgKeys = allKeys.filter(k => k.startsWith("bm:nwtsty_img:"));
   const modules = [];
 
   if (hasMapsMeta || mapImgKeys.length > 0) {
@@ -15019,9 +15460,13 @@ async function scanOfflineLibraryModules() {
     const desc = describeIdbMigrationModule("bm:maps_bundle", mapImgKeys.length);
     modules.push({ id: "bm:maps_bundle", keys, ...desc });
   }
+  if (studyImgKeys.length > 0) {
+    const desc = describeIdbMigrationModule("bm:nwtsty_media_bundle", studyImgKeys.length);
+    modules.push({ id: "bm:nwtsty_media_bundle", keys: studyImgKeys, ...desc });
+  }
 
   for (const k of allKeys) {
-    if (k === BP_DB_META || k.startsWith(BP_DB_IMG) || k === "bm:maps_it" || k === "bm:messianic_enriched_v1") continue;
+    if (k === BP_DB_META || k.startsWith(BP_DB_IMG) || k.startsWith("bm:nwtsty_img:") || k.startsWith("bm:nwtsty_status:") || k === "bm:maps_it" || k === "bm:messianic_enriched_v1") continue;
     const desc = describeIdbMigrationModule(k);
     modules.push({ id: k, keys: [k], ...desc });
   }
@@ -15104,7 +15549,7 @@ function setMigrationStatus(htmlMsg) {
 
 async function buildAndDeliverLibraryBundle(keysList, includeStudio, fileName, shareTitle) {
   const parts = [
-    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v17.0.12","date":',
+    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v17.1.0","date":',
     JSON.stringify(new Date().toISOString())
   ];
   if (includeStudio) {
@@ -15166,6 +15611,7 @@ async function refreshActiveViewAfterDataChange() {
       case "daily":   await showDailyTextView(currentDailyOffset, true); break;
       case "insight": await showInsightView(currentViewContext.idx ?? null, true); break;
       case "si":      await showSiView(true); break;
+      case "study_docs": await showStudyDocsView(currentViewContext.docId ?? null, true); break;
       case "maps":    await showMapsView(null, true); break;
       case "saved":   await showSavedView(true); break;
       case "notes":   showNotesView(true); break;
@@ -15241,6 +15687,7 @@ async function importLibraryMigrationFiles(event) {
       bmSearchNormCache.clear();
       bmBibleDataVersion.clear();
       clearXRayChapterCache();
+      resetStudyBibleCaches();
       insightMemCache = null;
       insightTitleIndexMap = null;
       resetInsightLookupCaches();
@@ -17497,6 +17944,13 @@ function onBmExitChoice(shouldExit, btnEl) {
       return false;
     };
 
+    // 0. Visualizzatore Fullscreen Immagini HD Studio (z-index 1380)
+    if (closeIfFlex("bmStudyLightbox", closeStudyImageLightbox)) {
+      bmHaptic(10);
+      armBmBackGuard(true);
+      return;
+    }
+
     // 1. Tendina Blu PRO (z-index 1350)
     if (closeIfFlex("bmSelectModal", closeBmSelectModal)) {
       bmHaptic(10);
@@ -17588,9 +18042,10 @@ function sortXRayBiblesHierarchy(biblesList) {
   };
 
   const tnmPriorityRank = (id) => {
-    if (id === "gb:bi12" || id === "gb:bi12_s" || id === "gb:bi12_e") return 1;
-    if (id === "gb:nwt"  || id === "gb:nwt_s"  || id === "gb:nwt_tpo" || id === "gb:nwt_e") return 2;
-    return 3;
+    if (id === "gb:nwtsty" || id === "gb:nwtsty_s" || id === "gb:nwtsty_tpo" || id === "gb:nwtsty_e") return 1;
+    if (id === "gb:bi12" || id === "gb:bi12_s" || id === "gb:bi12_e") return 2;
+    if (id === "gb:nwt"  || id === "gb:nwt_s"  || id === "gb:nwt_tpo" || id === "gb:nwt_e") return 3;
+    return 4;
   };
 
   return [...biblesList].sort((a, b) => {
@@ -18059,11 +18514,19 @@ async function openVerseXRayModal(forcedVerseNum) {
   const xrayFns = xrayFnMap[String(vNum)] || xrayFnMap[vNum] || [];
   const { refs, sourceLabel: xrayRefsLabel } = await buildDynamicCrossRefsForVerse(targetBookId, targetChapter, vNum, baseTextForDiff, xrayFns, xrayInsRefs);
   if (!isProModalSessionActive(sid)) return;
-  const xrayFnHtml = xrayFns.length ? `
+  const xrayStudyExtras = await fetchChapterStudyExtras(targetTrans, targetBookId, targetChapter, true);
+  if (!isProModalSessionActive(sid)) return;
+  const xraySNotes = (xrayStudyExtras && xrayStudyExtras.studyNotes && (xrayStudyExtras.studyNotes[String(vNum)] || xrayStudyExtras.studyNotes[vNum])) || [];
+  const xraySMedia = (xrayStudyExtras && xrayStudyExtras.media && (xrayStudyExtras.media[String(vNum)] || xrayStudyExtras.media[vNum])) || [];
+  const xrayStudyBtnHtml = (xraySNotes.length || xraySMedia.length) ? `
+    <button type="button" class="myread-action-btn" style="background:linear-gradient(135deg, #0d47a1, #1565c0); border-color:#00e5ff; margin-bottom:10px; font-size:13px; padding:8px 10px;" onclick="openStudyNoteModal(${vNum}, '${escapeJsStr(xrayStudyExtras.bibleId)}')">
+      🎓 Apri Note di Studio${xraySMedia.length ? ' & Media' : ''} (${escapeHtml(book.abbr)} ${targetChapter}:${vNum})
+    </button>` : "";
+  const xrayFnHtml = xrayStudyBtnHtml + (xrayFns.length ? `
     <div class="section-title"><span>📌 Note in Calce Ufficiali (${xrayFns.length})</span></div>
     <div style="margin-bottom:12px;">
       ${xrayFns.map((t, i) => `<div style="background:var(--bg-main); border-left:3px solid #ffd54f; border-radius:7px; padding:7px 10px; margin-bottom:6px; font-size:13px; line-height:1.5;"><b style="color:#ffd54f;">*${xrayFns.length > 1 ? i + 1 : ""}</b> ${formatNoteLinks(t, targetBookId)}</div>`).join("")}
-    </div>` : "";
+    </div>` : "");
   const xrayInsHtml = xrayInsRefs.length ? `
     <div class="section-title"><span>📚 Citato in Perspicacia (${xrayInsRefs.length} voci)</span></div>
     <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
@@ -19557,7 +20020,1169 @@ try {
 } catch (e) { console.debug(e); }
 try { initBmServiceWorker(); } catch (e) { console.debug(e); }
 populateSelects(false).catch(() => {});
-(async function bootInitialRoute() {
+(async 
+// ============================================================================
+// 🎓 MODULO BIBBIA PER LO STUDIO (nwtsty — Importatore Multi-ZIP/JSON,
+// Note di Studio, Riferimenti Marginali, 767 Documenti/Appendici, Immagini HD & Video JW.org)
+// ============================================================================
+const BM_STUDY_IMG_PREFIX = "bm:nwtsty_img:";
+let bmStudyDocsCache = { id: "", data: null };
+let bmStudyXrefsCache = { id: "", data: null };
+let bmStudyImgCache = new Map();
+let bmStudyMediaPool = [];
+let bmStudyDocsFilterCat = "all";
+let bmStudyDocsSearchQuery = "";
+let bmStudyDocsFilterBook = 0;
+let bmStudyDocsActiveBibleId = "gb:nwtsty";
+let bmStudyLbState = { scale: 1, minScale: 0.5, maxScale: 6, x: 0, y: 0, nw: 0, nh: 0, active: false, bound: false };
+
+function resetStudyBibleCaches() {
+  bmStudyDocsCache = { id: "", data: null };
+  bmStudyXrefsCache = { id: "", data: null };
+  bmStudyMediaPool = [];
+  bmStudyImgCache.forEach(url => {
+    try { if (typeof url === "string" && url.startsWith("blob:")) URL.revokeObjectURL(url); } catch (_e) {}
+  });
+  bmStudyImgCache.clear();
+}
+
+function registerStudyMediaPoolItem(item) {
+  if (bmStudyMediaPool.length > 300) bmStudyMediaPool = [];
+  bmStudyMediaPool.push(item);
+  return bmStudyMediaPool.length - 1;
+}
+
+function openStudyLightboxByPool(idx) {
+  const it = bmStudyMediaPool[Number(idx)];
+  if (!it) return;
+  openStudyImageLightbox(it.file, it.label, it.caption, it.credit);
+}
+
+function openStudyVideoByPool(idx) {
+  const it = bmStudyMediaPool[Number(idx)];
+  if (!it) return;
+  openStudyVideoOnline(it.video, it.label, it.wtLocale);
+}
+
+function getStudyBibleConfig(transId) {
+  return BM_STUDY_BIBLE_REGISTRY[transId] || BM_STUDY_BIBLE_REGISTRY["gb:nwtsty"];
+}
+
+function resolveStudyBibleIdForUi(preferredId = state.trans1) {
+  if (preferredId && BM_STUDY_BIBLE_REGISTRY[preferredId]) return preferredId;
+  const activeInstalled = (state.downloadedBibles || []).find(id => Boolean(BM_STUDY_BIBLE_REGISTRY[id]));
+  return activeInstalled || "gb:nwtsty";
+}
+
+function buildStudyMediaLookup(mediaArr) {
+  const map = {};
+  if (!Array.isArray(mediaArr)) return map;
+  mediaArr.forEach(m => {
+    if (!m || m.id === undefined || m.id === null) return;
+    map[String(m.id)] = {
+      id: m.id,
+      file: String(m.file || ""),
+      mime: String(m.mime || ""),
+      w: m.w || null,
+      h: m.h || null,
+      label: String(m.label || ""),
+      caption: String(m.caption || ""),
+      credit: String(m.credit || ""),
+      cat: typeof m.cat === "number" ? m.cat : 0
+    };
+  });
+  return map;
+}
+
+async function getStudyBibleDocsData(bibleId = resolveStudyBibleIdForUi()) {
+  if (bmStudyDocsCache.id === bibleId && bmStudyDocsCache.data) return bmStudyDocsCache.data;
+  const data = await idbGet(`bm:nwtsty_docs:${bibleId}`);
+  if (data && Array.isArray(data.documents)) {
+    bmStudyDocsCache = { id: bibleId, data };
+    return data;
+  }
+  return null;
+}
+
+async function getStudyBibleXrefsForKey(refKey) {
+  const bibleId = resolveStudyBibleIdForUi();
+  if (bmStudyXrefsCache.id !== bibleId) {
+    const data = await idbGet(`bm:nwtsty_xrefs:${bibleId}`);
+    bmStudyXrefsCache = { id: bibleId, data: (data && typeof data === "object") ? data : {} };
+  }
+  const arr = bmStudyXrefsCache.data ? bmStudyXrefsCache.data[refKey] : null;
+  return Array.isArray(arr) ? arr : [];
+}
+
+async function fetchChapterStudyExtras(transId, bookId, chapter, allowFallbackToInstalled = false) {
+  let targetId = BM_STUDY_BIBLE_REGISTRY[transId] ? transId : "";
+  if (!targetId && allowFallbackToInstalled) {
+    targetId = resolveStudyBibleIdForUi(transId);
+  }
+  if (!targetId) return null;
+  try {
+    const fullOffline = await getOfflineBible(targetId);
+    if (!fullOffline || !Array.isArray(fullOffline.books)) return null;
+    const bObj = fullOffline.books.find(b => Number(b.nr) === Number(bookId));
+    const cObj = bObj && Array.isArray(bObj.chapters)
+      ? bObj.chapters.find(c => Number(c.chapter) === Number(chapter))
+      : null;
+    if (!cObj) return { bibleId: targetId, isStudyBible: true, studyNotes: {}, marginal: {}, media: {}, mediaById: fullOffline.mediaById || {} };
+    return {
+      bibleId: targetId,
+      isStudyBible: true,
+      studyNotes: (cObj.studyNotes && typeof cObj.studyNotes === "object") ? cObj.studyNotes : {},
+      marginal: (cObj.marginal && typeof cObj.marginal === "object") ? cObj.marginal : {},
+      media: (cObj.media && typeof cObj.media === "object") ? cObj.media : {},
+      mediaById: (fullOffline.mediaById && typeof fullOffline.mediaById === "object") ? fullOffline.mediaById : {}
+    };
+  } catch (e) {
+    console.debug(e);
+    return null;
+  }
+}
+
+async function loadStudyImageDataUrl(fileName) {
+  const clean = String(fileName || "").trim();
+  if (!clean) return "";
+  if (bmStudyImgCache.has(clean)) return bmStudyImgCache.get(clean);
+  const rec = await idbGet(BM_STUDY_IMG_PREFIX + clean);
+  if (!rec || !rec.b64) return "";
+  const mime = rec.mime || (clean.toLowerCase().endsWith(".svg") ? "image/svg+xml" : "image/jpeg");
+  const url = `data:${mime};base64,${rec.b64}`;
+  if (bmStudyImgCache.size > 80) {
+    const firstKey = bmStudyImgCache.keys().next().value;
+    bmStudyImgCache.delete(firstKey);
+  }
+  bmStudyImgCache.set(clean, url);
+  return url;
+}
+
+async function hydrateStudyImagesInContainer(containerEl) {
+  if (!containerEl) return;
+  const imgs = Array.from(containerEl.querySelectorAll("img[data-study-img]"));
+  for (const img of imgs) {
+    if (!img.isConnected) continue;
+    const fname = img.getAttribute("data-study-img") || "";
+    if (!fname || img.getAttribute("data-study-loaded") === "1") continue;
+    const src = await loadStudyImageDataUrl(fname);
+    if (!img.isConnected) continue;
+    if (src) {
+      img.src = src;
+      img.setAttribute("data-study-loaded", "1");
+    } else {
+      img.alt = "Immagine non ancora importata (carica Parte 2 .zip)";
+      img.style.minHeight = "64px";
+    }
+  }
+}
+
+function buildStudyVideoJwUrl(videoSpec, wtLocale = "I") {
+  const loc = encodeURIComponent(String(wtLocale || "I").toUpperCase());
+  const raw = String(videoSpec || "").trim();
+  if (raw.startsWith("webpubvid://")) {
+    const qIdx = raw.indexOf("?");
+    const params = new URLSearchParams(qIdx >= 0 ? raw.slice(qIdx + 1) : "");
+    const docid = params.get("docid");
+    const pub = params.get("pub");
+    const track = params.get("track");
+    if (docid) {
+      return `https://www.jw.org/finder?wtlocale=${loc}&docid=${encodeURIComponent(docid)}`;
+    }
+    if (pub && track) {
+      const trNum = parseInt(track, 10);
+      const lank = `pub-${pub}_${Number.isFinite(trNum) ? trNum : track}_VIDEO`;
+      return `https://www.jw.org/finder?wtlocale=${loc}&lank=${encodeURIComponent(lank)}`;
+    }
+  }
+  const mPub = raw.match(/^([a-z0-9]+)_[A-Z]+_(\d+)_/i);
+  if (mPub) {
+    const firstPart = mPub[1];
+    if (/^\d{7,}$/.test(firstPart)) {
+      return `https://www.jw.org/finder?wtlocale=${loc}&docid=${encodeURIComponent(firstPart)}`;
+    }
+    const trNum = parseInt(mPub[2], 10);
+    const lank = `pub-${firstPart.toLowerCase()}_${Number.isFinite(trNum) ? trNum : mPub[2]}_VIDEO`;
+    return `https://www.jw.org/finder?wtlocale=${loc}&lank=${encodeURIComponent(lank)}`;
+  }
+  const mDoc = raw.match(/^(\d{7,})_/);
+  if (mDoc) {
+    return `https://www.jw.org/finder?wtlocale=${loc}&docid=${encodeURIComponent(mDoc[1])}`;
+  }
+  return `https://www.jw.org/finder?wtlocale=${loc}&pub=nwtsty`;
+}
+
+function openStudyVideoOnline(videoSpec, titleStr = "Video Bibbia per lo Studio", wtLocale = "I") {
+  bmHaptic(14);
+  if (navigator.onLine === false) {
+    showBlueInfoModal("📡 Connessione assente", "I video della Bibbia per lo Studio sono ospitati online su <b>JW.org</b> e richiedono una connessione a internet.");
+    return;
+  }
+  const url = buildStudyVideoJwUrl(videoSpec, wtLocale);
+  const safeUrl = escapeJsStr(url);
+  if (!openDialogModal(`
+    <div style="text-align:center; padding:4px 0 12px 0;">
+      <div style="font-size:32px; margin-bottom:6px;">🎬</div>
+      <div style="font-size:15.5px; font-weight:900; color:#ffd54f; margin-bottom:6px;">${escapeHtml(titleStr)}</div>
+      <div style="font-size:13px; color:#cfe3ff; line-height:1.48;">Questo video viene riprodotto direttamente online su <b>JW.org</b>.</div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#03a9f4; --btn-glow:rgba(3,169,244,0.65); background:#1565c0;" onclick="pubRefOpenApp('${safeUrl}')">${CHROME_LOGO_SVG}Guarda il video su JW.org ↗</button>
+      <button type="button" class="myread-action-btn" style="background:var(--bg-main);" onclick="closeMyReadModal()">Chiudi</button>
+    </div>
+  `)) {
+    pubRefOpenApp(url);
+  }
+}
+
+function resolveDeduplicatedVerseMedia(mediaIds, mediaById) {
+  const raw = (Array.isArray(mediaIds) ? mediaIds : [])
+    .map(id => mediaById[String(id)])
+    .filter(Boolean);
+  const videos = [];
+  const fullImages = [];
+  const squareThumbs = [];
+  raw.forEach(m => {
+    if (m.mime === "video/mp4") videos.push({ ...m, thumbFile: "" });
+    else if (m.cat === 10 || /_sqs\./i.test(m.file)) squareThumbs.push(m);
+    else if (m.mime && m.mime.startsWith("image/")) fullImages.push(m);
+  });
+  const usedThumbs = new Set();
+  videos.forEach(v => {
+    const normL = String(v.label || "").replace(/\.$/, "").trim().toLowerCase();
+    const matchIdx = squareThumbs.findIndex((th, idx) => !usedThumbs.has(idx) && String(th.label || "").replace(/\.$/, "").trim().toLowerCase() === normL);
+    if (matchIdx > -1) {
+      v.thumbFile = squareThumbs[matchIdx].file;
+      usedThumbs.add(matchIdx);
+    }
+  });
+  const fullPrefixes = new Set(fullImages.map(im => String(im.file || "").split("_")[0]).filter(Boolean));
+  const fullLabels = new Set(fullImages.map(im => String(im.label || "").trim().toLowerCase()).filter(Boolean));
+  squareThumbs.forEach((th, idx) => {
+    if (usedThumbs.has(idx)) return;
+    const pref = String(th.file || "").split("_")[0];
+    const lbl = String(th.label || "").trim().toLowerCase();
+    if ((pref && fullPrefixes.has(pref)) || (lbl && fullLabels.has(lbl))) return;
+    fullImages.push(th);
+  });
+  return { videos, images: fullImages };
+}
+
+function formatStudyNoteTextHtml(noteObj, bookId) {
+  const head = String((noteObj && noteObj.head) || "").trim();
+  const fullText = String((noteObj && noteObj.text) || "").trim();
+  if (!fullText) return "";
+  const paras = fullText.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
+  const lemmaCueRe = /^(.{2,78}?)\s+(?=(?:O\s+[“"]|Lett\.|In\s+(?:greco|ebraico|aramaico|questa|questo|molti|altri|senso|passato)|Nell['’]|Nella\s|Nelle\s|Nei\s|Nel\s|Questo\s|Questa\s|Queste\s|Questi\s|Vedi\s|Cioè\s|Corrisponde\s|Anche\s|Dato\s|Qui\s|A\s+partire|Come\s|Sembra\s|Nome\s|Espressione\s|Termine\s|Parola\s|Titolo\s|Il\s+|La\s+|Lo\s+|Le\s+|Gli\s+|L['’]|Un\s+|Una\s+|Uno\s+|I\s+|Matteo\s|Marco\s|Luca\s|Giovanni\s|Paolo\s|Pietro\s|Gesù\s|Geova\s|Dio\s|Presso\s|Quando\s|Prima\s|Dopo\s|Durante\s|Secondo\s|Spesso\s|Alcuni\s|Alcune\s|Molti\s|Molte\s|All['’]|Al\s|Per\s|Tra\s|Fra\s|Con\s|Senza\s|Fu\s|Era\s|Sono\s|Si\s|Non\s|Letteralmente|In\s+base|Dal\s|Dalla\s|Dai\s|Da\s|Avendo\s|Riferito\s|Usato\s|Indica\s|Significa\s))/;
+  return paras.map((para, idx) => {
+    let lead = "";
+    let rest = para;
+    if (idx === 0 && head && para.startsWith(head + " ")) {
+      lead = head;
+      rest = para.slice(head.length + 1);
+    } else {
+      const m = para.match(lemmaCueRe);
+      if (m && m[1] && !/[.!?]$/.test(m[1])) {
+        lead = m[1];
+        rest = para.slice(m[1].length + 1);
+      }
+    }
+    const leadHtml = lead ? `<span class="bm-study-lemma">${escapeHtml(lead)}</span> ` : "";
+    return `<div class="bm-study-note-card bm-justify-text">${leadHtml}${formatNoteLinks(rest, bookId)}</div>`;
+  }).join("");
+}
+
+// ============================================================================
+// IMPORTATORE MULTI-ZIP / MULTI-JSON PER TNM EDIZIONE PER LO STUDIO (nwtsty)
+// ============================================================================
+async function importStudyBibleArchive(event, targetId = "gb:nwtsty") {
+  const inputEl = event.target;
+  const files = Array.from((inputEl && inputEl.files) || []);
+  if (!files.length) return;
+  const statusEl = getActiveEpubStatusEl();
+  const setStatus = (msg) => { if (statusEl) statusEl.innerHTML = msg; };
+  const cfg = getStudyBibleConfig(targetId);
+
+  if (typeof JSZip === "undefined" && files.some(f => /\.zip$/i.test(f.name))) {
+    inputEl.value = "";
+    showBlueInfoModal("⚠️ Modulo Mancante", "Modulo locale jszip.min.js non trovato nella cartella dell'app.");
+    return;
+  }
+
+  let savedApp = false;
+  let savedImagesThisRun = 0;
+  let savedMediaPartsThisRun = [];
+  let appStats = null;
+  const prevStatus = (await idbGet(`bm:nwtsty_status:${targetId}`)) || {
+    hasApp: false, verseCount: 0, studyNotesCount: 0, docsCount: 0, xrefsCount: 0, imgCount: 0, imgTotal: 744, mediaParts: []
+  };
+
+  const ingestAppJsonObj = async (appObj) => {
+    if (!appObj || !Array.isArray(appObj.books) || appObj.books.length === 0) {
+      throw new Error("Il file app.json non contiene libri biblici validi.");
+    }
+    setStatus("💾 Salvataggio 66 libri, note di studio, note in calce e sommari...");
+    const mediaById = buildStudyMediaLookup(appObj.media);
+    let verseCount = 0;
+    let studyNotesCount = 0;
+    const cleanBooks = appObj.books.map(b => {
+      const chs = Array.isArray(b.chapters) ? b.chapters.map(c => {
+        if (Array.isArray(c.verses)) verseCount += c.verses.length;
+        if (c.studyNotes && typeof c.studyNotes === "object") {
+          Object.values(c.studyNotes).forEach(arr => { if (Array.isArray(arr)) studyNotesCount += arr.length; });
+        }
+        const outCh = {
+          chapter: Number(c.chapter),
+          verses: Array.isArray(c.verses) ? c.verses : []
+        };
+        if (c.footnotes && Object.keys(c.footnotes).length) outCh.footnotes = c.footnotes;
+        if (Array.isArray(c.outline) && c.outline.length) outCh.outline = c.outline;
+        if (Array.isArray(c.overview) && c.overview.length) outCh.overview = c.overview;
+        if (c.studyNotes && Object.keys(c.studyNotes).length) outCh.studyNotes = c.studyNotes;
+        if (c.marginal && Object.keys(c.marginal).length) outCh.marginal = c.marginal;
+        if (c.media && Object.keys(c.media).length) outCh.media = c.media;
+        return outCh;
+      }) : [];
+      return { nr: Number(b.nr), name: String(b.name || getBook(b.nr).name), chapters: chs };
+    });
+
+    const biblePayload = {
+      format: appObj.format || "bm-nwtsty-app/1",
+      id: targetId,
+      name: appObj.name || cfg.name,
+      title: appObj.title || cfg.name,
+      updated: Date.now(),
+      books: cleanBooks,
+      mediaById
+    };
+    await saveOfflineBible(targetId, biblePayload);
+
+    const docsArr = Array.isArray(appObj.documents) ? appObj.documents : [];
+    if (docsArr.length > 0) {
+      setStatus(`💾 Salvataggio ${docsArr.length} documenti, introduzioni e appendici...`);
+      await idbPut(`bm:nwtsty_docs:${targetId}`, {
+        updated: Date.now(),
+        bibleId: targetId,
+        wtLocale: cfg.wtLocale,
+        title: appObj.title || cfg.name,
+        documents: docsArr,
+        mediaById
+      });
+    }
+
+    const xrefsObj = (appObj.xrefs && typeof appObj.xrefs === "object" && !Array.isArray(appObj.xrefs)) ? appObj.xrefs : {};
+    const xrefsCount = Object.keys(xrefsObj).length;
+    if (xrefsCount > 0) {
+      setStatus(`💾 Salvataggio riferimenti marginali (${xrefsCount.toLocaleString("it-IT")} versetti)...`);
+      await idbPut(`bm:nwtsty_xrefs:${targetId}`, xrefsObj);
+    }
+
+    const uniqueImgCount = new Set(
+      (appObj.media || []).filter(m => m && m.mime && m.mime.startsWith("image/") && m.file).map(m => m.file)
+    ).size;
+
+    savedApp = true;
+    appStats = {
+      verseCount,
+      studyNotesCount,
+      docsCount: docsArr.length,
+      xrefsCount,
+      imgTotal: uniqueImgCount || prevStatus.imgTotal || 744
+    };
+  };
+
+  const ingestMediaJsonObj = async (mediaObj, partLabel) => {
+    const filesMap = (mediaObj && mediaObj.files && typeof mediaObj.files === "object") ? mediaObj.files : null;
+    if (!filesMap) return 0;
+    const names = Object.keys(filesMap);
+    let saved = 0;
+    for (let i = 0; i < names.length; i++) {
+      const fname = names[i];
+      const entry = filesMap[fname];
+      if (!entry || typeof entry.b64 !== "string" || !entry.b64) continue;
+      await idbPut(BM_STUDY_IMG_PREFIX + fname, {
+        mime: entry.mime || (fname.toLowerCase().endsWith(".svg") ? "image/svg+xml" : "image/jpeg"),
+        b64: entry.b64
+      });
+      saved++;
+      if (i % 15 === 0 || i === names.length - 1) {
+        setStatus(`🖼️ Salvataggio immagini <b>${escapeHtml(partLabel)}</b>: ${i + 1}/${names.length}...`);
+        await new Promise(r => setTimeout(r, 0));
+      }
+    }
+    return saved;
+  };
+
+  try {
+    for (let fIdx = 0; fIdx < files.length; fIdx++) {
+      const file = files[fIdx];
+      const lowerName = String(file.name || "").toLowerCase();
+      setStatus(`⏳ Lettura file ${fIdx + 1}/${files.length}: <b>${escapeHtml(file.name)}</b>...`);
+
+      if (lowerName.endsWith(".json")) {
+        const parsed = JSON.parse(await file.text());
+        if (parsed && Array.isArray(parsed.books)) {
+          await ingestAppJsonObj(parsed);
+        } else if (parsed && parsed.files && typeof parsed.files === "object") {
+          const n = await ingestMediaJsonObj(parsed, file.name);
+          savedImagesThisRun += n;
+          savedMediaPartsThisRun.push(file.name);
+        }
+        continue;
+      }
+
+      const zip = await JSZip.loadAsync(file);
+      const entryNames = Object.keys(zip.files).filter(k => !zip.files[k].dir);
+      const appEntry = entryNames.find(k => /(^|\/)app\.json$/i.test(k));
+      const mediaEntries = entryNames
+        .filter(k => /(^|\/)media\/media_\d+\.json$/i.test(k) || /(^|\/)media_\d+\.json$/i.test(k))
+        .sort();
+
+      if (!appEntry && mediaEntries.length === 0) {
+        throw new Error(`Nessun app.json o pacchetto media trovato in ${file.name}.`);
+      }
+
+      if (appEntry) {
+        setStatus(`⏳ Estrazione <b>app.json</b> da ${escapeHtml(file.name)}...`);
+        const rawApp = await zip.files[appEntry].async("string");
+        const parsedApp = JSON.parse(rawApp);
+        await ingestAppJsonObj(parsedApp);
+      }
+
+      for (let mIdx = 0; mIdx < mediaEntries.length; mIdx++) {
+        const mPath = mediaEntries[mIdx];
+        const shortName = mPath.split("/").pop();
+        setStatus(`📦 Estrazione <b>${escapeHtml(shortName)}</b> (${mIdx + 1}/${mediaEntries.length})...`);
+        const rawMedia = await zip.files[mPath].async("string");
+        const parsedMedia = JSON.parse(rawMedia);
+        const n = await ingestMediaJsonObj(parsedMedia, shortName);
+        savedImagesThisRun += n;
+        savedMediaPartsThisRun.push(shortName);
+      }
+    }
+
+    if (!savedApp && savedImagesThisRun === 0) {
+      throw new Error("Nessun dato compatibile TNM Studio trovato nei file selezionati.");
+    }
+
+    const allKeysNow = await idbGetAllKeys();
+    const totalImgNow = allKeysNow.filter(k => k.startsWith(BM_STUDY_IMG_PREFIX)).length;
+    const nextStatus = {
+      updated: Date.now(),
+      hasApp: prevStatus.hasApp || savedApp,
+      verseCount: appStats ? appStats.verseCount : prevStatus.verseCount,
+      studyNotesCount: appStats ? appStats.studyNotesCount : prevStatus.studyNotesCount,
+      docsCount: appStats ? appStats.docsCount : prevStatus.docsCount,
+      xrefsCount: appStats ? appStats.xrefsCount : prevStatus.xrefsCount,
+      imgCount: totalImgNow,
+      imgTotal: appStats ? appStats.imgTotal : (prevStatus.imgTotal || 744),
+      mediaParts: [...new Set([...(prevStatus.mediaParts || []), ...savedMediaPartsThisRun])].sort()
+    };
+    await idbPut(`bm:nwtsty_status:${targetId}`, nextStatus);
+
+    if (savedApp) {
+      if (!state.downloadedBibles.includes(targetId)) {
+        state.downloadedBibles.unshift(targetId);
+        safeSaveStorage("bm_v10_pro_bibles", JSON.stringify(state.downloadedBibles));
+      }
+      state.trans1 = targetId;
+      safeSaveStorage("bm_trans1", targetId);
+    }
+
+    resetStudyBibleCaches();
+    clearAllSearchViewCaches();
+    try { await idbDelete("bm:messianic_enriched_v1"); } catch (e) { console.debug(e); }
+    await populateSelects();
+    await refreshActiveViewAfterDataChange();
+
+    const missingImg = Math.max(0, (nextStatus.imgTotal || 744) - totalImgNow);
+    const tailHint = missingImg > 0
+      ? `<br>📌 Immagini offline: <b>${totalImgNow}/${nextStatus.imgTotal}</b> — carica ora anche <b>Parte 2 (.zip)</b> per completare le restanti ${missingImg} immagini!`
+      : `<br>🏆 Archivio completo al 100%: <b>${totalImgNow}/${nextStatus.imgTotal} immagini e mappe HD</b> pronte offline!`;
+
+    setStatus(
+      `✔ <b>TNM Studio salvata!</b>` +
+      (savedApp ? ` ${nextStatus.verseCount.toLocaleString("it-IT")} versetti · ${nextStatus.studyNotesCount.toLocaleString("it-IT")} note di studio · ${nextStatus.docsCount} documenti` : ` +${savedImagesThisRun} immagini aggiunte`) +
+      tailHint
+    );
+    bmChimeHaptic();
+  } catch (err) {
+    setStatus(`❌ Errore importazione TNM Studio: ${escapeHtml(err && err.message ? err.message : String(err))}`);
+  } finally {
+    if (inputEl) inputEl.value = "";
+  }
+}
+
+// ============================================================================
+// PANNELLO A: NOTE DI STUDIO DEL VERSETTO, RIFERIMENTI MARGINALI, IMMAGINI & VIDEO
+// ============================================================================
+async function openStudyNoteModal(verseNum, forcedBibleId = null) {
+  const sid = ++proModalSessionId;
+  bmHaptic(14);
+  const vNum = Math.max(1, Number(verseNum) || state.selectedVerse || 1);
+  const targetBookId = state.bookId;
+  const targetChapter = state.chapter;
+  const bibleId = forcedBibleId || resolveStudyBibleIdForUi(state.trans1);
+  const cfg = getStudyBibleConfig(bibleId);
+  const book = getBook(targetBookId);
+  const refStr = `${book.name} ${targetChapter}:${vNum}`;
+
+  const modalEl = document.getElementById("proModal");
+  const titleEl = document.getElementById("proModalTitle");
+  const bodyEl = document.getElementById("proModalBody");
+  if (titleEl) titleEl.textContent = `🎓 Studio: ${refStr}`;
+  if (bodyEl) bodyEl.innerHTML = `<div class="loader">🎓 Caricamento note di studio, media e riferimenti di <b>${escapeHtml(refStr)}</b>...</div>`;
+  if (modalEl) modalEl.style.display = "flex";
+
+  const [extras, footnotesMap] = await Promise.all([
+    fetchChapterStudyExtras(bibleId, targetBookId, targetChapter, true),
+    fetchChapterFootnotes(bibleId, targetBookId, targetChapter).catch(() => ({}))
+  ]);
+  if (!isProModalSessionActive(sid)) return;
+
+  if (!extras) {
+    if (bodyEl) bodyEl.innerHTML = `<div class="loader">Nessun dato TNM Studio trovato. Importa <b>nwtsty_I_parte1.zip</b> e <b>parte2.zip</b> da ⚙️ ➔ Moduli.</div>`;
+    return;
+  }
+
+  const studyVerseSet = new Set();
+  Object.keys(extras.studyNotes || {}).forEach(k => { if (Number(k) > 0) studyVerseSet.add(Number(k)); });
+  Object.keys(extras.media || {}).forEach(k => { if (Number(k) > 0) studyVerseSet.add(Number(k)); });
+  const navVerses = [...studyVerseSet].sort((a, b) => a - b);
+  const curIdx = navVerses.indexOf(vNum);
+  const prevV = curIdx > 0 ? navVerses[curIdx - 1] : (navVerses.filter(n => n < vNum).pop() || 0);
+  const nextV = (curIdx >= 0 && curIdx < navVerses.length - 1) ? navVerses[curIdx + 1] : (navVerses.find(n => n > vNum) || 0);
+
+  const vKey = String(vNum);
+  const sNotes = extras.studyNotes[vKey] || extras.studyNotes[vNum] || [];
+  const sMarginal = extras.marginal[vKey] || extras.marginal[vNum] || [];
+  const sMediaIds = extras.media[vKey] || extras.media[vNum] || [];
+  const vFootnotes = footnotesMap[vKey] || footnotesMap[vNum] || [];
+  const { videos, images } = resolveDeduplicatedVerseMedia(sMediaIds, extras.mediaById || {});
+
+  const domRow = document.getElementById(`v_${vNum}`);
+  const versePlain = domRow ? (domRow.getAttribute("data-text") || "") : "";
+
+  const notesHtml = sNotes.length
+    ? `<div class="section-title"><span>🎓 Note di Studio (${sNotes.length})</span><button type="button" class="nav-btn" style="padding:2px 8px; font-size:11.5px;" onclick="speakStudyNotesForCurrentModal()">🔊 Ascolta</button></div>` +
+      sNotes.map(n => formatStudyNoteTextHtml(n, targetBookId)).join("")
+    : "";
+
+  const fnHtml = vFootnotes.length
+    ? `<div class="section-title"><span>📌 Note in Calce (${vFootnotes.length})</span></div>` +
+      vFootnotes.map((t, i) => `<div style="background:var(--bg-main); border-left:3px solid #ffd54f; border-radius:7px; padding:7px 10px; margin-bottom:6px; font-size:13px; line-height:1.5;"><b style="color:#ffd54f;">*${vFootnotes.length > 1 ? i + 1 : ""}</b> ${formatNoteLinks(t, targetBookId)}</div>`).join("")
+    : "";
+
+  const marginalHtml = sMarginal.length
+    ? `<div class="section-title"><span>🔗 Riferimenti Marginali (${sMarginal.reduce((a, g) => a + (g.refs ? g.refs.length : 0), 0)})</span></div>
+       <div style="background:var(--bg-main); border:1px solid rgba(41,182,246,0.4); border-radius:9px; padding:8px 9px; margin-bottom:12px;">
+         ${sMarginal.map(g => `
+           <div class="bm-study-marginal-row">
+             <span class="bm-study-marginal-mark">${escapeHtml(g.mark || "•")}</span>
+             <div style="display:flex; flex-wrap:wrap; gap:4px; flex:1;">
+               ${(g.refs || []).map(r => `<span class="tag-badge" style="font-size:12px; padding:3px 8px;" onclick="closeProModal(); jumpToRefString('${escapeJsStr(r)}')">📖 ${escapeHtml(r)}</span>`).join("")}
+             </div>
+           </div>`).join("")}
+       </div>`
+    : "";
+
+  const imagesHtml = images.length
+    ? `<div class="section-title"><span>🖼️ Galleria Immagini & Mappe (${images.length})</span></div>
+       <div class="bm-study-media-grid">
+         ${images.map(im => {
+           const isSvg = im.mime === "image/svg+xml" || /\.svg$/i.test(im.file);
+           const poolIdx = registerStudyMediaPoolItem({ file: im.file, label: im.label, caption: im.caption, credit: im.credit });
+           return `
+             <div class="bm-study-media-card" onclick="openStudyLightboxByPool(${poolIdx})">
+               <img class="bm-study-media-thumb${isSvg ? ' is-svg' : ''}" data-study-img="${escapeHtml(im.file)}" alt="${escapeHtml(im.label)}">
+               <div class="bm-study-media-cap">${escapeHtml(im.label || im.file)}</div>
+             </div>`;
+         }).join("")}
+       </div>`
+    : "";
+
+  const videosHtml = videos.length
+    ? `<div class="section-title"><span>🎬 Video Correlati (${videos.length})</span></div>` +
+      videos.map(v => {
+        const poolIdx = registerStudyMediaPoolItem({ video: v.file, label: v.label, wtLocale: cfg.wtLocale });
+        return `
+        <div class="bm-study-video-card">
+          <div class="bm-study-video-thumb-wrap" onclick="openStudyVideoByPool(${poolIdx})">
+            ${v.thumbFile ? `<img data-study-img="${escapeHtml(v.thumbFile)}" alt="${escapeHtml(v.label)}">` : ""}
+            <span class="bm-study-video-play-pill">▶ Guarda su JW.org ↗</span>
+          </div>
+          <div style="padding:9px 11px;">
+            <div style="font-size:13.5px; font-weight:900; color:#84ffff; margin-bottom:${v.caption ? '5px' : '0'};">${escapeHtml(v.label)}</div>
+            ${v.caption ? `<div class="bm-justify-text" style="font-size:12.5px; color:var(--text-muted); line-height:1.48;">${formatNoteLinks(v.caption, targetBookId)}</div>` : ""}
+          </div>
+        </div>`;
+      }).join("")
+    : "";
+
+  window.__bmLastStudyModalSpeech = sNotes.map(n => n.text).join(" ");
+
+  if (bodyEl) {
+    bodyEl.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:10px; background:var(--primary-dark); padding:7px 9px; border-radius:10px; border:1px solid rgba(41,182,246,0.45);">
+        <button type="button" class="nav-btn" style="padding:5px 9px; ${prevV ? '' : 'opacity:0.42; pointer-events:none;'}" onclick="${prevV ? `openStudyNoteModal(${prevV}, '${escapeJsStr(bibleId)}')` : ''}">◀ ${prevV ? `v.${prevV}` : 'Inizio'}</button>
+        <span style="font-size:13.5px; font-weight:900; color:#ffd54f;">🎓 ${escapeHtml(book.abbr)} ${targetChapter}:${vNum}</span>
+        <button type="button" class="nav-btn" style="padding:5px 9px; ${nextV ? '' : 'opacity:0.42; pointer-events:none;'}" onclick="${nextV ? `openStudyNoteModal(${nextV}, '${escapeJsStr(bibleId)}')` : ''}">${nextV ? `v.${nextV}` : 'Fine'} ▶</button>
+      </div>
+      ${versePlain ? `<div class="bm-justify-text" style="font-size:13px; color:var(--text-muted); font-style:italic; margin-bottom:10px; border-left:3px solid var(--primary-light); padding-left:8px;">"${escapeHtml(versePlain)}"</div>` : ""}
+      ${notesHtml}
+      ${videosHtml}
+      ${imagesHtml}
+      ${marginalHtml}
+      ${fnHtml}
+      ${(!notesHtml && !videosHtml && !imagesHtml && !marginalHtml && !fnHtml) ? `<div class="loader">Nessuna nota di studio o media associato a <b>${escapeHtml(refStr)}</b>.</div>` : ""}
+      <div style="display:flex; gap:8px; margin-top:10px;">
+        <button type="button" class="myread-action-btn" style="flex:1; background:#1565c0; font-size:13px; padding:9px;" onclick="closeProModal(); openStudyDocsForBook(${targetBookId}, ${targetChapter});">📚 Documenti ${escapeHtml(book.abbr)}</button>
+        <button type="button" class="myread-action-btn" style="flex:0.7; background:var(--bg-main); font-size:13px; padding:9px;" onclick="closeProModal()">Chiudi</button>
+      </div>
+    `;
+    hydrateStudyImagesInContainer(bodyEl);
+  }
+}
+
+function speakStudyNotesForCurrentModal() {
+  const txt = String(window.__bmLastStudyModalSpeech || "").trim();
+  if (!txt) return;
+  bmHaptic(12);
+  startUniversalSpeech(txt, true, false);
+}
+
+// ============================================================================
+// PANNELLO B: HUB DOCUMENTI, INTRODUZIONI, 20 DOMANDE & APPENDICI (767 DOCS)
+// ============================================================================
+function classifyStudyDocument(doc) {
+  const cls = String(doc && doc.class !== undefined ? doc.class : "");
+  if (cls === "11" || cls === "18" || cls === "39" || cls === "12" || cls === "121") return "intro";
+  if (cls === "113" || cls === "114" || cls === "115" || cls === "1") return "books";
+  if (cls === "14" || cls === "125") return "appendices";
+  if (cls === "122") return "media";
+  if (cls === "118") return "chapters";
+  return "intro";
+}
+
+function openStudyDocsForBook(bookId, chapter = 0) {
+  bmHaptic(14);
+  bmStudyDocsFilterBook = Number(bookId) || 0;
+  bmStudyDocsFilterCat = bmStudyDocsFilterBook > 0 ? "book_current" : "all";
+  bmStudyDocsSearchQuery = "";
+  showStudyDocsView(null, false);
+}
+
+async function showStudyDocsView(selectedDocId = null, fromBack = false) {
+  const reqId = ++currentViewReqId;
+  if (!fromBack && (currentViewContext.type !== "study_docs" || (selectedDocId !== null && currentViewContext.docId !== selectedDocId))) {
+    saveCurrentPositionToHistory();
+  }
+  closeActionBar();
+  stopAllAudio();
+  clearSpeechContext();
+  bmStudyDocsActiveBibleId = resolveStudyBibleIdForUi(state.trans1);
+  currentViewContext = { type: "study_docs", docId: selectedDocId, label: "🎓 Studio" };
+  setActiveTab("", "studyDocsTabBtn");
+  const main = document.getElementById("mainContainer");
+
+  const data = await getStudyBibleDocsData(bmStudyDocsActiveBibleId);
+  if (reqId !== currentViewReqId) return;
+
+  if (!data || !Array.isArray(data.documents) || data.documents.length === 0) {
+    main.innerHTML = `
+      <div class="section-title">
+        <span>🎓 Bibbia per lo Studio — Documenti, Appendici & Media</span>
+        <span>${getBackBtnHtml()}</span>
+      </div>
+      <div class="result-card" style="cursor:default; padding:16px; text-align:center;">
+        <div style="font-size:32px; margin-bottom:8px;">🎓</div>
+        <div style="font-size:15.5px; font-weight:900; color:#84ffff; margin-bottom:6px;">TNM Edizione per lo Studio Offline</div>
+        <div style="font-size:13px; color:var(--text-muted); line-height:1.5; margin-bottom:12px;">
+          Importa <b>nwtsty_I_parte1.zip</b> e <b>nwtsty_I_parte2.zip</b> (insieme o uno alla volta) per sbloccare offline tutti i 66 libri, 3.729 note di studio, 767 documenti/appendici e 744 immagini & mappe HD:
+        </div>
+        <div class="epub-import-status bm-backup-status-sticky" role="status" aria-live="polite"></div>
+        <label class="search-btn" style="display:block; text-align:center; padding:11px; cursor:pointer; background:linear-gradient(135deg, #0d47a1, #1565c0); margin-bottom:8px;">
+          🎓 Carica TNM Studio (.zip Parte 1/2 o .json)
+          <input type="file" accept=".zip,.json,application/zip,application/json" multiple style="display:none;" onchange="importStudyBibleArchive(event, 'gb:nwtsty')">
+        </label>
+        <button type="button" class="nav-btn" style="width:100%;" onclick="openBibleTabFromMenu()">📖 Torna alla Bibbia</button>
+      </div>`;
+    syncBmPaperMode(true);
+    return;
+  }
+
+  if (selectedDocId !== null && selectedDocId !== undefined) {
+    const doc = data.documents.find(d => Number(d.id) === Number(selectedDocId));
+    if (doc) {
+      await renderStudyDocReader(doc, data, reqId);
+      return;
+    }
+  }
+
+  const statusObj = await idbGet(`bm:nwtsty_status:${bmStudyDocsActiveBibleId}`);
+  if (reqId !== currentViewReqId) return;
+  const imgInfo = statusObj && typeof statusObj.imgCount === "number"
+    ? `🖼️ ${statusObj.imgCount}/${statusObj.imgTotal || 744} immagini offline`
+    : "";
+  const curBook = getBook(bmStudyDocsFilterBook || state.bookId);
+
+  const cats = [
+    { id: "all", label: `Tutti (${data.documents.length})` },
+    { id: "book_current", label: `📖 ${curBook.abbr}` },
+    { id: "intro", label: "❓ Intro & 20 Domande" },
+    { id: "appendices", label: "📑 Appendici A/B/C" },
+    { id: "books", label: "📚 66 Libri" },
+    { id: "media", label: "🖼️ Galleria & Temi" },
+    { id: "chapters", label: "🎓 Approf. Capitoli" }
+  ];
+
+  main.innerHTML = `
+    <div class="chapter-header" style="flex-wrap:wrap; gap:8px;">
+      <div class="chapter-title">🎓 Bibbia per lo Studio</div>
+      <div class="chapter-nav-btns">
+        ${getBackBtnHtml()}
+        <button type="button" class="nav-btn" onclick="openBackupModal()" title="Importa Parte 2 o aggiorna archivio Studio">📥 Importa</button>
+      </div>
+    </div>
+    ${imgInfo ? `<div style="font-size:12px; color:var(--text-muted); margin:-4px 0 8px 0; display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px;"><span>${imgInfo}</span><span>${data.documents.length} documenti</span></div>` : ""}
+    <div class="search-box" style="margin-bottom:8px;">
+      <input type="search" id="bmStudyDocsSearchInput" class="search-input" placeholder="🔍 Cerca appendici, domande, cartine, temi, approfondimenti..." value="${escapeHtml(bmStudyDocsSearchQuery)}" oninput="onStudyDocsSearchInput(this.value)">
+    </div>
+    <div id="bmStudyDocsCatBar" class="bm-study-doc-cat-bar">
+      ${cats.map(c => `<button type="button" class="bm-study-doc-cat-btn${bmStudyDocsFilterCat === c.id ? ' active' : ''}" data-cat="${c.id}" onclick="setStudyDocsFilterCat('${c.id}')">${escapeHtml(c.label)}</button>`).join("")}
+    </div>
+    <div id="bmStudyDocsList"></div>
+  `;
+  setHeaderCenterPill("🎓 Studio", "study_docs");
+  renderStudyDocsFilteredList(data);
+  syncBmPaperMode(true);
+  main.scrollTop = 0;
+}
+
+function setStudyDocsFilterCat(catId) {
+  bmHaptic(10);
+  bmStudyDocsFilterCat = catId || "all";
+  if (catId === "book_current" && !bmStudyDocsFilterBook) bmStudyDocsFilterBook = state.bookId;
+  const bar = document.getElementById("bmStudyDocsCatBar");
+  if (bar) {
+    bar.querySelectorAll(".bm-study-doc-cat-btn").forEach(btn => {
+      btn.classList.toggle("active", btn.getAttribute("data-cat") === bmStudyDocsFilterCat);
+    });
+  }
+  getStudyBibleDocsData(bmStudyDocsActiveBibleId).then(d => { if (d) renderStudyDocsFilteredList(d); });
+}
+
+function onStudyDocsSearchInput(val) {
+  bmStudyDocsSearchQuery = String(val || "");
+  getStudyBibleDocsData(bmStudyDocsActiveBibleId).then(d => { if (d) renderStudyDocsFilteredList(d); });
+}
+
+function renderStudyDocsFilteredList(data) {
+  const listEl = document.getElementById("bmStudyDocsList");
+  if (!listEl || !data || !Array.isArray(data.documents)) return;
+  const qNorm = normalizeForSearch(bmStudyDocsSearchQuery.trim());
+  const targetBook = Number(bmStudyDocsFilterBook || state.bookId);
+  const bookMeta = getBook(targetBook);
+  const bookNameNorm = normalizeForSearch(bookMeta.name);
+
+  const catIcons = { intro: "❓", books: "📚", appendices: "📑", media: "🖼️", chapters: "🎓" };
+  const catNames = { intro: "Introduzione", books: "Libro Biblico", appendices: "Appendice", media: "Galleria & Temi", chapters: "Approfondimenti" };
+
+  const filtered = data.documents.filter(d => {
+    if (!d || !d.title) return false;
+    const cat = classifyStudyDocument(d);
+    if (bmStudyDocsFilterCat === "book_current") {
+      const matchCh = Number(d.chapter) === targetBook;
+      const matchTitle = normalizeForSearch(d.title).includes(bookNameNorm);
+      if (!matchCh && !matchTitle) return false;
+    } else if (bmStudyDocsFilterCat !== "all" && cat !== bmStudyDocsFilterCat) {
+      return false;
+    }
+    if (!qNorm) return true;
+    if (normalizeForSearch(d.title).includes(qNorm)) return true;
+    const paras = Array.isArray(d.paragraphs) ? d.paragraphs : [];
+    for (let i = 0; i < Math.min(paras.length, 25); i++) {
+      const t = paras[i] && paras[i].t ? paras[i].t : "";
+      if (t && normalizeForSearch(t).includes(qNorm)) return true;
+    }
+    return false;
+  });
+
+  const shown = filtered.slice(0, 160);
+  if (!shown.length) {
+    listEl.innerHTML = `<div class="loader">Nessun documento trovato per questa ricerca o categoria.</div>`;
+    return;
+  }
+
+  listEl.innerHTML = shown.map(d => {
+    const cat = classifyStudyDocument(d);
+    const hasMedia = Array.isArray(d.media) && d.media.length > 0;
+    const hasVid = Array.isArray(d.paragraphs) && d.paragraphs.some(p => p && p.c === "video");
+    const badges = [
+      catNames[cat] || "Studio",
+      hasMedia ? `${d.media.length} media` : "",
+      hasVid ? "🎬 Video" : ""
+    ].filter(Boolean).join(" · ");
+    return `
+      <div class="result-card" onclick="showStudyDocsView(${Number(d.id)}, false)">
+        <div class="result-ref">${catIcons[cat] || "🎓"} ${escapeHtml(d.title)}</div>
+        <div style="font-size:11.5px; color:var(--text-muted);">${escapeHtml(badges)}</div>
+      </div>`;
+  }).join("") + (filtered.length > shown.length ? `<div style="text-align:center; font-size:12px; color:var(--text-muted); padding:8px;">Mostrati ${shown.length} di ${filtered.length} documenti — usa la barra di ricerca per affinare.</div>` : "");
+}
+
+function renderStudyTableHtml(rows, bookId) {
+  if (!rows.length) return "";
+  const parseCells = (txt) => String(txt || "").split(/\s+—\s+/).map(s => s.trim());
+  let html = `<div class="bm-study-table-wrap"><table class="bm-study-table">`;
+  rows.forEach(r => {
+    const cells = parseCells(r.t);
+    const tag = r.c === "trh" ? "th" : "td";
+    html += `<tr>${cells.map(c => `<${tag}>${formatNoteLinks(c, bookId)}</${tag}>`).join("")}</tr>`;
+  });
+  html += `</table></div>`;
+  return html;
+}
+
+async function renderStudyDocReader(doc, data, reqId) {
+  const main = document.getElementById("mainContainer");
+  const mediaById = data.mediaById || {};
+  const wtLocale = data.wtLocale || "I";
+  const docBookId = Number(doc.chapter) > 0 && Number(doc.chapter) <= 66 ? Number(doc.chapter) : null;
+  currentViewContext = { type: "study_docs", docId: Number(doc.id), label: `🎓 ${String(doc.title || "Studio").slice(0, 14)}` };
+  setHeaderCenterPill(doc.title || "Studio", "study_docs");
+
+  const paras = Array.isArray(doc.paragraphs) ? doc.paragraphs : [];
+  const renderedFiles = new Set();
+  const speechChunks = [doc.title || ""];
+  let bodyHtml = "";
+  let i = 0;
+
+  while (i < paras.length) {
+    const p = paras[i];
+    if (!p || typeof p !== "object") { i++; continue; }
+    const cls = String(p.c || "p");
+
+    if (cls === "trh" || cls === "tr") {
+      const tableRows = [];
+      while (i < paras.length && paras[i] && (paras[i].c === "trh" || paras[i].c === "tr")) {
+        tableRows.push(paras[i]);
+        if (paras[i].t) speechChunks.push(paras[i].t);
+        i++;
+      }
+      bodyHtml += renderStudyTableHtml(tableRows, docBookId);
+      continue;
+    }
+
+    if (cls === "img" && p.file) {
+      renderedFiles.add(p.file);
+      const isSvg = /\.svg$/i.test(p.file);
+      const altTxt = String(p.alt || "");
+      const poolIdx = registerStudyMediaPoolItem({ file: p.file, label: altTxt || doc.title, caption: "", credit: "" });
+      bodyHtml += `
+        <div class="bm-study-doc-img-block" onclick="openStudyLightboxByPool(${poolIdx})">
+          <img class="${isSvg ? 'is-svg' : ''}" data-study-img="${escapeHtml(p.file)}" alt="${escapeHtml(altTxt)}">
+          ${altTxt ? `<div class="bm-study-doc-img-cap">🖼️ ${escapeHtml(altTxt)} <span style="opacity:0.7;">(tocca per ingrandire)</span></div>` : ""}
+        </div>`;
+      i++;
+      continue;
+    }
+
+    if (cls === "video" && p.video) {
+      if (p.image) renderedFiles.add(p.image);
+      const poolIdx = registerStudyMediaPoolItem({ video: p.video, label: doc.title, wtLocale });
+      bodyHtml += `
+        <div class="bm-study-video-card">
+          <div class="bm-study-video-thumb-wrap" onclick="openStudyVideoByPool(${poolIdx})">
+            ${p.image ? `<img data-study-img="${escapeHtml(p.image)}" alt="${escapeHtml(doc.title)}">` : ""}
+            <span class="bm-study-video-play-pill">▶ Guarda su JW.org ↗</span>
+          </div>
+          <div style="padding:8px 11px; font-size:12.5px; color:var(--text-muted);">
+            🎬 <b>${escapeHtml(doc.title)}</b> — Riproduzione online su JW.org
+          </div>
+        </div>`;
+      i++;
+      continue;
+    }
+
+    const txt = String(p.t || "").trim();
+    if (txt) {
+      speechChunks.push(txt);
+      const linked = formatNoteLinks(txt, docBookId);
+      if (cls === "contextTtl") {
+        bodyHtml += `<div style="font-size:11.5px; font-weight:900; letter-spacing:0.6px; color:#ffd54f; text-transform:uppercase; margin-bottom:2px;">${escapeHtml(txt)}</div>`;
+      } else if (cls === "h1") {
+        bodyHtml += `<h2 style="font-size:19px; font-weight:900; color:var(--primary-light); margin:2px 0 10px 0; line-height:1.3;">${escapeHtml(txt)}</h2>`;
+      } else if (cls === "h2") {
+        bodyHtml += `<h3 style="font-size:15.5px; font-weight:900; color:var(--primary-light); margin:14px 0 6px 0; border-bottom:1px solid var(--border-color); padding-bottom:3px;">${linked}</h3>`;
+      } else if (cls === "h3" || cls === "h4") {
+        bodyHtml += `<div style="font-size:14px; font-weight:800; color:#ffd54f; margin:11px 0 4px 0;">${linked}</div>`;
+      } else if (cls === "imgCredit") {
+        bodyHtml += `<div style="font-size:11px; color:var(--text-muted); opacity:0.82; margin:-4px 0 10px 0; font-style:italic;">© ${escapeHtml(txt)}</div>`;
+      } else if (cls === "si") {
+        bodyHtml += `<div style="font-size:12px; color:var(--text-muted); margin-bottom:6px; line-height:1.45;">${linked}</div>`;
+      } else if (cls === "s5" || cls === "s6") {
+        bodyHtml += `<div class="bm-justify-text" style="font-size:var(--font-size-verse); line-height:var(--verse-line-height, 1.58); margin:0 0 8px 12px;">• ${linked}</div>`;
+      } else {
+        bodyHtml += `<div class="bm-justify-text" style="font-size:var(--font-size-verse); line-height:var(--verse-line-height, 1.58); margin-bottom:10px;">${linked}</div>`;
+      }
+    }
+    i++;
+  }
+
+  const extraMediaIds = (Array.isArray(doc.media) ? doc.media : [])
+    .map(m => (typeof m === "object" && m !== null ? m.id : m))
+    .filter(id => id !== undefined && id !== null);
+  const { videos: extraVids, images: extraImgs } = resolveDeduplicatedVerseMedia(extraMediaIds, mediaById);
+  const unrenderedImgs = extraImgs.filter(im => im.file && !renderedFiles.has(im.file) && im.cat !== 9);
+  const unrenderedVids = extraVids.filter(v => v.file && !paras.some(p => p && p.c === "video"));
+
+  let attachedMediaHtml = "";
+  if (unrenderedImgs.length > 0) {
+    attachedMediaHtml += unrenderedImgs.map(im => {
+      const isSvg = im.mime === "image/svg+xml" || /\.svg$/i.test(im.file);
+      const poolIdx = registerStudyMediaPoolItem({ file: im.file, label: im.label || doc.title, caption: im.caption, credit: im.credit });
+      return `
+        <div class="bm-study-doc-img-block" onclick="openStudyLightboxByPool(${poolIdx})">
+          <img class="${isSvg ? 'is-svg' : ''}" data-study-img="${escapeHtml(im.file)}" alt="${escapeHtml(im.label || doc.title)}">
+          <div class="bm-study-doc-img-cap">
+            <b>${isSvg ? "🗺️" : "🖼️"} ${escapeHtml(im.label || doc.title)}</b> <span style="opacity:0.72;">(tocca per zoom HD)</span>
+            ${im.caption ? `<div style="margin-top:4px;">${formatNoteLinks(im.caption, docBookId)}</div>` : ""}
+          </div>
+        </div>`;
+    }).join("");
+  }
+  if (unrenderedVids.length > 0) {
+    attachedMediaHtml += unrenderedVids.map(v => {
+      const poolIdx = registerStudyMediaPoolItem({ video: v.file, label: v.label || doc.title, wtLocale });
+      return `
+      <div class="bm-study-video-card">
+        <div class="bm-study-video-thumb-wrap" onclick="openStudyVideoByPool(${poolIdx})">
+          ${v.thumbFile ? `<img data-study-img="${escapeHtml(v.thumbFile)}" alt="${escapeHtml(v.label)}">` : ""}
+          <span class="bm-study-video-play-pill">▶ Guarda su JW.org ↗</span>
+        </div>
+        <div style="padding:8px 11px; font-size:12.5px; color:var(--text-muted);">🎬 <b>${escapeHtml(v.label || doc.title)}</b></div>
+      </div>`;
+    }).join("");
+  }
+
+  const docFnArr = Array.isArray(doc.footnotes) ? doc.footnotes : [];
+  const docFnHtml = docFnArr.length ? `
+    <div class="section-title"><span>📌 Note del Documento (${docFnArr.length})</span></div>
+    <div style="margin-bottom:12px;">
+      ${docFnArr.map(fn => `<div class="bm-justify-text" style="background:var(--bg-card); border-left:3px solid #ffd54f; border-radius:7px; padding:7px 10px; margin-bottom:6px; font-size:13px; line-height:1.5;"><b style="color:#ffd54f;">[${escapeHtml(fn.label || "*")}]</b> ${formatNoteLinks(fn.text || "", docBookId)}</div>`).join("")}
+    </div>` : "";
+
+  currentInsightSpeechText = speechChunks.join(". ").slice(0, 24000);
+
+  if (reqId !== currentViewReqId) return;
+  main.innerHTML = `
+    <div class="chapter-header" style="flex-wrap:wrap; gap:8px;">
+      <div class="chapter-title" style="font-size:16.5px;">🎓 ${escapeHtml(doc.title)}</div>
+      <div class="chapter-nav-btns">
+        ${getBackBtnHtml()}
+        <button type="button" class="nav-btn" onclick="showStudyDocsView(null, true)">☰ Indice</button>
+      </div>
+    </div>
+    ${attachedMediaHtml}
+    <div>${bodyHtml}</div>
+    ${docFnHtml}
+  `;
+  syncBmPaperMode(true);
+  main.scrollTop = 0;
+  hydrateStudyImagesInContainer(main);
+}
+
+// ============================================================================
+// PANNELLO C: VISUALIZZATORE FULLSCREEN IMMAGINI & MAPPE HD (PINCH-TO-ZOOM + PAN)
+// ============================================================================
+function applyStudyLbTransform() {
+  const wrap = document.getElementById("bmStudyLbWrap");
+  if (!wrap) return;
+  wrap.style.transform = `translate3d(${bmStudyLbState.x.toFixed(1)}px, ${bmStudyLbState.y.toFixed(1)}px, 0) scale(${bmStudyLbState.scale.toFixed(4)})`;
+}
+
+function clampStudyLbPos() {
+  const stage = document.getElementById("bmStudyLbStage");
+  if (!stage || !bmStudyLbState.nw || !bmStudyLbState.nh) return;
+  const sw = stage.clientWidth || 360;
+  const sh = stage.clientHeight || 500;
+  const iw = bmStudyLbState.nw * bmStudyLbState.scale;
+  const ih = bmStudyLbState.nh * bmStudyLbState.scale;
+  if (iw <= sw) bmStudyLbState.x = (sw - iw) / 2;
+  else bmStudyLbState.x = Math.min(0, Math.max(sw - iw, bmStudyLbState.x));
+  if (ih <= sh) bmStudyLbState.y = (sh - ih) / 2;
+  else bmStudyLbState.y = Math.min(0, Math.max(sh - ih, bmStudyLbState.y));
+}
+
+function bmStudyLbFit() {
+  const stage = document.getElementById("bmStudyLbStage");
+  if (!stage || !bmStudyLbState.nw || !bmStudyLbState.nh) return;
+  const sw = Math.max(100, stage.clientWidth || window.innerWidth || 360);
+  const sh = Math.max(100, stage.clientHeight || (window.innerHeight - 120) || 480);
+  const fit = Math.min(sw / bmStudyLbState.nw, sh / bmStudyLbState.nh);
+  bmStudyLbState.minScale = Math.min(fit, 1);
+  bmStudyLbState.scale = fit;
+  bmStudyLbState.x = (sw - bmStudyLbState.nw * fit) / 2;
+  bmStudyLbState.y = (sh - bmStudyLbState.nh * fit) / 2;
+  applyStudyLbTransform();
+}
+
+function bmStudyLbZoomBy(factor, cx = null, cy = null) {
+  const stage = document.getElementById("bmStudyLbStage");
+  if (!stage || !bmStudyLbState.nw) return;
+  const sw = stage.clientWidth || 360;
+  const sh = stage.clientHeight || 500;
+  const px = cx === null ? sw / 2 : cx;
+  const py = cy === null ? sh / 2 : cy;
+  const nextScale = Math.min(bmStudyLbState.maxScale, Math.max(bmStudyLbState.minScale * 0.85, bmStudyLbState.scale * factor));
+  const ratio = nextScale / bmStudyLbState.scale;
+  bmStudyLbState.x = px - (px - bmStudyLbState.x) * ratio;
+  bmStudyLbState.y = py - (py - bmStudyLbState.y) * ratio;
+  bmStudyLbState.scale = nextScale;
+  clampStudyLbPos();
+  applyStudyLbTransform();
+}
+
+function bindStudyLightboxGestures() {
+  if (bmStudyLbState.bound) return;
+  const stage = document.getElementById("bmStudyLbStage");
+  if (!stage) return;
+  bmStudyLbState.bound = true;
+  const pointers = new Map();
+  let lastDist = 0;
+  let lastTapAt = 0;
+
+  stage.addEventListener("pointerdown", e => {
+    if (!bmStudyLbState.active) return;
+    if (typeof stage.setPointerCapture === "function") {
+      try { stage.setPointerCapture(e.pointerId); } catch (_e) {}
+    }
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()];
+      lastDist = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+    } else if (pointers.size === 1) {
+      const now = Date.now();
+      if (now - lastTapAt < 280) {
+        const rect = stage.getBoundingClientRect();
+        if (bmStudyLbState.scale > bmStudyLbState.minScale * 1.25) bmStudyLbFit();
+        else bmStudyLbZoomBy(2.2, e.clientX - rect.left, e.clientY - rect.top);
+        lastTapAt = 0;
+      } else {
+        lastTapAt = now;
+      }
+    }
+  });
+  stage.addEventListener("pointermove", e => {
+    if (!bmStudyLbState.active || !pointers.has(e.pointerId)) return;
+    const prev = pointers.get(e.pointerId);
+    const cur = { x: e.clientX, y: e.clientY };
+    pointers.set(e.pointerId, cur);
+    if (pointers.size === 1) {
+      bmStudyLbState.x += (cur.x - prev.x);
+      bmStudyLbState.y += (cur.y - prev.y);
+      clampStudyLbPos();
+      applyStudyLbTransform();
+    } else if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()];
+      const dist = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+      const rect = stage.getBoundingClientRect();
+      const midX = ((a.x + b.x) / 2) - rect.left;
+      const midY = ((a.y + b.y) / 2) - rect.top;
+      if (lastDist > 0) bmStudyLbZoomBy(dist / lastDist, midX, midY);
+      lastDist = dist;
+    }
+  });
+  const endPtr = e => {
+    pointers.delete(e.pointerId);
+    if (pointers.size < 2) lastDist = 0;
+  };
+  stage.addEventListener("pointerup", endPtr);
+  stage.addEventListener("pointercancel", endPtr);
+  stage.addEventListener("wheel", e => {
+    if (!bmStudyLbState.active) return;
+    e.preventDefault();
+    const rect = stage.getBoundingClientRect();
+    bmStudyLbZoomBy(e.deltaY < 0 ? 1.18 : (1 / 1.18), e.clientX - rect.left, e.clientY - rect.top);
+  }, { passive: false });
+  window.addEventListener("resize", () => {
+    if (bmStudyLbState.active && bmStudyLbState.nw) bmStudyLbFit();
+  });
+}
+
+async function openStudyImageLightbox(fileName, label = "", caption = "", credit = "") {
+  bmHaptic(14);
+  bindStudyLightboxGestures();
+  const lb = document.getElementById("bmStudyLightbox");
+  const img = document.getElementById("bmStudyLbImg");
+  const msg = document.getElementById("bmStudyLbMsg");
+  const titleEl = document.getElementById("bmStudyLbTitle");
+  const capBar = document.getElementById("bmStudyLbCapBar");
+  if (!lb || !img) return;
+
+  const isSvg = /\.svg$/i.test(fileName);
+  bmStudyLbState.active = true;
+  bmStudyLbState.nw = 0;
+  bmStudyLbState.nh = 0;
+  if (titleEl) titleEl.textContent = `${isSvg ? "🗺️" : "🖼️"} ${label || fileName}`;
+  if (msg) msg.textContent = "⏳ Caricamento immagine HD offline...";
+  img.style.display = "none";
+  img.classList.toggle("is-svg", isSvg);
+
+  if (capBar) {
+    if (caption || credit) {
+      capBar.innerHTML =
+        (caption ? `<div class="bm-justify-text" style="font-size:13px; line-height:1.48; color:#e3f2fd;">${formatNoteLinks(caption, state.bookId)}</div>` : "") +
+        (credit ? `<div style="font-size:11px; color:#9ec9ff; opacity:0.85; margin-top:4px;">© ${escapeHtml(credit)}</div>` : "");
+      capBar.style.display = "block";
+    } else {
+      capBar.innerHTML = "";
+      capBar.style.display = "none";
+    }
+  }
+  lb.style.display = "flex";
+
+  const src = await loadStudyImageDataUrl(fileName);
+  if (!bmStudyLbState.active) return;
+  if (!src) {
+    if (msg) msg.innerHTML = "⚠️ Immagine non trovata in memoria.<br>Carica anche <b>nwtsty_I_parte2.zip</b> da ⚙️ ➔ Moduli.";
+    return;
+  }
+  img.onload = () => {
+    if (!bmStudyLbState.active) return;
+    bmStudyLbState.nw = img.naturalWidth || (isSvg ? 1200 : 1000);
+    bmStudyLbState.nh = img.naturalHeight || (isSvg ? 900 : 800);
+    if (isSvg) {
+      img.style.width = `${bmStudyLbState.nw}px`;
+      img.style.height = `${bmStudyLbState.nh}px`;
+    } else {
+      img.style.width = "";
+      img.style.height = "";
+    }
+    img.style.display = "block";
+    if (msg) msg.textContent = "";
+    requestAnimationFrame(() => bmStudyLbFit());
+  };
+  img.onerror = () => {
+    if (msg) msg.textContent = "❌ Impossibile decodificare questa immagine.";
+  };
+  img.src = src;
+}
+
+function closeStudyImageLightbox() {
+  bmStudyLbState.active = false;
+  const lb = document.getElementById("bmStudyLightbox");
+  const img = document.getElementById("bmStudyLbImg");
+  if (lb) lb.style.display = "none";
+  if (img) {
+    img.onload = null;
+    img.onerror = null;
+    img.removeAttribute("src");
+  }
+}
+
+function bootInitialRoute() {
   let launchMode = "";
   try {
     const params = new URLSearchParams(window.location.search || "");
