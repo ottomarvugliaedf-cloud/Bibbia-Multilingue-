@@ -1924,7 +1924,13 @@ body.oled-mode .pub-ref-badge {
       }
     }
 
-    /* Biblioteca online JW.org: cerchio azzurro con torre vettoriale + effetto radiale dal centro ai bordi */
+    /* Pillole Biblioteca Online (WOL) & JW.org (Edizione Studio): griglia 2x2 alfabetica + effetto radiale */
+    .jw-pill-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 7px;
+      margin: 0 0 10px 0;
+    }
     .jw-btn {
       display: inline-flex;
       align-items: center;
@@ -1933,12 +1939,46 @@ body.oled-mode .pub-ref-badge {
       color: var(--text-main);
       border: 1px solid var(--border-color);
       border-radius: 24px;
-      padding: 5px 12px 5px 5px;
+      padding: 5px 11px 5px 5px;
       font-size: 13px;
       font-weight: 700;
       cursor: pointer;
       transition: all 0.18s ease;
       text-decoration: none;
+      min-width: 0;
+    }
+    .jw-pill-grid .jw-btn {
+      width: 100%;
+    }
+    .jw-btn-text {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      min-width: 0;
+      flex: 1;
+      line-height: 1.18;
+      text-align: left;
+    }
+    .jw-btn-title {
+      font-size: 12.2px;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+    .jw-btn-lang {
+      font-size: 10.8px;
+      font-weight: 700;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+    .jw-btn.bm-jw-current {
+      border-color: #00e5ff;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 0 11px rgba(0, 229, 255, 0.38);
     }
     .jw-btn .jw-circle {
       width: 34px;
@@ -1953,6 +1993,20 @@ body.oled-mode .pub-ref-badge {
       transition: all 0.18s ease;
     }
     .jw-btn .jw-circle svg { width: 20px; height: 20px; fill: #ffffff; transition: fill 0.18s ease; }
+    .jw-btn .jw-circle.jw-org-circle {
+      background-color: #4a6da7;
+      overflow: hidden;
+      padding: 0;
+      box-shadow: 0 2px 6px rgba(74, 109, 167, 0.48);
+    }
+    .jw-btn .jw-circle.jw-org-circle img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      border-radius: 50%;
+      pointer-events: none;
+    }
 
     .jw-btn:active,
     .jw-btn.btn-color-anim:active {
@@ -1964,15 +2018,42 @@ body.oled-mode .pub-ref-badge {
       box-shadow: 0 0 22px var(--btn-glow, rgba(0, 229, 255, 0.9)), inset 0 0 12px rgba(2, 11, 28, 0.85) !important;
       transform: scale(0.96) !important;
     }
-    .jw-btn:active .jw-circle,
-    .jw-btn.btn-color-anim:active .jw-circle {
+    .jw-btn:active .jw-btn-lang,
+    .jw-btn.btn-color-anim:active .jw-btn-lang {
+      color: #e0f7fa !important;
+    }
+    .jw-btn:active .jw-circle:not(.jw-org-circle),
+    .jw-btn.btn-color-anim:active .jw-circle:not(.jw-org-circle) {
       background: radial-gradient(circle at 50% 50%, #ffffff 0%, #84ffff 48%, #0d47a1 85%, #020b1c 100%) !important;
       box-shadow: 0 0 14px #00e5ff, inset 0 0 6px rgba(2, 11, 28, 0.75) !important;
+      transform: scale(1.06);
+    }
+    .jw-btn:active .jw-circle.jw-org-circle,
+    .jw-btn.btn-color-anim:active .jw-circle.jw-org-circle {
+      box-shadow: 0 0 14px #84ffff !important;
       transform: scale(1.06);
     }
     .jw-btn:active .jw-circle svg,
     .jw-btn.btn-color-anim:active .jw-circle svg {
       fill: #041a42 !important;
+    }
+    main.bm-paper-reading .jw-btn {
+      background: #ebe3d1;
+      color: #2c2216;
+      border-color: #bda982;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    main.bm-paper-reading .jw-btn.bm-jw-current {
+      border-color: #8c5818;
+      box-shadow: 0 0 0 1px #8c5818;
+    }
+    main.bm-paper-reading .jw-btn-lang {
+      color: #6b4c24;
+    }
+    body.oled-mode .jw-btn.bm-jw-current {
+      border-color: #38bdf8;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.35);
     }
 
     /* ===== 1. COMPLICAZIONE ROYAL OAK: Micro-Anglage Speculare, Vetro Zaffiro e Barra Elastica ===== */
@@ -3361,6 +3442,72 @@ body.oled-mode .pub-ref-badge {
     border-color: #1f1f1f;
   }
 
+  .bm-study-ribbon {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 4px 2px 8px 2px;
+    margin: -4px 0 8px 0;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .bm-study-ribbon::-webkit-scrollbar { display: none; }
+  .bm-study-ribbon-btn {
+    background: linear-gradient(135deg, rgba(13, 71, 161, 0.85), rgba(6, 35, 86, 0.92));
+    color: #e3f2fd;
+    border: 1px solid rgba(0, 229, 255, 0.52);
+    border-radius: 999px;
+    padding: 5px 11px;
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 2px 6px rgba(0, 0, 0, 0.28);
+    transition: transform 0.12s ease, border-color 0.14s ease;
+  }
+  .bm-study-ribbon-btn.accent {
+    background: linear-gradient(135deg, #0d47a1, #1565c0);
+    border-color: #00e5ff;
+    color: #84ffff;
+  }
+  .bm-study-ribbon-btn:active {
+    transform: scale(0.96);
+    background: #00e5ff !important;
+    color: #041a42 !important;
+    border-color: #84ffff !important;
+  }
+  body.dark-mode .bm-study-ribbon-btn {
+    background: #0d1d33;
+    border-color: #29b6f6;
+    color: #e6f1ff;
+  }
+  body.oled-mode .bm-study-ribbon-btn {
+    background: #0a0a0a;
+    border-color: #2b2b2b;
+    color: #f5f5f5;
+  }
+  body.oled-mode .bm-study-ribbon-btn.accent {
+    border-color: #38bdf8;
+    color: #84ffff;
+  }
+  main.bm-paper-reading .bm-study-ribbon-btn {
+    background: #e8dec8;
+    color: #3b2a14;
+    border-color: #b59469;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  main.bm-paper-reading .bm-study-ribbon-btn.accent {
+    background: #dfd1b2;
+    border-color: #8c5818;
+    color: #5c3a10;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     #splashScreen.ready .splash-box,
     #splashScreen.ready .splash-text,
@@ -3468,7 +3615,6 @@ body.oled-mode .pub-ref-badge {
   <div class="quick-menu-bar">
     <button id="booksTabBtn" class="quick-pill" onclick="showBooksView()">🟦 Libri Biblici</button>
     <button id="readTabBtn" class="quick-pill" onclick="openBibleTabFromMenu()">📖 Lettura</button>
-    <button id="studyDocsTabBtn" class="quick-pill" onclick="showStudyDocsView()">🎓 Studio</button>
     <button id="insightTabBtn" class="quick-pill" onclick="showInsightView()">📚 Perspicacia (it)</button>
     <button id="siTabBtn" class="quick-pill" onclick="showSiView()">📘 Tutta la Scrittura</button>
     <button id="mapsTabBtn" class="quick-pill" onclick="showMapsView()">🗺️ Cartine Bibliche</button>
@@ -3829,19 +3975,22 @@ const BIBLE_BOOKS = [
   { id: 66, name: "Rivelazione", abbr: "Riv", ch: 22, sec: "NT", cat: 4 }
 ];
   const BM_STUDY_BIBLE_REGISTRY = {
-    "gb:nwtsty":     { langCode: "it", wtLocale: "I", name: "🇮🇹 Italiano: TNM Edizione per lo Studio (2026)", lang: "Italian" },
-    "gb:nwtsty_e":   { langCode: "en", wtLocale: "E", name: "🇬🇧 English: NWT Study Edition", lang: "English" },
-    "gb:nwtsty_s":   { langCode: "es", wtLocale: "S", name: "🇪🇸 Español: TNM Edición de estudio", lang: "Spanish" },
-    "gb:nwtsty_tpo": { langCode: "pt", wtLocale: "T", name: "🇵🇹🇧🇷 Português: TNM Edição de Estudo", lang: "Portuguese" }
+    "gb:nwtsty":     { langCode: "it", wtLocale: "I", shortTitle: "TNM Studio 2026", name: "🇮🇹 Italiano: TNM Edizione per lo Studio (2026)", lang: "Italian" },
+    "gb:nwtsty_e":   { langCode: "en", wtLocale: "E", shortTitle: "NWT Study 2026",  name: "🇬🇧 English: NWT Study Edition (2026)", lang: "English" },
+    "gb:nwtsty_s":   { langCode: "es", wtLocale: "S", shortTitle: "TNM Estudio 2026", name: "🇪🇸 Español: TNM Edición de estudio (2026)", lang: "Spanish" },
+    "gb:nwtsty_tpo": { langCode: "pt", wtLocale: "TPO", shortTitle: "TNM Estudo 2024", name: "🇵🇹🇧🇷 Português: TNM Edição de Estudo (2024)", lang: "Portuguese" }
   };
   const CORE_BIBLES = [
   { id: "gb:nwtsty", name: "🇮🇹 Italiano: TNM Edizione per lo Studio (2026)", lang: "Italian" },
   { id: "gb:nwt", name: "🇮🇹 Italiano: Traduzione del Nuovo Mondo (TNM 2017)", lang: "Italian" },
   { id: "gb:bi12", name: "🇮🇹 Italiano: Traduzione del Nuovo Mondo (TNM 1987 - bi12)", lang: "Italian" },
+  { id: "gb:nwtsty_e", name: "🇬🇧 English: NWT Study Edition (2026)", lang: "English" },
   { id: "gb:nwt_e", name: "🇬🇧 English: New World Translation (NWT 2013)", lang: "English" },
   { id: "gb:bi12_e", name: "🇬🇧 English: New World Translation (NWT 1984 - bi12)", lang: "English" },
+  { id: "gb:nwtsty_s", name: "🇪🇸 Español: TNM Edición de estudio (2026)", lang: "Spanish" },
   { id: "gb:nwt_s", name: "🇪🇸 Español: Traducción del Nuevo Mundo (TNM 2019)", lang: "Spanish" },
   { id: "gb:bi12_s", name: "🇪🇸 Español: Traducción del Nuevo Mundo (TNM 1987 - bi12)", lang: "Spanish" },
+  { id: "gb:nwtsty_tpo", name: "🇵🇹🇧🇷 Português: TNM Edição de Estudo (2024)", lang: "Portuguese" },
   { id: "gb:nwt_tpo", name: "🇵🇹🇧🇷 Português: Tradução do Novo Mundo (TNM)", lang: "Portuguese" },
   { id: "epub:nr", name: "🇮🇹 Italiano: Bibbia Nuova Riveduta (NR)", lang: "Italian" },
   { id: "epub:nd", name: "🇮🇹 Italiano: Bibbia Nuova Diodati (LND)", lang: "Italian" },
@@ -3905,9 +4054,9 @@ const BIBLE_BOOKS = [
 ];
 const LOCAL_EPUB_IDS = [
   "gb:nwtsty", "gb:nwt", "gb:bi12",
-  "gb:nwt_e", "gb:bi12_e",
-  "gb:nwt_s", "gb:bi12_s",
-  "gb:nwt_tpo",
+  "gb:nwtsty_e", "gb:nwt_e", "gb:bi12_e",
+  "gb:nwtsty_s", "gb:nwt_s", "gb:bi12_s",
+  "gb:nwtsty_tpo", "gb:nwt_tpo",
   "epub:nr", "epub:nd", "epub:cei", "epub:tilc"
 ];
 let PRO_STRONG_DICT = {
@@ -6102,7 +6251,16 @@ function showBooksView() {
   const main = document.getElementById("mainContainer");
   const ot = BIBLE_BOOKS.filter(b => b.sec === "OT");
   const nt = BIBLE_BOOKS.filter(b => b.sec === "NT");
+  const isStudyActive = Boolean(BM_STUDY_BIBLE_REGISTRY[state.trans1]) && (state.downloadedBibles || []).includes(state.trans1);
+  const studyTopBar = isStudyActive ? `
+    <div class="bm-study-ribbon" style="margin-top:0;">
+      <button type="button" class="bm-study-ribbon-btn accent" onclick="openStudyDocsCategory('intro')">❓ Intro & 20 Domande</button>
+      <button type="button" class="bm-study-ribbon-btn accent" onclick="openStudyDocsCategory('appendices')">📑 Appendici A/B/C</button>
+      <button type="button" class="bm-study-ribbon-btn" onclick="openStudyDocsCategory('media')">🖼️ Galleria & Temi</button>
+      <button type="button" class="bm-study-ribbon-btn" onclick="openStudyDocsCategory('all')">📚 Indice Studio</button>
+    </div>` : "";
   main.innerHTML = `
+    ${studyTopBar}
     <div class="section-title"><span>Scritture Ebraico-Aramaiche</span><span>39 Libri</span></div>
     <div class="books-grid">${ot.map(b => `<button class="book-tile cat-${b.cat}" onclick="showChaptersView(${b.id})">${escapeHtml(b.abbr)}</button>`).join("")}</div>
     <div class="section-title"><span>Scritture Greche Cristiane</span><span>27 Libri</span></div>
@@ -6113,7 +6271,7 @@ function showBooksView() {
 }
 let pendingGridBookId = 1;
 function showChaptersView(bookId) {
-  currentViewReqId++;
+  const reqId = ++currentViewReqId;
   clearSpeechContext();
   pendingGridBookId = Number(bookId);
   const book = getBook(pendingGridBookId);
@@ -6135,13 +6293,24 @@ function showChaptersView(bookId) {
     const isCurr = (pendingGridBookId === state.bookId && i === state.chapter) ? "current" : "";
     btns += `<button class="chapter-tile ${isCurr}" onclick="selectChapter(${i})">${i}</button>`;
   }
+  const activeStudyBibleId = getActiveStudyBibleId();
+  const isStudyActive = Boolean(activeStudyBibleId) && (state.downloadedBibles || []).includes(activeStudyBibleId);
   main.innerHTML = `
     <div class="chapter-header">
       <div class="chapter-title">${escapeHtml(book.name)} — Capitoli</div>
       <button class="nav-btn" onclick="showBooksView()">← Tutti i Libri</button>
     </div>
+    ${isStudyActive ? `<div id="bmChaptersStudyRibbon"></div>` : ""}
+    ${activeStudyBibleId ? renderJwOrgStudyPillsHtml(pendingGridBookId, 0, activeStudyBibleId) : ""}
     <div class="chapters-grid">${btns}</div>
   `;
+  if (isStudyActive) {
+    getStudyBibleDocsData(activeStudyBibleId).then(docsData => {
+      if (reqId !== currentViewReqId || !docsData) return;
+      const slot = document.getElementById("bmChaptersStudyRibbon");
+      if (slot) slot.innerHTML = renderBookStudyRibbonHtml(docsData, pendingGridBookId);
+    }).catch(() => {});
+  }
   syncBmPaperMode(true);
   main.scrollTop = 0;
 }
@@ -7082,13 +7251,16 @@ async function renderChapterView(preserveAudio = false) {
   main.innerHTML = `<div class="loader">Caricamento di <b>${escapeHtml(book.name)} ${state.chapter}</b>...</div>`;
   syncBmPaperMode();
   try {
-    const [data1, footnotes1, outline1, studyExtras1, data2, data3] = await Promise.all([
+    const [data1, footnotes1, outline1, studyExtras1, studyDocsData1, data2, data3] = await Promise.all([
       fetchChapterData(state.trans1, state.bookId, state.chapter),
       fetchChapterFootnotes(state.trans1, state.bookId, state.chapter).catch(() => ({})),
       bmSettings.showOutlines !== false
         ? fetchChapterOutline(state.trans1, state.bookId, state.chapter).catch(() => [])
         : Promise.resolve([]),
       fetchChapterStudyExtras(state.trans1, state.bookId, state.chapter).catch(() => null),
+      BM_STUDY_BIBLE_REGISTRY[state.trans1]
+        ? getStudyBibleDocsData(state.trans1).catch(() => null)
+        : Promise.resolve(null),
       state.parallelCount >= 2
         ? fetchChapterData(state.trans2, state.bookId, state.chapter).catch(() => [])
         : Promise.resolve([]),
@@ -7196,18 +7368,22 @@ async function renderChapterView(preserveAudio = false) {
       }).join("");
     }
     const backBtnHtml = getBackBtnHtml();
+    const activeStudyBibleId = getActiveStudyBibleId();
+    const studyRibbonHtml = renderChapterStudyRibbonHtml(studyExtras1, studyDocsData1, state.bookId, state.chapter);
+    const jwOrgStudyPillsHtml = activeStudyBibleId ? renderJwOrgStudyPillsHtml(state.bookId, state.chapter, activeStudyBibleId) : "";
     const outlineHtml = renderChapterOutlineHtml(outline1, book.name, state.chapter);
     main.innerHTML = `
       <div class="chapter-header">
         <div class="chapter-title" onclick="showChaptersView(${state.bookId})" style="cursor:pointer;">${escapeHtml(book.name)} ${state.chapter}▾</div>
         <div class="chapter-nav-btns">
           ${backBtnHtml}
-          ${studyExtras1 && studyExtras1.isStudyBible ? `<button class="nav-btn" onclick="openStudyDocsForBook(${state.bookId}, ${state.chapter})" title="Documenti, Introduzione, Appendici e Media di ${escapeHtml(book.name)}">🎓</button>` : ""}
           <button class="nav-btn" onclick="openChapterDossierModal()" title="Dossier Esegetico Completo del Capitolo">💎</button>
           <button class="nav-btn" onclick="prevChapter()">◀Prec</button>
           <button class="nav-btn" onclick="nextChapter()">Succ▶</button>
         </div>
       </div>
+      ${studyRibbonHtml}
+      ${jwOrgStudyPillsHtml}
       ${outlineHtml}
       <div>${versesHtml}</div>
       ${renderChapterReadingPlanFooterHtml(state.bookId, state.chapter)}
@@ -8270,26 +8446,69 @@ function saveNoteFromModal() {
   showNotesView();
 }
 const SI_ABBR_MAP = {
-  "gen": 1, "eso": 2, "es": 2, "lev": 3, "num": 4, "deut": 5, "deu": 5,
-  "gios": 6, "giud": 7, "rut": 8, "1sam": 9, "1sa": 9, "2sam": 10, "2sa": 10,
+  // Italiano (completo + sigle ufficiali nwtsty IT)
+  "gen": 1, "eso": 2, "es": 2, "lev": 3, "le": 3, "num": 4, "nu": 4, "deut": 5, "deu": 5, "de": 5,
+  "gios": 6, "gse": 6, "giud": 7, "gdc": 7, "rut": 8, "ru": 8, "1sam": 9, "1sa": 9, "2sam": 10, "2sa": 10,
   "1re": 11, "2re": 12, "1cron": 13, "1cr": 13, "2cron": 14, "2cr": 14,
-  "esd": 15, "nee": 16, "est": 17, "giob": 18, "gb": 18, "sal": 19,
-  "prov": 20, "pro": 20, "eccl": 21, "ecc": 21, "cant": 22, "can": 22,
-  "isa": 23, "ger": 24, "lam": 25, "ezec": 26, "eze": 26, "dan": 27,
-  "osea": 28, "ose": 28, "gioe": 29, "gl": 29, "amos": 30, "amo": 30,
-  "abd": 31, "giona": 32, "gio": 32, "mic": 33, "naum": 34, "na": 34,
-  "abac": 35, "aba": 35, "sof": 36, "agg": 37, "zacc": 38, "zac": 38,
-  "mal": 39, "matt": 40, "mat": 40, "mar": 41, "luca": 42, "luc": 42,
-  "giov": 43, "gv": 43, "atti": 44, "at": 44, "rom": 45, "1cor": 46, "1co": 46,
-  "2cor": 47, "2co": 47, "gal": 48, "efes": 49, "efe": 49, "fil": 50, "flp": 50,
+  "esd": 15, "nee": 16, "ne": 16, "est": 17, "giob": 18, "gb": 18, "sal": 19, "sl": 19,
+  "prov": 20, "pro": 20, "pr": 20, "eccl": 21, "ecc": 21, "ec": 21, "cant": 22, "can": 22, "ca": 22,
+  "isa": 23, "ger": 24, "lam": 25, "la": 25, "ezec": 26, "eze": 26, "ez": 26, "dan": 27, "da": 27,
+  "osea": 28, "ose": 28, "os": 28, "gioe": 29, "gl": 29, "gle": 29, "amos": 30, "amo": 30, "am": 30,
+  "abd": 31, "giona": 32, "gio": 32, "gna": 32, "mic": 33, "naum": 34, "na": 34,
+  "abac": 35, "aba": 35, "sof": 36, "agg": 37, "ag": 37, "zacc": 38, "zac": 38,
+  "mal": 39, "matt": 40, "mat": 40, "mt": 40, "mar": 41, "mr": 41, "luca": 42, "luc": 42, "lu": 42,
+  "giov": 43, "gv": 43, "atti": 44, "at": 44, "rom": 45, "ro": 45, "1cor": 46, "1co": 46,
+  "2cor": 47, "2co": 47, "gal": 48, "efes": 49, "efe": 49, "ef": 49, "fil": 50, "flp": 50,
   "col": 51, "1tess": 52, "1ts": 52, "2tess": 53, "2ts": 53, "1tim": 54, "1tm": 54,
   "2tim": 55, "2tm": 55, "tito": 56, "tit": 56, "filem": 57, "flm": 57,
-  "ebr": 58, "giac": 59, "1piet": 60, "1pt": 60, "2piet": 61, "2pt": 61,
+  "ebr": 58, "eb": 58, "giac": 59, "gc": 59, "1piet": 60, "1pt": 60, "2piet": 61, "2pt": 61,
   "1giov": 62, "1gv": 62, "2giov": 63, "2gv": 63, "3giov": 64, "3gv": 64,
-  "giuda": 65, "gda": 65, "riv": 66
+  "giuda": 65, "gda": 65, "riv": 66, "ri": 66,
+  // English (full names + official NWT Study Edition abbreviations)
+  "genesis": 1, "ge": 1, "exodus": 2, "ex": 2, "leviticus": 3, "numbers": 4, "deuteronomy": 5,
+  "joshua": 6, "jos": 6, "judges": 7, "jg": 7, "ruth": 8, "1samuel": 9, "2samuel": 10,
+  "1kings": 11, "1ki": 11, "2kings": 12, "2ki": 12, "1chronicles": 13, "1ch": 13, "2chronicles": 14, "2ch": 14,
+  "ezra": 15, "ezr": 15, "nehemiah": 16, "esther": 17, "job": 18, "psalm": 19, "psalms": 19, "ps": 19,
+  "proverbs": 20, "ecclesiastes": 21, "songofsolomon": 22, "isaiah": 23, "jeremiah": 24, "jer": 24,
+  "lamentations": 25, "ezekiel": 26, "daniel": 27, "hosea": 28, "hos": 28, "ho": 28, "joel": 29, "joe": 29,
+  "obadiah": 31, "ob": 31, "jonah": 32, "jon": 32, "micah": 33, "nahum": 34,
+  "habakkuk": 35, "hab": 35, "zephaniah": 36, "zep": 36, "haggai": 37, "hag": 37, "zechariah": 38, "zec": 38,
+  "malachi": 39, "matthew": 40, "mark": 41, "luke": 42, "john": 43, "joh": 43, "acts": 44, "ac": 44,
+  "romans": 45, "1corinthians": 46, "2corinthians": 47, "galatians": 48, "ga": 48,
+  "ephesians": 49, "eph": 49, "philippians": 50, "php": 50, "colossians": 51,
+  "1thessalonians": 52, "1th": 52, "2thessalonians": 53, "2th": 53, "1timothy": 54, "1ti": 54,
+  "2timothy": 55, "2ti": 55, "titus": 56, "philemon": 57, "phm": 57, "hebrews": 58, "heb": 58,
+  "james": 59, "jas": 59, "1peter": 60, "1pe": 60, "2peter": 61, "2pe": 61,
+  "1john": 62, "1jo": 62, "2john": 63, "2jo": 63, "3john": 64, "3jo": 64,
+  "jude": 65, "revelation": 66, "re": 66, "rev": 66,
+  // Español (66 nombres completos + siglas oficiales TNM edición de estudio)
+  "exodo": 2, "levitico": 3, "numeros": 4, "deuteronomio": 5, "dt": 5,
+  "josue": 6, "jueces": 7, "jue": 7, "1reyes": 11, "2reyes": 12,
+  "1cronicas": 13, "2cronicas": 14, "esdras": 15, "nehemias": 16, "ester": 17,
+  "salmo": 19, "salmos": 19, "proverbios": 20, "eclesiastes": 21,
+  "elcantardeloscantares": 22, "cantardeloscantares": 22,
+  "isaias": 23, "is": 23, "jeremias": 24, "lamentaciones": 25, "ezequiel": 26,
+  "oseas": 28, "abdias": 31, "jonas": 32, "miqueas": 33, "miq": 33,
+  "nahum": 34, "habacuc": 35, "sofonias": 36, "ageo": 37, "zacarias": 38, "malaquias": 39,
+  "mateo": 40, "marcos": 41, "lucas": 42, "juan": 43, "jn": 43, "hechos": 44, "hch": 44,
+  "romanos": 45, "1corintios": 46, "2corintios": 47, "galatas": 48, "efesios": 49,
+  "filipenses": 50, "colosenses": 51, "1tesalonicenses": 52, "1te": 52, "2tesalonicenses": 53, "2te": 53,
+  "1timoteo": 54, "2timoteo": 55, "filemon": 57, "hebreos": 58,
+  "santiago": 59, "snt": 59, "1pedro": 60, "2pedro": 61,
+  "1juan": 62, "1jn": 62, "2juan": 63, "2jn": 63, "3juan": 64, "3jn": 64,
+  "judas": 65, "jud": 65, "apocalipsis": 66, "ap": 66,
+  // Português (66 livros completos + siglas oficiais TNM Edição de Estudo TPO)
+  "juizes": 7, "jz": 7, "rute": 8, "1reis": 11, "1rs": 11, "2reis": 12, "2rs": 12,
+  "neemias": 16, "canticodesalomao": 22, "canticodoscanticos": 22,
+  "lamentacoes": 25, "je": 24, "oseias": 28, "jl": 29, "obadias": 31, "miqueias": 33,
+  "naum": 34, "habacuque": 35, "sofonias": 36, "ageu": 37, "zacarias": 38, "za": 38, "malaquias": 39,
+  "mateus": 40, "joao": 43, "jo": 43, "atos": 44, "efesios": 49, "colossenses": 51,
+  "1tessalonicenses": 52, "2tessalonicenses": 53, "hebreus": 58, "he": 58,
+  "tiago": 59, "tg": 59, "1joao": 62, "2joao": 63, "3joao": 64, "apocalipse": 66
 };
+const BM_REQUIRE_COLON_SHORT_BOOKS = new Set(["es", "la", "le", "da", "de", "ne", "re", "am", "ho", "is", "he", "je", "jo", "at"]);
 
-const BM_BIBLE_CHAIN_RE = /\b(?:(?:([1-3]\s*)?([A-ZÀ-Ý][A-Za-zÀ-ÖØ-öø-ÿ]{1,18}(?:\s+dei\s+[A-Za-zÀ-ÖØ-öø-ÿ]{1,18})?)\.?\s+(\d{1,3})(?::(\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?(?::\d{1,3}[a-z]?)?)?(?:\s*,\s*(?!\d{1,3}\s*:)\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?)*))?)|(?:(\d{1,3}):(\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?(?::\d{1,3}[a-z]?)?)?(?:\s*,\s*(?!\d{1,3}\s*:)\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?)*)))((?:\s*[;,]\s*(?![1-3]?\s*[A-Za-zÀ-ÖØ-öø-ÿ]{2})\d{1,3}[a-z]?(?::\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?(?::\d{1,3}[a-z]?)?)?(?:\s*,\s*(?!\d{1,3}\s*:)\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?)*)?(?:\s*[–-]\s*\d{1,3}[a-z]?(?::\d{1,3}[a-z]?)?)?)*)/g;
+const BM_BIBLE_CHAIN_RE = /\b(?:(?:([1-3]\s*)?((?:(?:El|O)\s+)?[A-ZÀ-Ý][A-Za-zÀ-ÖØ-öø-ÿ]{1,18}(?:\s+(?:dei|of|de|dos)\s+(?:los\s+)?[A-Za-zÀ-ÖØ-öø-ÿ]{1,18})?)\.?\s+(\d{1,3})(?::(\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?(?::\d{1,3}[a-z]?)?)?(?:\s*,\s*(?!\d{1,3}\s*:)\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?)*))?)|(?:(\d{1,3}):(\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?(?::\d{1,3}[a-z]?)?)?(?:\s*,\s*(?!\d{1,3}\s*:)\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?)*)))((?:\s*[;,]\s*(?![1-3]?\s*[A-Za-zÀ-ÖØ-öø-ÿ]{2})\d{1,3}[a-z]?(?::\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?(?::\d{1,3}[a-z]?)?)?(?:\s*,\s*(?!\d{1,3}\s*:)\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?)*)?(?:\s*[–-]\s*\d{1,3}[a-z]?(?::\d{1,3}[a-z]?)?)?)*)/g;
 const BM_BIBLE_TAIL_SEG_RE = /(\s*([;,])\s*)(\d{1,3}[a-z]?)(?::(\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?(?:\s*,\s*(?!\d{1,3}\s*:)\d{1,3}[a-z]?(?:\s*[–-]\s*\d{1,3}[a-z]?)?)*))?(?:\s*[–-]\s*(\d{1,3}[a-z]?))?/g;
 const BM_PUB_REF_RE = (() => {
   const N = String.raw`\d+(?:\s*[–-]\s*\d+)?(?:\s*,\s*\d+(?:\s*[–-]\s*\d+)?)*`;
@@ -8318,9 +8537,19 @@ function transformBibleRefChain(plainSegment, defaultBookId, renderTokenFn) {
 
     if (wordPart) {
       const key = normalizeForSearch((numPrefix || "") + wordPart).replace(/\s+/g, "");
-      // Evita falsi positivi italiani come "Es. 12" (= Esempio 12): accetta "es" solo con ":versetto" esplicito (es. "Es 12:1")
-      if (key === "es" && !vListWithBook) return fullMatch;
-      bId = SI_ABBR_MAP[key] || (BIBLE_BOOKS.find(b => normalizeForSearch(b.name).replace(/\s+/g, "") === key)?.id);
+      const isPtJob = !numPrefix && /^j[óò]$/i.test(String(wordPart || "").trim());
+      // Evita falsi positivi in prosa IT/EN/ES/PT (es. "La 2", "Le 12", "Da 20", "He 10", "Es. 12"): per le sigle brevi ambigue richiede ":versetto" esplicito
+      if (!isPtJob && BM_REQUIRE_COLON_SHORT_BOOKS.has(key) && !vListWithBook) return fullMatch;
+      if (isPtJob) {
+        bId = 18;
+      } else if (key === "es") {
+        const isEnCtx = (currentViewContext && currentViewContext.type === "study_docs")
+          ? (getStudyBibleConfig(bmStudyDocsActiveBibleId).langCode === "en")
+          : (getActiveTTSLangCode(false) === "en");
+        bId = isEnCtx ? 17 : 2;
+      } else {
+        bId = SI_ABBR_MAP[key] || (BIBLE_BOOKS.find(b => normalizeForSearch(b.name).replace(/\s+/g, "") === key)?.id);
+      }
       if (!bId) return fullMatch;
       firstCh = chWithBook;
       firstVList = vListWithBook || "";
@@ -9016,10 +9245,7 @@ function showSearchView(fromBack = false) {
       <button class="search-btn" style="background:linear-gradient(135deg, #00838f, #00acc1);" onclick="executeOmniSearch()" title="Cerca contemporaneamente in Appunti/Preferiti, Perspicacia, Tutta la Scrittura, Cartine, Scrittura del Giorno e Bibbia">🌐 6 Pilastri</button>
       <button class="search-btn" style="background:linear-gradient(135deg, #1565c0, #0d47a1); border:1px solid #29b6f6;" onclick="openQuickJumpModal()" title="Salto Rapido al Passaggio (es. Gv 3 16)">⚡ Passo</button>
     </div>
-    <div style="display:flex; gap:8px; flex-wrap:wrap; margin:0 0 10px 0;">
-      <button class="jw-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,176,255,0.6);" onclick="openJwLibrary('it', 'searchInput')" title="Cerca nella Biblioteca Online Watchtower (italiano)"><span class="jw-circle">${JW_TOWER_SVG}</span>Biblioteca Online · Italiano</button>
-      <button class="jw-btn btn-color-anim" style="--btn-bg:#2962ff; --btn-glow:rgba(41,98,255,0.6);" onclick="openJwLibrary('en', 'searchInput')" title="Search the Watchtower Online Library (English)"><span class="jw-circle">${JW_TOWER_SVG}</span>Online Library · English</button>
-    </div>
+    ${renderWolLibraryPillsHtml('searchInput')}
     <div class="search-box" style="margin-top:-4px;">
       <select id="searchBibleSelect" class="trans-select" onchange="if(document.getElementById('searchInput').value.trim()) executeSearch(1)">${bibleOptionsHtml}</select>
       <select id="searchMode" class="trans-select" style="max-width:195px;" onchange="if(document.getElementById('searchInput').value.trim()) executeSearch(1)">
@@ -9059,46 +9285,145 @@ function showSearchView(fromBack = false) {
   syncBmPaperMode(true);
 }
 const JW_TOWER_SVG = `<svg viewBox="0 0 1000 1000"><path d="M200 200H334V267H367V200H434V267H467V200H534V267H566V200H633V267H666V200H800V433H767V467H734V800H266V467H233V433H200Z"/></svg>`;
+const JW_ORG_LOGO_DATA_URI = "data:image/webp;base64,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";
+const JW_ORG_LOGO_IMG = `<img src="${JW_ORG_LOGO_DATA_URI}" alt="JW.ORG" draggable="false" decoding="async">`;
 const CHROME_LOGO_SVG = `<svg viewBox="0 0 48 48" width="20" height="20" style="vertical-align:middle; margin-right:8px; flex-shrink:0;"><path fill="#EA4335" d="M24 24 4.95 13A22 22 0 0 1 43.05 13Z"/><path fill="#FBBC05" d="M24 24l19.05-11A22 22 0 0 1 24 46Z"/><path fill="#34A853" d="M24 24v22A22 22 0 0 1 4.95 13Z"/><circle cx="24" cy="24" r="11" fill="#4285F4"/><circle cx="24" cy="24" r="11" fill="none" stroke="#fff" stroke-width="2.5"/></svg>`;
+
+// Registri ufficiali multilingue (ordine alfabetico: English, Español, Italiano, Português)
+const BM_WOL_LANGUAGES = [
+  { code: "en", langName: "English",   label: "Online Library",      fullName: "Watchtower Online Library",            base: "https://wol.jw.org/en/wol/", tail: "r1/lp-e", btnBg: "#2962ff", btnGlow: "rgba(41,98,255,0.6)",  titleAttr: "Search the Watchtower Online Library (English)" },
+  { code: "es", langName: "Español",   label: "Biblioteca en línea", fullName: "Biblioteca en línea Watchtower",       base: "https://wol.jw.org/es/wol/", tail: "r4/lp-s", btnBg: "#0288d1", btnGlow: "rgba(2,136,209,0.6)",  titleAttr: "Buscar en la Biblioteca en línea Watchtower (Español)" },
+  { code: "it", langName: "Italiano",  label: "Biblioteca Online",   fullName: "Biblioteca Online Watchtower",         base: "https://wol.jw.org/it/wol/", tail: "r6/lp-i", btnBg: "#00b0ff", btnGlow: "rgba(0,176,255,0.6)",  titleAttr: "Cerca nella Biblioteca Online Watchtower (Italiano)" },
+  { code: "pt", langName: "Português", label: "Biblioteca On-line",  fullName: "Biblioteca On-line da Torre de Vigia", base: "https://wol.jw.org/pt/wol/", tail: "r5/lp-t", btnBg: "#00897b", btnGlow: "rgba(0,137,123,0.6)",  titleAttr: "Pesquisar na Biblioteca On-line da Torre de Vigia (Português)" }
+];
+
+const BM_JWORG_STUDY_LANGUAGES = [
+  { code: "en", bibleId: "gb:nwtsty_e",   wtLocale: "E",   langName: "English",   label: "Study Bible",       fullName: "NWT Study Edition · JW.org",           btnBg: "#2962ff", btnGlow: "rgba(41,98,255,0.6)",  titleAttr: "Open Study Bible on JW.org (English)" },
+  { code: "es", bibleId: "gb:nwtsty_s",   wtLocale: "S",   langName: "Español",   label: "Biblia de estudio", fullName: "TNM Edición de estudio · JW.org",      btnBg: "#0288d1", btnGlow: "rgba(2,136,209,0.6)",  titleAttr: "Abrir Biblia de estudio en JW.org (Español)" },
+  { code: "it", bibleId: "gb:nwtsty",     wtLocale: "I",   langName: "Italiano",  label: "Bibbia Studio",     fullName: "TNM Edizione per lo Studio · JW.org",  btnBg: "#00b0ff", btnGlow: "rgba(0,176,255,0.6)",  titleAttr: "Apri Bibbia per lo Studio su JW.org (Italiano)" },
+  { code: "pt", bibleId: "gb:nwtsty_tpo", wtLocale: "TPO", langName: "Português", label: "Bíblia de Estudo",  fullName: "TNM Edição de Estudo · JW.org",        btnBg: "#00897b", btnGlow: "rgba(0,137,123,0.6)",  titleAttr: "Abrir Bíblia de Estudo no JW.org (Português)" }
+];
+
+function getActiveStudyBibleId() {
+  if (BM_STUDY_BIBLE_REGISTRY[state.trans1]) return state.trans1;
+  if (state.parallelCount >= 2 && BM_STUDY_BIBLE_REGISTRY[state.trans2]) return state.trans2;
+  if (state.parallelCount === 3 && BM_STUDY_BIBLE_REGISTRY[state.trans3]) return state.trans3;
+  return "";
+}
+
+function copyJwExternalLink(url, btnEl) {
+  bmHaptic(14);
+  const ok = copyPubRefToClipboard(url);
+  if (btnEl) {
+    if (!btnEl.dataset.origLabel) btnEl.dataset.origLabel = btnEl.textContent;
+    btnEl.textContent = ok ? "✅ Riferimento copiato!" : "⚠️ Copia non riuscita";
+    setTimeout(() => {
+      if (btnEl && btnEl.dataset.origLabel) btnEl.textContent = btnEl.dataset.origLabel;
+    }, 1800);
+  }
+}
+
+function renderWolLibraryPillsHtml(searchInputId = "searchInput") {
+  const safeInput = escapeJsStr(searchInputId);
+  return `<div class="jw-pill-grid">${BM_WOL_LANGUAGES.map(l => `
+    <button type="button" class="jw-btn btn-color-anim" style="--btn-bg:${l.btnBg}; --btn-glow:${l.btnGlow};" onclick="openJwLibrary('${l.code}', '${safeInput}')" title="${escapeHtml(l.titleAttr)}">
+      <span class="jw-circle">${JW_TOWER_SVG}</span>
+      <span class="jw-btn-text"><span class="jw-btn-title">${escapeHtml(l.label)}</span><span class="jw-btn-lang">${escapeHtml(l.langName)}</span></span>
+    </button>`).join("")}</div>`;
+}
+
+function buildJwOrgStudyUrls(langCode, bookId, chapter = 0) {
+  const entry = BM_JWORG_STUDY_LANGUAGES.find(l => l.code === langCode) || BM_JWORG_STUDY_LANGUAGES[2];
+  const loc = encodeURIComponent(entry.wtLocale);
+  const bId = Math.min(66, Math.max(1, Number(bookId) || 1));
+  const ch = Math.max(0, Number(chapter) || 0);
+  const bb = String(bId).padStart(2, "0");
+  const ccc = String(ch).padStart(3, "0");
+  const bookDocId = 1001070104 + bId;
+  const introDocId = 1001070004 + bId;
+  return {
+    entry,
+    chapterUrl: ch > 0 ? `https://www.jw.org/finder?wtlocale=${loc}&prefer=lang&bible=${bb}${ccc}000&pub=nwtsty` : "",
+    bookUrl: `https://www.jw.org/finder?wtlocale=${loc}&prefer=lang&docid=${bookDocId}&pub=nwtsty`,
+    introUrl: `https://www.jw.org/finder?wtlocale=${loc}&prefer=lang&docid=${introDocId}&pub=nwtsty`
+  };
+}
+
+function renderJwOrgStudyPillsHtml(bookId, chapter = 0, activeStudyBibleId = "") {
+  const activeId = activeStudyBibleId || getActiveStudyBibleId();
+  if (!activeId) return "";
+  const bId = Math.min(66, Math.max(1, Number(bookId) || state.bookId || 1));
+  const ch = Math.max(0, Number(chapter) || 0);
+  return `<div class="jw-pill-grid">${BM_JWORG_STUDY_LANGUAGES.map(l => `
+    <button type="button" class="jw-btn btn-color-anim${l.bibleId === activeId ? " bm-jw-current" : ""}" style="--btn-bg:${l.btnBg}; --btn-glow:${l.btnGlow};" onclick="openJwOrgStudyModal('${l.code}', ${bId}, ${ch})" title="${escapeHtml(l.titleAttr)}">
+      <span class="jw-circle jw-org-circle">${JW_ORG_LOGO_IMG}</span>
+      <span class="jw-btn-text"><span class="jw-btn-title">${escapeHtml(l.label)}</span><span class="jw-btn-lang">${escapeHtml(l.langName)}</span></span>
+    </button>`).join("")}</div>`;
+}
+
+function openJwOrgStudyModal(langCode, bookId, chapter = 0) {
+  bmHaptic(14);
+  const bId = Math.min(66, Math.max(1, Number(bookId) || state.bookId || 1));
+  const ch = Math.max(0, Number(chapter) || 0);
+  const book = getBook(bId);
+  const urls = buildJwOrgStudyUrls(langCode, bId, ch);
+  const entry = urls.entry;
+  const primaryUrl = urls.chapterUrl || urls.bookUrl;
+  const refLabel = ch > 0 ? `${book.name} ${ch}` : book.name;
+  const copyLabel = ch > 0 ? `${book.abbr} ${ch}` : book.name;
+  const offlineBanner = navigator.onLine === false
+    ? `<div style="font-size:12px; color:#ffd54f; background:rgba(255,213,79,0.12); border:1px solid rgba(255,213,79,0.5); border-radius:8px; padding:7px 9px; margin-top:8px;">📡 Sei offline: puoi comunque copiare il riferimento URL e incollarlo su JW.org quando tornerai connesso.</div>`
+    : "";
+
+  if (!openDialogModal(`
+    <div style="text-align:center; padding:4px 0 12px 0;">
+      <div style="width:46px; height:46px; border-radius:50%; overflow:hidden; margin:0 auto 8px auto; background:#4a6da7; border:1.5px solid #84ffff; box-shadow:0 4px 14px rgba(0,229,255,0.35);">${JW_ORG_LOGO_IMG}</div>
+      <div style="font-size:16px; font-weight:900; color:#ffffff; margin-bottom:4px;">${escapeHtml(entry.fullName)}</div>
+      <div style="font-size:14.5px; font-weight:800; color:#84ffff; margin-bottom:4px;">📖 ${escapeHtml(refLabel)} · ${escapeHtml(entry.langName)}</div>
+      <div style="font-size:12.5px; color:#cfe3ff; line-height:1.45;">Accedi all'edizione online su <b>JW.org</b> con i contenuti multimediali e le note di studio aggiornati.</div>
+      ${offlineBanner}
+    </div>
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      ${urls.chapterUrl ? `<button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#03a9f4; --btn-glow:rgba(3,169,244,0.65); background:#1565c0;" onclick="pubRefOpenApp('${escapeJsStr(urls.chapterUrl)}')">${CHROME_LOGO_SVG}Apri ${escapeHtml(refLabel)} su JW.org</button>` : ""}
+      <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#0288d1; --btn-glow:rgba(2,136,209,0.65); background:#0d47a1;" onclick="pubRefOpenApp('${escapeJsStr(urls.bookUrl)}')">${CHROME_LOGO_SVG}Apri libro di ${escapeHtml(book.name)} su JW.org</button>
+      <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00897b; --btn-glow:rgba(0,137,123,0.65); background:#00695c;" onclick="pubRefOpenApp('${escapeJsStr(urls.introUrl)}')">🎬 Introduzione & Video (${escapeHtml(book.abbr)}) su JW.org</button>
+      <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00acc1; --btn-glow:rgba(0,172,193,0.65); background:#062356;" onclick="copyJwExternalLink('${escapeJsStr(primaryUrl)}', this)">📋 Copia link JW.org (${escapeHtml(copyLabel)})</button>
+      <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#7b1fa2; --btn-glow:rgba(156,39,176,0.7); background:#1a0033; margin-top:4px;" onclick="closeMyReadModal()">Chiudi</button>
+    </div>
+  `)) {
+    pubRefOpenApp(primaryUrl);
+  }
+}
 
 function openJwLibrary(lang, searchInputId = "searchInput", directQuery) {
   const fromInput = searchInputId ? (document.getElementById(searchInputId)?.value || "") : "";
   const q = String(directQuery != null ? directQuery : fromInput).trim();
-  if (navigator.onLine === false) {
-    const res = document.getElementById("searchResults");
-    if (res) res.innerHTML = '<div class="loader">📡 Sei offline: la Biblioteca Online richiede la connessione a internet.</div>';
-    else showBlueInfoModal("📡 Connessione assente", "La Biblioteca Online richiede una connessione a internet.");
-    return;
-  }
-  const base = lang === "en" ? "https://wol.jw.org/en/wol/" : "https://wol.jw.org/it/wol/";
-  const tail = lang === "en" ? "r1/lp-e" : "r6/lp-i";
+  const entry = BM_WOL_LANGUAGES.find(l => l.code === lang) || BM_WOL_LANGUAGES[2];
   const url = q
-    ? (base + "s/" + tail + "?q=" + encodeURIComponent(q) + "&p=par&r=occ")
-    : (base + "h/" + tail);
-  const langLabel = lang === "en" ? "English" : "Italiano";
-  const title = q ? `Biblioteca Online · ${langLabel}` : `Biblioteca Online · ${langLabel} (home)`;
-
+    ? (entry.base + "s/" + entry.tail + "?q=" + encodeURIComponent(q) + "&p=par&r=occ")
+    : (entry.base + "h/" + entry.tail);
+  const title = q ? `${entry.label} · ${entry.langName}` : `${entry.label} · ${entry.langName} (home)`;
   const safeUrl = escapeJsStr(url);
   const queryDisplay = q ? `🔍 <b>${escapeHtml(q)}</b>` : `🏠 Pagina iniziale`;
+  const offlineBanner = navigator.onLine === false
+    ? `<div style="font-size:12px; color:#ffd54f; background:rgba(255,213,79,0.12); border:1px solid rgba(255,213,79,0.5); border-radius:8px; padding:7px 9px; margin-top:8px;">📡 Sei offline: puoi comunque copiare il link e aprirlo quando tornerai connesso.</div>`
+    : "";
 
   if (!openDialogModal(`
     <div style="text-align:center; padding:4px 0 12px 0;">
-      <div style="font-size:30px; margin-bottom:8px;">📚</div>
-      <div style="font-size:16px; font-weight:800; color:#ffffff; margin-bottom:6px;">${escapeHtml(title)}</div>
+      <div style="width:44px; height:44px; border-radius:50%; margin:0 auto 8px auto; background:var(--cat-3); display:flex; align-items:center; justify-content:center; border:1.5px solid #84ffff; box-shadow:0 4px 14px rgba(0,229,255,0.35);"><span style="width:24px; height:24px; fill:#ffffff; display:inline-flex;">${JW_TOWER_SVG}</span></div>
+      <div style="font-size:16px; font-weight:800; color:#ffffff; margin-bottom:4px;">${escapeHtml(title)}</div>
+      <div style="font-size:12px; color:#9ec9ff; margin-bottom:6px;">${escapeHtml(entry.fullName)}</div>
       <div style="font-size:14px; color:#e3f2fd; line-height:1.5;">${queryDisplay}</div>
+      ${offlineBanner}
     </div>
     <div style="display:flex; flex-direction:column; gap:8px;">
-      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#03a9f4; --btn-glow:rgba(3,169,244,0.65); background:#1565c0;" onclick="pubRefOpenApp('${safeUrl}')">${CHROME_LOGO_SVG}Apri nella Biblioteca Online</button>
-      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#7b1fa2; --btn-glow:rgba(156,39,176,0.7); background:#1a0033; margin-top:6px;" onclick="closeMyReadModal()">Chiudi</button>
+      <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#03a9f4; --btn-glow:rgba(3,169,244,0.65); background:#1565c0;" onclick="pubRefOpenApp('${safeUrl}')">${CHROME_LOGO_SVG}Apri in ${escapeHtml(entry.label)}</button>
+      <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00acc1; --btn-glow:rgba(0,172,193,0.65); background:#062356;" onclick="copyJwExternalLink('${safeUrl}', this)">📋 Copia link ${escapeHtml(entry.label)}</button>
+      <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#7b1fa2; --btn-glow:rgba(156,39,176,0.7); background:#1a0033; margin-top:4px;" onclick="closeMyReadModal()">Chiudi</button>
     </div>
   `)) {
-    const a = document.createElement("a");
-    a.href = url;
-    a.target = "_blank";
-    a.rel = "noopener noreferrer";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    pubRefOpenApp(url);
   }
 }
 
@@ -10277,6 +10602,7 @@ function applySavedTheme() {
   if (metaTheme) metaTheme.setAttribute("content", themeHex);
 }
 function closeProModal() {
+  window.__bmStudyModalSpeaking = false;
   proModalSessionId++;
   clearXRayChapterCache();
   const modalEl = document.getElementById("proModal");
@@ -10322,14 +10648,16 @@ function runQuickJump() {
 
 function parseRefStringToTarget(str, strict = false) {
   const cleanStr = String(str || "").trim().replace(/\s+/g, " ");
-  const m = cleanStr.match(/^([1-3]?\s*[a-zA-ZÀ-ÿ]+(?:\s+dei\s+[a-zA-ZÀ-ÿ]+)?)\.?\s*(\d{1,3})(?:([:.,\s–-])\s*(\d.*))?$/i);
+  const m = cleanStr.match(/^([1-3]?\s*(?:(?:El|O)\s+)?[a-zA-ZÀ-ÿ]+(?:\s+(?:dei|of|de|dos)\s+(?:los\s+)?[a-zA-ZÀ-ÿ]+)?)\.?\s*(\d{1,3})(?:([:.,\s–-])\s*(\d.*))?$/i);
   if (!m) return null;
   const qBook = normalizeForSearch(m[1]).replace(/[^a-z0-9]/g, "");
   const num1 = parseInt(m[2] || "1", 10);
   const sep = m[3] || "";
   const rest = (m[4] || "").trim();
   let found = null;
-  if (SI_ABBR_MAP[qBook]) {
+  if (/^j[óò]$/i.test(String(m[1] || "").trim())) {
+    found = getBook(18);
+  } else if (SI_ABBR_MAP[qBook]) {
     found = getBook(SI_ABBR_MAP[qBook]);
   }
   if (!found) {
@@ -10681,6 +11009,17 @@ function clearSpeechContext(preservePausedAudio = false) {
   }
 }
 function getActiveTTSLangCode(fullLocale = false) {
+  const studyModalEl = document.getElementById("proModal");
+  if (studyModalEl && studyModalEl.style.display === "flex" && window.__bmLastStudyModalLang && window.__bmStudyModalSpeaking) {
+    const ml = String(window.__bmLastStudyModalLang);
+    const lMap = { it: "it-IT", en: "en-US", es: "es-ES", pt: "pt-BR" };
+    return fullLocale ? (lMap[ml] || "it-IT") : ml;
+  }
+  if (currentViewContext && currentViewContext.type === "study_docs") {
+    const scfg = getStudyBibleConfig(bmStudyDocsActiveBibleId);
+    const lMap = { it: "it-IT", en: "en-US", es: "es-ES", pt: "pt-BR" };
+    return fullLocale ? (lMap[scfg.langCode] || "it-IT") : (scfg.langCode || "it");
+  }
   if ((typeof currentInsightSpeechText === "string" && currentInsightSpeechText.trim()) ||
       (typeof currentDailySpeechText === "string" && currentDailySpeechText.trim())) {
     const hasVerseRows = document.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3").length > 0;
@@ -11539,6 +11878,7 @@ let bmVerseCardState = { ref: "", text: "", transBadge: "", theme: "sapphire", f
 
 function getShortBibleBadge(transId) {
   const map = {
+    "gb:nwtsty": "TNM Studio", "gb:nwtsty_e": "NWT Study", "gb:nwtsty_s": "TNM Estudio", "gb:nwtsty_tpo": "TNM Estudo",
     "gb:nwt": "TNM 2017", "gb:bi12": "TNM 1987", "gb:nwt_e": "NWT 2013", "gb:bi12_e": "NWT 1984",
     "gb:nwt_s": "TNM 2019", "gb:bi12_s": "TNM 1987", "gb:nwt_tpo": "TNM",
     "epub:nr": "NR", "epub:nd": "LND", "epub:cei": "CEI 2008", "epub:tilc": "TILC",
@@ -11789,6 +12129,10 @@ function openBackupModal() {
         <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:bi12', 'TNM 1987 (IT)')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#1565c0;">
+        🎓🇬🇧 Carica NWT Study Edition (.zip Parte 1/2 o .json)
+        <input type="file" accept=".zip,.json,application/zip,application/json" multiple style="display:none;" onchange="importStudyBibleArchive(event, 'gb:nwtsty_e')">
+      </label>
+      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0d47a1;">
         🇬🇧 Carica EPUB NWT 2013 English (nwt_E.epub)
         <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:nwt_e', 'NWT 2013 (EN)')">
       </label>
@@ -11797,12 +12141,20 @@ function openBackupModal() {
         <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:bi12_e', 'NWT 1984 (EN)')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#1565c0;">
+        🎓🇪🇸 Carica TNM Edición de Estudio (.zip Parte 1/2 o .json)
+        <input type="file" accept=".zip,.json,application/zip,application/json" multiple style="display:none;" onchange="importStudyBibleArchive(event, 'gb:nwtsty_s')">
+      </label>
+      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0d47a1;">
         🇪🇸 Carica EPUB TNM 2019 Español (nwt_S.epub)
         <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:nwt_s', 'TNM 2019 (ES)')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#0a367e;">
         🇪🇸 Carica EPUB TNM 1987 Español (bi12_S.epub)
         <input type="file" accept=".epub,application/epub+zip" style="display:none;" onchange="importUniversalEpubFiles(event, 'gb:bi12_s', 'TNM 1987 (ES)')">
+      </label>
+      <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#00897b;">
+        🎓🇵🇹🇧🇷 Carica TNM Edição de Estudo (.zip Parte 1/2 o .json)
+        <input type="file" accept=".zip,.json,application/zip,application/json" multiple style="display:none;" onchange="importStudyBibleArchive(event, 'gb:nwtsty_tpo')">
       </label>
       <label class="search-btn" style="text-align:center; padding:9px; cursor:pointer; background:#00695c;">
         🇵🇹🇧🇷 Carica EPUB TNM Português (nwt_TPO.epub)
@@ -13616,10 +13968,7 @@ async function showInsightView(selectedIndex = null, fromBack = false) {
       <input type="text" id="insightSearchInput" class="search-input" value="${escapeHtml(insightSearchQuery)}" placeholder="🔍 Cerca voce o parola nel testo (es. Incorruzione)..." oninput="onInsightSearchInput(this.value)">
       <button id="insightClearBtn" class="nav-btn" style="${insightSearchQuery ? '' : 'display:none;'}" onclick="insightSearchQuery=''; showInsightView(null, true);" title="Pulisci ricerca">✕</button>
     </div>
-    <div style="display:flex; gap:8px; flex-wrap:wrap; margin:0 0 10px 0;">
-      <button class="jw-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,176,255,0.6);" onclick="openJwLibrary('it', 'insightSearchInput')" title="Cerca nella Biblioteca Online Watchtower (italiano)"><span class="jw-circle">${JW_TOWER_SVG}</span>Biblioteca Online · Italiano</button>
-      <button class="jw-btn btn-color-anim" style="--btn-bg:#2962ff; --btn-glow:rgba(41,98,255,0.6);" onclick="openJwLibrary('en', 'insightSearchInput')" title="Search the Watchtower Online Library (English)"><span class="jw-circle">${JW_TOWER_SVG}</span>Online Library · English</button>
-    </div>
+    ${renderWolLibraryPillsHtml('insightSearchInput')}
     <div style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:12px;">${letterPills}</div>
     <div id="insightListContainer"></div>
   `;
@@ -13990,10 +14339,7 @@ async function showSiView(fromBack = false) {
       <input type="text" id="siSearchInput" class="search-input" value="${escapeHtml(siSearchQuery)}" placeholder="🔍 Cerca nei 66 libri, introduzione e studi..." oninput="onSiSearchInput(this.value)">
       <button id="siClearBtn" class="nav-btn" style="${siSearchQuery ? '' : 'display:none;'}" onclick="siSearchQuery=''; showSiView(true);" title="Pulisci ricerca">✕</button>
     </div>
-    <div style="display:flex; gap:8px; flex-wrap:wrap; margin:0 0 10px 0;">
-      <button class="jw-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,176,255,0.6);" onclick="openJwLibrary('it', 'siSearchInput')" title="Cerca nella Biblioteca Online Watchtower (italiano)"><span class="jw-circle">${JW_TOWER_SVG}</span>Biblioteca Online · Italiano</button>
-      <button class="jw-btn btn-color-anim" style="--btn-bg:#2962ff; --btn-glow:rgba(41,98,255,0.6);" onclick="openJwLibrary('en', 'siSearchInput')" title="Search the Watchtower Online Library (English)"><span class="jw-circle">${JW_TOWER_SVG}</span>Online Library · English</button>
-    </div>
+    ${renderWolLibraryPillsHtml('siSearchInput')}
     <div id="siContentContainer"></div>
   `;
   syncBmPaperMode(true);
@@ -15107,7 +15453,7 @@ function scrollRpToToday(smooth = false) {
 function buildStudioBackupObject() {
   return {
     app: "BibbiaMultilingue_PRO",
-    version: "PRO_v17.1.1",
+    version: "PRO_v17.1.6",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
@@ -15437,9 +15783,19 @@ function describeIdbMigrationModule(id, extraCount = 0) {
   if (id === "bm:maps_bundle") return { icon: "🗺️", title: `Cartine Bibliche HD${extraCount ? ` (${extraCount} tavole)` : ""}`, fileSlug: "cartine_hd", prio: 4 };
   if (id === "bm:strong_ext") return { icon: "🏺", title: "Lessico Strong Esteso", fileSlug: "strong_esteso", prio: 5 };
   if (id === "bm:xrefs_ext") return { icon: "🔗", title: "Riferimenti Incrociati Estesi", fileSlug: "riferimenti_estesi", prio: 6 };
-  if (id === "bm:nwtsty_media_bundle") return { icon: "🖼️", title: `Immagini & Mappe TNM Studio${extraCount ? ` (${extraCount} file)` : ""}`, fileSlug: "nwtsty_media", prio: 7 };
-  if (id.startsWith("bm:nwtsty_docs:")) return { icon: "🎓", title: "Documenti & Appendici TNM Studio", fileSlug: "nwtsty_documenti", prio: 8 };
-  if (id.startsWith("bm:nwtsty_xrefs:")) return { icon: "🔗", title: "Riferimenti Marginali TNM Studio", fileSlug: "nwtsty_riferimenti", prio: 9 };
+  if (id === "bm:nwtsty_media_bundle") return { icon: "🖼️", title: `Immagini & Mappe Studio${extraCount ? ` (${extraCount} file)` : ""}`, fileSlug: "nwtsty_media", prio: 7 };
+  if (id.startsWith("bm:nwtsty_docs:")) {
+    const bId = id.slice("bm:nwtsty_docs:".length);
+    const cfg = BM_STUDY_BIBLE_REGISTRY[bId];
+    const tag = cfg ? cfg.langCode.toUpperCase() : "IT";
+    return { icon: "🎓", title: `Documenti & Appendici Studio (${tag})`, fileSlug: `nwtsty_docs_${tag.toLowerCase()}`, prio: 8 };
+  }
+  if (id.startsWith("bm:nwtsty_xrefs:")) {
+    const bId = id.slice("bm:nwtsty_xrefs:".length);
+    const cfg = BM_STUDY_BIBLE_REGISTRY[bId];
+    const tag = cfg ? cfg.langCode.toUpperCase() : "IT";
+    return { icon: "🔗", title: `Riferimenti Marginali Studio (${tag})`, fileSlug: `nwtsty_xrefs_${tag.toLowerCase()}`, prio: 9 };
+  }
   const bMeta = dynamicCatalog.find(b => b.id === id) || CORE_BIBLES.find(b => b.id === id);
   const label = bMeta ? bMeta.name : `Bibbia offline (${id})`;
   const slug = String(id).replace(/[^a-zA-Z0-9_-]+/g, "_");
@@ -15549,7 +15905,7 @@ function setMigrationStatus(htmlMsg) {
 
 async function buildAndDeliverLibraryBundle(keysList, includeStudio, fileName, shareTitle) {
   const parts = [
-    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v17.1.1","date":',
+    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v17.1.6","date":',
     JSON.stringify(new Date().toISOString())
   ];
   if (includeStudio) {
@@ -20133,22 +20489,41 @@ async function loadStudyImageDataUrl(fileName) {
   return url;
 }
 
+async function hydrateSingleStudyImg(img) {
+  if (!img || !img.isConnected) return;
+  const fname = img.getAttribute("data-study-img") || "";
+  if (!fname || img.getAttribute("data-study-loaded") === "1") return;
+  img.setAttribute("data-study-loaded", "loading");
+  const src = await loadStudyImageDataUrl(fname);
+  if (!img.isConnected) return;
+  if (src) {
+    img.src = src;
+    img.setAttribute("data-study-loaded", "1");
+  } else {
+    img.setAttribute("data-study-loaded", "missing");
+    img.alt = "Immagine non ancora importata (carica Parte 2 .zip)";
+    img.style.minHeight = "64px";
+  }
+}
+
 async function hydrateStudyImagesInContainer(containerEl) {
   if (!containerEl) return;
   const imgs = Array.from(containerEl.querySelectorAll("img[data-study-img]"));
+  if (!imgs.length) return;
+  if (imgs.length > 12 && typeof IntersectionObserver !== "undefined") {
+    const io = new IntersectionObserver((entries, obs) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        const target = entry.target;
+        obs.unobserve(target);
+        hydrateSingleStudyImg(target);
+      });
+    }, { root: document.getElementById("mainContainer"), rootMargin: "360px 0px", threshold: 0.01 });
+    imgs.forEach(img => io.observe(img));
+    return;
+  }
   for (const img of imgs) {
-    if (!img.isConnected) continue;
-    const fname = img.getAttribute("data-study-img") || "";
-    if (!fname || img.getAttribute("data-study-loaded") === "1") continue;
-    const src = await loadStudyImageDataUrl(fname);
-    if (!img.isConnected) continue;
-    if (src) {
-      img.src = src;
-      img.setAttribute("data-study-loaded", "1");
-    } else {
-      img.alt = "Immagine non ancora importata (carica Parte 2 .zip)";
-      img.style.minHeight = "64px";
-    }
+    await hydrateSingleStudyImg(img);
   }
 }
 
@@ -20243,11 +20618,13 @@ function resolveDeduplicatedVerseMedia(mediaIds, mediaById) {
   return { videos, images: fullImages };
 }
 
-function formatStudyNoteTextHtml(noteObj, bookId) {
+function formatStudyNoteTextHtml(noteObj, bookId, langCode = "it") {
   const head = String((noteObj && noteObj.head) || "").trim();
   const fullText = String((noteObj && noteObj.text) || "").trim();
   if (!fullText) return "";
   const paras = fullText.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
+  const colonLemmaRe = /^([^:\n]{1,84}:)\s+/;
+  const dotLemmaRe = /^([^.!?\n]{1,92}[.!?])\s+(?=[A-ZÁÉÍÓÚÑ¡¿“"'])/;
   const lemmaCueRe = /^(.{2,78}?)\s+(?=(?:O\s+[“"]|Lett\.|In\s+(?:greco|ebraico|aramaico|questa|questo|molti|altri|senso|passato)|Nell['’]|Nella\s|Nelle\s|Nei\s|Nel\s|Questo\s|Questa\s|Queste\s|Questi\s|Vedi\s|Cioè\s|Corrisponde\s|Anche\s|Dato\s|Qui\s|A\s+partire|Come\s|Sembra\s|Nome\s|Espressione\s|Termine\s|Parola\s|Titolo\s|Il\s+|La\s+|Lo\s+|Le\s+|Gli\s+|L['’]|Un\s+|Una\s+|Uno\s+|I\s+|Matteo\s|Marco\s|Luca\s|Giovanni\s|Paolo\s|Pietro\s|Gesù\s|Geova\s|Dio\s|Presso\s|Quando\s|Prima\s|Dopo\s|Durante\s|Secondo\s|Spesso\s|Alcuni\s|Alcune\s|Molti\s|Molte\s|All['’]|Al\s|Per\s|Tra\s|Fra\s|Con\s|Senza\s|Fu\s|Era\s|Sono\s|Si\s|Non\s|Letteralmente|In\s+base|Dal\s|Dalla\s|Dai\s|Da\s|Avendo\s|Riferito\s|Usato\s|Indica\s|Significa\s))/;
   return paras.map((para, idx) => {
     let lead = "";
@@ -20255,11 +20632,23 @@ function formatStudyNoteTextHtml(noteObj, bookId) {
     if (idx === 0 && head && para.startsWith(head + " ")) {
       lead = head;
       rest = para.slice(head.length + 1);
+    } else if (langCode === "es") {
+      const md = para.match(dotLemmaRe);
+      if (md && md[1]) {
+        lead = md[1];
+        rest = para.slice(md[0].length);
+      }
     } else {
-      const m = para.match(lemmaCueRe);
-      if (m && m[1] && !/[.!?]$/.test(m[1])) {
-        lead = m[1];
-        rest = para.slice(m[1].length + 1);
+      const mc = para.match(colonLemmaRe);
+      if (mc && mc[1] && !/[.!?]$/.test(mc[1])) {
+        lead = mc[1];
+        rest = para.slice(mc[0].length);
+      } else {
+        const m = para.match(lemmaCueRe);
+        if (m && m[1] && !/[.!?]$/.test(m[1])) {
+          lead = m[1];
+          rest = para.slice(m[1].length + 1);
+        }
       }
     }
     const leadHtml = lead ? `<span class="bm-study-lemma">${escapeHtml(lead)}</span> ` : "";
@@ -20441,7 +20830,28 @@ async function importStudyBibleArchive(event, targetId = "gb:nwtsty") {
     }
 
     const allKeysNow = await idbGetAllKeys();
-    const totalImgNow = allKeysNow.filter(k => k.startsWith(BM_STUDY_IMG_PREFIX)).length;
+    const imgFileSet = new Set(
+      allKeysNow
+        .filter(k => k.startsWith(BM_STUDY_IMG_PREFIX))
+        .map(k => k.slice(BM_STUDY_IMG_PREFIX.length))
+    );
+    let requiredImgFiles = [];
+    try {
+      const savedBibleObj = await getOfflineBible(targetId);
+      if (savedBibleObj && savedBibleObj.mediaById && typeof savedBibleObj.mediaById === "object") {
+        const reqSet = new Set();
+        Object.values(savedBibleObj.mediaById).forEach(m => {
+          if (m && m.file && m.mime && m.mime.startsWith("image/")) reqSet.add(m.file);
+        });
+        requiredImgFiles = [...reqSet];
+      }
+    } catch (e) { console.debug(e); }
+
+    const editionImgTotal = requiredImgFiles.length || (appStats ? appStats.imgTotal : (prevStatus.imgTotal || 744));
+    const editionImgCount = requiredImgFiles.length
+      ? requiredImgFiles.filter(fn => imgFileSet.has(fn)).length
+      : Math.min(editionImgTotal, imgFileSet.size);
+
     const nextStatus = {
       updated: Date.now(),
       hasApp: prevStatus.hasApp || savedApp,
@@ -20449,8 +20859,8 @@ async function importStudyBibleArchive(event, targetId = "gb:nwtsty") {
       studyNotesCount: appStats ? appStats.studyNotesCount : prevStatus.studyNotesCount,
       docsCount: appStats ? appStats.docsCount : prevStatus.docsCount,
       xrefsCount: appStats ? appStats.xrefsCount : prevStatus.xrefsCount,
-      imgCount: totalImgNow,
-      imgTotal: appStats ? appStats.imgTotal : (prevStatus.imgTotal || 744),
+      imgCount: editionImgCount,
+      imgTotal: editionImgTotal,
       mediaParts: [...new Set([...(prevStatus.mediaParts || []), ...savedMediaPartsThisRun])].sort()
     };
     await idbPut(`bm:nwtsty_status:${targetId}`, nextStatus);
@@ -20470,19 +20880,20 @@ async function importStudyBibleArchive(event, targetId = "gb:nwtsty") {
     await populateSelects();
     await refreshActiveViewAfterDataChange();
 
-    const missingImg = Math.max(0, (nextStatus.imgTotal || 744) - totalImgNow);
+    const editionTitle = cfg.shortTitle || "TNM Studio";
+    const missingImg = Math.max(0, editionImgTotal - editionImgCount);
     const tailHint = missingImg > 0
-      ? `<br>📌 Immagini offline: <b>${totalImgNow}/${nextStatus.imgTotal}</b> — carica ora anche <b>Parte 2 (.zip)</b> per completare le restanti ${missingImg} immagini!`
-      : `<br>🏆 Archivio completo al 100%: <b>${totalImgNow}/${nextStatus.imgTotal} immagini e mappe HD</b> pronte offline!`;
+      ? `<br>📌 Immagini ${escapeHtml(editionTitle)}: <b>${editionImgCount}/${editionImgTotal}</b> — carica ora anche <b>Parte 2 (.zip)</b> per completare le restanti ${missingImg} immagini!`
+      : `<br>🏆 Archivio ${escapeHtml(editionTitle)} completo al 100%: <b>${editionImgCount}/${editionImgTotal} immagini e mappe HD</b> pronte offline!`;
 
     setStatus(
-      `✔ <b>TNM Studio salvata!</b>` +
-      (savedApp ? ` ${nextStatus.verseCount.toLocaleString("it-IT")} versetti · ${nextStatus.studyNotesCount.toLocaleString("it-IT")} note di studio · ${nextStatus.docsCount} documenti` : ` +${savedImagesThisRun} immagini aggiunte`) +
+      `✔ <b>${escapeHtml(editionTitle)} salvata!</b>` +
+      (savedApp ? ` ${nextStatus.verseCount.toLocaleString("it-IT")} versetti · ${nextStatus.studyNotesCount.toLocaleString("it-IT")} note di studio · ${nextStatus.docsCount} documenti` : ` +${savedImagesThisRun} immagini elaborate`) +
       tailHint
     );
     bmChimeHaptic();
   } catch (err) {
-    setStatus(`❌ Errore importazione TNM Studio: ${escapeHtml(err && err.message ? err.message : String(err))}`);
+    setStatus(`❌ Errore importazione ${escapeHtml(cfg.shortTitle || "TNM Studio")}: ${escapeHtml(err && err.message ? err.message : String(err))}`);
   } finally {
     if (inputEl) inputEl.value = "";
   }
@@ -20540,7 +20951,7 @@ async function openStudyNoteModal(verseNum, forcedBibleId = null) {
 
   const notesHtml = sNotes.length
     ? `<div class="section-title"><span>🎓 Note di Studio (${sNotes.length})</span><button type="button" class="nav-btn" style="padding:2px 8px; font-size:11.5px;" onclick="speakStudyNotesForCurrentModal()">🔊 Ascolta</button></div>` +
-      sNotes.map(n => formatStudyNoteTextHtml(n, targetBookId)).join("")
+      sNotes.map(n => formatStudyNoteTextHtml(n, targetBookId, cfg.langCode)).join("")
     : "";
 
   const fnHtml = vFootnotes.length
@@ -20595,6 +21006,8 @@ async function openStudyNoteModal(verseNum, forcedBibleId = null) {
     : "";
 
   window.__bmLastStudyModalSpeech = sNotes.map(n => n.text).join(" ");
+  window.__bmLastStudyModalLang = cfg.langCode || "it";
+  window.__bmStudyModalSpeaking = false;
 
   if (bodyEl) {
     bodyEl.innerHTML = `
@@ -20623,20 +21036,205 @@ function speakStudyNotesForCurrentModal() {
   const txt = String(window.__bmLastStudyModalSpeech || "").trim();
   if (!txt) return;
   bmHaptic(12);
+  window.__bmStudyModalSpeaking = true;
   startUniversalSpeech(txt, true, false);
 }
 
 // ============================================================================
-// PANNELLO B: HUB DOCUMENTI, INTRODUZIONI, 20 DOMANDE & APPENDICI (767 DOCS)
+// PANNELLO B: STRISCIA CONTESTUALE IN LETTURA, DOCUMENTI, APPENDICI & MEDIA
 // ============================================================================
+function isStudyDocEmptyShell(doc) {
+  if (!doc || typeof doc !== "object") return true;
+  const hasParas = Array.isArray(doc.paragraphs) && doc.paragraphs.length > 0;
+  const hasMedia = Array.isArray(doc.media) && doc.media.length > 0;
+  const hasFns = Array.isArray(doc.footnotes) && doc.footnotes.length > 0;
+  return !hasParas && !hasMedia && !hasFns;
+}
+
+function isStudyDocMediaGalleryOnly(doc) {
+  if (!doc || typeof doc !== "object") return false;
+  return String(doc.class) === "1"
+    && (!Array.isArray(doc.paragraphs) || doc.paragraphs.length === 0)
+    && Array.isArray(doc.media) && doc.media.length > 0;
+}
+
 function classifyStudyDocument(doc) {
   const cls = String(doc && doc.class !== undefined ? doc.class : "");
   if (cls === "11" || cls === "18" || cls === "39" || cls === "12" || cls === "121") return "intro";
-  if (cls === "113" || cls === "114" || cls === "115" || cls === "1") return "books";
+  if (cls === "113" || cls === "114" || cls === "115") return "books";
+  if (cls === "1") return isStudyDocMediaGalleryOnly(doc) ? "media" : "books";
   if (cls === "14" || cls === "125") return "appendices";
   if (cls === "122") return "media";
   if (cls === "118") return "chapters";
   return "intro";
+}
+
+function findBookStudyDocs(docsData, bookId, chapter = 0) {
+  const res = { intro: null, overview: null, overviewIsPanoramica: false, chapDeep: null, hasAnyChapDeep: false, bookMedia: null };
+  if (!docsData || !Array.isArray(docsData.documents)) return res;
+  const bId = Number(bookId) || 0;
+  const chNum = Number(chapter) || 0;
+  const bMeta = getBook(bId);
+  for (const d of docsData.documents) {
+    if (!d || Number(d.chapter) !== bId) continue;
+    const cls = String(d.class);
+    if (cls === "113" && !res.intro) res.intro = d;
+    else if (cls === "114") { res.overview = d; res.overviewIsPanoramica = true; }
+    else if (cls === "115" && !res.overview) { res.overview = d; res.overviewIsPanoramica = false; }
+    else if (cls === "1" && isStudyDocMediaGalleryOnly(d)) res.bookMedia = d;
+    else if (cls === "118") {
+      res.hasAnyChapDeep = true;
+      if (chNum > 0 && !res.chapDeep) {
+        const m = String(d.title || "").trim().match(/(\d+)\s*$/);
+        const docCh = m ? parseInt(m[1], 10) : (bMeta.ch === 1 ? 1 : 0);
+        if (docCh === chNum) res.chapDeep = d;
+      }
+    }
+  }
+  return res;
+}
+
+function collectChapterStudyMediaItems(studyExtras) {
+  if (!studyExtras || !studyExtras.media || !studyExtras.mediaById) return { videos: [], images: [], total: 0 };
+  const allVideos = [];
+  const allImages = [];
+  const seenVidFiles = new Set();
+  const seenImgFiles = new Set();
+  const vNums = Object.keys(studyExtras.media).map(Number).filter(n => n > 0).sort((a, b) => a - b);
+  for (const vNum of vNums) {
+    const ids = studyExtras.media[String(vNum)] || studyExtras.media[vNum] || [];
+    const { videos, images } = resolveDeduplicatedVerseMedia(ids, studyExtras.mediaById);
+    videos.forEach(v => {
+      const k = String(v.file || v.label || "");
+      if (k && !seenVidFiles.has(k)) { seenVidFiles.add(k); allVideos.push({ ...v, verse: vNum }); }
+    });
+    images.forEach(im => {
+      const k = String(im.file || im.label || "");
+      if (k && !seenImgFiles.has(k)) { seenImgFiles.add(k); allImages.push({ ...im, verse: vNum }); }
+    });
+  }
+  return { videos: allVideos, images: allImages, total: allVideos.length + allImages.length };
+}
+
+function renderChapterStudyRibbonHtml(studyExtras, docsData, bookId, chapter) {
+  if (!studyExtras || !studyExtras.isStudyBible) return "";
+  const book = getBook(bookId);
+  const found = findBookStudyDocs(docsData, bookId, chapter);
+  const chapMedia = collectChapterStudyMediaItems(studyExtras);
+  const btns = [];
+  if (found.intro) {
+    btns.push(`<button type="button" class="bm-study-ribbon-btn accent" onclick="showStudyDocsView(${Number(found.intro.id)}, false)">🎬 Intro ${escapeHtml(book.abbr)}</button>`);
+  }
+  if (found.overview) {
+    btns.push(`<button type="button" class="bm-study-ribbon-btn accent" onclick="showStudyDocsView(${Number(found.overview.id)}, false)">📋 ${found.overviewIsPanoramica ? "Panoramica" : "Sommario"}</button>`);
+  }
+  if (found.chapDeep) {
+    btns.push(`<button type="button" class="bm-study-ribbon-btn accent" onclick="showStudyDocsView(${Number(found.chapDeep.id)}, false)">🎓 Approf. Cap. ${chapter}</button>`);
+  }
+  if (chapMedia.total > 0) {
+    btns.push(`<button type="button" class="bm-study-ribbon-btn accent" onclick="openChapterStudyMediaModal(${bookId}, ${chapter}, '${escapeJsStr(studyExtras.bibleId)}')">🖼️ Media Cap. ${chapter} (${chapMedia.total})</button>`);
+  }
+  if (found.bookMedia) {
+    btns.push(`<button type="button" class="bm-study-ribbon-btn" onclick="showStudyDocsView(${Number(found.bookMedia.id)}, false)">🖼️ Media ${escapeHtml(book.abbr)}</button>`);
+  }
+  btns.push(`<button type="button" class="bm-study-ribbon-btn" onclick="openStudyDocsCategory('appendices', ${bookId})">📑 Appendici</button>`);
+  btns.push(`<button type="button" class="bm-study-ribbon-btn" onclick="openStudyDocsCategory('intro', ${bookId})">❓ 20 Domande</button>`);
+  btns.push(`<button type="button" class="bm-study-ribbon-btn" onclick="openStudyDocsCategory('media', ${bookId})">🖼️ Galleria</button>`);
+  btns.push(`<button type="button" class="bm-study-ribbon-btn" onclick="openStudyDocsForBook(${bookId}, ${chapter})">📚 Indice</button>`);
+  return `<div class="bm-study-ribbon">${btns.join("")}</div>`;
+}
+
+function renderBookStudyRibbonHtml(docsData, bookId) {
+  const book = getBook(bookId);
+  const found = findBookStudyDocs(docsData, bookId, 0);
+  const btns = [];
+  if (found.intro) {
+    btns.push(`<button type="button" class="bm-study-ribbon-btn accent" onclick="showStudyDocsView(${Number(found.intro.id)}, false)">🎬 Introduzione</button>`);
+  }
+  if (found.overview) {
+    btns.push(`<button type="button" class="bm-study-ribbon-btn accent" onclick="showStudyDocsView(${Number(found.overview.id)}, false)">📋 ${found.overviewIsPanoramica ? "Panoramica" : "Sommario"}</button>`);
+  }
+  if (found.bookMedia) {
+    btns.push(`<button type="button" class="bm-study-ribbon-btn accent" onclick="showStudyDocsView(${Number(found.bookMedia.id)}, false)">🖼️ Media ${escapeHtml(book.abbr)}</button>`);
+  }
+  if (found.hasAnyChapDeep) {
+    btns.push(`<button type="button" class="bm-study-ribbon-btn" onclick="openStudyDocsForBook(${bookId}, 0)">🎓 Approfondimenti</button>`);
+  }
+  btns.push(`<button type="button" class="bm-study-ribbon-btn" onclick="openStudyDocsCategory('appendices', ${bookId})">📑 Appendici</button>`);
+  btns.push(`<button type="button" class="bm-study-ribbon-btn" onclick="openStudyDocsCategory('all', ${bookId})">📚 Tutto lo Studio</button>`);
+  return `<div class="bm-study-ribbon" style="margin:0 0 8px 0;">${btns.join("")}</div>`;
+}
+
+async function openChapterStudyMediaModal(bookId, chapter, forcedBibleId = null) {
+  bmHaptic(14);
+  const sid = beginProModalSession();
+  const targetBookId = Number(bookId) || state.bookId;
+  const targetChapter = Number(chapter) || state.chapter;
+  const bibleId = forcedBibleId || resolveStudyBibleIdForUi(state.trans1);
+  const cfg = getStudyBibleConfig(bibleId);
+  const book = getBook(targetBookId);
+
+  const modalEl = document.getElementById("proModal");
+  const titleEl = document.getElementById("proModalTitle");
+  const bodyEl = document.getElementById("proModalBody");
+  if (titleEl) titleEl.textContent = `🖼️ Media: ${book.name} ${targetChapter}`;
+  if (bodyEl) bodyEl.innerHTML = `<div class="loader">🖼️ Caricamento immagini e video di <b>${escapeHtml(book.name)} ${targetChapter}</b>...</div>`;
+  if (modalEl) modalEl.style.display = "flex";
+
+  const extras = await fetchChapterStudyExtras(bibleId, targetBookId, targetChapter, true);
+  if (!isProModalSessionActive(sid)) return;
+  const { videos, images } = collectChapterStudyMediaItems(extras);
+
+  const videosHtml = videos.length
+    ? `<div class="section-title"><span>🎬 Video del Capitolo (${videos.length})</span></div>` +
+      videos.map(v => {
+        const poolIdx = registerStudyMediaPoolItem({ video: v.file, label: v.label, wtLocale: cfg.wtLocale });
+        return `
+        <div class="bm-study-video-card">
+          <div class="bm-study-video-thumb-wrap" onclick="openStudyVideoByPool(${poolIdx})">
+            ${v.thumbFile ? `<img data-study-img="${escapeHtml(v.thumbFile)}" alt="${escapeHtml(v.label)}">` : ""}
+            <span class="bm-study-video-play-pill">▶ Guarda su JW.org ↗</span>
+          </div>
+          <div style="padding:8px 11px;">
+            <div style="font-size:13px; font-weight:900; color:#84ffff;">v.${v.verse} · ${escapeHtml(v.label)}</div>
+            ${v.caption ? `<div class="bm-justify-text" style="font-size:12px; color:var(--text-muted); margin-top:4px; line-height:1.45;">${formatNoteLinks(v.caption, targetBookId)}</div>` : ""}
+          </div>
+        </div>`;
+      }).join("")
+    : "";
+
+  const imagesHtml = images.length
+    ? `<div class="section-title"><span>🖼️ Immagini & Mappe (${images.length})</span></div>
+       <div class="bm-study-media-grid">
+         ${images.map(im => {
+           const isSvg = im.mime === "image/svg+xml" || /\.svg$/i.test(im.file);
+           const poolIdx = registerStudyMediaPoolItem({ file: im.file, label: im.label, caption: im.caption, credit: im.credit });
+           return `
+             <div class="bm-study-media-card" onclick="openStudyLightboxByPool(${poolIdx})">
+               <img class="bm-study-media-thumb${isSvg ? ' is-svg' : ''}" data-study-img="${escapeHtml(im.file)}" alt="${escapeHtml(im.label)}">
+               <div class="bm-study-media-cap"><span style="color:#ffd54f;">v.${im.verse}</span> ${escapeHtml(im.label || im.file)}</div>
+             </div>`;
+         }).join("")}
+       </div>`
+    : "";
+
+  if (bodyEl) {
+    bodyEl.innerHTML = `
+      ${videosHtml}
+      ${imagesHtml}
+      ${(!videosHtml && !imagesHtml) ? `<div class="loader">Nessuna immagine o video associato a <b>${escapeHtml(book.name)} ${targetChapter}</b>.</div>` : ""}
+      <button type="button" class="myread-action-btn" style="background:var(--bg-main); margin-top:8px;" onclick="closeProModal()">Chiudi</button>
+    `;
+    hydrateStudyImagesInContainer(bodyEl);
+  }
+}
+
+function openStudyDocsCategory(catId = "all", bookId = 0) {
+  bmHaptic(14);
+  bmStudyDocsFilterBook = Number(bookId) || state.bookId;
+  bmStudyDocsFilterCat = catId || "all";
+  bmStudyDocsSearchQuery = "";
+  showStudyDocsView(null, false);
 }
 
 function openStudyDocsForBook(bookId, chapter = 0) {
@@ -20657,7 +21255,7 @@ async function showStudyDocsView(selectedDocId = null, fromBack = false) {
   clearSpeechContext();
   bmStudyDocsActiveBibleId = resolveStudyBibleIdForUi(state.trans1);
   currentViewContext = { type: "study_docs", docId: selectedDocId, label: "🎓 Studio" };
-  setActiveTab("", "studyDocsTabBtn");
+  setActiveTab("", "readTabBtn");
   const main = document.getElementById("mainContainer");
 
   const data = await getStudyBibleDocsData(bmStudyDocsActiveBibleId);
@@ -20673,12 +21271,12 @@ async function showStudyDocsView(selectedDocId = null, fromBack = false) {
         <div style="font-size:32px; margin-bottom:8px;">🎓</div>
         <div style="font-size:15.5px; font-weight:900; color:#84ffff; margin-bottom:6px;">TNM Edizione per lo Studio Offline</div>
         <div style="font-size:13px; color:var(--text-muted); line-height:1.5; margin-bottom:12px;">
-          Importa <b>nwtsty_I_parte1.zip</b> e <b>nwtsty_I_parte2.zip</b> (insieme o uno alla volta) per sbloccare offline tutti i 66 libri, 3.729 note di studio, 767 documenti/appendici e 744 immagini & mappe HD:
+          Importa <b>nwtsty_I_parte1.zip</b> e <b>nwtsty_I_parte2.zip</b> (insieme o uno alla volta) per sbloccare offline tutti i 66 libri, 3.729 note di studio, 720 documenti/appendici e 744 immagini & mappe HD:
         </div>
         <div class="epub-import-status bm-backup-status-sticky" role="status" aria-live="polite"></div>
         <label class="search-btn" style="display:block; text-align:center; padding:11px; cursor:pointer; background:linear-gradient(135deg, #0d47a1, #1565c0); margin-bottom:8px;">
-          🎓 Carica TNM Studio (.zip Parte 1/2 o .json)
-          <input type="file" accept=".zip,.json,application/zip,application/json" multiple style="display:none;" onchange="importStudyBibleArchive(event, 'gb:nwtsty')">
+          🎓 Carica ${escapeHtml(getStudyBibleConfig(bmStudyDocsActiveBibleId).shortTitle || "TNM Studio")} (.zip Parte 1/2 o .json)
+          <input type="file" accept=".zip,.json,application/zip,application/json" multiple style="display:none;" onchange="importStudyBibleArchive(event, '${escapeJsStr(bmStudyDocsActiveBibleId)}')">
         </label>
         <button type="button" class="nav-btn" style="width:100%;" onclick="openBibleTabFromMenu()">📖 Torna alla Bibbia</button>
       </div>`;
@@ -20689,6 +21287,11 @@ async function showStudyDocsView(selectedDocId = null, fromBack = false) {
   if (selectedDocId !== null && selectedDocId !== undefined) {
     const doc = data.documents.find(d => Number(d.id) === Number(selectedDocId));
     if (doc) {
+      if (isStudyDocEmptyShell(doc)) {
+        const targetBook = Number(doc.chapter) > 0 && Number(doc.chapter) <= 66 ? Number(doc.chapter) : state.bookId;
+        openRef(targetBook, 1);
+        return;
+      }
       await renderStudyDocReader(doc, data, reqId);
       return;
     }
@@ -20696,30 +21299,31 @@ async function showStudyDocsView(selectedDocId = null, fromBack = false) {
 
   const statusObj = await idbGet(`bm:nwtsty_status:${bmStudyDocsActiveBibleId}`);
   if (reqId !== currentViewReqId) return;
+  const realDocCount = data.documents.filter(d => !isStudyDocEmptyShell(d)).length;
   const imgInfo = statusObj && typeof statusObj.imgCount === "number"
     ? `🖼️ ${statusObj.imgCount}/${statusObj.imgTotal || 744} immagini offline`
     : "";
   const curBook = getBook(bmStudyDocsFilterBook || state.bookId);
 
   const cats = [
-    { id: "all", label: `Tutti (${data.documents.length})` },
+    { id: "all", label: `Tutti (${realDocCount})` },
     { id: "book_current", label: `📖 ${curBook.abbr}` },
     { id: "intro", label: "❓ Intro & 20 Domande" },
     { id: "appendices", label: "📑 Appendici A/B/C" },
-    { id: "books", label: "📚 66 Libri" },
+    { id: "books", label: "📚 Intro & Sommari" },
     { id: "media", label: "🖼️ Galleria & Temi" },
     { id: "chapters", label: "🎓 Approf. Capitoli" }
   ];
 
   main.innerHTML = `
     <div class="chapter-header" style="flex-wrap:wrap; gap:8px;">
-      <div class="chapter-title">🎓 Bibbia per lo Studio</div>
+      <div class="chapter-title">🎓 ${escapeHtml(getStudyBibleConfig(bmStudyDocsActiveBibleId).shortTitle || "TNM Studio 2026")}</div>
       <div class="chapter-nav-btns">
         ${getBackBtnHtml()}
-        <button type="button" class="nav-btn" onclick="openBackupModal()" title="Importa Parte 2 o aggiorna archivio Studio">📥 Importa</button>
+        <button type="button" class="nav-btn" onclick="openBibleTabFromMenu()">📖 Lettura</button>
       </div>
     </div>
-    ${imgInfo ? `<div style="font-size:12px; color:var(--text-muted); margin:-4px 0 8px 0; display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px;"><span>${imgInfo}</span><span>${data.documents.length} documenti</span></div>` : ""}
+    ${imgInfo ? `<div style="font-size:12px; color:var(--text-muted); margin:-4px 0 8px 0; display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px;"><span>${imgInfo}</span><span>${realDocCount} documenti</span></div>` : ""}
     <div class="search-box" style="margin-bottom:8px;">
       <input type="search" id="bmStudyDocsSearchInput" class="search-input" placeholder="🔍 Cerca appendici, domande, cartine, temi, approfondimenti..." value="${escapeHtml(bmStudyDocsSearchQuery)}" oninput="onStudyDocsSearchInput(this.value)">
     </div>
@@ -20759,16 +21363,50 @@ function renderStudyDocsFilteredList(data) {
   const targetBook = Number(bmStudyDocsFilterBook || state.bookId);
   const bookMeta = getBook(targetBook);
   const bookNameNorm = normalizeForSearch(bookMeta.name);
+  const EN_BOOK_NAMES_66 = [
+    "", "genesis", "exodus", "leviticus", "numbers", "deuteronomy", "joshua", "judges", "ruth",
+    "1 samuel", "2 samuel", "1 kings", "2 kings", "1 chronicles", "2 chronicles", "ezra", "nehemiah",
+    "esther", "job", "psalm", "proverbs", "ecclesiastes", "song of solomon", "isaiah", "jeremiah",
+    "lamentations", "ezekiel", "daniel", "hosea", "joel", "amos", "obadiah", "jonah", "micah",
+    "nahum", "habakkuk", "zephaniah", "haggai", "zechariah", "malachi", "matthew", "mark", "luke",
+    "john", "acts", "romans", "1 corinthians", "2 corinthians", "galatians", "ephesians", "philippians",
+    "colossians", "1 thessalonians", "2 thessalonians", "1 timothy", "2 timothy", "titus", "philemon",
+    "hebrews", "james", "1 peter", "2 peter", "1 john", "2 john", "3 john", "jude", "revelation"
+  ];
+  const ES_BOOK_NAMES_66 = [
+    "", "genesis", "exodo", "levitico", "numeros", "deuteronomio", "josue", "jueces", "rut",
+    "1 samuel", "2 samuel", "1 reyes", "2 reyes", "1 cronicas", "2 cronicas", "esdras", "nehemias",
+    "ester", "job", "salmos", "proverbios", "eclesiastes", "el cantar de los cantares", "isaias", "jeremias",
+    "lamentaciones", "ezequiel", "daniel", "oseas", "joel", "amos", "abdias", "jonas", "miqueas",
+    "nahum", "habacuc", "sofonias", "ageo", "zacarias", "malaquias", "mateo", "marcos", "lucas",
+    "juan", "hechos", "romanos", "1 corintios", "2 corintios", "galatas", "efesios", "filipenses",
+    "colosenses", "1 tesalonicenses", "2 tesalonicenses", "1 timoteo", "2 timoteo", "tito", "filemon",
+    "hebreos", "santiago", "1 pedro", "2 pedro", "1 juan", "2 juan", "3 juan", "judas", "apocalipsis"
+  ];
+  const PT_BOOK_NAMES_66 = [
+    "", "genesis", "exodo", "levitico", "numeros", "deuteronomio", "josue", "juizes", "rute",
+    "1 samuel", "2 samuel", "1 reis", "2 reis", "1 cronicas", "2 cronicas", "esdras", "neemias",
+    "ester", "jo", "salmos", "proverbios", "eclesiastes", "cantico de salomao", "isaias", "jeremias",
+    "lamentacoes", "ezequiel", "daniel", "oseias", "joel", "amos", "obadias", "jonas", "miqueias",
+    "naum", "habacuque", "sofonias", "ageu", "zacarias", "malaquias", "mateus", "marcos", "lucas",
+    "joao", "atos", "romanos", "1 corintios", "2 corintios", "galatas", "efesios", "filipenses",
+    "colossenses", "1 tessalonicenses", "2 tessalonicenses", "1 timoteo", "2 timoteo", "tito", "filemon",
+    "hebreus", "tiago", "1 pedro", "2 pedro", "1 joao", "2 joao", "3 joao", "judas", "apocalipse"
+  ];
+  const enBookNameNorm = EN_BOOK_NAMES_66[targetBook] || "";
+  const esBookNameNorm = ES_BOOK_NAMES_66[targetBook] || "";
+  const ptBookNameNorm = PT_BOOK_NAMES_66[targetBook] || "";
 
   const catIcons = { intro: "❓", books: "📚", appendices: "📑", media: "🖼️", chapters: "🎓" };
-  const catNames = { intro: "Introduzione", books: "Libro Biblico", appendices: "Appendice", media: "Galleria & Temi", chapters: "Approfondimenti" };
+  const catNames = { intro: "Introduzione", books: "Intro & Sommario", appendices: "Appendice", media: "Galleria & Temi", chapters: "Approfondimenti" };
 
   const filtered = data.documents.filter(d => {
-    if (!d || !d.title) return false;
+    if (!d || !d.title || isStudyDocEmptyShell(d)) return false;
     const cat = classifyStudyDocument(d);
     if (bmStudyDocsFilterCat === "book_current") {
       const matchCh = Number(d.chapter) === targetBook;
-      const matchTitle = normalizeForSearch(d.title).includes(bookNameNorm);
+      const tNorm = normalizeForSearch(d.title);
+      const matchTitle = tNorm.includes(bookNameNorm) || (enBookNameNorm && tNorm.includes(enBookNameNorm)) || (esBookNameNorm && tNorm.includes(esBookNameNorm)) || (ptBookNameNorm && (ptBookNameNorm.length > 2 ? tNorm.includes(ptBookNameNorm) : new RegExp('\\b' + ptBookNameNorm + '\\b').test(tNorm)));
       if (!matchCh && !matchTitle) return false;
     } else if (bmStudyDocsFilterCat !== "all" && cat !== bmStudyDocsFilterCat) {
       return false;
@@ -20791,16 +21429,18 @@ function renderStudyDocsFilteredList(data) {
 
   listEl.innerHTML = shown.map(d => {
     const cat = classifyStudyDocument(d);
+    const isMediaBook = isStudyDocMediaGalleryOnly(d);
+    const displayTitle = isMediaBook ? `Galleria Media: ${d.title}` : d.title;
     const hasMedia = Array.isArray(d.media) && d.media.length > 0;
     const hasVid = Array.isArray(d.paragraphs) && d.paragraphs.some(p => p && p.c === "video");
     const badges = [
-      catNames[cat] || "Studio",
+      isMediaBook ? "Galleria Libro" : (catNames[cat] || "Studio"),
       hasMedia ? `${d.media.length} media` : "",
       hasVid ? "🎬 Video" : ""
     ].filter(Boolean).join(" · ");
     return `
       <div class="result-card" onclick="showStudyDocsView(${Number(d.id)}, false)">
-        <div class="result-ref">${catIcons[cat] || "🎓"} ${escapeHtml(d.title)}</div>
+        <div class="result-ref">${isMediaBook ? "🖼️" : (catIcons[cat] || "🎓")} ${escapeHtml(displayTitle)}</div>
         <div style="font-size:11.5px; color:var(--text-muted);">${escapeHtml(badges)}</div>
       </div>`;
   }).join("") + (filtered.length > shown.length ? `<div style="text-align:center; font-size:12px; color:var(--text-muted); padding:8px;">Mostrati ${shown.length} di ${filtered.length} documenti — usa la barra di ricerca per affinare.</div>` : "");
@@ -20824,6 +21464,8 @@ async function renderStudyDocReader(doc, data, reqId) {
   const mediaById = data.mediaById || {};
   const wtLocale = data.wtLocale || "I";
   const docBookId = Number(doc.chapter) > 0 && Number(doc.chapter) <= 66 ? Number(doc.chapter) : null;
+  const isMediaOnlyBook = isStudyDocMediaGalleryOnly(doc);
+  const readerTitle = isMediaOnlyBook ? `Galleria Media: ${doc.title}` : (doc.title || "Studio");
   currentViewContext = { type: "study_docs", docId: Number(doc.id), label: `🎓 ${String(doc.title || "Studio").slice(0, 14)}` };
   setHeaderCenterPill(doc.title || "Studio", "study_docs");
 
@@ -20913,32 +21555,47 @@ async function renderStudyDocReader(doc, data, reqId) {
   const unrenderedVids = extraVids.filter(v => v.file && !paras.some(p => p && p.c === "video"));
 
   let attachedMediaHtml = "";
-  if (unrenderedImgs.length > 0) {
-    attachedMediaHtml += unrenderedImgs.map(im => {
-      const isSvg = im.mime === "image/svg+xml" || /\.svg$/i.test(im.file);
-      const poolIdx = registerStudyMediaPoolItem({ file: im.file, label: im.label || doc.title, caption: im.caption, credit: im.credit });
-      return `
-        <div class="bm-study-doc-img-block" onclick="openStudyLightboxByPool(${poolIdx})">
-          <img class="${isSvg ? 'is-svg' : ''}" data-study-img="${escapeHtml(im.file)}" alt="${escapeHtml(im.label || doc.title)}">
-          <div class="bm-study-doc-img-cap">
-            <b>${isSvg ? "🗺️" : "🖼️"} ${escapeHtml(im.label || doc.title)}</b> <span style="opacity:0.72;">(tocca per zoom HD)</span>
-            ${im.caption ? `<div style="margin-top:4px;">${formatNoteLinks(im.caption, docBookId)}</div>` : ""}
-          </div>
-        </div>`;
-    }).join("");
-  }
   if (unrenderedVids.length > 0) {
-    attachedMediaHtml += unrenderedVids.map(v => {
-      const poolIdx = registerStudyMediaPoolItem({ video: v.file, label: v.label || doc.title, wtLocale });
-      return `
-      <div class="bm-study-video-card">
-        <div class="bm-study-video-thumb-wrap" onclick="openStudyVideoByPool(${poolIdx})">
-          ${v.thumbFile ? `<img data-study-img="${escapeHtml(v.thumbFile)}" alt="${escapeHtml(v.label)}">` : ""}
-          <span class="bm-study-video-play-pill">▶ Guarda su JW.org ↗</span>
-        </div>
-        <div style="padding:8px 11px; font-size:12.5px; color:var(--text-muted);">🎬 <b>${escapeHtml(v.label || doc.title)}</b></div>
-      </div>`;
-    }).join("");
+    attachedMediaHtml += (isMediaOnlyBook ? `<div class="section-title"><span>🎬 Video (${unrenderedVids.length})</span></div>` : "") +
+      unrenderedVids.map(v => {
+        const poolIdx = registerStudyMediaPoolItem({ video: v.file, label: v.label || doc.title, wtLocale });
+        return `
+        <div class="bm-study-video-card">
+          <div class="bm-study-video-thumb-wrap" onclick="openStudyVideoByPool(${poolIdx})">
+            ${v.thumbFile ? `<img data-study-img="${escapeHtml(v.thumbFile)}" alt="${escapeHtml(v.label)}">` : ""}
+            <span class="bm-study-video-play-pill">▶ Guarda su JW.org ↗</span>
+          </div>
+          <div style="padding:8px 11px; font-size:12.5px; color:var(--text-muted);">🎬 <b>${escapeHtml(v.label || doc.title)}</b></div>
+        </div>`;
+      }).join("");
+  }
+  if (unrenderedImgs.length > 0) {
+    if (isMediaOnlyBook || unrenderedImgs.length > 4) {
+      attachedMediaHtml += (isMediaOnlyBook ? `<div class="section-title"><span>🖼️ Immagini & Mappe HD (${unrenderedImgs.length})</span></div>` : "") +
+        `<div class="bm-study-media-grid">` +
+        unrenderedImgs.map(im => {
+          const isSvg = im.mime === "image/svg+xml" || /\.svg$/i.test(im.file);
+          const poolIdx = registerStudyMediaPoolItem({ file: im.file, label: im.label || doc.title, caption: im.caption, credit: im.credit });
+          return `
+            <div class="bm-study-media-card" onclick="openStudyLightboxByPool(${poolIdx})">
+              <img class="bm-study-media-thumb${isSvg ? ' is-svg' : ''}" data-study-img="${escapeHtml(im.file)}" alt="${escapeHtml(im.label || doc.title)}">
+              <div class="bm-study-media-cap">${escapeHtml(im.label || im.file)}</div>
+            </div>`;
+        }).join("") + `</div>`;
+    } else {
+      attachedMediaHtml += unrenderedImgs.map(im => {
+        const isSvg = im.mime === "image/svg+xml" || /\.svg$/i.test(im.file);
+        const poolIdx = registerStudyMediaPoolItem({ file: im.file, label: im.label || doc.title, caption: im.caption, credit: im.credit });
+        return `
+          <div class="bm-study-doc-img-block" onclick="openStudyLightboxByPool(${poolIdx})">
+            <img class="${isSvg ? 'is-svg' : ''}" data-study-img="${escapeHtml(im.file)}" alt="${escapeHtml(im.label || doc.title)}">
+            <div class="bm-study-doc-img-cap">
+              <b>${isSvg ? "🗺️" : "🖼️"} ${escapeHtml(im.label || doc.title)}</b> <span style="opacity:0.72;">(tocca per zoom HD)</span>
+              ${im.caption ? `<div style="margin-top:4px;">${formatNoteLinks(im.caption, docBookId)}</div>` : ""}
+            </div>
+          </div>`;
+      }).join("");
+    }
   }
 
   const docFnArr = Array.isArray(doc.footnotes) ? doc.footnotes : [];
@@ -20953,9 +21610,10 @@ async function renderStudyDocReader(doc, data, reqId) {
   if (reqId !== currentViewReqId) return;
   main.innerHTML = `
     <div class="chapter-header" style="flex-wrap:wrap; gap:8px;">
-      <div class="chapter-title" style="font-size:16.5px;">🎓 ${escapeHtml(doc.title)}</div>
+      <div class="chapter-title" style="font-size:16.5px;">${isMediaOnlyBook ? "🖼️" : "🎓"} ${escapeHtml(readerTitle)}</div>
       <div class="chapter-nav-btns">
         ${getBackBtnHtml()}
+        ${docBookId ? `<button type="button" class="nav-btn" onclick="openRef(${docBookId}, 1)">📖 Leggi</button>` : ""}
         <button type="button" class="nav-btn" onclick="showStudyDocsView(null, true)">☰ Indice</button>
       </div>
     </div>
