@@ -15107,7 +15107,7 @@ function scrollRpToToday(smooth = false) {
 function buildStudioBackupObject() {
   return {
     app: "BibbiaMultilingue_PRO",
-    version: "PRO_v17.1.0",
+    version: "PRO_v17.1.1",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
@@ -15549,7 +15549,7 @@ function setMigrationStatus(htmlMsg) {
 
 async function buildAndDeliverLibraryBundle(keysList, includeStudio, fileName, shareTitle) {
   const parts = [
-    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v17.1.0","date":',
+    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v17.1.1","date":',
     JSON.stringify(new Date().toISOString())
   ];
   if (includeStudio) {
@@ -19997,31 +19997,6 @@ function saveChapterDossierAsNote(btnEl) {
   if (btnEl) btnEl.textContent = "✔ Salvato in Appunti!";
 }
 // ============================================================================
-// AVVIO APPLICAZIONE (BOOT UNIFICATO — TUTTI I MODULI CARICATI)
-// ============================================================================
-document.documentElement.style.setProperty("--font-size-verse", state.fontSize + "px");
-applySavedTheme();
-syncParallelAndDiffUI();
-updateReadingPlanHeaderBtn();
-updateMyReadingLabel();
-if (bmTtsRate !== 1) {
-  const ttsBootBtn = document.getElementById("ttsChapterBtn");
-  if (ttsBootBtn) ttsBootBtn.innerHTML = `<span class="tab-icon">🔊</span><span>Ascolta ${bmTtsRate}x</span>`;
-}
-try {
-  if (typeof navigator !== "undefined" && navigator.storage && typeof navigator.storage.persist === "function") {
-    navigator.storage.persist().catch(e => console.debug(e));
-  }
-} catch (e) { console.debug(e); }
-try { initTtsVoicesWatcher(); } catch (e) { console.debug(e); }
-try {
-  const extModP = loadExternalExegeticalModules();
-  if (extModP && typeof extModP.catch === "function") extModP.catch(e => console.debug(e));
-} catch (e) { console.debug(e); }
-try { initBmServiceWorker(); } catch (e) { console.debug(e); }
-populateSelects(false).catch(() => {});
-(async 
-// ============================================================================
 // 🎓 MODULO BIBBIA PER LO STUDIO (nwtsty — Importatore Multi-ZIP/JSON,
 // Note di Studio, Riferimenti Marginali, 767 Documenti/Appendici, Immagini HD & Video JW.org)
 // ============================================================================
@@ -21181,8 +21156,31 @@ function closeStudyImageLightbox() {
     img.removeAttribute("src");
   }
 }
-
-function bootInitialRoute() {
+// ============================================================================
+// AVVIO APPLICAZIONE (BOOT UNIFICATO — TUTTI I MODULI CARICATI)
+// ============================================================================
+document.documentElement.style.setProperty("--font-size-verse", state.fontSize + "px");
+applySavedTheme();
+syncParallelAndDiffUI();
+updateReadingPlanHeaderBtn();
+updateMyReadingLabel();
+if (bmTtsRate !== 1) {
+  const ttsBootBtn = document.getElementById("ttsChapterBtn");
+  if (ttsBootBtn) ttsBootBtn.innerHTML = `<span class="tab-icon">🔊</span><span>Ascolta ${bmTtsRate}x</span>`;
+}
+try {
+  if (typeof navigator !== "undefined" && navigator.storage && typeof navigator.storage.persist === "function") {
+    navigator.storage.persist().catch(e => console.debug(e));
+  }
+} catch (e) { console.debug(e); }
+try { initTtsVoicesWatcher(); } catch (e) { console.debug(e); }
+try {
+  const extModP = loadExternalExegeticalModules();
+  if (extModP && typeof extModP.catch === "function") extModP.catch(e => console.debug(e));
+} catch (e) { console.debug(e); }
+try { initBmServiceWorker(); } catch (e) { console.debug(e); }
+populateSelects(false).catch(() => {});
+(async function bootInitialRoute() {
   let launchMode = "";
   try {
     const params = new URLSearchParams(window.location.search || "");
