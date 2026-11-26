@@ -1605,11 +1605,12 @@ body.oled-mode .pub-ref-badge {
       }
     }
 
-    /* Pulsanti rapidi del cassetto Impostazioni (Heatmap Studio / Modalità Focus): stesso aspetto e stessa illuminazione */
+    /* Pulsanti rapidi del cassetto Impostazioni (Heatmap / Focus / Filo di Arianna): stesso aspetto e stessa illuminazione */
     .bm-drawer-quick-btn {
       flex: 1;
-      padding: 10px 8px;
-      font-size: 12.5px;
+      padding: 10px 6px;
+      font-size: 12px;
+      white-space: nowrap;
       background: var(--surface-btn-grad);
       border-color: var(--border-color);
       transition: transform 0.14s ease, box-shadow 0.14s ease;
@@ -3084,7 +3085,7 @@ body.oled-mode .pub-ref-badge {
     font-size: 11.5px;
     font-weight: 800;
     color: #cfe3ff;
-    max-width: 82px;
+    max-width: 112px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -3637,6 +3638,196 @@ body.oled-mode .pub-ref-badge {
     contain-intrinsic-size: auto 84px;
   }
 
+  /* ===== v18.0.1: Peek Bilingue, Switch Lingua Studio, Colonna TTS Attiva & Filo di Arianna ===== */
+  .bm-peek-block + .bm-peek-block {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(41, 182, 246, 0.45);
+  }
+  .bm-peek-lang-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11.5px;
+    font-weight: 800;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .bm-peek-lang-pill {
+    display: inline-block;
+    font-size: 10.5px;
+    font-weight: 900;
+    letter-spacing: 0.4px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: rgba(0, 229, 255, 0.14);
+    color: #84ffff;
+    border: 1px solid rgba(0, 229, 255, 0.5);
+    flex-shrink: 0;
+  }
+  .bm-peek-verse {
+    margin-bottom: 7px;
+    line-height: 1.55;
+    font-size: 14.8px;
+  }
+  .bm-peek-vnum {
+    color: #00e5ff;
+    margin-right: 5px;
+  }
+  .bm-rtl .bm-peek-vnum {
+    margin-right: 0;
+    margin-left: 5px;
+  }
+  .bm-study-lang-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    background: var(--surface-deep);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 5px 8px;
+    margin-bottom: 9px;
+    flex-wrap: wrap;
+  }
+  .bm-study-lang-label {
+    font-size: 11.5px;
+    font-weight: 800;
+    color: var(--text-muted);
+  }
+  .bm-study-lang-pills {
+    display: inline-flex;
+    gap: 4px;
+  }
+  .bm-study-lang-btn {
+    background: var(--surface-base);
+    color: var(--text-main);
+    border: 1px solid var(--border-subtle);
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 11.5px;
+    font-weight: 900;
+    cursor: pointer;
+  }
+  .bm-study-lang-btn.active {
+    background: #00e5ff;
+    color: #041a42;
+    border-color: #84ffff;
+    box-shadow: 0 0 8px rgba(0, 229, 255, 0.55);
+  }
+  main.bm-paper-reading .bm-study-lang-bar {
+    background: #ebe3d1;
+    border-color: #bda982;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  main.bm-paper-reading .bm-study-lang-label { color: #5c3a10; }
+  main.bm-paper-reading .bm-study-lang-btn {
+    background: #f5efe2;
+    color: #3b2a14;
+    border-color: #b59469;
+  }
+  main.bm-paper-reading .bm-study-lang-btn.active {
+    background: #8c5818;
+    color: #fff8e8;
+    border-color: #6b4c24;
+    box-shadow: none;
+  }
+  .bm-study-doc-fallback-notice {
+    font-size: 12.5px;
+    color: #ffe082;
+    background: rgba(255, 213, 79, 0.12);
+    border: 1px solid rgba(255, 213, 79, 0.52);
+    border-radius: 9px;
+    padding: 7px 10px;
+    margin-bottom: 9px;
+    line-height: 1.45;
+  }
+  main.bm-paper-reading .bm-study-doc-fallback-notice {
+    color: #7c2d12;
+    background: rgba(180, 83, 9, 0.10);
+    border-color: #b45309;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .parallel-col.bm-tts-active-col {
+    background: rgba(204, 255, 0, 0.16);
+    border-radius: 6px;
+    box-shadow: inset 0 0 0 1.5px rgba(204, 255, 0, 0.72);
+    padding: 2px 6px;
+  }
+  main.bm-paper-reading .parallel-col.bm-tts-active-col {
+    background: rgba(2, 132, 199, 0.14);
+    box-shadow: inset 0 0 0 1.5px rgba(2, 132, 199, 0.65);
+  }
+  .bm-trail-current {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface-btn-grad);
+    border: 1.5px solid #00e5ff;
+    border-radius: 10px;
+    padding: 9px 11px;
+    margin-bottom: 10px;
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--text-main);
+  }
+  .bm-trail-badge {
+    font-size: 10px;
+    font-weight: 900;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: #00e5ff;
+    color: #041a42;
+    flex-shrink: 0;
+  }
+  .bm-trail-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 48vh;
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+  .bm-trail-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-align: left;
+    background: var(--surface-base);
+    color: var(--text-main);
+    border: 1px solid var(--border-subtle);
+    border-radius: 9px;
+    padding: 9px 11px;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .bm-trail-item:active {
+    border-color: #00e5ff;
+    background: var(--primary-main);
+  }
+  .bm-trail-num {
+    font-size: 11px;
+    font-weight: 900;
+    color: #84ffff;
+    min-width: 26px;
+    flex-shrink: 0;
+  }
+  .bm-trail-label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .bm-trail-time {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
   /* Media queries responsive ordinate in fondo alla cascata */
   @media (max-width: 640px) {
     .parallel-row-3 { grid-template-columns: 1fr; gap: 6px; }
@@ -3762,7 +3953,7 @@ body.oled-mode .pub-ref-badge {
       </button>
     </div>
     <div class="header-center-slot">
-      <button type="button" id="currentBookChapterPill" class="header-center-pill" style="display:none;" onclick="onHeaderCenterPillClick()" title="Posizione di lettura attuale">
+      <button type="button" id="currentBookChapterPill" class="header-center-pill" style="display:none;" onpointerdown="onHeaderPillDown(event)" onpointerup="onHeaderPillUp()" onpointerleave="onHeaderPillUp()" onpointercancel="onHeaderPillUp()" oncontextmenu="event.preventDefault()" onclick="onHeaderPillClick(event)" title="Tocca per capitoli/indice • Tieni premuto per il Filo di Arianna">
       </button>
     </div>
     <div class="header-controls">
@@ -6392,7 +6583,7 @@ function setHeaderCenterPill(text = "", mode = "") {
   }
   const actualMode = mode || "bible";
   pillEl.dataset.mode = actualMode;
-  pillEl.title = clean;
+  pillEl.title = `${clean} • Tieni premuto per il Filo di Arianna`;
   pillEl.classList.remove("is-marquee");
   pillEl.textContent = clean;
   pillEl.style.display = "inline-flex";
@@ -6427,6 +6618,15 @@ function onHeaderCenterPillClick() {
     showChaptersView(state.bookId);
   }
 }
+
+const bmHeaderPillLP = createLongPressHandlers(
+  () => onHeaderCenterPillClick(),
+  () => { bmChimeHaptic(); openNavHistoryTrailModal(); },
+  550
+);
+function onHeaderPillDown(ev) { bmHeaderPillLP.down(ev); }
+function onHeaderPillUp() { bmHeaderPillLP.up(); }
+function onHeaderPillClick(ev) { bmHeaderPillLP.click(ev); }
 
 function setActiveTab(tabId, quickPillId = null) {
   disconnectStudyImgObserver("main");
@@ -7598,12 +7798,14 @@ async function renderChapterView(preserveAudio = false) {
         const t2 = map2.get(vNum) || "";
         const key = `${state.bookId}_${state.chapter}_${vNum}`;
         const hlClass = state.highlights[key] || "";
-        const cleanText = escapeHtml(stripTagsToPlainText(t1 || t2));
+        const cleanText1 = escapeHtml(stripTagsToPlainText(t1));
+        const cleanText2 = escapeHtml(stripTagsToPlainText(t2));
+        const cleanText = cleanText1 || cleanText2;
         const html1 = t1 ? formatInlineStrongs(t1, vNum) : '<span style="opacity:0.45;">—</span>';
         const html2 = t2 ? highlightDiffText(t1, t2, vNum, state.trans2) : '<span style="opacity:0.45;">—</span>';
         const pBadges = buildVerseStudyBadges(vNum, false);
         return `
-          <div class="parallel-row ${hlClass}" id="v_${vNum}" data-text="${cleanText}" onclick="onVerseClick(${vNum}, this.getAttribute('data-text'))">
+          <div class="parallel-row ${hlClass}" id="v_${vNum}" data-text="${cleanText}" data-text1="${cleanText1}" data-text2="${cleanText2}" onclick="onVerseClick(${vNum}, this.getAttribute('data-text'))">
             <div class="parallel-col${rtlCls1}"${rtlAttr1}><span class="verse-num">${vNum}</span>${html1}${pBadges}</div>
             <div class="parallel-col${rtlCls2}"${rtlAttr2}><span class="verse-num">${vNum}</span>${html2}</div>
           </div>`;
@@ -7620,13 +7822,16 @@ async function renderChapterView(preserveAudio = false) {
         const t3 = map3.get(vNum) || "";
         const key = `${state.bookId}_${state.chapter}_${vNum}`;
         const hlClass = state.highlights[key] || "";
-        const cleanText = escapeHtml(stripTagsToPlainText(t1 || t2 || t3));
+        const cleanText1 = escapeHtml(stripTagsToPlainText(t1));
+        const cleanText2 = escapeHtml(stripTagsToPlainText(t2));
+        const cleanText3 = escapeHtml(stripTagsToPlainText(t3));
+        const cleanText = cleanText1 || cleanText2 || cleanText3;
         const html1 = t1 ? formatInlineStrongs(t1, vNum) : '<span style="opacity:0.45;">—</span>';
         const html2 = t2 ? highlightDiffText(t1, t2, vNum, state.trans2) : '<span style="opacity:0.45;">—</span>';
         const html3 = t3 ? highlightDiffText(t1, t3, vNum, state.trans3) : '<span style="opacity:0.45;">—</span>';
         const pBadges = buildVerseStudyBadges(vNum, false);
         return `
-          <div class="parallel-row-3 ${hlClass}" id="v_${vNum}" data-text="${cleanText}" onclick="onVerseClick(${vNum}, this.getAttribute('data-text'))">
+          <div class="parallel-row-3 ${hlClass}" id="v_${vNum}" data-text="${cleanText}" data-text1="${cleanText1}" data-text2="${cleanText2}" data-text3="${cleanText3}" onclick="onVerseClick(${vNum}, this.getAttribute('data-text'))">
             <div class="parallel-col${rtlCls1}"${rtlAttr1}><span class="verse-num">${vNum}</span>${html1}${pBadges}</div>
             <div class="parallel-col${rtlCls2}"${rtlAttr2}><span class="verse-num">${vNum}</span>${html2}</div>
             <div class="parallel-col${rtlCls3}"${rtlAttr3}><span class="verse-num">${vNum}</span>${html3}</div>
@@ -7668,7 +7873,13 @@ async function renderChapterView(preserveAudio = false) {
     }
     if (preserveAudio && (bmAudioPlaying || bmAudioPaused) && bmCurrentSpokenVerse > 0) {
       const activeRow = document.getElementById(`v_${bmCurrentSpokenVerse}`);
-      if (activeRow) activeRow.classList.add("bm-tts-active-verse");
+      if (activeRow) {
+        activeRow.classList.add("bm-tts-active-verse");
+        if (bmCurrentSpokenCol >= 1 && state.parallelCount >= 2) {
+          const activeCol = activeRow.querySelectorAll(".parallel-col")[bmCurrentSpokenCol - 1];
+          if (activeCol) activeCol.classList.add("bm-tts-active-col");
+        }
+      }
     }
     main.scrollTop = 0;
     return true;
@@ -7791,10 +8002,16 @@ function syncParallelAndDiffUI() {
 }
 function toggleParallel() {
   if (currentViewContext.type !== "bible") saveCurrentPositionToHistory();
+  const wasChapterPlaying = bmAudioPlaying && isActiveBibleChapterAudio();
+  const resumeVerse = Math.max(1, bmCurrentSpokenVerse || 1);
   state.parallelCount = (state.parallelCount % 3) + 1;
   safeSaveStorage("bm_parallel_count", String(state.parallelCount));
   syncParallelAndDiffUI();
-  loadChapterView(shouldPreserveAudioOnChapterReload());
+  loadChapterView(shouldPreserveAudioOnChapterReload()).then((ok) => {
+    if (ok && wasChapterPlaying && bmSettings.bilingualTts && bmAudioPlaying && isActiveBibleChapterAudio()) {
+      startChapterKaraokeSpeech(resumeVerse, true);
+    }
+  });
 }
 function toggleDiffMode() {
   if (currentViewContext.type !== "bible") saveCurrentPositionToHistory();
@@ -7818,6 +8035,7 @@ const BM_DEFAULT_SETTINGS = {
   messianicBulb: true,
   nameLinks: false,
   paperMode: false,
+  bilingualTts: false,
   exitAnimStyle: "hand",
   openCard: "aspetto"
 };
@@ -8025,12 +8243,15 @@ function renderSettingsDrawerContent() {
   const bkAlertHtml = bkRem.due ? `<div style="font-size:12px; color:#ffe082; background:rgba(255,213,79,0.12); border:1px solid rgba(255,213,79,0.55); border-radius:8px; padding:7px 10px; line-height:1.4;">🛡️ ${bkRem.neverBackedUp ? `Hai dati di studio attivi da ${bkRem.daysAgo} giorni senza un backup esportato.` : `Sono passati ${bkRem.daysAgo} giorni dall'ultimo backup e hai nuove note o evidenziazioni.`} Ti consigliamo un export rapido.</div>` : "";
 
   body.innerHTML = `
-    <div style="display:flex; gap:8px; margin-bottom:4px; flex-shrink:0;">
-      <button type="button" class="myread-action-btn bm-drawer-quick-btn" onclick="runDrawerQuickAction(this, openStudyAnalyticsModal)">
-        📊 Heatmap Studio
+    <div style="display:flex; gap:6px; margin-bottom:4px; flex-shrink:0;">
+      <button type="button" class="myread-action-btn bm-drawer-quick-btn" title="Heatmap Studio" onclick="runDrawerQuickAction(this, openStudyAnalyticsModal)">
+        📊 Heatmap
       </button>
-      <button type="button" class="myread-action-btn bm-drawer-quick-btn" onclick="runDrawerQuickAction(this, toggleBmZenMode)">
-        🧘 ${bmZenModeActive ? "Disattiva Focus" : "Modalità Focus"}
+      <button type="button" class="myread-action-btn bm-drawer-quick-btn" title="Modalità Focus (Zen)" onclick="runDrawerQuickAction(this, toggleBmZenMode)">
+        🧘 ${bmZenModeActive ? "Esci Focus" : "Focus"}
+      </button>
+      <button type="button" class="myread-action-btn bm-drawer-quick-btn" title="Filo di Arianna (cronologia studio)" onclick="runDrawerQuickAction(this, openNavHistoryTrailModal)">
+        🧵 Filo
       </button>
     </div>
     <!-- SCHEDA 1: ASPETTO & TIPOGRAFIA -->
@@ -8252,6 +8473,13 @@ function renderSettingsDrawerContent() {
             <span class="bm-slider"></span>
           </label>
         </div>
+        <div class="bm-set-row">
+          <span>🌐 Lettura alternata in Parallelo (2x / 3x)</span>
+          <label class="bm-switch">
+            <input type="checkbox" ${bmSettings.bilingualTts === true ? 'checked' : ''} onchange="setBmTtsBilingual(this.checked, 'drawer-switch')">
+            <span class="bm-slider"></span>
+          </label>
+        </div>
       </div>
     </div>
 
@@ -8317,10 +8545,7 @@ function syncSelectedVersesState() {
 }
 
 function appendVerseToLiveTtsQueue(vNum, rawText) {
-  const subChunks = splitTextForAudio(rawText || "", 165);
-  subChunks.forEach(sc => {
-    activeTtsQueue.push({ text: sc, verseNum: vNum });
-  });
+  pushVerseChunksToQueue(activeTtsQueue, vNum, null, rawText || "");
 }
 
 function onVerseClick(verseNum, text) {
@@ -9075,12 +9300,16 @@ function formatNoteLinks(txt, defaultBookId = null, langHint = "") {
   });
 
   // Applica il parser biblico SOLO sul testo esterno: mai dentro <span class="pub-ref-badge">...</span> o tag HTML
+  const normLangHint = String(langHint || "").trim().toLowerCase();
+  const extraLangArgs = (normLangHint && normLangHint !== "it")
+    ? `, false, '${escapeJsStr(normLangHint)}'`
+    : "";
   out = out.replace(/(<span class="pub-ref-badge"[^>]*>.*?<\/span>|<[^>]+>)|([^<]+)/g, (_m, protectedHtml, plainSeg) => {
     if (protectedHtml) return protectedHtml;
     return transformBibleRefChain(
       plainSeg,
       defaultBookId,
-      (refStr, labelStr) => `<span class="tag-badge" onclick="event.stopPropagation(); jumpToRefString('${escapeJsStr(refStr)}')">📖 ${labelStr}</span>`,
+      (refStr, labelStr) => `<span class="tag-badge" onclick="event.stopPropagation(); jumpToRefString('${escapeJsStr(refStr)}'${extraLangArgs})">📖 ${labelStr}</span>`,
       langHint
     );
   });
@@ -11056,115 +11285,132 @@ function deleteBookmark(idx) {
   );
 }
 // (currentViewContext dichiarata più in alto, prima di applyBmSettingsToDOM)
-const bmBackLP = createLongPressHandlers(() => goBackHistory(), () => openResetHistoryModal(), 550);
+const bmBackLP = createLongPressHandlers(
+  () => goBackHistory(),
+  () => { bmChimeHaptic(); openNavHistoryTrailModal(); },
+  550
+);
 function onBackBtnDown(ev) { bmBackLP.down(ev); }
 function onBackBtnUp() { bmBackLP.up(); }
 function onBackBtnClick(ev) { bmBackLP.click(ev); }
 
-function openResetHistoryModal() {
-  openDialogModal(`
-    <div style="text-align:center; padding:4px 0 14px 0;">
-      <div style="font-size:30px; margin-bottom:8px;">🧹</div>
-      <div style="font-size:16px; font-weight:800; color:var(--text-main); margin-bottom:8px;">Reset Memoria Rientri</div>
-      <div style="font-size:14px; color:var(--text-main); line-height:1.5;">
-        Vuoi azzerare la memoria delle posizioni precedenti (<b>${navHistory.length}</b> passaggi salvati)?<br>
-        <span style="font-size:12.5px; color:var(--text-muted);">La memorizzazione ripartirà automaticamente dal tuo prossimo spostamento.</span>
-      </div>
-    </div>
-    <div style="display:flex; gap:10px;">
-      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#062356; --btn-glow:rgba(41,182,246,0.6); background:var(--bg-main); flex:1;" onclick="closeMyReadModal()">Annulla</button>
-      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#1565c0; --btn-glow:rgba(21,101,192,0.7); background:#1565c0; flex:1.3;" onclick="confirmResetNavHistory()">🗑️ Azzera memoria</button>
-    </div>
-  `);
-}
-
 function confirmResetNavHistory() {
   navHistory = [];
-  closeMyReadModal();
   document.querySelectorAll(".bm-back-history-btn").forEach(btn => btn.remove());
+  if (document.getElementById("bmAriannaTrailList")) {
+    openNavHistoryTrailModal();
+  }
 }
 
 function getBackBtnHtml() {
   if (!navHistory.length) return "";
   const lastNav = navHistory[navHistory.length - 1];
-  return `<button class="nav-btn bm-back-history-btn" onpointerdown="onBackBtnDown(event)" onpointerup="onBackBtnUp()" onpointerleave="onBackBtnUp()" onpointercancel="onBackBtnUp()" oncontextmenu="event.preventDefault()" onclick="onBackBtnClick(event)" title="Tocca per tornare indietro • Tieni premuto per azzerare la memoria">⬅️ ${escapeHtml(lastNav.label)}</button>`;
-    }
-function saveCurrentPositionToHistory(targetBookId = null, targetCh = null) {
+  return `<button class="nav-btn bm-back-history-btn" onpointerdown="onBackBtnDown(event)" onpointerup="onBackBtnUp()" onpointerleave="onBackBtnUp()" onpointercancel="onBackBtnUp()" oncontextmenu="event.preventDefault()" onclick="onBackBtnClick(event)" title="Tocca per tornare indietro • Tieni premuto per il Filo di Arianna (cronologia studio)">⬅️ ${escapeHtml(lastNav.label)}</button>`;
+}
+
+function buildCurrentHistorySnapshot(targetBookId = null, targetCh = null) {
   const main = document.getElementById("mainContainer");
   const scrollPos = main ? main.scrollTop : 0;
-  let snap = null;
+  const ts = Date.now();
   if (currentViewContext.type === "daily") {
-    snap = { type: "daily", offset: currentDailyOffset, scrollTop: scrollPos, label: "☀️ Giorno" };
-  } else if (currentViewContext.type === "insight") {
-    snap = {
+    return { type: "daily", offset: currentDailyOffset, scrollTop: scrollPos, label: "☀️ Giorno", fullLabel: "☀️ Scrittura del Giorno", ts };
+  }
+  if (currentViewContext.type === "insight") {
+    const t = currentViewContext.title || "";
+    return {
       type: "insight",
       idx: currentViewContext.idx,
       scrollTop: scrollPos,
-      label: currentViewContext.title ? `📚 ${currentViewContext.title.slice(0, 14)}` : "📚 Perspicacia"
+      label: t ? `📚 ${t.slice(0, 14)}` : "📚 Perspicacia",
+      fullLabel: t ? `📚 Perspicacia: ${t}` : "📚 Perspicacia (Indice)",
+      ts
     };
-  } else if (currentViewContext.type === "si") {
-    snap = {
+  }
+  if (currentViewContext.type === "si") {
+    const lbl = currentViewContext.label || "📘 Scrittura";
+    return {
       type: "si",
       mode: currentViewContext.mode,
       kind: currentViewContext.kind,
       i: currentViewContext.i,
       ci: currentViewContext.ci,
       scrollTop: scrollPos,
-      label: currentViewContext.label || "📘 Scrittura"
+      label: lbl,
+      fullLabel: lbl,
+      ts
     };
-  } else if (currentViewContext.type === "maps") {
-    snap = {
+  }
+  if (currentViewContext.type === "maps") {
+    const lbl = currentViewContext.label || "🗺️ Cartine";
+    return {
       type: "maps",
       mapIdx: currentViewContext.mapIdx,
       scrollTop: scrollPos,
-      label: currentViewContext.label || "🗺️ Cartine"
+      label: lbl,
+      fullLabel: lbl,
+      ts
     };
-  } else if (currentViewContext.type === "study_docs") {
-    snap = {
+  }
+  if (currentViewContext.type === "study_docs") {
+    const lbl = currentViewContext.label || "🎓 Studio";
+    const full = currentViewContext.title ? `🎓 ${currentViewContext.title}` : lbl;
+    return {
       type: "study_docs",
       docId: currentViewContext.docId ?? null,
       bibleId: currentViewContext.bibleId || bmStudyDocsActiveBibleId,
       scrollTop: scrollPos,
-      label: currentViewContext.label || "🎓 Studio"
+      label: lbl,
+      fullLabel: full,
+      ts
     };
-    } else if (currentViewContext.type === "notes") {
-    snap = { type: "notes", scrollTop: scrollPos, label: "📝 Appunti" };
-  } else if (currentViewContext.type === "search") {
-    snap = { type: "search", scrollTop: scrollPos, label: "🔍 Cerca" };
-  } else if (currentViewContext.type === "saved") {
-    snap = { type: "saved", scrollTop: scrollPos, label: "🔖 Preferiti" };
-  } else if (currentViewContext.type === "bible") {
+  }
+  if (currentViewContext.type === "notes") {
+    return { type: "notes", scrollTop: scrollPos, label: "📝 Appunti", fullLabel: "📝 Appunti Studio", ts };
+  }
+  if (currentViewContext.type === "search") {
+    return { type: "search", scrollTop: scrollPos, label: "🔍 Cerca", fullLabel: "🔍 Ricerca & Concordanza", ts };
+  }
+  if (currentViewContext.type === "saved") {
+    return { type: "saved", scrollTop: scrollPos, label: "🔖 Preferiti", fullLabel: "🔖 Preferiti & Evidenziati", ts };
+  }
+  if (currentViewContext.type === "bible") {
     if (targetBookId === null || state.bookId !== Number(targetBookId) || state.chapter !== Number(targetCh)) {
       const curBook = getBook(state.bookId);
       const vNum = state.selectedVerse || (bmXRayReturnState && Number(bmXRayReturnState.bookId) === Number(state.bookId) && Number(bmXRayReturnState.chapter) === Number(state.chapter) ? bmXRayReturnState.verse : null);
-      const label = `${curBook.abbr} ${state.chapter}${vNum ? ':' + vNum : ''}`;
-      snap = {
+      const vSuffix = vNum ? `:${vNum}` : "";
+      return {
         type: "bible",
         bookId: state.bookId,
         chapter: state.chapter,
         verse: vNum,
         scrollTop: scrollPos,
-        label: label
+        label: `${curBook.abbr} ${state.chapter}${vSuffix}`,
+        fullLabel: `📖 ${curBook.name} ${state.chapter}${vSuffix}`,
+        ts
       };
     }
   }
-  if (snap) {
-    const prev = navHistory[navHistory.length - 1];
-    const isSameSnap = Boolean(prev)
-      && prev.type === snap.type
-      && prev.label === snap.label
-      && prev.idx === snap.idx
-      && prev.i === snap.i
-      && prev.ci === snap.ci
-      && prev.docId === snap.docId
-      && prev.bibleId === snap.bibleId
-      && prev.bookId === snap.bookId
-      && prev.chapter === snap.chapter
-      && prev.verse === snap.verse;
-    if (!isSameSnap) {
-      navHistory.push(snap);
-      if (navHistory.length > 30) navHistory.shift();
-    }
+  return null;
+}
+
+function saveCurrentPositionToHistory(targetBookId = null, targetCh = null) {
+  const snap = buildCurrentHistorySnapshot(targetBookId, targetCh);
+  if (!snap) return;
+  const prev = navHistory[navHistory.length - 1];
+  const isSameSnap = Boolean(prev)
+    && prev.type === snap.type
+    && prev.label === snap.label
+    && prev.idx === snap.idx
+    && prev.i === snap.i
+    && prev.ci === snap.ci
+    && prev.docId === snap.docId
+    && prev.bibleId === snap.bibleId
+    && prev.bookId === snap.bookId
+    && prev.chapter === snap.chapter
+    && prev.verse === snap.verse;
+  if (!isSameSnap) {
+    navHistory.push(snap);
+    if (navHistory.length > 30) navHistory.shift();
   }
 }
 function parseVerseSpecToArray(vSpec) {
@@ -11207,52 +11453,146 @@ function scrollToVerseAndHighlight(vSpec) {
     });
   }, 300);
 }
-function goBackHistory() {
-  if (!navHistory.length) return;
-  const prev = navHistory.pop();
+function restoreNavHistoryEntry(prev) {
+  if (!prev) return Promise.resolve();
   const main = document.getElementById("mainContainer");
   if (prev.type === "daily") {
-    showDailyTextView(prev.offset || 0, true).then(() => { if (main && prev.scrollTop) main.scrollTop = prev.scrollTop; });
-    return;
+    return showDailyTextView(prev.offset || 0, true).then(() => { if (main && prev.scrollTop) main.scrollTop = prev.scrollTop; });
   }
   if (prev.type === "insight") {
-    showInsightView(prev.idx !== undefined ? prev.idx : null, true).then(() => { if (main && prev.scrollTop) main.scrollTop = prev.scrollTop; });
-    return;
+    return showInsightView(prev.idx !== undefined ? prev.idx : null, true).then(() => { if (main && prev.scrollTop) main.scrollTop = prev.scrollTop; });
   }
   if (prev.type === "si") {
     const p = prev.mode === "reader" ? showSiReader(prev.kind, prev.i, prev.ci, true) : (prev.mode === "book" ? showSiBook(prev.i, true) : showSiView(true));
-    Promise.resolve(p).then(() => { if (main && prev.scrollTop) main.scrollTop = prev.scrollTop; });
-    return;
+    return Promise.resolve(p).then(() => { if (main && prev.scrollTop) main.scrollTop = prev.scrollTop; });
   }
   if (prev.type === "maps") {
-    showMapsView(prev.mapIdx !== undefined ? prev.mapIdx : null, true).then(() => { if (main && prev.scrollTop) main.scrollTop = prev.scrollTop; });
-    return;
+    return showMapsView(prev.mapIdx !== undefined ? prev.mapIdx : null, true).then(() => { if (main && prev.scrollTop) main.scrollTop = prev.scrollTop; });
   }
   if (prev.type === "study_docs") {
-    showStudyDocsView(prev.docId !== undefined ? prev.docId : null, true, prev.bibleId || "").then(() => { if (main && prev.scrollTop) main.scrollTop = prev.scrollTop; });
-    return;
+    return showStudyDocsView(prev.docId !== undefined ? prev.docId : null, true, prev.bibleId || "").then(() => { if (main && prev.scrollTop) main.scrollTop = prev.scrollTop; });
   }
-    if (prev.type === "search") {
-      showSearchView(true);
-      if (main && prev.scrollTop) requestAnimationFrame(() => { main.scrollTop = prev.scrollTop; });
-      return;
-    }
-    if (prev.type === "saved") {
-      showSavedView(true).then(() => { if (main && prev.scrollTop) main.scrollTop = prev.scrollTop; });
-      return;
-    }
-    if (prev.type === "notes") {
+  if (prev.type === "search") {
+    showSearchView(true);
+    if (main && prev.scrollTop) requestAnimationFrame(() => { main.scrollTop = prev.scrollTop; });
+    return Promise.resolve();
+  }
+  if (prev.type === "saved") {
+    return showSavedView(true).then(() => { if (main && prev.scrollTop) main.scrollTop = prev.scrollTop; });
+  }
+  if (prev.type === "notes") {
     showNotesView(true);
     if (main && prev.scrollTop) setTimeout(() => { main.scrollTop = prev.scrollTop; }, 60);
-    return;
+    return Promise.resolve();
   }
   state.bookId = prev.bookId;
   state.chapter = prev.chapter;
   const targetVerse = prev.verse || null;
-  loadChapterView().then(() => {
-    if (targetVerse) scrollToVerseAndHighlight(targetVerse);
-    else if (main && prev.scrollTop) main.scrollTop = prev.scrollTop;
+  return loadChapterView().then((ok) => {
+    if (ok && targetVerse) scrollToVerseAndHighlight(targetVerse);
+    else if (ok && main && prev.scrollTop) main.scrollTop = prev.scrollTop;
   });
+}
+
+function goBackHistory() {
+  if (!navHistory.length) return Promise.resolve();
+  return restoreNavHistoryEntry(navHistory.pop());
+}
+
+function jumpToNavHistoryIndex(idx) {
+  const entry = navHistory[Number(idx)];
+  if (!entry) return Promise.resolve();
+  bmHaptic(14);
+  closeProModal();
+  saveCurrentPositionToHistory(entry.type === "bible" ? entry.bookId : null, entry.type === "bible" ? entry.chapter : null);
+  return restoreNavHistoryEntry(entry);
+}
+
+function formatHistoryTimeShort(ts) {
+  if (!ts) return "";
+  try {
+    return new Date(ts).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
+  } catch (_e) { return ""; }
+}
+
+function getHistoryEntryDisplayText(item) {
+  if (!item) return "";
+  if (item.fullLabel) return item.fullLabel;
+  if (item.type === "bible" && item.bookId) {
+    const b = getBook(item.bookId);
+    return `📖 ${b.name} ${item.chapter}${item.verse ? ":" + item.verse : ""}`;
+  }
+  return item.label || "Tappa studio";
+}
+
+function saveNavHistoryTrailAsNote(btnEl) {
+  bmChimeHaptic();
+  const curSnap = buildCurrentHistorySnapshot();
+  const steps = [...navHistory];
+  if (curSnap) steps.push(curSnap);
+  if (!steps.length) return;
+  const dateStr = new Date().toLocaleDateString("it-IT");
+  const timeStr = formatHistoryTimeShort(Date.now());
+  const baseTitle = `🧵 Percorso Studio (${dateStr} ${timeStr})`;
+  let uniqueRef = baseTitle;
+  let dupN = 2;
+  while (state.notes.some(x => x.ref === uniqueRef)) uniqueRef = `${baseTitle} (${dupN++})`;
+  const bodyLines = [
+    `🧵 Filo di Arianna — ${steps.length} tappe:`,
+    ...steps.map((s, i) => `${i + 1}. ${getHistoryEntryDisplayText(s)}${s.ts ? ` (${formatHistoryTimeShort(s.ts)})` : ""}`)
+  ].join("\n");
+  state.notes.unshift({
+    id: Date.now(),
+    bookId: state.bookId,
+    chapter: state.chapter,
+    verse: 1,
+    verseSpec: "",
+    ref: uniqueRef,
+    verseText: "",
+    isFreeNote: true,
+    text: bodyLines,
+    tags: ["percorso", "studio"],
+    date: dateStr
+  });
+  safeSaveStorage("bm_notes", JSON.stringify(state.notes));
+  recordStudioDataEditedNow();
+  if (btnEl) btnEl.textContent = "✔ Percorso salvato in Appunti!";
+}
+
+function requestClearNavHistoryFromTrail() {
+  if (!navHistory.length) return;
+  showBlueDeleteConfirmModal(
+    "🧹 Azzera Filo di Arianna",
+    `Vuoi azzerare la cronologia di navigazione (<b>${navHistory.length}</b> tappe salvate)?`,
+    () => confirmResetNavHistory()
+  );
+}
+
+function openNavHistoryTrailModal() {
+  closeActionBar();
+  const curSnap = buildCurrentHistorySnapshot();
+  const curHtml = curSnap ? `
+    <div class="bm-trail-current">
+      <span class="bm-trail-badge">📍 QUI ORA</span>
+      <span>${escapeHtml(getHistoryEntryDisplayText(curSnap))}</span>
+    </div>` : "";
+  const listHtml = navHistory.length
+    ? [...navHistory].map((item, origIdx) => ({ item, origIdx })).reverse().map(({ item, origIdx }) => `
+        <button type="button" class="bm-trail-item" onclick="jumpToNavHistoryIndex(${origIdx})">
+          <span class="bm-trail-num">#${origIdx + 1}</span>
+          <span class="bm-trail-label">${escapeHtml(getHistoryEntryDisplayText(item))}</span>
+          <span class="bm-trail-time">${escapeHtml(formatHistoryTimeShort(item.ts))}</span>
+        </button>`).join("")
+    : `<div class="loader" style="padding:18px 8px;">Nessuna tappa precedente in memoria.<br><span style="font-size:12px;">Ogni salto fra capitoli, Perspicacia, Tutta la Scrittura, Cartine e Studio apparirà automaticamente qui.</span></div>`;
+
+  openProModal(`🧵 Filo di Arianna (${navHistory.length})`, `
+    ${curHtml}
+    <div id="bmAriannaTrailList" class="bm-trail-list">${listHtml}</div>
+    <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
+      ${(navHistory.length > 0 || curSnap) ? `<button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,229,255,0.75); background:#1565c0; flex:1.3; font-size:13px;" onclick="saveNavHistoryTrailAsNote(this)">📝 Salva percorso come Appunto</button>` : ""}
+      ${navHistory.length > 0 ? `<button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#ef5350; --btn-glow:rgba(239,83,80,0.75); background:#8e0000; border-color:#ff8a80; flex:0.85; font-size:13px;" onclick="requestClearNavHistoryFromTrail()">🗑️ Azzera</button>` : ""}
+    </div>
+  `);
 }
 function openRef(bookId, chapter, verseSpec = 0) {
   saveCurrentPositionToHistory(bookId, chapter);
@@ -11291,6 +11631,7 @@ function applySavedTheme() {
 function openProModal(title, bodyHtml = null, expectedSid = null, preferredFocusEl = null) {
   if (expectedSid !== null && expectedSid !== proModalSessionId) return false;
   if (expectedSid === null) proModalSessionId++;
+  bmStudyModalActiveBibleId = "";
   const modalEl = document.getElementById("proModal");
   const titleEl = document.getElementById("proModalTitle");
   const bodyEl = document.getElementById("proModalBody");
@@ -11310,6 +11651,7 @@ function openProModal(title, bodyHtml = null, expectedSid = null, preferredFocus
 }
 function closeProModal() {
   proModalSessionId++;
+  bmStudyModalActiveBibleId = "";
   disconnectStudyImgObserver("modal");
   clearXRayChapterCache();
   const modalEl = document.getElementById("proModal");
@@ -11426,12 +11768,16 @@ function parseRefStringToTarget(str, strict = false, langHint = "") {
 function jumpToRefString(str, forceDirectJump = false, langHint = "") {
   const target = parseRefStringToTarget(str, false, langHint);
   if (!target) return;
+  const isDialogOpen = isDialogModalOpen();
   const proModalEl = document.getElementById("proModal");
-  const isProModalOpen = proModalEl && proModalEl.style.display === "flex";
+  const isProModalOpen = Boolean(proModalEl && proModalEl.style.display === "flex");
   const lbEl = document.getElementById("bmStudyLightbox");
-  const isLbOpen = lbEl && lbEl.style.display === "flex";
-  if (!forceDirectJump && !isProModalOpen && !isLbOpen && currentViewContext && ["daily", "insight", "si", "study_docs", "notes"].includes(currentViewContext.type)) {
-    openVersePeekModal(target.bookId, target.chapter, target.vSpec);
+  const isLbOpen = Boolean(lbEl && lbEl.style.display === "flex");
+  const peekableMainView = Boolean(
+    currentViewContext && ["daily", "insight", "si", "study_docs", "notes"].includes(currentViewContext.type)
+  );
+  if (!forceDirectJump && !isDialogOpen && (isProModalOpen || isLbOpen || peekableMainView)) {
+    openVersePeekModal(target.bookId, target.chapter, target.vSpec, langHint);
     return;
   }
   executeDirectRefJump(target.bookId, target.chapter, target.vSpec);
@@ -11443,11 +11789,85 @@ function executeDirectRefJump(bookId, targetCh, vSpec = "") {
   saveCurrentPositionToHistory(bookId, targetCh);
   state.bookId = Number(bookId);
   state.chapter = Number(targetCh);
-  loadChapterView().then(() => {
-    if (vSpec) scrollToVerseAndHighlight(vSpec);
+  loadChapterView().then((ok) => {
+    if (ok && vSpec) scrollToVerseAndHighlight(vSpec);
   });
 }
-async function openVersePeekModal(bookId, chapter, vSpec = "") {
+function isBibleReadyOffline(transId) {
+  return Boolean(transId && (memoryBibleCache.has(transId) || bmCachedOfflineBibleKeys.has(transId)));
+}
+function findBestOfflineBibleForLang(langCode) {
+  const code = String(langCode || "").toLowerCase();
+  const pools = {
+    it: ["gb:nwtsty", "gb:nwt", "gb:bi12", "epub:nr", "epub:nd", "epub:cei", "epub:tilc", "gb:riveduta", "gb:giovanni"],
+    en: ["gb:nwtsty_e", "gb:nwt_e", "gb:bi12_e", "gb:kjv", "gb:web", "gb:asv", "gb:akjv", "gb:ylt", "gb:darby"],
+    es: ["gb:nwtsty_s", "gb:nwt_s", "gb:bi12_s", "gb:valera", "gb:rvg", "gb:sagradas"],
+    pt: ["gb:nwtsty_tpo", "gb:nwt_tpo", "gb:almeida"]
+  };
+  const list = pools[code] || [];
+  const offlineHit = list.find(id => isBibleReadyOffline(id));
+  if (offlineHit) return offlineHit;
+  if (navigator.onLine !== false) {
+    return list.find(id => !LOCAL_EPUB_IDS.includes(id)) || "";
+  }
+  return "";
+}
+function getTransLangIsoCode(transId) {
+  const pair = resolveTransTTSLangPair(transId);
+  const loc = String((pair && pair.locale) || "it").split(/[-_]/)[0].toLowerCase();
+  return loc || "it";
+}
+function resolvePeekBiblePair(langHint = "") {
+  const cleanHint = String(langHint || "").trim().toLowerCase();
+  const proModalEl = document.getElementById("proModal");
+  const isProOpen = Boolean(proModalEl && proModalEl.style.display === "flex");
+  let primaryId = state.trans1;
+
+  if (cleanHint) {
+    if (getTransLangIsoCode(state.trans1) === cleanHint && (isBibleReadyOffline(state.trans1) || !LOCAL_EPUB_IDS.includes(state.trans1))) {
+      primaryId = state.trans1;
+    } else if (isProOpen && bmStudyModalActiveBibleId && getTransLangIsoCode(bmStudyModalActiveBibleId) === cleanHint && isBibleReadyOffline(bmStudyModalActiveBibleId)) {
+      primaryId = bmStudyModalActiveBibleId;
+    } else {
+      const langBible = findBestOfflineBibleForLang(cleanHint);
+      if (langBible) primaryId = langBible;
+    }
+  } else if (isProOpen && bmStudyModalActiveBibleId && isBibleReadyOffline(bmStudyModalActiveBibleId)) {
+    primaryId = bmStudyModalActiveBibleId;
+  } else if (currentViewContext && currentViewContext.type === "study_docs" && bmStudyDocsActiveBibleId && isBibleReadyOffline(bmStudyDocsActiveBibleId)) {
+    primaryId = bmStudyDocsActiveBibleId;
+  }
+
+  let italianId = "";
+  if (!isItalianBible(primaryId)) {
+    if (isItalianBible(state.trans1) && (isBibleReadyOffline(state.trans1) || (!LOCAL_EPUB_IDS.includes(state.trans1) && navigator.onLine !== false))) {
+      italianId = state.trans1;
+    } else {
+      italianId = findBestOfflineBibleForLang("it");
+    }
+    if (italianId === primaryId) italianId = "";
+  }
+  return { primaryId, italianId };
+}
+function renderPeekVersesBlockHtml(versesArr, vSpec, transId, showHeader = false) {
+  const targetNums = parseVerseSpecToArray(vSpec);
+  const filtered = targetNums.length > 0
+    ? versesArr.filter(v => targetNums.includes(Number(v.verse)))
+    : versesArr.slice(0, 6);
+  const list = filtered.length > 0 ? filtered : versesArr.slice(0, 5);
+  const rtl = isRtlBible(transId);
+  const badge = getShortBibleBadge(transId);
+  const langTag = getTransLangIsoCode(transId).toUpperCase();
+  const headerHtml = showHeader
+    ? `<div class="bm-peek-lang-head"><span>${escapeHtml(badge)}</span><span class="bm-peek-lang-pill">${escapeHtml(langTag)}</span></div>`
+    : "";
+  const rowsHtml = list.map(v => `
+    <div class="bm-peek-verse${rtl ? " bm-rtl" : ""}"${rtl ? ' dir="rtl"' : ""}>
+      <b class="bm-peek-vnum">${v.verse}</b><span>${escapeHtml(stripTagsToPlainText(v.text))}</span>
+    </div>`).join("");
+  return `${headerHtml}${rowsHtml}`;
+}
+async function openVersePeekModal(bookId, chapter, vSpec = "", langHint = "") {
   const book = getBook(bookId);
   const refTitle = `${book.name} ${chapter}${vSpec ? ":" + vSpec : ""}`;
   if (!openDialogModal(`<div class="loader" style="color:var(--text-muted); padding:18px 8px;">📖 Caricamento anteprima di <b>${escapeHtml(refTitle)}</b>...</div>`)) {
@@ -11455,36 +11875,81 @@ async function openVersePeekModal(bookId, chapter, vSpec = "") {
     return;
   }
   const reqId = peekReqId;
-  try {
-    const data = await fetchChapterData(state.trans1, bookId, chapter);
+  if (!bmCachedOfflineKeysLoaded) {
+    await refreshOfflineBibleKeysCache();
     if (reqId !== peekReqId || !isDialogModalOpen()) return;
-    const targetNums = parseVerseSpecToArray(vSpec);
-    const filtered = targetNums.length > 0
-      ? data.filter(v => targetNums.includes(Number(v.verse)))
-      : data.slice(0, 6);
-    const versesToRender = filtered.length > 0 ? filtered : data.slice(0, 5);
-    const versesHtml = versesToRender.map(v => `
-      <div style="margin-bottom:8px; line-height:1.55; font-size:15px;">
-        <b style="color:#00e5ff; margin-right:5px;">${v.verse}</b><span>${escapeHtml(stripTagsToPlainText(v.text))}</span>
-      </div>
-    `).join("");
+  }
+
+  let { primaryId, italianId } = resolvePeekBiblePair(langHint);
+  const [resPrimary, resItalian] = await Promise.allSettled([
+    fetchChapterData(primaryId, bookId, chapter),
+    italianId ? fetchChapterData(italianId, bookId, chapter) : Promise.resolve(null)
+  ]);
+  if (reqId !== peekReqId || !isDialogModalOpen()) return;
+
+  let primaryData = (resPrimary.status === "fulfilled" && Array.isArray(resPrimary.value) && resPrimary.value.length > 0)
+    ? resPrimary.value
+    : null;
+  const italianData = (resItalian.status === "fulfilled" && Array.isArray(resItalian.value) && resItalian.value.length > 0)
+    ? resItalian.value
+    : null;
+
+  if (!primaryData && italianData) {
+    primaryId = italianId;
+    primaryData = italianData;
+    italianId = "";
+  } else if (!primaryData) {
+    const fbId = findBestOfflineBibleForLang("it") || findBestOfflineBibleForLang("en");
+    if (fbId && fbId !== primaryId) {
+      try {
+        const fbData = await fetchChapterData(fbId, bookId, chapter);
+        if (reqId !== peekReqId || !isDialogModalOpen()) return;
+        if (Array.isArray(fbData) && fbData.length > 0) {
+          primaryId = fbId;
+          primaryData = fbData;
+        }
+      } catch (e) { console.debug(e); }
+    }
+  }
+
+  if (!primaryData) {
     openDialogModal(`
       <div style="font-size:15.5px; font-weight:900; color:#00e5ff; margin-bottom:10px; border-bottom:1px solid rgba(41,182,246,0.4); padding-bottom:6px;">
         📖 ${escapeHtml(refTitle)}
       </div>
-      <div style="max-height:46vh; overflow-y:auto; padding:4px 2px 10px 2px;">
-        ${versesHtml}
+      <div style="font-size:13.5px; color:var(--text-muted); line-height:1.5; padding:8px 2px 12px 2px;">
+        Anteprima non disponibile offline nella versione attiva per questo passo.
       </div>
-      <div style="display:flex; gap:10px; margin-top:8px;">
-        <button class="myread-action-btn" style="background:var(--bg-main); flex:1;" onclick="closeMyReadModal()">Chiudi (Resta qui)</button>
-        <button class="myread-action-btn" style="flex:1.25;" onclick="executeDirectRefJump(${bookId}, ${chapter}, '${escapeJsStr(vSpec)}')">📖 Apri nel Capitolo</button>
+      <div style="display:flex; gap:10px;">
+        <button type="button" class="myread-action-btn" style="background:var(--bg-main); flex:1;" onclick="closeMyReadModal()">Chiudi (Resta qui)</button>
+        <button type="button" class="myread-action-btn" style="flex:1.25;" onclick="executeDirectRefJump(${bookId}, ${chapter}, '${escapeJsStr(vSpec)}')">📖 Apri nel Capitolo</button>
       </div>
     `);
-  } catch (e) {
-    console.debug(e);
-    if (reqId !== peekReqId || !isDialogModalOpen()) return;
-    executeDirectRefJump(bookId, chapter, vSpec);
+    return;
   }
+
+  const isBilingual = Boolean(italianData && italianId && italianId !== primaryId);
+  const blocksHtml = isBilingual
+    ? `<div class="bm-peek-block">${renderPeekVersesBlockHtml(primaryData, vSpec, primaryId, true)}</div>
+       <div class="bm-peek-block bm-peek-block-it">${renderPeekVersesBlockHtml(italianData, vSpec, italianId, true)}</div>`
+    : renderPeekVersesBlockHtml(primaryData, vSpec, primaryId, false);
+  const titleBadge = isBilingual
+    ? `${getTransLangIsoCode(primaryId).toUpperCase()} + IT`
+    : getShortBibleBadge(primaryId);
+
+  openDialogModal(`
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px; border-bottom:1px solid rgba(41,182,246,0.4); padding-bottom:6px;">
+      <span style="font-size:15.5px; font-weight:900; color:#00e5ff;">📖 ${escapeHtml(refTitle)}</span>
+      <span class="bm-peek-lang-pill">${escapeHtml(titleBadge)}</span>
+    </div>
+    <div style="max-height:50vh; overflow-y:auto; padding:2px 2px 8px 2px;">
+      ${blocksHtml}
+    </div>
+    <div style="display:flex; gap:10px; margin-top:8px;">
+      <button type="button" class="myread-action-btn" style="background:var(--bg-main); flex:1;" onclick="closeMyReadModal()">Chiudi (Resta qui)</button>
+      <button type="button" class="myread-action-btn" style="flex:1.25;" onclick="executeDirectRefJump(${bookId}, ${chapter}, '${escapeJsStr(vSpec)}')">📖 Apri nel Capitolo</button>
+    </div>
+  `);
 }
 
 // ============================================================================
@@ -11747,26 +12212,10 @@ function resolveStudyLangPair(langCode) {
   return map[code] || { locale: "it-IT", tl: "it" };
 }
 
-function resolveViewTTSLangPair(sourceKind = "text") {
-  if (sourceKind === "study_modal") {
-    return resolveStudyLangPair(bmStudyModalLangCode || "it");
-  }
-  const ctxType = currentViewContext ? currentViewContext.type : "";
-  if (ctxType === "study_docs") {
-    const scfg = getStudyBibleConfig(bmStudyDocsActiveBibleId);
-    return resolveStudyLangPair(scfg.langCode || "it");
-  }
-  if (ctxType === "insight" || ctxType === "daily" || ctxType === "si" || ctxType === "maps") {
-    return { locale: "it-IT", tl: "it" };
-  }
-  if ((typeof currentInsightSpeechText === "string" && currentInsightSpeechText.trim()) ||
-      (typeof currentDailySpeechText === "string" && currentDailySpeechText.trim())) {
-    const hasVerseRows = document.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3").length > 0;
-    if (!hasVerseRows) return { locale: "it-IT", tl: "it" };
-  }
-  const t = (state.trans1 || "").toLowerCase();
-  const activeObj = dynamicCatalog.find(b => b.id === state.trans1);
-  const langName = activeObj ? (activeObj.lang || "").toLowerCase() : "";
+function resolveTransTTSLangPair(transId) {
+  const t = String(transId || "").toLowerCase();
+  const activeObj = dynamicCatalog.find(b => b.id === transId) || CORE_BIBLES.find(b => b.id === transId);
+  const langName = activeObj ? String(activeObj.lang || "").toLowerCase() : "";
   if (t === "gb:nwtsty" || t === "gb:nwt" || t === "gb:bi12" || t.includes("riveduta") || t.includes("giovanni") || t.startsWith("epub:") || langName.includes("ital")) return { locale: "it-IT", tl: "it" };
   if (t.endsWith("_s") || t.includes("valera") || t.includes("sagradas") || t.includes("rvg") || langName.includes("span")) return { locale: "es-ES", tl: "es" };
   if (t.endsWith("_tpo") || t.includes("almeida") || langName.includes("port")) return { locale: "pt-BR", tl: "pt" };
@@ -11800,6 +12249,26 @@ function resolveViewTTSLangPair(sourceKind = "text") {
   if (langName.includes("lati") || t.includes("vulgate")) return { locale: "la", tl: "la" };
   if (langName.includes("espe") || t.includes("esperanto")) return { locale: "eo", tl: "eo" };
   return { locale: "en-US", tl: "en" };
+}
+
+function resolveViewTTSLangPair(sourceKind = "text") {
+  if (sourceKind === "study_modal") {
+    return resolveStudyLangPair(bmStudyModalLangCode || "it");
+  }
+  const ctxType = currentViewContext ? currentViewContext.type : "";
+  if (ctxType === "study_docs") {
+    const scfg = getStudyBibleConfig(bmStudyDocsActiveBibleId);
+    return resolveStudyLangPair(scfg.langCode || "it");
+  }
+  if (ctxType === "insight" || ctxType === "daily" || ctxType === "si" || ctxType === "maps") {
+    return { locale: "it-IT", tl: "it" };
+  }
+  if ((typeof currentInsightSpeechText === "string" && currentInsightSpeechText.trim()) ||
+      (typeof currentDailySpeechText === "string" && currentDailySpeechText.trim())) {
+    const hasVerseRows = document.querySelectorAll(".verse-row, .parallel-row, .parallel-row-3").length > 0;
+    if (!hasVerseRows) return { locale: "it-IT", tl: "it" };
+  }
+  return resolveTransTTSLangPair(state.trans1);
 }
 
 function getActiveTTSLangCode(fullLocale = false, useActiveAudioLock = true) {
@@ -11878,12 +12347,56 @@ function clearTtsKaraokeHighlight() {
   document.querySelectorAll(".bm-tts-active-verse").forEach(el => {
     el.classList.remove("bm-tts-active-verse");
   });
+  document.querySelectorAll(".bm-tts-active-col").forEach(el => {
+    el.classList.remove("bm-tts-active-col");
+  });
+  bmCurrentSpokenCol = 0;
+  bmCurrentSpokenLangTag = "";
 }
 
 let bmCurrentSpokenVerse = 0;
+let bmCurrentSpokenCol = 0;
+let bmCurrentSpokenLangTag = "";
 let bmCurrentSpokenIdx = 0;
 let bmAudioPaused = false;
-let bmAudioMediaMeta = { title: "", sub: "", autoNext: false, kind: "text", bookId: null, chapter: null, locale: "", tl: "", studyKey: "" };
+let bmAudioMediaMeta = { title: "", sub: "", autoNext: false, kind: "text", bookId: null, chapter: null, locale: "", tl: "", studyKey: "", bilingual: false, colSig: "" };
+
+function isBilingualParallelTtsActive() {
+  return Boolean(bmSettings.bilingualTts && state.parallelCount >= 2 && currentViewContext && currentViewContext.type === "bible");
+}
+
+function getActiveBilingualTtsSignature() {
+  if (!isBilingualParallelTtsActive()) return "";
+  const cols = state.parallelCount === 3
+    ? [state.trans1, state.trans2, state.trans3]
+    : [state.trans1, state.trans2];
+  return `${state.parallelCount}|${cols.join("|")}`;
+}
+
+function pushVerseChunksToQueue(queue, vNum, rowEl = null, fallbackText = "") {
+  const row = rowEl || document.getElementById(`v_${vNum}`);
+  if (isBilingualParallelTtsActive() && row) {
+    const colTransIds = state.parallelCount === 3
+      ? [state.trans1, state.trans2, state.trans3]
+      : [state.trans1, state.trans2];
+    colTransIds.forEach((tId, idx) => {
+      const colIdx = idx + 1;
+      const rawCol = row.getAttribute(`data-text${colIdx}`) || "";
+      if (!rawCol.trim()) return;
+      const pair = resolveTransTTSLangPair(tId);
+      splitTextForAudio(rawCol, 165).forEach(sc => {
+        queue.push({ text: sc, verseNum: vNum, locale: pair.locale, tl: pair.tl, colIdx });
+      });
+    });
+    return;
+  }
+  const rawSingle = (row ? row.getAttribute("data-text") : "") || fallbackText || "";
+  if (!rawSingle.trim()) return;
+  const pair1 = resolveTransTTSLangPair(state.trans1);
+  splitTextForAudio(rawSingle, 165).forEach(sc => {
+    queue.push({ text: sc, verseNum: vNum, locale: pair1.locale, tl: pair1.tl, colIdx: 1 });
+  });
+}
 
 function isActiveBibleChapterAudio() {
   return (bmAudioPlaying || bmAudioPaused)
@@ -11937,11 +12450,16 @@ function updateAudioMiniPlayerUI() {
     ppBtn.title = bmAudioPaused ? "Riprendi lettura" : "Metti in pausa";
   }
   if (lbl) {
-    if (isChapterNav && bmCurrentSpokenVerse > 0) {
+    const isSelectionBibleAudio = currentViewContext.type === "bible"
+      && bmAudioMediaMeta.kind === "selection"
+      && Number(bmAudioMediaMeta.bookId) === Number(state.bookId)
+      && Number(bmAudioMediaMeta.chapter) === Number(state.chapter);
+    const langSuffix = (bmAudioMediaMeta.bilingual && bmCurrentSpokenLangTag) ? ` · ${bmCurrentSpokenLangTag}` : "";
+    if ((isChapterNav || isSelectionBibleAudio) && bmCurrentSpokenVerse > 0) {
       const b = getBook(state.bookId);
-      lbl.textContent = `${b.abbr} ${state.chapter}:${bmCurrentSpokenVerse}`;
+      lbl.textContent = `${b.abbr} ${state.chapter}:${bmCurrentSpokenVerse}${langSuffix}`;
     } else {
-      lbl.textContent = bmAudioMediaMeta.title || "Audio";
+      lbl.textContent = `${bmAudioMediaMeta.title || "Audio"}${langSuffix}`;
     }
   }
   if (rateBtn) rateBtn.textContent = `${bmTtsRate}x`;
@@ -12002,12 +12520,45 @@ function cycleMiniPlayerRate() {
 }
 
 function resumeAudioFromCurrentPosition() {
-  if (currentViewContext.type === "bible" && bmAudioMediaMeta.kind === "chapter" && Number(bmAudioMediaMeta.bookId) === Number(state.bookId) && Number(bmAudioMediaMeta.chapter) === Number(state.chapter) && bmCurrentSpokenVerse > 0) {
-    const v = bmCurrentSpokenVerse;
-    startChapterKaraokeSpeech(v, true);
+  const isSameBibleView = currentViewContext.type === "bible"
+    && Number(bmAudioMediaMeta.bookId) === Number(state.bookId)
+    && Number(bmAudioMediaMeta.chapter) === Number(state.chapter);
+  const isSameChapter = isSameBibleView && bmAudioMediaMeta.kind === "chapter";
+  const isSameSelection = isSameBibleView && bmAudioMediaMeta.kind === "selection";
+  const remQueue = Array.isArray(activeTtsQueue) ? activeTtsQueue.slice(Math.max(0, bmCurrentSpokenIdx)) : [];
+  const expectedColSig = getActiveBilingualTtsSignature();
+  const layoutChanged = Boolean(bmAudioMediaMeta.bilingual) !== isBilingualParallelTtsActive()
+    || (bmAudioMediaMeta.colSig || "") !== expectedColSig;
+
+  if (isSameChapter && layoutChanged && bmCurrentSpokenVerse > 0) {
+    startChapterKaraokeSpeech(bmCurrentSpokenVerse, true);
     return;
   }
-  const remQueue = Array.isArray(activeTtsQueue) ? activeTtsQueue.slice(Math.max(0, bmCurrentSpokenIdx)) : [];
+  if (isSameSelection && layoutChanged && remQueue.length > 0) {
+    const remVerseNums = [];
+    remQueue.forEach(item => {
+      const vn = Number(item && item.verseNum);
+      if (vn > 0 && !remVerseNums.includes(vn)) remVerseNums.push(vn);
+    });
+    const rebuiltQueue = [];
+    remVerseNums.forEach(vn => {
+      pushVerseChunksToQueue(rebuiltQueue, vn, null, selectedVersesMap.get(vn) || "");
+    });
+    if (rebuiltQueue.length > 0) {
+      startQueueSpeech(
+        rebuiltQueue,
+        true,
+        false,
+        bmAudioMediaMeta.title,
+        bmAudioMediaMeta.sub,
+        "selection",
+        true,
+        bmAudioMediaMeta.bookId,
+        bmAudioMediaMeta.chapter
+      );
+      return;
+    }
+  }
   if (remQueue.length > 0) {
     const lockedPair = (bmAudioMediaMeta.locale && bmAudioMediaMeta.tl)
       ? { locale: bmAudioMediaMeta.locale, tl: bmAudioMediaMeta.tl }
@@ -12025,6 +12576,8 @@ function resumeAudioFromCurrentPosition() {
       lockedPair,
       bmAudioMediaMeta.studyKey || ""
     );
+  } else if (isSameChapter && bmCurrentSpokenVerse > 0) {
+    startChapterKaraokeSpeech(bmCurrentSpokenVerse, true);
   } else {
     stopAllAudio();
   }
@@ -12082,13 +12635,20 @@ function speakChapterFromSelectedVerse() {
   startChapterKaraokeSpeech(startV);
 }
 
-function highlightTtsKaraokeVerse(vNum) {
+function highlightTtsKaraokeVerse(vNum, colIdx = 0, langTag = "") {
   clearTtsKaraokeHighlight();
   if (!vNum) return;
   bmCurrentSpokenVerse = Number(vNum) || bmCurrentSpokenVerse;
+  bmCurrentSpokenCol = Number(colIdx) || 0;
+  bmCurrentSpokenLangTag = langTag ? String(langTag).split(/[-_]/)[0].toUpperCase() : "";
   const row = document.getElementById(`v_${vNum}`);
   if (row) {
     row.classList.add("bm-tts-active-verse");
+    if (bmCurrentSpokenCol >= 1 && state.parallelCount >= 2) {
+      const cols = row.querySelectorAll(".parallel-col");
+      const activeCol = cols[bmCurrentSpokenCol - 1];
+      if (activeCol) activeCol.classList.add("bm-tts-active-col");
+    }
     row.scrollIntoView({ behavior: "smooth", block: "center" });
   }
   updateAudioMiniPlayerUI();
@@ -12166,8 +12726,10 @@ function stopAllAudio(preserveSleep = false) {
   if (!preserveSleep) {
     clearBmAudioSleepTimer(true);
     bmCurrentSpokenVerse = 0;
+    bmCurrentSpokenCol = 0;
+    bmCurrentSpokenLangTag = "";
     bmCurrentSpokenIdx = 0;
-    bmAudioMediaMeta = { title: "", sub: "", autoNext: false, kind: "text", bookId: null, chapter: null, locale: "", tl: "", studyKey: "" };
+    bmAudioMediaMeta = { title: "", sub: "", autoNext: false, kind: "text", bookId: null, chapter: null, locale: "", tl: "", studyKey: "", bilingual: false, colSig: "" };
   }
   syncStudyModalSpeakBtnUI();
   teardownBmAudioPlayer();
@@ -12260,9 +12822,9 @@ function playWebViewStreamQueue(queueItems, idx, sessionId, consecutiveErrors = 
       row.classList.remove("bm-verse-queued-orange");
       row.classList.add("bm-verse-selected");
     }
-    highlightTtsKaraokeVerse(vNumItem);
+    highlightTtsKaraokeVerse(vNumItem, item.colIdx || 0, item.locale || item.tl || "");
   }
-  const tl = getActiveTTSLangCode(false);
+  const tl = item.tl || getActiveTTSLangCode(false);
   const q = encodeURIComponent(item.text);
   const urls = [
     `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=${tl}&q=${q}`,
@@ -12340,6 +12902,7 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
   const frozenPair = (lockedLangPair && lockedLangPair.locale && lockedLangPair.tl)
     ? lockedLangPair
     : resolveViewTTSLangPair(resolvedKind);
+  const isBilingualKind = (resolvedKind === "chapter" || resolvedKind === "selection") && isBilingualParallelTtsActive();
   bmAudioMediaMeta = {
     title: mediaTitle || "",
     sub: mediaSub || "",
@@ -12349,7 +12912,9 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
     chapter: sourceChapter !== null && sourceChapter !== undefined ? Number(sourceChapter) : null,
     locale: frozenPair.locale,
     tl: frozenPair.tl,
-    studyKey: studyKey || ""
+    studyKey: studyKey || "",
+    bilingual: isBilingualKind,
+    colSig: isBilingualKind ? getActiveBilingualTtsSignature() : ""
   };
   bmSelectionReadingActive = resolvedKind === "selection";
   bmQueueSupportsAutoNext = Boolean(autoNext) && resolvedKind === "chapter";
@@ -12369,7 +12934,7 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
   if ("speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined") {
     let idx = 0;
     let nativeOk = false;
-    let forceSystemDefaultVoice = false;
+    const failedVoiceLangs = new Set();
     let stallWatchdog = null;
     const clearStallWatchdog = () => {
       if (stallWatchdog) { clearTimeout(stallWatchdog); stallWatchdog = null; }
@@ -12402,14 +12967,15 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
           row.classList.remove("bm-verse-queued-orange");
           row.classList.add("bm-verse-selected");
         }
-        highlightTtsKaraokeVerse(vNumItem);
+        highlightTtsKaraokeVerse(vNumItem, item.colIdx || 0, item.locale || item.tl || "");
       }
       try {
         const u = new SpeechSynthesisUtterance(item.text);
-        const targetLang = getActiveTTSLangCode(true);
+        const targetLang = item.locale || getActiveTTSLangCode(true);
+        const targetLangBase = getTtsLangBase(targetLang);
         u.lang = targetLang;
         u.rate = bmTtsRate;
-        const chosenVoice = forceSystemDefaultVoice ? null : resolvePreferredTtsVoice(targetLang);
+        const chosenVoice = failedVoiceLangs.has(targetLangBase) ? null : resolvePreferredTtsVoice(targetLang);
         if (chosenVoice) {
           u.voice = chosenVoice;
           if (chosenVoice.lang) u.lang = chosenVoice.lang;
@@ -12419,8 +12985,8 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
           if (chunkSettled || bmUserStopped || !bmAudioPlaying || mySession !== bmSessionId) return;
           chunkSettled = true;
           // Stadio 1 -> Stadio 2: se la voce personalizzata non parte, riprova con la voce predefinita di sistema dopo micro-pausa anti-stallo Chrome Android
-          if (chosenVoice && !forceSystemDefaultVoice) {
-            forceSystemDefaultVoice = true;
+          if (chosenVoice && !failedVoiceLangs.has(targetLangBase)) {
+            failedVoiceLangs.add(targetLangBase);
             try { window.speechSynthesis.cancel(); } catch (e) { console.debug(e); }
             scheduleNextNative(55);
             return;
@@ -12454,8 +13020,12 @@ function startQueueSpeech(queueItems, updateMainBtn = true, autoNext = false, me
           clearStallWatchdog();
           if (!chunkSettled && !bmUserStopped && bmAudioPlaying && mySession === bmSessionId) {
             chunkSettled = true;
+            const prevLocale = targetLang;
             idx++;
-            speakNextNative();
+            const nextItem = activeTtsQueue[idx];
+            const nextLocale = nextItem && nextItem.locale ? nextItem.locale : prevLocale;
+            if (nextItem && nextLocale !== prevLocale) scheduleNextNative(45);
+            else speakNextNative();
           }
         };
         u.onerror = (ev) => {
@@ -12514,9 +13084,7 @@ function startSelectedVersesSmartSpeech() {
 
   const queue = [];
   targetVerses.forEach(vNum => {
-    const vTxt = selectedVersesMap.get(vNum) || "";
-    const subChunks = splitTextForAudio(vTxt, 165);
-    subChunks.forEach(sc => queue.push({ text: sc, verseNum: vNum }));
+    pushVerseChunksToQueue(queue, vNum, null, selectedVersesMap.get(vNum) || "");
   });
 
   pendingOrangeVersesSet.clear();
@@ -12577,15 +13145,16 @@ function startChapterKaraokeSpeech(startFromVerse = 1, preserveSleep = false) {
   const queue = [];
   if (startFromVerse <= 1) {
     const announcement = buildLocalizedChapterAnnouncement(state.bookId, state.chapter);
-    if (announcement) queue.push({ text: announcement, verseNum: 1 });
+    if (announcement) {
+      const pair1 = resolveTransTTSLangPair(state.trans1);
+      queue.push({ text: announcement, verseNum: 1, locale: pair1.locale, tl: pair1.tl, colIdx: 1 });
+    }
   }
   rows.forEach(r => {
     const idAttr = r.id || "";
     const vNum = idAttr.startsWith("v_") ? parseInt(idAttr.slice(2), 10) : 0;
     if (vNum >= startFromVerse) {
-      const vTxt = r.getAttribute("data-text") || "";
-      const subChunks = splitTextForAudio(vTxt, 165);
-      subChunks.forEach(sc => queue.push({ text: sc, verseNum: vNum }));
+      pushVerseChunksToQueue(queue, vNum, r);
     }
   });
   if (queue.length > 0) {
@@ -16302,7 +16871,7 @@ function scrollRpToToday(smooth = false) {
 function buildStudioBackupObject() {
   return {
     app: "BibbiaMultilingue_PRO",
-    version: "PRO_v17.2.4",
+    version: "PRO_v18.0.1",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
@@ -16361,7 +16930,7 @@ function applyStudioBackupObject(parsed) {
     const validExit = ["hand", "scroll"];
     const validCards = ["", "aspetto", "backup", "feedback", "speciali", "audio", "moduli"];
     const nextSet = { ...BM_DEFAULT_SETTINGS, ...bmSettings };
-    ["haptic", "soundTick", "showInlineBadges", "showFootnotes", "showOutlines", "showStudyBadges", "messianicBulb", "nameLinks", "paperMode"].forEach(k => {
+    ["haptic", "soundTick", "showInlineBadges", "showFootnotes", "showOutlines", "showStudyBadges", "messianicBulb", "nameLinks", "paperMode", "bilingualTts"].forEach(k => {
       if (typeof srcSet[k] === "boolean") nextSet[k] = srcSet[k];
     });
     if (validLH.includes(String(srcSet.lineHeight))) nextSet.lineHeight = String(srcSet.lineHeight);
@@ -16798,7 +17367,7 @@ function setMigrationStatus(htmlMsg) {
 
 async function buildAndDeliverLibraryBundle(keysList, includeStudio, fileName, shareTitle) {
   const parts = [
-    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v17.2.4","date":',
+    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v18.0.1","date":',
     JSON.stringify(new Date().toISOString())
   ];
   if (includeStudio) {
@@ -17572,7 +18141,7 @@ async function openDeepenDailyModal() {
   const refsHtml = refs.length
     ? `<div class="section-title"><span>Versetti citati</span><span>${refs.length}</span></div>
        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">` +
-      refs.map(r => `<span class="tag-badge" style="padding:6px 10px; font-size:12.5px;" onclick="closeProModal(); jumpToRefString('${escapeJsStr(r)}')">📖 ${escapeHtml(r)}</span>`).join("") + `</div>`
+      refs.map(r => `<span class="tag-badge" style="padding:6px 10px; font-size:12.5px;" onclick="jumpToRefString('${escapeJsStr(r)}')">📖 ${escapeHtml(r)}</span>`).join("") + `</div>`
     : "";
   // luoghi citati, con rimando alla cartina (solo se le cartine sono state caricate)
   let placesHtml = "";
@@ -18515,6 +19084,11 @@ function openTtsSettingsModal() {
       <button type="button" class="myread-action-btn" style="flex:1; background:${bmTtsAutoNextPref ? '#00e5ff' : 'var(--bg-main)'}; color:${bmTtsAutoNextPref ? '#041a42' : '#ffffff'};" onclick="setBmTtsAutoNext(true)">▶ Continua al Succ.</button>
       <button type="button" class="myread-action-btn" style="flex:1; background:${!bmTtsAutoNextPref ? '#00e5ff' : 'var(--bg-main)'}; color:${!bmTtsAutoNextPref ? '#041a42' : '#ffffff'};" onclick="setBmTtsAutoNext(false)">⏹️ Ferma a fine cap.</button>
     </div>
+    <div style="font-size:13px; font-weight:800; color:var(--text-main); margin-bottom:6px;">🌐 Lettura alternata in Parallelo (2x / 3x):</div>
+    <div style="display:flex; gap:8px; margin-bottom:14px;">
+      <button type="button" class="myread-action-btn" style="flex:1; background:${bmSettings.bilingualTts ? '#00e5ff' : 'var(--bg-main)'}; color:${bmSettings.bilingualTts ? '#041a42' : '#ffffff'};" onclick="setBmTtsBilingual(true)">🌐 Alternata ON</button>
+      <button type="button" class="myread-action-btn" style="flex:1; background:${!bmSettings.bilingualTts ? '#00e5ff' : 'var(--bg-main)'}; color:${!bmSettings.bilingualTts ? '#041a42' : '#ffffff'};" onclick="setBmTtsBilingual(false)">📖 Solo Colonna 1</button>
+    </div>
     <button type="button" class="myread-action-btn" onclick="closeMyReadModal()">✔ Chiudi</button>
   `);
 }
@@ -18544,6 +19118,17 @@ function setBmTtsAutoNext(val, refreshTarget = "modal") {
     bmAutoNextChapter = bmTtsAutoNextPref;
   }
   safeSaveStorage("bm_tts_autonext", bmTtsAutoNextPref ? "1" : "0");
+  if (refreshTarget === "drawer-switch") return;
+  if (refreshTarget === "drawer") renderSettingsDrawerContent();
+  else openTtsSettingsModal();
+}
+
+function setBmTtsBilingual(val, refreshTarget = "modal") {
+  bmSettings.bilingualTts = Boolean(val);
+  saveBmSettings();
+  if (bmAudioPlaying && isActiveBibleChapterAudio() && state.parallelCount >= 2) {
+    startChapterKaraokeSpeech(Math.max(1, bmCurrentSpokenVerse || 1), true);
+  }
   if (refreshTarget === "drawer-switch") return;
   if (refreshTarget === "drawer") renderSettingsDrawerContent();
   else openTtsSettingsModal();
@@ -20249,7 +20834,7 @@ async function openVerseXRayModal(forcedVerseNum) {
     ${xrayFnHtml}
     <div class="section-title"><span>🔗 ${escapeHtml(xrayRefsLabel)}</span></div>
     <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
-      ${refs.map(r => `<span class="tag-badge" style="padding:6px 10px; font-size:13px;" onclick="closeProModal(); jumpToRefString('${escapeJsStr(r.label)}', false, '${escapeJsStr(r.lang || "")}')">📖 ${escapeHtml(r.label)}</span>`).join("")}
+      ${refs.map(r => `<span class="tag-badge" style="padding:6px 10px; font-size:13px;" onclick="jumpToRefString('${escapeJsStr(r.label)}', false, '${escapeJsStr(r.lang || "")}')">📖 ${escapeHtml(r.label)}</span>`).join("")}
     </div>
     ${xrayInsHtml}
     ${placesHtml}
@@ -21169,7 +21754,7 @@ function renderMessianicCatalogModalBody() {
     const fullText = p.fullDesc || p.desc || "";
     const srcTag = p.isCurated === false ? `<span class="tag-badge" style="font-size:10px; opacity:0.85;">Auto</span>` : "";
     const ntPills = (p.nt || []).map(ntRef =>
-      `<span class="tag-badge" style="background:rgba(255,213,79,0.18); color:#ffd54f; border-color:#ffd54f;" onclick="event.stopPropagation(); closeProModal(); jumpToRefString('${escapeJsStr(ntRef)}', true)">🏛️ ${escapeHtml(ntRef)}</span>`
+      `<span class="tag-badge" style="background:rgba(255,213,79,0.18); color:#ffd54f; border-color:#ffd54f;" onclick="event.stopPropagation(); jumpToRefString('${escapeJsStr(ntRef)}')">🏛️ ${escapeHtml(ntRef)}</span>`
     ).join(" ");
     return `
       <div class="result-card" style="margin-bottom:7px; border-left:3px solid ${p.ntCited ? '#ffd54f' : '#00e5ff'};" onclick="jumpToMessianicProphecyIndex(${idx}, true)">
@@ -21739,6 +22324,7 @@ let bmStudyDocsActiveBibleId = "gb:nwtsty";
 let bmStudyModalSpeechText = "";
 let bmStudyModalLangCode = "it";
 let bmStudyModalCurrentKey = "";
+let bmStudyModalActiveBibleId = "";
 let bmStudyLbReqId = 0;
 let bmStudyLbState = { scale: 1, fitScale: 1, minScale: 0.5, maxScale: 6, x: 0, y: 0, nw: 0, nh: 0, active: false, bound: false, ptrs: new Map() };
 
@@ -21896,6 +22482,32 @@ function resolveStudyBibleIdForUi(preferredId = "") {
   if (langMatched && installed.includes(langMatched)) return langMatched;
   if (installed.length > 0) return installed[0];
   return activeInView || langMatched || "gb:nwtsty";
+}
+
+const BM_STUDY_LANG_ORDER = ["gb:nwtsty_e", "gb:nwtsty_s", "gb:nwtsty", "gb:nwtsty_tpo"];
+
+async function getInstalledOfflineStudyBibleIds(kind = "bible") {
+  if (!bmCachedOfflineKeysLoaded) await refreshOfflineBibleKeysCache();
+  return BM_STUDY_LANG_ORDER.filter(id => {
+    if (kind === "docs") return bmCachedOfflineBibleKeys.has(`bm:nwtsty_docs:${id}`);
+    return bmCachedOfflineBibleKeys.has(id) || memoryBibleCache.has(id);
+  });
+}
+
+function renderInstalledStudyLangSwitcherHtml(activeBibleId, installedIds, buildOnclickFn) {
+  if (!Array.isArray(installedIds) || installedIds.length < 2) return "";
+  return `
+    <div class="bm-study-lang-bar" role="group" aria-label="Lingua Bibbia per lo Studio">
+      <span class="bm-study-lang-label">🌐 Edizione Studio:</span>
+      <div class="bm-study-lang-pills">
+        ${installedIds.map(id => {
+          const cfg = getStudyBibleConfig(id);
+          const code = (cfg.langCode || "it").toUpperCase();
+          const isAct = id === activeBibleId;
+          return `<button type="button" class="bm-study-lang-btn${isAct ? " active" : ""}" onclick="${buildOnclickFn(id)}" title="${escapeHtml(cfg.name || code)}">${escapeHtml(code)}</button>`;
+        }).join("")}
+      </div>
+    </div>`;
 }
 
 function buildStudyMediaLookup(mediaArr) {
@@ -22474,9 +23086,12 @@ async function importStudyBibleArchive(event, targetId = "gb:nwtsty") {
 // ============================================================================
 // PANNELLO A: NOTE DI STUDIO DEL VERSETTO, RIFERIMENTI MARGINALI, IMMAGINI & VIDEO
 // ============================================================================
-async function openStudyNoteModal(verseNum, forcedBibleId = null) {
+async function openStudyNoteModal(verseNum, forcedBibleId = null, isExplicitLangSwitch = false) {
   const sid = ++proModalSessionId;
   bmHaptic(14);
+  if ((bmAudioPlaying || bmAudioPaused) && bmAudioMediaMeta.kind === "study_modal") {
+    stopAllAudio();
+  }
   const vNum = Math.max(1, Number(verseNum) || state.selectedVerse || 1);
   const targetBookId = state.bookId;
   const targetChapter = state.chapter;
@@ -22487,20 +23102,28 @@ async function openStudyNoteModal(verseNum, forcedBibleId = null) {
   const bodyEl = document.getElementById("proModalBody");
   if (!openProModal(`🎓 Studio: ${refStr}`, `<div class="loader">🎓 Caricamento note di studio, media e riferimenti di <b>${escapeHtml(refStr)}</b>...</div>`, sid)) return;
 
-  const [extras, footnotesMap] = await Promise.all([
-    fetchChapterStudyExtras(bibleId, targetBookId, targetChapter, true),
-    fetchChapterFootnotes(bibleId, targetBookId, targetChapter).catch(() => ({}))
+  const [extras, footnotesMap, installedStudyIds] = await Promise.all([
+    fetchChapterStudyExtras(bibleId, targetBookId, targetChapter, !isExplicitLangSwitch),
+    fetchChapterFootnotes(bibleId, targetBookId, targetChapter).catch(() => ({})),
+    getInstalledOfflineStudyBibleIds("bible")
   ]);
   if (!isProModalSessionActive(sid)) return;
 
   if (!extras) {
     const missingCfg = getStudyBibleConfig(bibleId);
     const loc = missingCfg.wtLocale || "I";
-    if (bodyEl) bodyEl.innerHTML = `<div class="loader">Nessun dato ${escapeHtml(missingCfg.shortTitle || "TNM Studio")} trovato. Importa <b>nwtsty_${escapeHtml(loc)}_parte1.zip</b> e <b>nwtsty_${escapeHtml(loc)}_parte2.zip</b> da ⚙️ ➔ Moduli.</div>`;
+    const fallbackSwitcher = renderInstalledStudyLangSwitcherHtml(
+      bibleId,
+      installedStudyIds,
+      (id) => `openStudyNoteModal(${vNum}, '${escapeJsStr(id)}', true)`
+    );
+    bmStudyModalActiveBibleId = bibleId;
+    if (bodyEl) bodyEl.innerHTML = `${fallbackSwitcher}<div class="loader">Nessun dato ${escapeHtml(missingCfg.shortTitle || "TNM Studio")} trovato. Importa <b>nwtsty_${escapeHtml(loc)}_parte1.zip</b> e <b>nwtsty_${escapeHtml(loc)}_parte2.zip</b> da ⚙️ ➔ Moduli.</div>`;
     return;
   }
   const resolvedBibleId = extras.bibleId || bibleId;
   const resolvedCfg = getStudyBibleConfig(resolvedBibleId);
+  bmStudyModalActiveBibleId = resolvedBibleId;
   const resolvedFootnotesMap = resolvedBibleId !== bibleId
     ? await fetchChapterFootnotes(resolvedBibleId, targetBookId, targetChapter).catch(() => footnotesMap)
     : footnotesMap;
@@ -22522,7 +23145,27 @@ async function openStudyNoteModal(verseNum, forcedBibleId = null) {
   const { videos, images } = resolveDeduplicatedVerseMedia(sMediaIds, extras.mediaById || {});
 
   const domRow = document.getElementById(`v_${vNum}`);
-  const versePlain = domRow ? (domRow.getAttribute("data-text") || "") : "";
+  let versePlain = domRow ? (domRow.getAttribute("data-text") || "") : "";
+  try {
+    const resolvedBibleObj = await getOfflineBible(resolvedBibleId);
+    if (!isProModalSessionActive(sid)) return;
+    const rb = resolvedBibleObj && Array.isArray(resolvedBibleObj.books)
+      ? resolvedBibleObj.books.find(b => Number(b.nr) === Number(targetBookId))
+      : null;
+    const rc = rb && Array.isArray(rb.chapters)
+      ? rb.chapters.find(c => Number(c.chapter) === Number(targetChapter))
+      : null;
+    const rv = rc && Array.isArray(rc.verses)
+      ? rc.verses.find(v => Number(v.verse) === Number(vNum))
+      : null;
+    if (rv && rv.text) versePlain = stripTagsToPlainText(rv.text);
+  } catch (e) { console.debug(e); }
+
+  const langSwitcherHtml = renderInstalledStudyLangSwitcherHtml(
+    resolvedBibleId,
+    installedStudyIds,
+    (id) => `openStudyNoteModal(${vNum}, '${escapeJsStr(id)}', true)`
+  );
 
   const notesHtml = sNotes.length
     ? `<div class="section-title"><span>🎓 Note di Studio (${sNotes.length})</span><button type="button" id="bmStudyModalSpeakBtn" class="nav-btn" style="padding:2px 8px; font-size:11.5px;" onclick="speakStudyNotesForCurrentModal()">🔊 Ascolta</button></div>` +
@@ -22542,7 +23185,7 @@ async function openStudyNoteModal(verseNum, forcedBibleId = null) {
            <div class="bm-study-marginal-row">
              <span class="bm-study-marginal-mark">${escapeHtml(g.mark || "•")}</span>
              <div style="display:flex; flex-wrap:wrap; gap:4px; flex:1;">
-               ${(g.refs || []).map(r => `<span class="tag-badge" style="font-size:12px; padding:3px 8px;" onclick="closeProModal(); jumpToRefString('${escapeJsStr(r)}', false, '${escapeJsStr(resolvedCfg.langCode || "")}')">📖 ${escapeHtml(r)}</span>`).join("")}
+               ${(g.refs || []).map(r => `<span class="tag-badge" style="font-size:12px; padding:3px 8px;" onclick="jumpToRefString('${escapeJsStr(r)}', false, '${escapeJsStr(resolvedCfg.langCode || "")}')">📖 ${escapeHtml(r)}</span>`).join("")}
              </div>
            </div>`).join("")}
        </div>`
@@ -22587,10 +23230,11 @@ async function openStudyNoteModal(verseNum, forcedBibleId = null) {
 
   if (bodyEl) {
     bodyEl.innerHTML = `
+      ${langSwitcherHtml}
       <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:10px; background:var(--primary-dark); padding:7px 9px; border-radius:10px; border:1px solid rgba(41,182,246,0.45);">
-        <button type="button" class="nav-btn" style="padding:5px 9px; ${prevV ? '' : 'opacity:0.42; pointer-events:none;'}" onclick="${prevV ? `openStudyNoteModal(${prevV}, '${escapeJsStr(resolvedBibleId)}')` : ''}">◀ ${prevV ? `v.${prevV}` : 'Inizio'}</button>
+        <button type="button" class="nav-btn" style="padding:5px 9px; ${prevV ? '' : 'opacity:0.42; pointer-events:none;'}" onclick="${prevV ? `openStudyNoteModal(${prevV}, '${escapeJsStr(resolvedBibleId)}', true)` : ''}">◀ ${prevV ? `v.${prevV}` : 'Inizio'}</button>
         <span style="font-size:13.5px; font-weight:900; color:#ffd54f;">🎓 ${escapeHtml(book.abbr)} ${targetChapter}:${vNum}</span>
-        <button type="button" class="nav-btn" style="padding:5px 9px; ${nextV ? '' : 'opacity:0.42; pointer-events:none;'}" onclick="${nextV ? `openStudyNoteModal(${nextV}, '${escapeJsStr(resolvedBibleId)}')` : ''}">${nextV ? `v.${nextV}` : 'Fine'} ▶</button>
+        <button type="button" class="nav-btn" style="padding:5px 9px; ${nextV ? '' : 'opacity:0.42; pointer-events:none;'}" onclick="${nextV ? `openStudyNoteModal(${nextV}, '${escapeJsStr(resolvedBibleId)}', true)` : ''}">${nextV ? `v.${nextV}` : 'Fine'} ▶</button>
       </div>
       ${versePlain ? `<div class="bm-justify-text" style="font-size:13px; color:var(--text-muted); font-style:italic; margin-bottom:10px; border-left:3px solid var(--primary-light); padding-left:8px;">"${escapeHtml(versePlain)}"</div>` : ""}
       ${notesHtml}
@@ -22770,7 +23414,7 @@ function renderBookStudyRibbonHtml(docsData, bookId, bibleId = "") {
   return `<div class="bm-study-ribbon" style="margin:0 0 8px 0;">${btns.join("")}</div>`;
 }
 
-async function openChapterStudyMediaModal(bookId, chapter, forcedBibleId = null) {
+async function openChapterStudyMediaModal(bookId, chapter, forcedBibleId = null, isExplicitLangSwitch = false) {
   bmHaptic(14);
   const sid = ++proModalSessionId;
   const targetBookId = Number(bookId) || state.bookId;
@@ -22781,9 +23425,19 @@ async function openChapterStudyMediaModal(bookId, chapter, forcedBibleId = null)
   const bodyEl = document.getElementById("proModalBody");
   if (!openProModal(`🖼️ Media: ${book.name} ${targetChapter}`, `<div class="loader">🖼️ Caricamento immagini e video di <b>${escapeHtml(book.name)} ${targetChapter}</b>...</div>`, sid)) return;
 
-  const extras = await fetchChapterStudyExtras(bibleId, targetBookId, targetChapter, true);
+  const [extras, installedStudyIds] = await Promise.all([
+    fetchChapterStudyExtras(bibleId, targetBookId, targetChapter, !isExplicitLangSwitch),
+    getInstalledOfflineStudyBibleIds("bible")
+  ]);
   if (!isProModalSessionActive(sid)) return;
-  const mediaCfg = getStudyBibleConfig((extras && extras.bibleId) || bibleId);
+  const resolvedBibleId = (extras && extras.bibleId) || bibleId;
+  bmStudyModalActiveBibleId = resolvedBibleId;
+  const mediaCfg = getStudyBibleConfig(resolvedBibleId);
+  const mediaLangSwitcherHtml = renderInstalledStudyLangSwitcherHtml(
+    resolvedBibleId,
+    installedStudyIds,
+    (id) => `openChapterStudyMediaModal(${targetBookId}, ${targetChapter}, '${escapeJsStr(id)}', true)`
+  );
   const { videos, images } = collectChapterStudyMediaItems(extras);
 
   bmStudyModalMediaPool = [];
@@ -22822,6 +23476,7 @@ async function openChapterStudyMediaModal(bookId, chapter, forcedBibleId = null)
 
   if (bodyEl) {
     bodyEl.innerHTML = `
+      ${mediaLangSwitcherHtml}
       ${videosHtml}
       ${imagesHtml}
       ${(!videosHtml && !imagesHtml) ? `<div class="loader">Nessuna immagine o video associato a <b>${escapeHtml(book.name)} ${targetChapter}</b>.</div>` : ""}
@@ -22847,8 +23502,41 @@ function openStudyDocsForBook(bookId, forcedBibleId = "") {
   showStudyDocsView(null, false, forcedBibleId);
 }
 
+function findEquivalentStudyDoc(documents, selectedDocId, prevDocHint = null) {
+  if (!Array.isArray(documents) || selectedDocId === null || selectedDocId === undefined) return null;
+  const exact = documents.find(d => d && Number(d.id) === Number(selectedDocId));
+  if (exact) return exact;
+  if (!prevDocHint || !prevDocHint.docClass) return null;
+  const targetCls = String(prevDocHint.docClass);
+  const targetBook = Number(prevDocHint.docChapter) || 0;
+  if (targetBook > 0 && targetBook <= 66) {
+    const bookMatches = documents.filter(d => d && !isStudyDocEmptyShell(d) && Number(d.chapter) === targetBook);
+    if (targetCls === "118" && prevDocHint.docSubChapter > 0) {
+      const chMatch = bookMatches.find(d => String(d.class) === "118" && extractStudyDocChapterNumber(d) === prevDocHint.docSubChapter);
+      if (chMatch) return chMatch;
+    }
+    const sameClass = bookMatches.find(d => String(d.class) === targetCls);
+    if (sameClass) return sameClass;
+    if (targetCls === "114" || targetCls === "115") {
+      const altOverview = bookMatches.find(d => String(d.class) === "114" || String(d.class) === "115");
+      if (altOverview) return altOverview;
+    }
+  }
+  return null;
+}
+
 async function showStudyDocsView(selectedDocId = null, fromBack = false, forcedBibleId = "") {
   const reqId = ++currentViewReqId;
+  const prevDocHint = (forcedBibleId && selectedDocId !== null && selectedDocId !== undefined
+    && currentViewContext && currentViewContext.type === "study_docs"
+    && Number(currentViewContext.docId) === Number(selectedDocId))
+    ? {
+        docClass: String(currentViewContext.docClass || ""),
+        docChapter: Number(currentViewContext.docChapter) || 0,
+        docSubChapter: Number(currentViewContext.docSubChapter) || 0,
+        docTitle: String(currentViewContext.docTitle || "")
+      }
+    : null;
   if (!fromBack && (currentViewContext.type !== "study_docs" || (selectedDocId !== null && currentViewContext.docId !== selectedDocId))) {
     saveCurrentPositionToHistory();
   }
@@ -22892,8 +23580,9 @@ async function showStudyDocsView(selectedDocId = null, fromBack = false, forcedB
     return;
   }
 
+  let missingDocNoticeHtml = "";
   if (selectedDocId !== null && selectedDocId !== undefined) {
-    const doc = data.documents.find(d => Number(d.id) === Number(selectedDocId));
+    const doc = findEquivalentStudyDoc(data.documents, selectedDocId, prevDocHint);
     if (doc) {
       if (isStudyDocEmptyShell(doc)) {
         const targetBook = Number(doc.chapter) > 0 && Number(doc.chapter) <= 66 ? Number(doc.chapter) : state.bookId;
@@ -22903,10 +23592,26 @@ async function showStudyDocsView(selectedDocId = null, fromBack = false, forcedB
       await renderStudyDocReader(doc, data, reqId);
       return;
     }
+    currentViewContext.docId = null;
+    if (forcedBibleId) {
+      const targetCfg = getStudyBibleConfig(bmStudyDocsActiveBibleId);
+      const docRefLabel = prevDocHint && prevDocHint.docTitle
+        ? `«${escapeHtml(prevDocHint.docTitle)}»`
+        : "Il documento selezionato";
+      missingDocNoticeHtml = `<div class="bm-study-doc-fallback-notice" role="status">ℹ️ ${docRefLabel} non è presente in <b>${escapeHtml(targetCfg.shortTitle || targetCfg.name || bmStudyDocsActiveBibleId)}</b>: aperto l'indice dell'edizione.</div>`;
+    }
   }
 
-  const statusObj = await idbGet(`bm:nwtsty_status:${bmStudyDocsActiveBibleId}`);
+  const [statusObj, installedDocIds] = await Promise.all([
+    idbGet(`bm:nwtsty_status:${bmStudyDocsActiveBibleId}`),
+    getInstalledOfflineStudyBibleIds("docs")
+  ]);
   if (reqId !== currentViewReqId) return;
+  const docsLangSwitcherHtml = renderInstalledStudyLangSwitcherHtml(
+    bmStudyDocsActiveBibleId,
+    installedDocIds,
+    (id) => `showStudyDocsView(null, true, '${escapeJsStr(id)}')`
+  );
   const realDocCount = data.documents.filter(d => !isStudyDocEmptyShell(d)).length;
   const imgInfo = statusObj && typeof statusObj.imgCount === "number"
     ? `🖼️ ${statusObj.imgCount}/${statusObj.imgTotal || 744} immagini offline`
@@ -22931,6 +23636,8 @@ async function showStudyDocsView(selectedDocId = null, fromBack = false, forcedB
         <button type="button" class="nav-btn" onclick="openBibleTabFromMenu()">📖 Lettura</button>
       </div>
     </div>
+    ${docsLangSwitcherHtml}
+    ${missingDocNoticeHtml}
     ${imgInfo ? `<div style="font-size:12px; color:var(--text-muted); margin:-4px 0 8px 0; display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px;"><span>${imgInfo}</span><span>${realDocCount} documenti</span></div>` : ""}
     <div class="search-box" style="margin-bottom:8px; flex-wrap:nowrap;">
       <input type="search" id="bmStudyDocsSearchInput" class="search-input" placeholder="🔍 Cerca appendici, domande, cartine, temi, approfondimenti..." value="${escapeHtml(bmStudyDocsSearchQuery)}" oninput="onStudyDocsSearchInput(this.value)">
@@ -23091,7 +23798,17 @@ async function renderStudyDocReader(doc, data, reqId) {
   const docBookId = Number(doc.chapter) > 0 && Number(doc.chapter) <= 66 ? Number(doc.chapter) : null;
   const isMediaOnlyBook = isStudyDocMediaGalleryOnly(doc);
   const readerTitle = isMediaOnlyBook ? `Galleria Media: ${doc.title}` : (doc.title || "Studio");
-  currentViewContext = { type: "study_docs", docId: Number(doc.id), bibleId: bmStudyDocsActiveBibleId, title: readerTitle, label: `🎓 ${String(doc.title || "Studio").slice(0, 14)}` };
+  currentViewContext = {
+    type: "study_docs",
+    docId: Number(doc.id),
+    docClass: String(doc.class !== undefined && doc.class !== null ? doc.class : ""),
+    docChapter: Number(doc.chapter) || 0,
+    docSubChapter: String(doc.class) === "118" ? extractStudyDocChapterNumber(doc) : 0,
+    docTitle: String(doc.title || ""),
+    bibleId: bmStudyDocsActiveBibleId,
+    title: readerTitle,
+    label: `🎓 ${String(doc.title || "Studio").slice(0, 14)}`
+  };
   setHeaderCenterPill(doc.title || "Studio", "study_docs");
 
   bmStudyDocMediaPool = [];
@@ -23231,11 +23948,17 @@ async function renderStudyDocReader(doc, data, reqId) {
       ${docFnArr.map(fn => `<div class="bm-justify-text bm-study-doc-fn-card"><b class="bm-study-doc-fn-mark">[${escapeHtml(fn.label || "*")}]</b> ${formatNoteLinks(fn.text || "", docBookId, docLangCode)}</div>`).join("")}
     </div>` : "";
 
+  const installedDocIds = await getInstalledOfflineStudyBibleIds("docs");
+  if (reqId !== currentViewReqId) return;
+  const docReaderLangSwitcherHtml = renderInstalledStudyLangSwitcherHtml(
+    bmStudyDocsActiveBibleId,
+    installedDocIds,
+    (id) => `showStudyDocsView(${Number(doc.id)}, true, '${escapeJsStr(id)}')`
+  );
   const targetReadCh = docBookId ? (extractStudyDocChapterNumber(doc) || 1) : 1;
   currentInsightSpeechText = speechChunks.join(". ").slice(0, 24000);
   const hasDocSpeech = Boolean(currentInsightSpeechText.trim()) && !isMediaOnlyBook;
 
-  if (reqId !== currentViewReqId) return;
   main.innerHTML = `
     <div class="chapter-header" style="flex-wrap:wrap; gap:8px;">
       <div class="chapter-title" style="font-size:16.5px;">${isMediaOnlyBook ? "🖼️" : "🎓"} ${escapeHtml(readerTitle)}</div>
@@ -23246,6 +23969,7 @@ async function renderStudyDocReader(doc, data, reqId) {
         <button type="button" class="nav-btn" onclick="showStudyDocsView(null, true, '${escapeJsStr(bmStudyDocsActiveBibleId)}')">☰ Indice</button>
       </div>
     </div>
+    ${docReaderLangSwitcherHtml}
     ${attachedMediaHtml}
     <div>${bodyHtml}</div>
     ${docFnHtml}
