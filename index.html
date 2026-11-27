@@ -47,9 +47,6 @@
       --bm-sar: env(safe-area-inset-right, 0px);
       --bm-sab: env(safe-area-inset-bottom, 0px);
       --bm-sal: env(safe-area-inset-left, 0px);
-      --bm-sat-stable: env(safe-area-inset-top, 0px);
-      --bm-sab-stable: env(safe-area-inset-bottom, 0px);
-      --bm-vh-stable: 100lvh;
     }
     body.dark-mode {
       color-scheme: dark;
@@ -1639,15 +1636,6 @@ body.oled-mode .pub-ref-badge {
       box-shadow: 0 0 20px var(--btn-glow, rgba(0, 229, 255, 0.85)), inset 0 0 14px rgba(2, 11, 28, 0.85);
       transform: scale(0.95);
     }
-    /* Modale Uscita: ancoraggio viewport stabile (lvh) + padding simmetrico anti-scatto barre transitorie Android */
-    #bmExitModal {
-      height: 100vh;
-      height: 100lvh;
-      padding: 16px;
-    }
-    #bmExitModal .modal-card {
-      max-height: 86lvh;
-    }
     /* Fase 2 Modale Uscita: Mano Fotografica RGBA & Rotolo Biblico Antico 3D a 3 Livelli (120Hz Compositor-Only) */
     #bmExitModal.bm-exit-step2-active,
     #bmExitModal.bm-exit-step2-active .modal-card {
@@ -1888,7 +1876,7 @@ body.oled-mode .pub-ref-badge {
     }
     .bm-scroll-close-float {
       position: fixed;
-      top: max(18px, var(--bm-sat-stable, env(safe-area-inset-top, 18px)));
+      top: max(18px, env(safe-area-inset-top, 18px));
       right: max(18px, env(safe-area-inset-right, 18px));
       width: 38px;
       height: 38px;
@@ -1915,7 +1903,7 @@ body.oled-mode .pub-ref-badge {
       background: rgba(13, 71, 161, 0.9);
     }
     .bm-biblical-scroll {
-      --bm-scroll-h: min(calc(min(88vw, 358px) / 0.910277), 56lvh);
+      --bm-scroll-h: min(calc(min(88vw, 358px) / 0.910277), 56dvh);
       --bm-sheet-clip-l: 0px;
       --bm-sheet-clip-r: 0px;
       --bm-roll-tx-l: 0px;
@@ -3650,7 +3638,7 @@ body.oled-mode .pub-ref-badge {
     contain-intrinsic-size: auto 84px;
   }
 
-  /* ===== v18.0.3: Peek Bilingue, Switch Lingua Studio, Colonna TTS Attiva & Filo di Arianna ===== */
+  /* ===== v18.0.4: Peek Bilingue, Switch Lingua Studio, Colonna TTS Attiva & Filo di Arianna ===== */
   .bm-peek-block + .bm-peek-block {
     margin-top: 10px;
     padding-top: 10px;
@@ -3852,7 +3840,7 @@ body.oled-mode .pub-ref-badge {
   }
   @media (max-height: 560px) {
     .bm-biblical-scroll {
-      --bm-scroll-h: min(calc(min(84vw, 320px) / 0.910277), 54lvh);
+      --bm-scroll-h: min(calc(min(84vw, 320px) / 0.910277), 54dvh);
     }
     .bm-scroll-caption-3d {
       margin-top: 12px;
@@ -3874,58 +3862,6 @@ body.oled-mode .pub-ref-badge {
     }
     nav.bottom-nav {
       padding-bottom: max(8px, env(safe-area-inset-bottom, 8px));
-    }
-  }
-
-  /* Stabilizzazione sfondo, modale uscita e widget flottanti in display: fullscreen (blocca salto barre transitorie Android Chrome WebAPK) */
-  @media (display-mode: fullscreen) {
-    body {
-      height: 100vh;
-      height: 100lvh;
-    }
-    body.bm-exit-modal-open {
-      height: var(--bm-vh-stable, 100lvh);
-      overflow: hidden;
-    }
-    #bmExitModal {
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: auto;
-      height: var(--bm-vh-stable, 100lvh);
-    }
-    #bmExitModal .modal-card {
-      max-height: calc(var(--bm-vh-stable, 100lvh) * 0.86);
-    }
-    .bm-biblical-scroll {
-      --bm-scroll-h: min(calc(min(88vw, 358px) / 0.910277), calc(var(--bm-vh-stable, 100lvh) * 0.56));
-    }
-    header {
-      padding-top: max(10px, var(--bm-sat-stable, env(safe-area-inset-top, 10px)));
-    }
-    nav.bottom-nav {
-      padding-bottom: max(8px, var(--bm-sab-stable, env(safe-area-inset-bottom, 8px)));
-    }
-    #bmProphecyWidget {
-      --bm-bulb-bottom: calc(84px + var(--bm-sab-stable, env(safe-area-inset-bottom, 0px)));
-    }
-    body.bm-miniplayer-open #bmProphecyWidget:not(.bm-dragging-bulb),
-    body.bm-actionbar-open #bmProphecyWidget:not(.bm-dragging-bulb) {
-      --bm-bulb-min-bottom: calc(148px + var(--bm-sab-stable, env(safe-area-inset-bottom, 0px)));
-    }
-    body.bm-miniplayer-open.bm-actionbar-open #bmProphecyWidget:not(.bm-dragging-bulb) {
-      --bm-bulb-min-bottom: calc(196px + var(--bm-sab-stable, env(safe-area-inset-bottom, 0px)));
-    }
-    .bm-audio-mini-player {
-      bottom: calc(70px + var(--bm-sab-stable, env(safe-area-inset-bottom, 0px)));
-    }
-    body.bm-zen-on .bm-audio-mini-player {
-      bottom: calc(64px + var(--bm-sab-stable, env(safe-area-inset-bottom, 0px)));
-    }
-  }
-  @media (display-mode: fullscreen) and (max-height: 560px) {
-    .bm-biblical-scroll {
-      --bm-scroll-h: min(calc(min(84vw, 320px) / 0.910277), calc(var(--bm-vh-stable, 100lvh) * 0.54));
     }
   }
 
@@ -3989,6 +3925,7 @@ body.oled-mode .pub-ref-badge {
   function lockCenterAndReveal() {
     if (done) return;
     done = true;
+    clearTimeout(timer);
     window.removeEventListener("resize", onResizeStabilize);
     var h = getStableViewportHeight();
     splash.style.setProperty("--splash-locked-top", Math.round(h / 2) + "px");
@@ -4001,7 +3938,7 @@ body.oled-mode .pub-ref-badge {
     clearTimeout(timer);
     timer = setTimeout(lockCenterAndReveal, 90);
   }
-  window.addEventListener("resize", onResizeStabilize);
+  window.addEventListener("resize", onResizeStabilize, { passive: true });
   onResizeStabilize();
   setTimeout(lockCenterAndReveal, 320);
 })();
@@ -16935,7 +16872,7 @@ function scrollRpToToday(smooth = false) {
 function buildStudioBackupObject() {
   return {
     app: "BibbiaMultilingue_PRO",
-    version: "PRO_v18.0.3",
+    version: "PRO_v18.0.4",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
@@ -17431,7 +17368,7 @@ function setMigrationStatus(htmlMsg) {
 
 async function buildAndDeliverLibraryBundle(keysList, includeStudio, fileName, shareTitle) {
   const parts = [
-    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v18.0.3","date":',
+    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v18.0.4","date":',
     JSON.stringify(new Date().toISOString())
   ];
   if (includeStudio) {
@@ -19055,7 +18992,9 @@ function isInRightEdgeExitZone(clientX) {
   return clientX >= w - edgeStrip;
 }
 
-
+document.getElementById("mainContainer")?.addEventListener("touchcancel", function() {
+  bmSwipeIgnore = true;
+}, { passive: true });
 
 document.getElementById("mainContainer")?.addEventListener("touchstart", function(e) {
   if (!e.touches || e.touches.length !== 1) { bmSwipeIgnore = true; return; }
@@ -19605,79 +19544,9 @@ function getBmExitAnimStyle() {
   return (bmSettings && bmSettings.exitAnimStyle === "scroll") ? "scroll" : "hand";
 }
 
-let bmLastViewportWidth = window.innerWidth || document.documentElement.clientWidth || 360;
-let bmStableViewportHeight = window.innerHeight || document.documentElement.clientHeight || 740;
-let bmStableSatPx = null;
-let bmStableSabPx = null;
-let bmStableInsetOrientWidth = bmLastViewportWidth;
-let bmStableInsetTimer = null;
-let bmStableInsetSettleTimer = null;
-
-function readBmSafeAreaVarPx(varName) {
-  try {
-    const raw = (getComputedStyle(document.documentElement).getPropertyValue(varName) || "").trim();
-    const val = parseFloat(raw);
-    if (Number.isFinite(val) && val >= 0) return Math.round(val);
-  } catch (e) { console.debug(e); }
-  return null;
-}
-
-function syncBmStableViewportHeightVar() {
-  if (!Number.isFinite(bmStableViewportHeight) || bmStableViewportHeight <= 0) return;
-  document.documentElement.style.setProperty("--bm-vh-stable", `${Math.round(bmStableViewportHeight)}px`);
-}
-
-function sampleBmStableSafeAreaInsets(resetOrientation = false) {
-  if (bmExitConfirmOpen && !resetOrientation) return;
-  const curW = window.innerWidth || document.documentElement.clientWidth || 360;
-  const curH = window.innerHeight || document.documentElement.clientHeight || 740;
-  if (resetOrientation || Math.abs(curW - bmStableInsetOrientWidth) >= 2) {
-    bmStableInsetOrientWidth = curW;
-    bmStableSatPx = null;
-    bmStableSabPx = null;
-    bmLastViewportWidth = curW;
-    bmStableViewportHeight = curH;
-  } else {
-    bmStableViewportHeight = Math.max(bmStableViewportHeight, curH);
-  }
-  syncBmStableViewportHeightVar();
-  const measuredSat = readBmSafeAreaVarPx("--bm-sat");
-  const measuredSab = readBmSafeAreaVarPx("--bm-sab");
-  const rootStyle = document.documentElement.style;
-  if (measuredSat !== null) {
-    bmStableSatPx = (bmStableSatPx === null) ? measuredSat : Math.min(bmStableSatPx, measuredSat);
-    rootStyle.setProperty("--bm-sat-stable", `${bmStableSatPx}px`);
-  }
-  if (measuredSab !== null) {
-    bmStableSabPx = (bmStableSabPx === null) ? measuredSab : Math.min(bmStableSabPx, measuredSab);
-    rootStyle.setProperty("--bm-sab-stable", `${bmStableSabPx}px`);
-  }
-}
-
-function scheduleBmStableSafeAreaSample(delayMs = 400, resetOrientation = false) {
-  clearTimeout(bmStableInsetTimer);
-  if (resetOrientation) {
-    clearTimeout(bmStableInsetSettleTimer);
-    bmStableInsetSettleTimer = null;
-  }
-  bmStableInsetTimer = setTimeout(() => {
-    bmStableInsetTimer = null;
-    sampleBmStableSafeAreaInsets(resetOrientation);
-  }, delayMs);
-}
-
 function getBmScrollHeightPx() {
   const vw = window.innerWidth || document.documentElement.clientWidth || 360;
-  const curH = window.innerHeight || document.documentElement.clientHeight || 740;
-  if (Math.abs(vw - bmLastViewportWidth) >= 2) {
-    bmLastViewportWidth = vw;
-    bmStableViewportHeight = curH;
-    syncBmStableViewportHeightVar();
-  } else if (!bmExitConfirmOpen) {
-    bmStableViewportHeight = Math.max(bmStableViewportHeight, curH);
-    syncBmStableViewportHeightVar();
-  }
-  const vh = Math.max(curH, bmStableViewportHeight);
+  const vh = window.innerHeight || document.documentElement.clientHeight || 740;
   const isShort = vh <= 560;
   const maxByW = Math.min(isShort ? 320 : 358, Math.round(vw * (isShort ? 0.84 : 0.88))) / 0.910277;
   const maxByH = Math.max(isShort ? 160 : 190, Math.round(vh * (isShort ? 0.54 : 0.56)));
@@ -19841,8 +19710,6 @@ function openBmExitStylePreview() {
   bmExitActionLock = false;
   bmExitingApp = false;
   bmExitConfirmOpen = true;
-  syncBmStableViewportHeightVar();
-  document.body.classList.add("bm-exit-modal-open");
   setBmExitModalStep(2);
   modal.style.display = "flex";
   const prefEl = document.getElementById(getBmExitAnimStyle() === "scroll" ? "bmBiblicalScroll" : "bmExitHandBtn");
@@ -19883,8 +19750,6 @@ function openBmExitModal() {
   bmExitActionLock = false;
   bmExitingApp = false;
   bmExitConfirmOpen = true;
-  syncBmStableViewportHeightVar();
-  document.body.classList.add("bm-exit-modal-open");
   modal.style.display = "flex";
   bmFocusOverlayElement(modal, document.getElementById("bmExitNoBtn"));
   bmHaptic(14);
@@ -19897,7 +19762,6 @@ function closeBmExitModal(rearmGuard = true) {
     modal.style.display = "none";
     modal.querySelectorAll(".bm-exit-lit").forEach(el => el.classList.remove("bm-exit-lit"));
   }
-  document.body.classList.remove("bm-exit-modal-open");
   bmExitPreviewMode = false;
   setBmExitModalStep(1);
   bmExitConfirmOpen = false;
@@ -19955,8 +19819,6 @@ function confirmBmAppExit() {
     }
     bmExitActionLock = false;
     bmExitingApp = false;
-    syncBmStableViewportHeightVar();
-    document.body.classList.add("bm-exit-modal-open");
     const modal = document.getElementById("bmExitModal");
     if (modal) {
       modal.style.display = "flex";
@@ -20138,7 +20000,7 @@ function initBmExitHandDrag() {
         bmExitCaptureTarget = scrollEl;
       } catch (err) { console.debug(err); }
     }
-  });
+  }, { passive: true });
 
   window.addEventListener("pointermove", function (e) {
     if (bmExitActivePid === null || e.pointerId !== bmExitActivePid) return;
@@ -21012,20 +20874,6 @@ function scheduleBmGlobalResize() {
   if (bmGlobalResizeRaf) return;
   bmGlobalResizeRaf = requestAnimationFrame(() => {
     bmGlobalResizeRaf = 0;
-    const curW = window.innerWidth || document.documentElement.clientWidth || 360;
-    const curH = window.innerHeight || document.documentElement.clientHeight || 740;
-    const widthChanged = Math.abs(curW - bmLastViewportWidth) >= 2;
-    if (widthChanged) {
-      bmLastViewportWidth = curW;
-      bmStableViewportHeight = curH;
-      syncBmStableViewportHeightVar();
-      scheduleBmStableSafeAreaSample(400, true);
-    } else if (bmExitConfirmOpen) {
-      return;
-    } else {
-      bmStableViewportHeight = Math.max(bmStableViewportHeight, curH);
-      syncBmStableViewportHeightVar();
-    }
     scheduleBmReadProgressUpdate();
     handleMapsViewerResize();
     if (typeof bmStudyLbState !== "undefined" && bmStudyLbState.active && bmStudyLbState.nw) {
@@ -21041,13 +20889,6 @@ function scheduleBmGlobalResize() {
   });
 }
 window.addEventListener("resize", scheduleBmGlobalResize, { passive: true });
-window.addEventListener("orientationchange", () => scheduleBmStableSafeAreaSample(400, true), { passive: true });
-sampleBmStableSafeAreaInsets(true);
-scheduleBmStableSafeAreaSample(400, true);
-bmStableInsetSettleTimer = setTimeout(() => {
-  bmStableInsetSettleTimer = null;
-  sampleBmStableSafeAreaInsets(false);
-}, 1500);
 
 function recordActiveStudyDay() {
   const today = getLocalIsoDateStr();
@@ -21932,20 +21773,18 @@ function renderMessianicCatalogModalBody() {
 }
 
 function getRootSafeAreaPx(varName) {
-  const v = readBmSafeAreaVarPx(varName);
-  return v !== null ? v : 0;
+  const v = parseFloat(getComputedStyle(document.documentElement).getPropertyValue(varName));
+  return Number.isFinite(v) && v > 0 ? Math.round(v) : 0;
 }
 
 function placeBulbAtOrbCoords(orbLeftPx, bottomPx) {
   const widget = document.getElementById("bmProphecyWidget");
   if (!widget) return;
   const vw = window.innerWidth;
-  const curH = window.innerHeight || document.documentElement.clientHeight || 740;
-  const isFullscreen = Boolean(window.matchMedia && window.matchMedia("(display-mode: fullscreen)").matches);
-  const vh = (isFullscreen && Math.abs(vw - bmLastViewportWidth) < 2) ? Math.max(curH, bmStableViewportHeight) : curH;
-  const sat = getRootSafeAreaPx("--bm-sat-stable");
+  const vh = window.innerHeight;
+  const sat = getRootSafeAreaPx("--bm-sat");
   const sar = getRootSafeAreaPx("--bm-sar");
-  const sab = getRootSafeAreaPx("--bm-sab-stable");
+  const sab = getRootSafeAreaPx("--bm-sab");
   const sal = getRootSafeAreaPx("--bm-sal");
   const hdr = document.querySelector("header");
   const nav = document.querySelector("nav.bottom-nav");
