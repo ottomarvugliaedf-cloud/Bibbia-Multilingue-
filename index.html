@@ -2586,6 +2586,21 @@ body.oled-mode .pub-ref-badge {
     main.bm-paper-reading .bp-ref b { background: rgba(140, 88, 24, 0.12); border-color: #8c5818; color: #6b4c24; }
     main.bm-paper-reading .bp-more,
     main.bm-paper-reading .bp-h { color: #6b4c24; border-bottom-color: #cbbd9e; }
+    .bm-omni-strong-card { border-left: 3.5px solid #ffd54f; }
+    .bm-omni-strong-ref { color: #ffd54f; }
+    .bm-omni-strong-code { color: #00e5ff; font-weight: 800; }
+    .nav-btn.bm-omni-study-btn { border-color: #00e5ff; color: #84ffff; font-weight: 800; }
+    .bm-omni-study-card { border-left: 3.5px solid #00e5ff; }
+    .tag-badge.bm-bp-count-badge { font-size: 11px; background: #0a367e; color: #84ffff; border-color: #29b6f6; }
+    .tag-badge.bm-bp-verse-pill { background: rgba(0, 229, 255, 0.16); color: #00e5ff; border-color: #00e5ff; font-size: 11.5px; padding: 2px 8px; }
+    body.oled-mode .tag-badge.bm-bp-count-badge { background: #0d213f; border-color: #38bdf8; }
+    main.bm-paper-reading .result-card.bm-omni-strong-card { border-left-color: #8c5818; }
+    main.bm-paper-reading .bm-omni-strong-ref { color: #7c2d12; }
+    main.bm-paper-reading .bm-omni-strong-code { color: #5c3a10; }
+    main.bm-paper-reading .nav-btn.bm-omni-study-btn { border-color: #8c5818; color: #5c3a10; }
+    main.bm-paper-reading .result-card.bm-omni-study-card { border-left-color: #8c5818; }
+    main.bm-paper-reading .tag-badge.bm-bp-count-badge { background: #dfd1b2; color: #5c3a10; border-color: #b59469; }
+    main.bm-paper-reading .tag-badge.bm-bp-verse-pill { background: rgba(140, 88, 24, 0.12); color: #6b4110; border-color: #8c5818; }
     main.bm-paper-reading #bmXRayReturnBar {
       background: #ebe3d1;
       border-color: #8c5818;
@@ -2621,6 +2636,8 @@ body.oled-mode .pub-ref-badge {
     body.bm-paper-on #mapsViewer .bp-it { border-bottom-color: #d8ccb4; }
     body.bm-paper-on #mapsViewer .bp-it.click:active { background: #e8dec8; }
     body.bm-paper-on #mapsViewer .bp-g { color: #8c5818; }
+    body.bm-paper-on #mapsViewer .tag-badge.bm-bp-count-badge { background: #dfd1b2; color: #5c3a10; border-color: #b59469; }
+    body.bm-paper-on #mapsViewer .tag-badge.bm-bp-verse-pill { background: rgba(140, 88, 24, 0.12); color: #6b4110; border-color: #8c5818; }
 
   /* ===== Modulo Lampadina Profezie Messianiche ===== */
   /* Rifiniture mirate Dark & True-Black OLED (le superfici ereditano nativamente i token --surface-*) */
@@ -3638,7 +3655,7 @@ body.oled-mode .pub-ref-badge {
     contain-intrinsic-size: auto 84px;
   }
 
-  /* ===== v18.0.4: Peek Bilingue, Switch Lingua Studio, Colonna TTS Attiva & Filo di Arianna ===== */
+  /* ===== v18.0.5: Peek Bilingue, Switch Lingua Studio, Colonna TTS Attiva & Filo di Arianna ===== */
   .bm-peek-block + .bm-peek-block {
     margin-top: 10px;
     padding-top: 10px;
@@ -6796,7 +6813,7 @@ async function fetchChapterData(transId, bookId, chapter) {
   if (transId.startsWith("helloao:")) {
     const code = transId.split(":")[1];
     const bookCode = HELLOAO_BOOK_MAP[Number(bookId)] || "GEN";
-    const res = await fetch(`https://bible.helloao.org/api/${code}/${bookCode}/${chapter}.json`);
+    const res = await fetchWithTimeout(`https://bible.helloao.org/api/${code}/${bookCode}/${chapter}.json`, 12000);
     if (!res.ok) throw new Error("Capitolo non disponibile in questa edizione");
     const data = await res.json();
     const contentList = (data.chapter && data.chapter.content) ? data.chapter.content : [];
@@ -6808,7 +6825,7 @@ async function fetchChapterData(transId, bookId, chapter) {
     });
   } else {
     const code = resolveGetBibleApiCode(transId);
-    const res = await fetch(`https://api.getbible.net/v2/${code}/${bookId}/${chapter}.json`);
+    const res = await fetchWithTimeout(`https://api.getbible.net/v2/${code}/${bookId}/${chapter}.json`, 12000);
     if (!res.ok) throw new Error("Capitolo non disponibile");
     const data = await res.json();
     verses = (data.verses || []).map(v => ({ verse: Number(v.verse), text: v.text }));
@@ -9967,7 +9984,7 @@ async function toggleDownload(id) {
   try {
     if (!id.startsWith("helloao:") && !LOCAL_EPUB_IDS.includes(id)) {
       const code = resolveGetBibleApiCode(id);
-      const res = await fetch(`https://api.getbible.net/v2/${code}.json`);
+      const res = await fetchWithTimeout(`https://api.getbible.net/v2/${code}.json`, 45000);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       if (!data || !Array.isArray(data.books)) throw new Error("Archivio Bibbia non valido");
@@ -10433,7 +10450,7 @@ async function executeSearch(page = 1) {
       let fullBible = await getOfflineBible(searchTransId);
       if (!fullBible && !LOCAL_EPUB_IDS.includes(searchTransId)) {
         const code = resolveGetBibleApiCode(searchTransId);
-        const res = await fetch(`https://api.getbible.net/v2/${code}.json`);
+        const res = await fetchWithTimeout(`https://api.getbible.net/v2/${code}.json`, 45000);
         if (res.ok) {
           fullBible = await res.json();
           await saveOfflineBible(searchTransId, fullBible);
@@ -13731,7 +13748,7 @@ async function importUniversalEpubFiles(event, targetId, labelName) {
       setStatus(`✔ <b>${escapeHtml(labelName)}</b> salvata Offline (${importedCount}/66 libri${extraSuffix}).<br>📌 Carica ora il secondo file EPUB per completare i libri mancanti.`);
     }
   } catch (err) {
-    console.error(err);
+    console.debug(err);
     setStatus(`❌ Errore durante l'importazione: ${escapeHtml(err.message)}`);
   }
   }, setStatus);
@@ -14258,7 +14275,7 @@ async function extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, 
         if (resolved && !resolved.includes("titlepage") && /\.x?html$/i.test(resolved)) spineOrder.push(resolved);
       });
       if (spineOrder.length > 0) orderedHtmlFiles = spineOrder;
-    } catch (e) { console.warn("Errore lettura content.opf:", e); }
+    } catch (e) { console.debug("Errore lettura content.opf:", e); }
   }
 
   // 1b. Rilevazione automatica EPUB strutturati per capitolo (LaParola / Palm PDB: b01c001.xhtml)
@@ -16101,7 +16118,7 @@ async function importMapsArchive(event) {
     }
     const meta = { updated: Date.now(), title: parsed.title, counts: parsed.counts, places: parsed.places, maps: metaMaps };
     await idbPut(BP_DB_META, meta);
-    await idbDelete("bm:maps_it");
+    await idbDelete("bm:maps_it"); // pulizia chiave legacy pre-v16
     bpMeta = meta;
     bpBuildPlaceMap();
     cachedOmniQuery = "";
@@ -16872,7 +16889,7 @@ function scrollRpToToday(smooth = false) {
 function buildStudioBackupObject() {
   return {
     app: "BibbiaMultilingue_PRO",
-    version: "PRO_v18.0.4",
+    version: "PRO_v18.0.5",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
@@ -17275,6 +17292,7 @@ async function scanOfflineLibraryModules() {
 
   const attachedStatusKeys = new Set();
   for (const k of allKeys) {
+    // Esclude chiavi già raggruppate, cache ricreabili e la chiave legacy pre-v16 bm:maps_it
     if (k === BP_DB_META || k.startsWith(BP_DB_IMG) || k.startsWith("bm:nwtsty_img:") || k.startsWith("bm:nwtsty_status:") || k === "bm:maps_it" || k === "bm:messianic_enriched_v1") continue;
     const desc = describeIdbMigrationModule(k);
     const modKeys = [k];
@@ -17368,7 +17386,7 @@ function setMigrationStatus(htmlMsg) {
 
 async function buildAndDeliverLibraryBundle(keysList, includeStudio, fileName, shareTitle) {
   const parts = [
-    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v18.0.4","date":',
+    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v18.0.5","date":',
     JSON.stringify(new Date().toISOString())
   ];
   if (includeStudio) {
@@ -17757,11 +17775,11 @@ function bpJumpToVerseInDom(verseNum) {
 }
 
 function bpCardHtml(r) {
-  const cntBadge = r.count > 1 ? `<span class="tag-badge" style="font-size:11px; background:#0a367e; color:#84ffff; border-color:#29b6f6;">${r.count} occorrenze</span>` : "";
+  const cntBadge = r.count > 1 ? `<span class="tag-badge bm-bp-count-badge">${r.count} occorrenze</span>` : "";
   const versePills = (r.verses && r.verses.length > 0)
     ? `<div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; align-items:center;">
          <span style="font-size:11.5px; color:var(--text-muted); font-weight:700;">Nel capitolo:</span>
-         ${r.verses.map(v => `<span class="tag-badge" style="background:rgba(0,229,255,0.16); color:#00e5ff; border-color:#00e5ff; font-size:11.5px; padding:2px 8px;" onclick="bpJumpToVerseInDom(${v})" title="Salta al versetto ${v}">📖 v. ${v}</span>`).join("")}
+         ${r.verses.map(v => `<span class="tag-badge bm-bp-verse-pill" onclick="bpJumpToVerseInDom(${v})" title="Salta al versetto ${v}">📖 v. ${v}</span>`).join("")}
        </div>`
     : "";
 
@@ -19178,8 +19196,8 @@ async function executeOmniSearch() {
   if (strongHits.length > 0) {
     html += `<div class="section-title"><span>🏺 Lessico Strong (${strongHits.length} radici)</span></div>`;
     html += strongHits.slice(0, 4).map(h => `
-      <div class="result-card" style="border-left:3.5px solid #ffd54f;" onclick="showXRayRootPopup('${escapeJsStr(h.dictKey)}', null, false)">
-        <div class="result-ref" style="color:#ffd54f;">🏺 ${escapeHtml(h.dictKey.toUpperCase())} <small style="color:#00e5ff; font-weight:800;">(${escapeHtml(h.entry.code)})</small></div>
+      <div class="result-card bm-omni-strong-card" onclick="showXRayRootPopup('${escapeJsStr(h.dictKey)}', null, false)">
+        <div class="result-ref bm-omni-strong-ref">🏺 ${escapeHtml(h.dictKey.toUpperCase())} <small class="bm-omni-strong-code">(${escapeHtml(h.entry.code)})</small></div>
         <div style="font-size:12.5px; color:var(--text-main); font-weight:700; margin-bottom:2px;">${escapeHtml(h.entry.orig)}</div>
         <div class="bm-justify-text" style="font-size:12.5px; color:var(--text-muted);">${highlightSnippetSafe(String(h.entry.def || "").slice(0, 145), rawQuery)}${String(h.entry.def || "").length > 145 ? "…" : ""}</div>
       </div>`).join("");
@@ -19374,7 +19392,7 @@ async function executeOmniSearch() {
   const installedStudyBibleIds = studyCandidateIds.filter(id => allIdbKeys.includes(id));
   if (installedStudyBibleIds.length > 0) {
     html += `
-      <button type="button" class="nav-btn" style="width:100%; padding:10px 12px; margin-bottom:10px; border-color:#00e5ff; color:#84ffff; font-weight:800;" onclick="executeStudyNotesOmniSearch('${escapeJsStr(rawQuery)}')">
+      <button type="button" class="nav-btn bm-omni-study-btn" style="width:100%; padding:10px 12px; margin-bottom:10px;" onclick="executeStudyNotesOmniSearch('${escapeJsStr(rawQuery)}')">
         🎓 Cerca anche nelle Note di Studio ("${escapeHtml(rawQuery)}")
       </button>`;
   }
@@ -19490,7 +19508,7 @@ async function executeStudyNotesOmniSearch(rawQueryStr, searchAllInstalled = fal
     : activeLangCode;
   const expandBtnHtml = (!searchAllInstalled && otherLangCodes.length > 0)
     ? `<div style="margin-bottom:10px; display:flex; justify-content:flex-end;">
-         <button type="button" class="nav-btn" style="padding:5px 10px; font-size:12px; border-color:#00e5ff; color:#84ffff;" onclick="executeStudyNotesOmniSearch('${escapeJsStr(rawQuery)}', true)">🌍 Cerca anche in ${escapeHtml(otherLangCodes.join(" / "))}</button>
+         <button type="button" class="nav-btn bm-omni-study-btn" style="padding:5px 10px; font-size:12px;" onclick="executeStudyNotesOmniSearch('${escapeJsStr(rawQuery)}', true)">🌍 Cerca anche in ${escapeHtml(otherLangCodes.join(" / "))}</button>
        </div>`
     : "";
 
@@ -19504,7 +19522,7 @@ async function executeStudyNotesOmniSearch(rawQueryStr, searchAllInstalled = fal
     outHtml += `<div class="loader">Nessuna Nota di Studio corrispondente trovata${!searchAllInstalled && otherLangCodes.length ? ` in ${escapeHtml(activeLangCode)}. Prova ad estendere la ricerca alle altre lingue installate.` : " negli archivi installati."}</div>`;
   } else {
     outHtml += hits.map(h => `
-      <div class="result-card" style="border-left:3.5px solid #00e5ff;" onclick="openRef(${h.bookId}, ${h.chapter}, ${h.verse}).then((ok) => { if (ok) openStudyNoteModal(${h.verse}, '${escapeJsStr(h.bibleId)}'); })">
+      <div class="result-card bm-omni-study-card" onclick="openRef(${h.bookId}, ${h.chapter}, ${h.verse}).then((ok) => { if (ok) openStudyNoteModal(${h.verse}, '${escapeJsStr(h.bibleId)}'); })">
         <div class="result-ref">🎓 ${escapeHtml(h.bookName)} ${h.chapter}:${h.verse} <small style="color:var(--text-muted); font-weight:700;">(${escapeHtml(h.langBadge)})</small></div>
         <div class="bm-justify-text" style="font-size:13px; color:var(--text-muted);">${highlightSnippetSafe(h.snippet, h.hlTerm || rawQuery)}</div>
       </div>`).join("");

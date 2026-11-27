@@ -1,5 +1,5 @@
-// Service Worker — Bibbia Multilingue PRO (v18.0.4 — App Shell 100% Atomica Whitelist, Protezione Cataloghi API & Guardie Redirect/Type)
-const BM_SW_VERSION = "bm-pro-shell-v18-0-4";
+// Service Worker — Bibbia Multilingue PRO (v18.0.5 — App Shell 100% Atomica Whitelist, Protezione Cataloghi API & Guardie Redirect/Type)
+const BM_SW_VERSION = "bm-pro-shell-v18-0-5";
 const BM_API_CACHE = "bm-pro-api-v1";
 const BM_API_CACHE_MAX = 150;
 const BM_CRITICAL_SHELL = [
