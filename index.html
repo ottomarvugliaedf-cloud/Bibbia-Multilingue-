@@ -49,6 +49,7 @@
       --bm-sal: env(safe-area-inset-left, 0px);
       --bm-sat-stable: env(safe-area-inset-top, 0px);
       --bm-sab-stable: env(safe-area-inset-bottom, 0px);
+      --bm-vh-stable: 100lvh;
     }
     body.dark-mode {
       color-scheme: dark;
@@ -3649,7 +3650,7 @@ body.oled-mode .pub-ref-badge {
     contain-intrinsic-size: auto 84px;
   }
 
-  /* ===== v18.0.2: Peek Bilingue, Switch Lingua Studio, Colonna TTS Attiva & Filo di Arianna ===== */
+  /* ===== v18.0.3: Peek Bilingue, Switch Lingua Studio, Colonna TTS Attiva & Filo di Arianna ===== */
   .bm-peek-block + .bm-peek-block {
     margin-top: 10px;
     padding-top: 10px;
@@ -3876,11 +3877,28 @@ body.oled-mode .pub-ref-badge {
     }
   }
 
-  /* Stabilizzazione sfondo e widget flottanti in display: fullscreen (blocca salto barre transitorie Android Chrome WebAPK) */
+  /* Stabilizzazione sfondo, modale uscita e widget flottanti in display: fullscreen (blocca salto barre transitorie Android Chrome WebAPK) */
   @media (display-mode: fullscreen) {
     body {
       height: 100vh;
       height: 100lvh;
+    }
+    body.bm-exit-modal-open {
+      height: var(--bm-vh-stable, 100lvh);
+      overflow: hidden;
+    }
+    #bmExitModal {
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: auto;
+      height: var(--bm-vh-stable, 100lvh);
+    }
+    #bmExitModal .modal-card {
+      max-height: calc(var(--bm-vh-stable, 100lvh) * 0.86);
+    }
+    .bm-biblical-scroll {
+      --bm-scroll-h: min(calc(min(88vw, 358px) / 0.910277), calc(var(--bm-vh-stable, 100lvh) * 0.56));
     }
     header {
       padding-top: max(10px, var(--bm-sat-stable, env(safe-area-inset-top, 10px)));
@@ -3903,6 +3921,11 @@ body.oled-mode .pub-ref-badge {
     }
     body.bm-zen-on .bm-audio-mini-player {
       bottom: calc(64px + var(--bm-sab-stable, env(safe-area-inset-bottom, 0px)));
+    }
+  }
+  @media (display-mode: fullscreen) and (max-height: 560px) {
+    .bm-biblical-scroll {
+      --bm-scroll-h: min(calc(min(84vw, 320px) / 0.910277), calc(var(--bm-vh-stable, 100lvh) * 0.54));
     }
   }
 
@@ -16912,7 +16935,7 @@ function scrollRpToToday(smooth = false) {
 function buildStudioBackupObject() {
   return {
     app: "BibbiaMultilingue_PRO",
-    version: "PRO_v18.0.2",
+    version: "PRO_v18.0.3",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
@@ -17408,7 +17431,7 @@ function setMigrationStatus(htmlMsg) {
 
 async function buildAndDeliverLibraryBundle(keysList, includeStudio, fileName, shareTitle) {
   const parts = [
-    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v18.0.2","date":',
+    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v18.0.3","date":',
     JSON.stringify(new Date().toISOString())
   ];
   if (includeStudio) {
@@ -19599,6 +19622,11 @@ function readBmSafeAreaVarPx(varName) {
   return null;
 }
 
+function syncBmStableViewportHeightVar() {
+  if (!Number.isFinite(bmStableViewportHeight) || bmStableViewportHeight <= 0) return;
+  document.documentElement.style.setProperty("--bm-vh-stable", `${Math.round(bmStableViewportHeight)}px`);
+}
+
 function sampleBmStableSafeAreaInsets(resetOrientation = false) {
   if (bmExitConfirmOpen && !resetOrientation) return;
   const curW = window.innerWidth || document.documentElement.clientWidth || 360;
@@ -19612,6 +19640,7 @@ function sampleBmStableSafeAreaInsets(resetOrientation = false) {
   } else {
     bmStableViewportHeight = Math.max(bmStableViewportHeight, curH);
   }
+  syncBmStableViewportHeightVar();
   const measuredSat = readBmSafeAreaVarPx("--bm-sat");
   const measuredSab = readBmSafeAreaVarPx("--bm-sab");
   const rootStyle = document.documentElement.style;
@@ -19643,8 +19672,10 @@ function getBmScrollHeightPx() {
   if (Math.abs(vw - bmLastViewportWidth) >= 2) {
     bmLastViewportWidth = vw;
     bmStableViewportHeight = curH;
+    syncBmStableViewportHeightVar();
   } else if (!bmExitConfirmOpen) {
     bmStableViewportHeight = Math.max(bmStableViewportHeight, curH);
+    syncBmStableViewportHeightVar();
   }
   const vh = Math.max(curH, bmStableViewportHeight);
   const isShort = vh <= 560;
@@ -19810,6 +19841,8 @@ function openBmExitStylePreview() {
   bmExitActionLock = false;
   bmExitingApp = false;
   bmExitConfirmOpen = true;
+  syncBmStableViewportHeightVar();
+  document.body.classList.add("bm-exit-modal-open");
   setBmExitModalStep(2);
   modal.style.display = "flex";
   const prefEl = document.getElementById(getBmExitAnimStyle() === "scroll" ? "bmBiblicalScroll" : "bmExitHandBtn");
@@ -19850,6 +19883,8 @@ function openBmExitModal() {
   bmExitActionLock = false;
   bmExitingApp = false;
   bmExitConfirmOpen = true;
+  syncBmStableViewportHeightVar();
+  document.body.classList.add("bm-exit-modal-open");
   modal.style.display = "flex";
   bmFocusOverlayElement(modal, document.getElementById("bmExitNoBtn"));
   bmHaptic(14);
@@ -19862,6 +19897,7 @@ function closeBmExitModal(rearmGuard = true) {
     modal.style.display = "none";
     modal.querySelectorAll(".bm-exit-lit").forEach(el => el.classList.remove("bm-exit-lit"));
   }
+  document.body.classList.remove("bm-exit-modal-open");
   bmExitPreviewMode = false;
   setBmExitModalStep(1);
   bmExitConfirmOpen = false;
@@ -19919,6 +19955,8 @@ function confirmBmAppExit() {
     }
     bmExitActionLock = false;
     bmExitingApp = false;
+    syncBmStableViewportHeightVar();
+    document.body.classList.add("bm-exit-modal-open");
     const modal = document.getElementById("bmExitModal");
     if (modal) {
       modal.style.display = "flex";
@@ -20980,11 +21018,13 @@ function scheduleBmGlobalResize() {
     if (widthChanged) {
       bmLastViewportWidth = curW;
       bmStableViewportHeight = curH;
+      syncBmStableViewportHeightVar();
       scheduleBmStableSafeAreaSample(400, true);
     } else if (bmExitConfirmOpen) {
       return;
     } else {
       bmStableViewportHeight = Math.max(bmStableViewportHeight, curH);
+      syncBmStableViewportHeightVar();
     }
     scheduleBmReadProgressUpdate();
     handleMapsViewerResize();
