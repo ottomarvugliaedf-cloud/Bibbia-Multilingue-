@@ -1,5 +1,5 @@
-// Service Worker — Bibbia Multilingue PRO (v18.0.5 — App Shell 100% Atomica Whitelist, Protezione Cataloghi API & Guardie Redirect/Type)
-const BM_SW_VERSION = "bm-pro-shell-v18-0-5";
+// Service Worker — Bibbia Multilingue PRO (v18.0.12 — App Shell 100% Atomica Whitelist, Memoizzazione Scope, Protezione Cataloghi API & Guardie Redirect/Type)
+const BM_SW_VERSION = "bm-pro-shell-v18-0-12";
 const BM_API_CACHE = "bm-pro-api-v1";
 const BM_API_CACHE_MAX = 150;
 const BM_CRITICAL_SHELL = [
@@ -22,10 +22,13 @@ function getCanonicalIndexUrl() {
   return getCanonicalUrl("./index.html");
 }
 
+let _cachedAllowedShellSet = null;
 function getAllowedShellUrlSet() {
+  if (_cachedAllowedShellSet) return _cachedAllowedShellSet;
   const allowed = new Set();
   for (const path of BM_CRITICAL_SHELL) allowed.add(getCanonicalUrl(path));
   for (const path of BM_OPTIONAL_SHELL) allowed.add(getCanonicalUrl(path));
+  _cachedAllowedShellSet = allowed;
   return allowed;
 }
 
@@ -122,15 +125,13 @@ self.addEventListener("message", (event) => {
           caches.open(BM_SW_VERSION),
           caches.open(BM_API_CACHE)
         ]);
-        const jszipCanonical = getCanonicalUrl("./jszip.min.js");
-        const [shellReqs, apiReqs, criticalChecks, jszipHit] = await Promise.all([
+        const [shellReqs, apiReqs, criticalChecks] = await Promise.all([
           shellCache.keys(),
           apiCache.keys(),
-          Promise.all(BM_CRITICAL_SHELL.map((u) => shellCache.match(getCanonicalUrl(u)))),
-          shellCache.match(jszipCanonical)
+          Promise.all(BM_CRITICAL_SHELL.map((u) => shellCache.match(getCanonicalUrl(u))))
         ]);
         const hasCoreShell = criticalChecks.every(Boolean);
-        const hasJszip = Boolean(jszipHit);
+        const hasJszip = Boolean(criticalChecks[BM_CRITICAL_SHELL.indexOf("./jszip.min.js")]);
         port.postMessage({
           version: BM_SW_VERSION,
           cachedCount: shellReqs.length,
@@ -210,7 +211,9 @@ self.addEventListener("fetch", (event) => {
 
   // 3. Risorse statiche same-origin (whitelist App Shell immutabile della release attiva)
   if (url.origin === self.location.origin) {
-    const canonicalShellKey = url.pathname.endsWith("/") ? getCanonicalIndexUrl() : (url.origin + url.pathname);
+    const rawShellKey = url.origin + url.pathname;
+    const isScopeRoot = rawShellKey === self.registration.scope || (rawShellKey + "/") === self.registration.scope;
+    const canonicalShellKey = isScopeRoot ? getCanonicalIndexUrl() : rawShellKey;
     const allowedShell = getAllowedShellUrlSet();
     if (!allowedShell.has(canonicalShellKey)) return;
     event.respondWith((async () => {

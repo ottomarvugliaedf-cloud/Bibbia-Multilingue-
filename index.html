@@ -2680,8 +2680,7 @@ body.oled-mode .pub-ref-badge {
     outline: 2px solid #00e5ff;
   }
   body.oled-mode .bm-audio-mini-player,
-  body.oled-mode .bm-prophecy-bubble,
-  body.oled-mode .bm-zen-exit-btn {
+  body.oled-mode .bm-prophecy-bubble {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
@@ -3167,6 +3166,8 @@ body.oled-mode .pub-ref-badge {
     color: #38bdf8;
     border-color: #38bdf8;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.9), 0 0 10px rgba(56, 189, 248, 0.35);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
   body.bm-paper-on .bm-zen-exit-btn {
     background: #ebe3d1;
@@ -3655,7 +3656,7 @@ body.oled-mode .pub-ref-badge {
     contain-intrinsic-size: auto 84px;
   }
 
-  /* ===== v18.0.5: Peek Bilingue, Switch Lingua Studio, Colonna TTS Attiva & Filo di Arianna ===== */
+  /* ===== Peek Bilingue, Switch Lingua Studio, Colonna TTS Attiva & Filo di Arianna ===== */
   .bm-peek-block + .bm-peek-block {
     margin-top: 10px;
     padding-top: 10px;
@@ -3934,7 +3935,8 @@ body.oled-mode .pub-ref-badge {
   <script>
 (function () {
   var splash = document.getElementById("splashScreen");
-  var timer, done = false;
+  if (!splash) return;
+  var timer, maxTimer, done = false;
   function getStableViewportHeight() {
     var vv = window.visualViewport ? window.visualViewport.height : 0;
     return Math.max(window.innerHeight || 0, document.documentElement.clientHeight || 0, Math.round(vv)) || (window.screen ? window.screen.height : 800);
@@ -3943,6 +3945,7 @@ body.oled-mode .pub-ref-badge {
     if (done) return;
     done = true;
     clearTimeout(timer);
+    clearTimeout(maxTimer);
     window.removeEventListener("resize", onResizeStabilize);
     var h = getStableViewportHeight();
     splash.style.setProperty("--splash-locked-top", Math.round(h / 2) + "px");
@@ -3957,7 +3960,7 @@ body.oled-mode .pub-ref-badge {
   }
   window.addEventListener("resize", onResizeStabilize, { passive: true });
   onResizeStabilize();
-  setTimeout(lockCenterAndReveal, 320);
+  maxTimer = setTimeout(lockCenterAndReveal, 320);
 })();
 </script>
   
@@ -6267,7 +6270,14 @@ state.chapter = Math.min(state.chapter, getBook(state.bookId).ch);
 function openDB() {
   if (dbInstancePromise) return dbInstancePromise;
   dbInstancePromise = new Promise((resolve, reject) => {
-    const req = indexedDB.open("BM_OfflineDB_v10", 1);
+    let req;
+    try {
+      req = indexedDB.open("BM_OfflineDB_v10", 1);
+    } catch (e) {
+      dbInstancePromise = null;
+      reject(e);
+      return;
+    }
     req.onupgradeneeded = e => {
       const db = e.target.result;
       if (!db.objectStoreNames.contains("bibles")) {
@@ -6279,6 +6289,10 @@ function openDB() {
       db.onclose = () => { dbInstancePromise = null; };
       db.onversionchange = () => { db.close(); dbInstancePromise = null; };
       resolve(db);
+    };
+    req.onblocked = () => {
+      dbInstancePromise = null;
+      reject(new Error("Database offline bloccato da un'altra sessione."));
     };
     req.onerror = e => {
       dbInstancePromise = null;
@@ -7610,8 +7624,10 @@ async function openNameLinkPeekModal(idx, verseNum, displayTitle = "") {
 async function openNameLinkTarget(idx, kind, verseNum, bookNum) {
   const link = BM_NAME_LINKS[idx];
   if (!link) return;
+  const viewReqId = currentViewReqId;
   if (kind === "si") {
     const data = await getSiData();
+    if (viewReqId !== currentViewReqId) return;
     const bi = data && Array.isArray(data.books) ? data.books.findIndex(b => Number(b.bookNumber) === Number(bookNum)) : -1;
     siSearchQuery = "";
     state.selectedVerse = verseNum;
@@ -7619,6 +7635,7 @@ async function openNameLinkTarget(idx, kind, verseNum, bookNum) {
     return;
   }
   const target = await resolveInsightTarget(link.ins);
+  if (viewReqId !== currentViewReqId) return;
   insightActiveLetter = "TUTTE";
   insightSearchQuery = target.query;
   state.selectedVerse = verseNum;
@@ -7629,8 +7646,8 @@ async function setNameLinksSetting(on) {
   if (currentViewContext.type !== "bible") return;
   const main = document.getElementById("mainContainer");
   const top = main ? main.scrollTop : 0;
-  await loadChapterView(shouldPreserveAudioOnChapterReload());
-  if (main) main.scrollTop = top;
+  const ok = await loadChapterView(shouldPreserveAudioOnChapterReload());
+  if (ok && main) main.scrollTop = top;
 }
 
 // Micro-algoritmo LCS (Longest Common Subsequence) su token normalizzati per Diff filologico (ordine, singolare/plurale, sostituzioni)
@@ -7700,11 +7717,12 @@ function highlightDiffText(baseStr, targetStr, verseNum = 1, targetTransId = sta
   }).join("");
 }
 async function loadChapterView(preserveAudio = false) {
-  const rendered = await renderChapterView(preserveAudio);
-  if (rendered) {
-    await evaluateMessianicBulbForCurrentView();
-  }
-  return rendered;
+  const renderedPromise = renderChapterView(preserveAudio);
+  const viewReqId = currentViewReqId;
+  const rendered = await renderedPromise;
+  if (!rendered || viewReqId !== currentViewReqId) return false;
+  await evaluateMessianicBulbForCurrentView();
+  return viewReqId === currentViewReqId;
 }
 async function renderChapterView(preserveAudio = false) {
   const reqId = ++currentViewReqId;
@@ -7948,12 +7966,12 @@ function openBibleTabFromMenu() {
   const savedRef = safeGetStorage("bm_last_scroll_ref");
   const savedScroll = Number(safeGetStorage("bm_last_scroll")) || 0;
   const curRefKey = `${state.bookId}_${state.chapter}`;
-  loadChapterView(isActiveBibleChapterAudio()).then(() => {
-    if (savedRef === curRefKey && savedScroll > 30) {
+  loadChapterView(isActiveBibleChapterAudio()).then((ok) => {
+    if (ok && savedRef === curRefKey && savedScroll > 30) {
       const main = document.getElementById("mainContainer");
       if (main) main.scrollTop = savedScroll;
     }
-  });
+  }).catch(() => {});
 }
 function prevChapter() {
   let targetB = state.bookId, targetC = state.chapter;
@@ -8029,7 +8047,7 @@ function toggleParallel() {
     if (ok && wasChapterPlaying && bmSettings.bilingualTts && bmAudioPlaying && isActiveBibleChapterAudio()) {
       startChapterKaraokeSpeech(resumeVerse, true);
     }
-  });
+  }).catch(() => {});
 }
 function toggleDiffMode() {
   if (currentViewContext.type !== "bible") saveCurrentPositionToHistory();
@@ -8753,7 +8771,7 @@ function applyHighlight(colorClass) {
   closeActionBar();
 }
 
-function copySelectedVerse() {
+async function copySelectedVerse() {
   const nums = selectedVersesMap.size > 0
     ? Array.from(selectedVersesMap.keys()).sort((a, b) => a - b)
     : (state.selectedVerse ? [state.selectedVerse] : []);
@@ -8766,9 +8784,15 @@ function copySelectedVerse() {
     ? nums.map(n => `[${n}] ${selectedVersesMap.get(n) || ""}`).join(" ")
     : (state.selectedVerseText || selectedVersesMap.get(nums[0]) || "");
   const fullCopy = `${ref} — "${combinedText}"`;
-  copyPubRefToClipboard(fullCopy);
+  const reqId = ++peekReqId;
+  const copyPromise = copyPubRefToClipboard(fullCopy);
   closeActionBar();
-  showBlueInfoModal(nums.length > 1 ? `📋 ${nums.length} Versetti Copiati` : "📋 Versetto Copiato", escapeHtml(fullCopy));
+  const ok = await copyPromise;
+  if (reqId !== peekReqId) return;
+  const titleTxt = ok
+    ? (nums.length > 1 ? `📋 ${nums.length} Versetti Copiati` : "📋 Versetto Copiato")
+    : "⚠️ Copia Non Riuscita";
+  showBlueInfoModal(titleTxt, escapeHtml(fullCopy));
 }
 
 function saveBookmark() {
@@ -9360,31 +9384,29 @@ function onPubRefClick(ev, ref, langCode = "") {
 }
 
 function fallbackCopyTextExec(txt) {
+  let ta = null;
   try {
-    const ta = document.createElement("textarea");
+    ta = document.createElement("textarea");
     ta.value = txt;
     ta.setAttribute("readonly", "");
     ta.style.cssText = "position:fixed;left:-9999px;top:0;opacity:0;";
     document.body.appendChild(ta);
     ta.select();
     ta.setSelectionRange(0, ta.value.length);
-    const ok = document.execCommand("copy");
-    document.body.removeChild(ta);
-    return Boolean(ok);
+    return Boolean(document.execCommand("copy"));
   } catch (e) {
     console.debug(e);
     return false;
+  } finally {
+    if (ta && ta.parentNode) ta.parentNode.removeChild(ta);
   }
 }
 
-function copyPubRefToClipboard(txt) {
+async function copyPubRefToClipboard(txt) {
   if (!txt) return false;
   if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
     try {
-      const p = navigator.clipboard.writeText(txt);
-      if (p && typeof p.catch === "function") {
-        p.catch(() => fallbackCopyTextExec(txt));
-      }
+      await navigator.clipboard.writeText(txt);
       return true;
     } catch (e) {
       console.debug(e);
@@ -9395,7 +9417,8 @@ function copyPubRefToClipboard(txt) {
 
 function pubRefParse(ref) {
   const r = String(ref || "").replace(/\s+/g, " ").trim();
-  const yearOf = (yy) => (Number(yy) <= 30 ? 2000 + Number(yy) : 1900 + Number(yy));
+  const max2000Year = Math.min(99, (new Date().getFullYear() % 100) + 5);
+  const yearOf = (yy) => (Number(yy) <= max2000Year ? 2000 + Number(yy) : 1900 + Number(yy));
   let m = r.match(/^(w|wp|ws|g|mwb)(\d{2})\.(\d{1,2})\b\s*(.*)$/i);
   if (m) return { code: m[1].toLowerCase(), fmt: "new", year: yearOf(m[2]), month: Number(m[3]), rest: m[4] };
   m = r.match(/^(w|wp|ws|g|km|mwb|yb)(\d{0,2})\s+(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\b\s*(.*)$/i);
@@ -9424,8 +9447,9 @@ function pubRefTarget(ref, langCode = "it") {
   const root = "https://wol.jw.org/it/wol/library/r6/lp-i/tutte-le-pubblicazioni";
   const mesi = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"];
   const p = pubRefParse(ref);
-  let where = p.rest ? p.rest.replace(/\b(?:parr?|párrs?|pars?)\./gi, "parr.").replace(/\b(?:pp?|pagg?|págs?|pags?)\./gi, "pag.") : "";
-  if (/^\d/.test(where)) where = "pag. " + where;
+  const locAbbr = { it: ["parr.", "pag."], en: ["pars.", "p."], es: ["párrs.", "pág."], pt: ["pars.", "p."] }[normLang] || ["parr.", "pag."];
+  let where = p.rest ? p.rest.replace(/\b(?:parr?|párrs?|pars?)\./gi, locAbbr[0]).replace(/\b(?:pp?|pagg?|págs?|pags?)\./gi, locAbbr[1]) : "";
+  if (/^\d/.test(where)) where = locAbbr[1] + " " + where;
 
   if (normLang !== "it") {
     return {
@@ -9545,6 +9569,7 @@ function pubRefOpenApp(url) {
 
 async function openLocalPubBridge(code, rawRest, fullRef) {
   bmChimeHaptic();
+  const viewReqId = currentViewReqId;
   closeMyReadModal();
   closeStudyImageLightbox();
   closeProModal();
@@ -9552,6 +9577,7 @@ async function openLocalPubBridge(code, rawRest, fullRef) {
     const m = String(rawRest || "").match(/(?:pp?\.|pagg?\.)\s*(\d+)/i) || String(rawRest || "").match(/(\d+)/);
     const targetNum = m ? parseInt(m[1], 10) : 0;
     const siData = await getSiData();
+    if (viewReqId !== currentViewReqId) return;
     if (!siData || !Array.isArray(siData.books)) { showSiView(); return; }
     if (targetNum > 0) {
       let best = null;
@@ -9609,7 +9635,7 @@ function showPubRefModal(fullRef, langCode = "it") {
   const bridgeRestJs = escapeJsStr(p.rest || "");
   const bridgeRefJs = escapeJsStr(fullRef);
   const offlineBridgeBtn = (isSi || isIt) ? `
-    <button class="myread-action-btn btn-color-anim" style="--btn-bg:#00c853; --btn-glow:rgba(0,200,83,0.8); background:#2e7d32;" onclick="openLocalPubBridge('${bridgeCodeJs}', '${bridgeRestJs}', '${bridgeRefJs}')">
+    <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00c853; --btn-glow:rgba(0,200,83,0.8); background:#2e7d32;" onclick="openLocalPubBridge('${bridgeCodeJs}', '${bridgeRestJs}', '${bridgeRefJs}')">
       ⚡ ${isSi ? "Apri subito in Tutta la Scrittura Offline" : "Apri Indice Perspicacia Offline"}
     </button>
   ` : "";
@@ -9630,18 +9656,18 @@ function showPubRefModal(fullRef, langCode = "it") {
     </div>
     <div style="display:flex; flex-direction:column; gap:8px;">
       ${offlineBridgeBtn}
-      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#03a9f4; --btn-glow:rgba(3,169,244,0.75); background:#1565c0;" onclick="pubRefOpenApp('${u}')">${CHROME_LOGO_SVG}${showDirectSearchBtn ? "Apri nella Biblioteca Online" : `Cerca "${escapeHtml(fullRef)}" (${t.langCode.toUpperCase()})`}</button>
-      ${showDirectSearchBtn ? `<button class="myread-action-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,176,255,0.75); background:#0d47a1;" onclick="pubRefOpenApp('${sUrl}')">🔍 Cerca "${escapeHtml(fullRef)}" su Biblioteca Online</button>` : ""}
-      ${t.safeUrl && t.langCode === "it" ? `<button class="myread-action-btn btn-color-anim" style="--btn-bg:#8e24aa; --btn-glow:rgba(186,104,200,0.75); background:#6a1b9a;" onclick="pubRefOpenApp('${escapeJsStr(t.safeUrl)}')">📅 Apri l'annata (elenco dei numeri)</button>` : ""}
+      <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#03a9f4; --btn-glow:rgba(3,169,244,0.75); background:#1565c0;" onclick="pubRefOpenApp('${u}')">${CHROME_LOGO_SVG}${showDirectSearchBtn ? "Apri nella Biblioteca Online" : `Cerca "${escapeHtml(fullRef)}" (${t.langCode.toUpperCase()})`}</button>
+      ${showDirectSearchBtn ? `<button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#00b0ff; --btn-glow:rgba(0,176,255,0.75); background:#0d47a1;" onclick="pubRefOpenApp('${sUrl}')">🔍 Cerca "${escapeHtml(fullRef)}" su Biblioteca Online</button>` : ""}
+      ${t.safeUrl && t.langCode === "it" ? `<button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#8e24aa; --btn-glow:rgba(186,104,200,0.75); background:#6a1b9a;" onclick="pubRefOpenApp('${escapeJsStr(t.safeUrl)}')">📅 Apri l'annata (elenco dei numeri)</button>` : ""}
       <div style="display:flex; gap:5px; align-items:center;">
         <span style="font-size:11px; color:var(--text-muted); font-weight:800; white-space:nowrap;">WOL:</span>
         ${langPillsHtml}
       </div>
       <div style="display:flex; gap:8px;">
-        <button class="myread-action-btn btn-color-anim" style="--btn-bg:#43a047; --btn-glow:rgba(102,187,106,0.75); background:#43a047; flex:1;" onclick="copyPubRefToClipboard('${bridgeRefJs}'); this.textContent='✔ Copiato!';">📋 Riferimento</button>
-        <button class="myread-action-btn btn-color-anim" style="--btn-bg:#2e7d32; --btn-glow:rgba(76,175,80,0.75); background:#2e7d32; flex:1;" onclick="copyPubRefToClipboard('${u}'); this.textContent='✔ Link Copiato!';">🔗 Link</button>
+        <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#43a047; --btn-glow:rgba(102,187,106,0.75); background:#43a047; flex:1;" onclick="copyJwExternalLink('${bridgeRefJs}', this, '✔ Copiato!')">📋 Riferimento</button>
+        <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#2e7d32; --btn-glow:rgba(76,175,80,0.75); background:#2e7d32; flex:1;" onclick="copyJwExternalLink('${u}', this, '✔ Link Copiato!')">🔗 Link</button>
       </div>
-      <button class="myread-action-btn btn-color-anim" style="--btn-bg:#7b1fa2; --btn-glow:rgba(156,39,176,0.7); background:#1a0033; margin-top:4px;" onclick="closeMyReadModal()">Chiudi</button>
+      <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#7b1fa2; --btn-glow:rgba(156,39,176,0.7); background:#1a0033; margin-top:4px;" onclick="closeMyReadModal()">Chiudi</button>
     </div>
   `);
 }
@@ -9683,8 +9709,7 @@ function getFilteredStudioNotes() {
   });
 }
 
-function exportFilteredNotesDossier(btnEl) {
-  bmChimeHaptic();
+async function exportFilteredNotesDossier(btnEl) {
   const list = getFilteredStudioNotes();
   if (!list.length) return;
   const label = [
@@ -9699,8 +9724,7 @@ function exportFilteredNotesDossier(btnEl) {
     if (n.tags && n.tags.length) lines.push(`🏷️ ${n.tags.map(t => "#" + t).join(" ")}`);
   });
   lines.push("", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  copyPubRefToClipboard(lines.join("\n"));
-  if (btnEl) btnEl.textContent = `✔ Copiati (${list.length})!`;
+  await copyTextWithButtonFeedback(lines.join("\n"), btnEl, `✔ Copiati (${list.length})!`, "chime");
 }
 
 function renderNotesListOnly() {
@@ -10105,16 +10129,26 @@ function getActiveStudyBibleId() {
   return "";
 }
 
-function copyJwExternalLink(url, btnEl) {
-  bmHaptic(14);
-  const ok = copyPubRefToClipboard(url);
-  if (btnEl) {
+async function copyTextWithButtonFeedback(txt, btnEl, successLabel = "✔ Copiato!", hapticMode = "tap") {
+  if (hapticMode === "chime") bmChimeHaptic();
+  else if (hapticMode === "tap") bmHaptic(14);
+  const ok = await copyPubRefToClipboard(txt);
+  if (btnEl && btnEl.isConnected) {
     if (!btnEl.dataset.origLabel) btnEl.dataset.origLabel = btnEl.textContent;
-    btnEl.textContent = ok ? "✅ Riferimento copiato!" : "⚠️ Copia non riuscita";
-    setTimeout(() => {
-      if (btnEl && btnEl.dataset.origLabel) btnEl.textContent = btnEl.dataset.origLabel;
+    if (btnEl._copyResetTimer) clearTimeout(btnEl._copyResetTimer);
+    btnEl.textContent = ok ? successLabel : "⚠️ Copia non riuscita";
+    btnEl._copyResetTimer = setTimeout(() => {
+      if (btnEl && btnEl.isConnected && btnEl.dataset.origLabel) {
+        btnEl.textContent = btnEl.dataset.origLabel;
+      }
+      if (btnEl) btnEl._copyResetTimer = null;
     }, 1800);
   }
+  return ok;
+}
+
+async function copyJwExternalLink(url, btnEl, successLabel = "✅ Riferimento copiato!") {
+  return copyTextWithButtonFeedback(url, btnEl, successLabel, "tap");
 }
 
 function renderWolLibraryPillsHtml(searchInputId = "searchInput") {
@@ -10146,9 +10180,9 @@ function buildJwOrgStudyUrls(langCode, bookId, chapter = 0, verse = 0, offlineDo
   const ccc = String(ch).padStart(3, "0");
   const vvv = String(v).padStart(3, "0");
   const foundOffline = offlineDocsData ? findBookStudyDocs(offlineDocsData, bId, ch) : null;
-  const introDocId = (foundOffline && foundOffline.intro && Number(foundOffline.intro.id) > 0)
+  const exactIntroDocId = (foundOffline && foundOffline.intro && Number(foundOffline.intro.id) > 0)
     ? Number(foundOffline.intro.id)
-    : (1001070004 + bId);
+    : 0;
   const wol = BM_WOL_LANGUAGES.find(l => l.code === entry.code) || BM_WOL_LANGUAGES[2];
   const locBook = getLocalizedBookNameForWol(bId, entry.code);
   const localizedRef = ch > 0 ? (v > 0 ? `${locBook} ${ch}:${v}` : `${locBook} ${ch}`) : locBook;
@@ -10158,7 +10192,9 @@ function buildJwOrgStudyUrls(langCode, bookId, chapter = 0, verse = 0, offlineDo
     verseUrl: (ch > 0 && v > 0) ? `https://www.jw.org/finder?wtlocale=${loc}&prefer=lang&bible=${bb}${ccc}${vvv}&pub=nwtsty` : "",
     chapterUrl: ch > 0 ? `https://www.jw.org/finder?wtlocale=${loc}&prefer=lang&bible=${bb}${ccc}000&pub=nwtsty` : "",
     bookUrl: `https://www.jw.org/finder?wtlocale=${loc}&prefer=lang&bible=${bb}001000&pub=nwtsty`,
-    introUrl: `https://www.jw.org/finder?wtlocale=${loc}&prefer=lang&docid=${introDocId}&pub=nwtsty`,
+    introUrl: exactIntroDocId > 0
+      ? `https://www.jw.org/finder?wtlocale=${loc}&prefer=lang&docid=${exactIntroDocId}&pub=nwtsty`
+      : `https://www.jw.org/finder?wtlocale=${loc}&prefer=lang&bible=${bb}000000&pub=nwtsty`,
     wolUrl: `${wol.base}l/${wol.tail}?q=${encodeURIComponent(localizedRef)}`
   };
 }
@@ -10336,6 +10372,7 @@ function openSearchResultRef(transId, bookId, ch, v) {
 
 async function executeSearch(page = 1) {
   const reqId = ++searchReqId;
+  omniReqId++;
   const inpEl = document.getElementById("searchInput");
   const rawQuery = inpEl ? inpEl.value.trim() : "";
   const scopeEl = document.getElementById("searchScope");
@@ -10344,7 +10381,8 @@ async function executeSearch(page = 1) {
   const mode = modeEl ? modeEl.value : "all_words";
   const bibleEl = document.getElementById("searchBibleSelect");
   const targetTrans = bibleEl ? bibleEl.value : "gb:bi12";
-  if (!rawQuery) return;
+  const resDiv = document.getElementById("searchResults");
+  if (!rawQuery || !resDiv) return;
   recordRecentSearchQuery(rawQuery);
   const searchTransId = targetTrans.startsWith("helloao:") ? "gb:riveduta" : targetTrans;
   const isNewSearch = (page === 1) ||
@@ -10353,7 +10391,6 @@ async function executeSearch(page = 1) {
     cachedSearchMeta.scope !== scope ||
     cachedSearchMeta.mode !== mode;
   currentSearchPage = page;
-  const resDiv = document.getElementById("searchResults");
   if (isNewSearch) {
     resDiv.innerHTML = `<div class="loader">Ricerca nella Concordanza di "<b>${escapeHtml(rawQuery)}</b>" in corso...</div>`;
     const normalizeForPhrase = (str) => normalizeForSearch(str)
@@ -10444,7 +10481,7 @@ async function executeSearch(page = 1) {
       return (normTxt) => queryTerms.every(w => normTxt.includes(w));
     };
     await new Promise(r => setTimeout(r, 30));
-    if (reqId !== searchReqId) return;
+    if (reqId !== searchReqId || currentViewContext.type !== "search") return;
     const matchLogic = buildMatcher(rawQuery);
     try {
       let fullBible = await getOfflineBible(searchTransId);
@@ -10452,8 +10489,11 @@ async function executeSearch(page = 1) {
         const code = resolveGetBibleApiCode(searchTransId);
         const res = await fetchWithTimeout(`https://api.getbible.net/v2/${code}.json`, 45000);
         if (res.ok) {
-          fullBible = await res.json();
-          await saveOfflineBible(searchTransId, fullBible);
+          const downloaded = await res.json();
+          if (downloaded && Array.isArray(downloaded.books) && downloaded.books.length > 0) {
+            fullBible = downloaded;
+            await saveOfflineBible(searchTransId, fullBible);
+          }
         }
       }
       if (reqId !== searchReqId || currentViewContext.type !== "search") return;
@@ -10514,6 +10554,7 @@ async function executeSearch(page = 1) {
       }
     } catch (e) {
       console.debug(e);
+      if (reqId !== searchReqId || currentViewContext.type !== "search") return;
       resDiv.innerHTML = `<div class="loader">Errore durante la ricerca.</div>`;
       return;
     }
@@ -11112,7 +11153,6 @@ function removeSingleHighlightFromSaved(hlKey) {
 }
 
 async function copyFilteredHighlightsDossier(btnEl) {
-  bmChimeHaptic();
   const cards = document.querySelectorAll(".bm-hl-saved-item");
   if (!cards.length) return;
   const lines = [`━━━ 🎨 DOSSIER VERSETTI EVIDENZIATI (${savedColorFilter === "ALL" ? "Tutti i colori" : savedColorFilter.replace("hl-", "").toUpperCase()}) ━━━`];
@@ -11122,8 +11162,7 @@ async function copyFilteredHighlightsDossier(btnEl) {
     lines.push(txt ? `• ${ref} — "${txt}"` : `• ${ref}`);
   });
   lines.push(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
-  copyPubRefToClipboard(lines.join("\n"));
-  if (btnEl) btnEl.textContent = "✔ Copiati negli Appunti!";
+  await copyTextWithButtonFeedback(lines.join("\n"), btnEl, "✔ Copiati negli Appunti!", "chime");
 }
 
 function renderSavedListsOnly() {
@@ -11474,42 +11513,60 @@ function scrollToVerseAndHighlight(vSpec) {
 function restoreNavHistoryEntry(prev) {
   if (!prev) return Promise.resolve();
   const main = document.getElementById("mainContainer");
+  const restoreScrollIfActive = (targetViewReqId) => {
+    if (main && prev.scrollTop && targetViewReqId === currentViewReqId) {
+      main.scrollTop = prev.scrollTop;
+    }
+  };
+  const restoreAsyncView = (viewPromise) => {
+    const targetViewReqId = currentViewReqId;
+    return Promise.resolve(viewPromise)
+      .then(() => restoreScrollIfActive(targetViewReqId))
+      .catch(() => {});
+  };
   if (prev.type === "daily") {
-    return showDailyTextView(prev.offset || 0, true).then(() => { if (main && prev.scrollTop) main.scrollTop = prev.scrollTop; });
+    return restoreAsyncView(showDailyTextView(prev.offset || 0, true));
   }
   if (prev.type === "insight") {
-    return showInsightView(prev.idx !== undefined ? prev.idx : null, true).then(() => { if (main && prev.scrollTop) main.scrollTop = prev.scrollTop; });
+    return restoreAsyncView(showInsightView(prev.idx !== undefined ? prev.idx : null, true));
   }
   if (prev.type === "si") {
-    const p = prev.mode === "reader" ? showSiReader(prev.kind, prev.i, prev.ci, true) : (prev.mode === "book" ? showSiBook(prev.i, true) : showSiView(true));
-    return Promise.resolve(p).then(() => { if (main && prev.scrollTop) main.scrollTop = prev.scrollTop; });
+    const p = prev.mode === "reader"
+      ? showSiReader(prev.kind, prev.i, prev.ci, true)
+      : (prev.mode === "book" ? showSiBook(prev.i, true) : showSiView(true));
+    return restoreAsyncView(p);
   }
   if (prev.type === "maps") {
-    return showMapsView(prev.mapIdx !== undefined ? prev.mapIdx : null, true).then(() => { if (main && prev.scrollTop) main.scrollTop = prev.scrollTop; });
+    return restoreAsyncView(showMapsView(prev.mapIdx !== undefined ? prev.mapIdx : null, true));
   }
   if (prev.type === "study_docs") {
-    return showStudyDocsView(prev.docId !== undefined ? prev.docId : null, true, prev.bibleId || "").then(() => { if (main && prev.scrollTop) main.scrollTop = prev.scrollTop; });
+    return restoreAsyncView(showStudyDocsView(prev.docId !== undefined ? prev.docId : null, true, prev.bibleId || ""));
   }
   if (prev.type === "search") {
     showSearchView(true);
-    if (main && prev.scrollTop) requestAnimationFrame(() => { main.scrollTop = prev.scrollTop; });
+    const targetViewReqId = currentViewReqId;
+    if (main && prev.scrollTop) requestAnimationFrame(() => restoreScrollIfActive(targetViewReqId));
     return Promise.resolve();
   }
   if (prev.type === "saved") {
-    return showSavedView(true).then(() => { if (main && prev.scrollTop) main.scrollTop = prev.scrollTop; });
+    return restoreAsyncView(showSavedView(true));
   }
   if (prev.type === "notes") {
     showNotesView(true);
-    if (main && prev.scrollTop) setTimeout(() => { main.scrollTop = prev.scrollTop; }, 60);
+    const targetViewReqId = currentViewReqId;
+    if (main && prev.scrollTop) setTimeout(() => restoreScrollIfActive(targetViewReqId), 60);
     return Promise.resolve();
   }
   state.bookId = prev.bookId;
   state.chapter = prev.chapter;
   const targetVerse = prev.verse || null;
-  return loadChapterView().then((ok) => {
-    if (ok && targetVerse) scrollToVerseAndHighlight(targetVerse);
-    else if (ok && main && prev.scrollTop) main.scrollTop = prev.scrollTop;
-  });
+  const loadPromise = loadChapterView();
+  const targetViewReqId = currentViewReqId;
+  return loadPromise.then((ok) => {
+    if (!ok || targetViewReqId !== currentViewReqId) return;
+    if (targetVerse) scrollToVerseAndHighlight(targetVerse);
+    else restoreScrollIfActive(targetViewReqId);
+  }).catch(() => {});
 }
 
 function goBackHistory() {
@@ -11619,7 +11676,7 @@ function openRef(bookId, chapter, verseSpec = 0) {
   return loadChapterView().then((ok) => {
     if (ok && verseSpec) scrollToVerseAndHighlight(verseSpec);
     return Boolean(ok);
-  });
+  }).catch(() => false);
 }
 function changeFontSize(delta) {
   const d = Number(delta);
@@ -11809,7 +11866,7 @@ function executeDirectRefJump(bookId, targetCh, vSpec = "") {
   state.chapter = Number(targetCh);
   loadChapterView().then((ok) => {
     if (ok && vSpec) scrollToVerseAndHighlight(vSpec);
-  });
+  }).catch(() => {});
 }
 function isBibleReadyOffline(transId) {
   return Boolean(transId && (memoryBibleCache.has(transId) || bmCachedOfflineBibleKeys.has(transId)));
@@ -11994,6 +12051,7 @@ let bmAudioPlaying = false;
 let bmUserStopped = false;
 let bmSessionId = 0;
 let bmWakeLock = null;
+let bmWakeLockPending = false;
 let bmTtsRate = Math.min(1.5, Math.max(0.75, Number(safeGetStorage("bm_tts_rate")) || 1.0));
 let bmTtsAutoNextPref = safeGetStorage("bm_tts_autonext") !== "0";
 let bmTtsVoiceMap = (() => {
@@ -12192,15 +12250,26 @@ function previewSelectedTtsVoice() {
   setTimeout(() => speakSample(true), 55);
 }
 async function requestAudioWakeLock() {
-  if ("wakeLock" in navigator && navigator.wakeLock) {
-    try {
-      if (!bmWakeLock || bmWakeLock.released) {
-        bmWakeLock = await navigator.wakeLock.request("screen");
-        if (bmWakeLock && typeof bmWakeLock.addEventListener === "function") {
-          bmWakeLock.addEventListener("release", () => { bmWakeLock = null; }, { once: true });
-        }
-      }
-    } catch (e) { console.debug(e); }
+  if (!("wakeLock" in navigator) || !navigator.wakeLock) return;
+  if (bmWakeLockPending || (bmWakeLock && !bmWakeLock.released)) return;
+  if (!bmAudioPlaying || document.visibilityState !== "visible") return;
+  bmWakeLockPending = true;
+  try {
+    const sentinel = await navigator.wakeLock.request("screen");
+    if (!bmAudioPlaying || document.visibilityState !== "visible") {
+      try { sentinel.release(); } catch (_e) {}
+      return;
+    }
+    bmWakeLock = sentinel;
+    if (bmWakeLock && typeof bmWakeLock.addEventListener === "function") {
+      bmWakeLock.addEventListener("release", () => {
+        if (bmWakeLock === sentinel) bmWakeLock = null;
+      }, { once: true });
+    }
+  } catch (e) {
+    console.debug(e);
+  } finally {
+    bmWakeLockPending = false;
   }
 }
 function releaseAudioWakeLock() {
@@ -12513,7 +12582,7 @@ function cycleMiniPlayerSleepTimer() {
         clearBmAudioSleepTimer(true);
         return;
       }
-      updateAudioMiniPlayerUI();
+      if (document.visibilityState === "visible") updateAudioMiniPlayerUI();
     }, 15000);
   }
   updateAudioMiniPlayerUI();
@@ -12809,6 +12878,8 @@ function onSpeechFinishedSession(sessionId) {
           startChapterKaraokeSpeech(1, true);
         }
       }, 350);
+    }).catch(() => {
+      if (sessionId === bmSessionId) stopAllAudio();
     });
     return;
   }
@@ -13597,9 +13668,8 @@ function getExegeticalSchemaSample(kind) {
     ? JSON.stringify({ entries: { grazia: { code: "G5485", orig: "χάρις (charis)", def: "Favore immeritato, benignità sovrana di Dio." } } }, null, 2)
     : JSON.stringify({ refs: { "1_1_1": ["Giovanni 1:1", "Ebrei 11:3", "Salmi 33:6"], "43_3_16": ["Romani 5:8", "1 Giovanni 4:9"] } }, null, 2);
 }
-function copyExegeticalSchemaSample(kind, btnEl) {
-  copyPubRefToClipboard(getExegeticalSchemaSample(kind));
-  if (btnEl) btnEl.textContent = "✔ Esempio JSON copiato!";
+async function copyExegeticalSchemaSample(kind, btnEl) {
+  await copyTextWithButtonFeedback(getExegeticalSchemaSample(kind), btnEl, "✔ Esempio JSON copiato!", "tap");
 }
 function openExegeticalSchemaInfo(kind) {
   const isStrong = kind === "strong";
@@ -14569,7 +14639,7 @@ async function extractCalibreSplitEpub(zip, allFiles, mergedBooksMap, statusEl, 
       mergedBooksMap.set(bId, bObj);
     }
   }
-  if (report.warnings.length || report.skipped.length) console.info("[EPUB import]", labelName, report);
+  if (report.warnings.length || report.skipped.length) console.debug("[EPUB import]", labelName, report);
   return report;
 }
 // ============================================================================
@@ -16073,11 +16143,18 @@ function bpMakeThumb(dataUri, w = 260) {
   return new Promise(res => {
     const im = new Image();
     im.onload = () => {
-      const h = Math.max(1, Math.round(im.naturalHeight * w / im.naturalWidth));
-      const c = document.createElement("canvas");
-      c.width = w; c.height = h;
-      c.getContext("2d").drawImage(im, 0, 0, w, h);
-      res(c.toDataURL("image/jpeg", 0.7));
+      try {
+        if (!im.naturalWidth || !im.naturalHeight) { res(""); return; }
+        const h = Math.max(1, Math.round(im.naturalHeight * w / im.naturalWidth));
+        const c = document.createElement("canvas");
+        c.width = w; c.height = h;
+        const ctx = c.getContext("2d");
+        if (!ctx) { res(""); return; }
+        ctx.drawImage(im, 0, 0, w, h);
+        res(c.toDataURL("image/jpeg", 0.7));
+      } catch (_e) {
+        res("");
+      }
     };
     im.onerror = () => res("");
     im.src = dataUri;
@@ -16889,7 +16966,7 @@ function scrollRpToToday(smooth = false) {
 function buildStudioBackupObject() {
   return {
     app: "BibbiaMultilingue_PRO",
-    version: "PRO_v18.0.5",
+    version: "PRO_v18.0.12",
     date: new Date().toISOString(),
     bookId: state.bookId,
     chapter: state.chapter,
@@ -17144,8 +17221,11 @@ async function importBackupJson(e) {
   const inputEl = e.target;
   const file = inputEl && inputEl.files ? inputEl.files[0] : null;
   if (!file) return;
+  const reqId = ++peekReqId;
   try {
-    pendingBackupRawText = await file.text();
+    const rawText = await file.text();
+    if (reqId !== peekReqId) return;
+    pendingBackupRawText = rawText;
     openDialogModal(`
       <div style="text-align:center; padding:4px 0 14px 0;">
         <div style="font-size:30px; margin-bottom:8px;">📥</div>
@@ -17156,12 +17236,14 @@ async function importBackupJson(e) {
         </div>
       </div>
       <div style="display:flex; gap:10px;">
-        <button class="myread-action-btn" style="background:var(--bg-main); flex:1;" onclick="closeMyReadModal()">Annulla</button>
-        <button class="myread-action-btn" style="flex:1.3;" onclick="confirmImportBackupNow()">✔ Importa ora</button>
+        <button type="button" class="myread-action-btn" style="background:var(--bg-main); flex:1;" onclick="closeMyReadModal()">Annulla</button>
+        <button type="button" class="myread-action-btn" style="flex:1.3;" onclick="confirmImportBackupNow()">✔ Importa ora</button>
       </div>
     `, true);
-  } catch (err) {
-    showBlueInfoModal("❌ Errore", "Impossibile leggere il file selezionato.");
+  } catch (_err) {
+    if (reqId === peekReqId) {
+      showBlueInfoModal("❌ Errore", "Impossibile leggere il file selezionato.");
+    }
   } finally {
     inputEl.value = "";
   }
@@ -17386,7 +17468,7 @@ function setMigrationStatus(htmlMsg) {
 
 async function buildAndDeliverLibraryBundle(keysList, includeStudio, fileName, shareTitle) {
   const parts = [
-    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v18.0.5","date":',
+    '{"app":"BibbiaMultilingue_PRO","bmLibraryBundle":true,"version":"PRO_v18.0.12","date":',
     JSON.stringify(new Date().toISOString())
   ];
   if (includeStudio) {
@@ -17934,8 +18016,7 @@ function bpToggleDomHighlights(btnEl) {
   }
 }
 
-function bpCopyGeoDossier(btnEl) {
-  bmChimeHaptic();
+async function bpCopyGeoDossier(btnEl) {
   const list = [...bpUi.sel, ...bpUi.all];
   if (!list.length) return;
   const lines = [
@@ -17950,8 +18031,7 @@ function bpCopyGeoDossier(btnEl) {
     }),
     `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
   ];
-  copyPubRefToClipboard(lines.join("\n"));
-  if (btnEl) btnEl.textContent = "✔ Luoghi Copiati!";
+  await copyTextWithButtonFeedback(lines.join("\n"), btnEl, "✔ Luoghi Copiati!", "chime");
 }
 
 // ---------- 📍 Dove? — Console Geografica Intelligente ----------
@@ -18237,7 +18317,7 @@ function openDailyTextOnWolModal(langCode = "it", dayOffset = currentDailyOffset
   }
 }
 
-function exportSingleNoteDossier(noteId, refFallback) {
+async function exportSingleNoteDossier(noteId, refFallback) {
   bmChimeHaptic();
   let n = state.notes.find(x => Number(x.id) === Number(noteId));
   if (!n && refFallback) n = state.notes.find(x => x.ref === refFallback);
@@ -18253,12 +18333,18 @@ function exportSingleNoteDossier(noteId, refFallback) {
     tagsStr ? `\n🏷️ Tag: ${tagsStr}` : "",
     `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
   ].filter(Boolean).join("\n");
-  copyPubRefToClipboard(dossier);
-  showBlueInfoModal("📋 Dossier Copiato!", `Il dossier formattato per <b>${escapeHtml(n.ref)}</b> è pronto negli appunti per essere incollato o condiviso.`);
+  const reqId = ++peekReqId;
+  const ok = await copyPubRefToClipboard(dossier);
+  if (reqId !== peekReqId) return;
+  showBlueInfoModal(
+    ok ? "📋 Dossier Copiato!" : "⚠️ Copia Non Riuscita",
+    ok
+      ? `Il dossier formattato per <b>${escapeHtml(n.ref)}</b> è pronto negli appunti per essere incollato o condiviso.`
+      : `Impossibile copiare automaticamente il dossier per <b>${escapeHtml(n.ref)}</b>.`
+  );
 }
 
-function exportDailyDossierNow(btnEl) {
-  bmChimeHaptic();
+async function exportDailyDossierNow(btnEl) {
   const d = lastDailyDossier;
   if (!d) return;
   const dossier = [
@@ -18271,8 +18357,7 @@ function exportDailyDossierNow(btnEl) {
     d.comment,
     `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
   ].filter(Boolean).join("\n");
-  copyPubRefToClipboard(dossier);
-  if (btnEl) btnEl.textContent = "✔ Dossier Copiato negli Appunti!";
+  await copyTextWithButtonFeedback(dossier, btnEl, "✔ Dossier Copiato negli Appunti!", "chime");
 }
 let splashDismissed = false;
 let splashFadeStarted = false;
@@ -18468,8 +18553,10 @@ function initBmServiceWorker() {
 }
 
 async function checkBmPwaUpdates() {
+  if (bmSwManualCheckInFlight) return;
   bmChimeHaptic();
   bmSwManualCheckInFlight = true;
+  const reqId = ++peekReqId;
   clearBmSwUpdatePendingQueue();
   closeSettingsDrawer();
   try {
@@ -18483,9 +18570,24 @@ async function checkBmPwaUpdates() {
       try { await reg.update(); } catch (e) { console.debug(e); }
       const info = await new Promise(resolve => {
         const ch = new MessageChannel();
-        const t = setTimeout(() => resolve(null), 1500);
-        ch.port1.onmessage = ev => { clearTimeout(t); resolve(ev.data); };
-        reg.active.postMessage({ type: "GET_CACHE_STATUS" }, [ch.port2]);
+        let settled = false;
+        let t = null;
+        const done = (val) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(t);
+          ch.port1.onmessage = null;
+          try { ch.port1.close(); } catch (_e) {}
+          resolve(val);
+        };
+        t = setTimeout(() => done(null), 1500);
+        ch.port1.onmessage = ev => done(ev.data);
+        try {
+          reg.active.postMessage({ type: "GET_CACHE_STATUS" }, [ch.port2]);
+        } catch (_e) {
+          try { ch.port2.close(); } catch (_err) {}
+          done(null);
+        }
       });
       if (info) {
         const shellBadge = info.hasCoreShell
@@ -18507,12 +18609,15 @@ async function checkBmPwaUpdates() {
     const actionBtnHtml = hasWaitingUpdate
       ? `<button type="button" class="myread-action-btn" style="background:linear-gradient(135deg,#00838f,#00acc1);border-color:#84ffff;" onclick="applyPendingBmSwUpdate()">🚀 Applica Nuovo Aggiornamento Ora</button>`
       : `<button type="button" class="myread-action-btn" onclick="window.location.reload()">🔄 Ricarica App</button>`;
+    if (reqId !== peekReqId) return;
     showBlueInfoModal(
       "📡 Stato PWA Offline & Aggiornamenti",
       `${statusLine}${stHtml ? "<br>" + stHtml : ""}<br>${actionBtnHtml}`
     );
   } catch (err) {
-    showBlueInfoModal("⚠️ Verifica PWA", escapeHtml(err.message || "Impossibile contattare il Service Worker."));
+    if (reqId === peekReqId) {
+      showBlueInfoModal("⚠️ Verifica PWA", escapeHtml(err.message || "Impossibile contattare il Service Worker."));
+    }
   } finally {
     bmSwManualCheckInFlight = false;
   }
@@ -18631,17 +18736,19 @@ function goToMyPersonalReadingNow() {
   saveCurrentPositionToHistory(pers.bookId, pers.chapter);
   state.bookId = pers.bookId;
   state.chapter = pers.chapter;
-  loadChapterView().then(() => {
+  loadChapterView().then((ok) => {
+    if (!ok) return;
+    const viewReqId = currentViewReqId;
     const main = document.getElementById("mainContainer");
     const savedScroll = Number(safeGetStorage("bm_pers_scroll")) || 0;
     if (main && savedScroll > 0) {
       setTimeout(() => {
-        if (currentViewContext.type === "bible" && state.bookId === pers.bookId && state.chapter === pers.chapter) {
+        if (viewReqId === currentViewReqId && currentViewContext.type === "bible" && state.bookId === pers.bookId && state.chapter === pers.chapter) {
           main.scrollTop = savedScroll;
         }
       }, 80);
     }
-  });
+  }).catch(() => {});
 }
 
 function setAsMyReading() {
@@ -18871,7 +18978,7 @@ function showBlueInfoModal(titleTxt, bodyHtml) {
       <div style="font-size:16px; font-weight:800; color:var(--text-main); margin-bottom:8px;">${escapeHtml(titleTxt)}</div>
       <div style="font-size:14px; color:var(--text-main); line-height:1.5;">${bodyHtml}</div>
     </div>
-    <button class="myread-action-btn btn-color-anim" style="--btn-bg:#1565c0; --btn-glow:rgba(21,101,192,0.7); background:#1565c0;" onclick="closeMyReadModal()">OK</button>
+    <button type="button" class="myread-action-btn btn-color-anim" style="--btn-bg:#1565c0; --btn-glow:rgba(21,101,192,0.7); background:#1565c0;" onclick="closeMyReadModal()">OK</button>
   `);
 }
 
@@ -19160,6 +19267,7 @@ function setBmTtsBilingual(val, refreshTarget = "modal") {
 // ============================================================================
 async function executeOmniSearch() {
   const reqId = ++omniReqId;
+  searchReqId++;
   const inpEl = document.getElementById("searchInput");
   const rawQuery = inpEl ? inpEl.value.trim() : "";
   const resDiv = document.getElementById("searchResults");
@@ -19413,14 +19521,18 @@ async function executeOmniSearch() {
 
 async function executeStudyNotesOmniSearch(rawQueryStr, searchAllInstalled = false) {
   const reqId = ++omniReqId;
+  searchReqId++;
   const rawQuery = String(rawQueryStr || document.getElementById("searchInput")?.value || "").trim();
   const resDiv = document.getElementById("searchResults");
   if (!rawQuery || !resDiv) return;
   bmHaptic(14);
-  resDiv.innerHTML = `<div class="loader">🎓 Ricerca nelle Note di Studio per "<b>${escapeHtml(rawQuery)}</b>"...</div>`;
   const normFullQuery = normalizeForSearch(rawQuery);
   const qTokens = normFullQuery.split(/\s+/).filter(Boolean);
-  if (!qTokens.length) return;
+  if (!qTokens.length) {
+    resDiv.innerHTML = `<div class="loader">Digita almeno una parola valida da cercare nelle Note di Studio.</div>`;
+    return;
+  }
+  resDiv.innerHTML = `<div class="loader">🎓 Ricerca nelle Note di Studio per "<b>${escapeHtml(rawQuery)}</b>"...</div>`;
   const allKeys = await idbGetAllKeys();
   if (reqId !== omniReqId || currentViewContext.type !== "search") return;
   const installedIds = buildOrderedStudyBibleCandidates(resolveStudyBibleIdForUi()).filter(id => allKeys.includes(id));
@@ -19522,7 +19634,7 @@ async function executeStudyNotesOmniSearch(rawQueryStr, searchAllInstalled = fal
     outHtml += `<div class="loader">Nessuna Nota di Studio corrispondente trovata${!searchAllInstalled && otherLangCodes.length ? ` in ${escapeHtml(activeLangCode)}. Prova ad estendere la ricerca alle altre lingue installate.` : " negli archivi installati."}</div>`;
   } else {
     outHtml += hits.map(h => `
-      <div class="result-card bm-omni-study-card" onclick="openRef(${h.bookId}, ${h.chapter}, ${h.verse}).then((ok) => { if (ok) openStudyNoteModal(${h.verse}, '${escapeJsStr(h.bibleId)}'); })">
+      <div class="result-card bm-omni-study-card" onclick="openRef(${h.bookId}, ${h.chapter}, ${h.verse}).then((ok) => { if (ok) openStudyNoteModal(${h.verse}, '${escapeJsStr(h.bibleId)}'); }).catch(() => {})">
         <div class="result-ref">🎓 ${escapeHtml(h.bookName)} ${h.chapter}:${h.verse} <small style="color:var(--text-muted); font-weight:700;">(${escapeHtml(h.langBadge)})</small></div>
         <div class="bm-justify-text" style="font-size:13px; color:var(--text-muted);">${highlightSnippetSafe(h.snippet, h.hlTerm || rawQuery)}</div>
       </div>`).join("");
@@ -20200,6 +20312,7 @@ function onBmExitChoice(shouldExit, btnEl) {
   document.addEventListener("keydown", armOnUserGesture, { capture: true, passive: true });
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") {
+      pauseStudyMinuteTracker();
       if (bmExitConfirmOpen || bmExitingApp) closeBmExitModal(false);
       clearTimeout(bmHapticSuspendTimer);
       bmHapticSuspendTimer = null;
@@ -20208,13 +20321,23 @@ function onBmExitChoice(shouldExit, btnEl) {
       }
     } else if (document.visibilityState === "visible") {
       bmExitingApp = false;
+      markBmUserActive();
+      scheduleStudyMinuteTick();
       if (bmAudioPlaying) requestAudioWakeLock();
+      if (bmAudioPlaying || bmAudioPaused) updateAudioMiniPlayerUI();
       if (bmSwReg && navigator.onLine !== false && (Date.now() - bmLastSwCheckAt) > 21600000) {
         bmLastSwCheckAt = Date.now();
         bmSwReg.update().catch(() => {});
       }
     }
   });
+  window.addEventListener("pagehide", pauseStudyMinuteTracker, { passive: true });
+  window.addEventListener("pageshow", (e) => {
+    if (e.persisted && document.visibilityState === "visible") {
+      markBmUserActive();
+      scheduleStudyMinuteTick();
+    }
+  }, { passive: true });
 
   // Gestore dedicato: swipe rapido e deciso dal bordo destro verso sinistra -> apre sempre #bmExitModal ovunque ci si trovi (anche subito su Scrittura del Giorno)
   let edgeStartX = 0;
@@ -20373,7 +20496,8 @@ async function returnToXRayModalNow() {
   state.chapter = chapter;
   state.selectedVerse = verse;
   if (currentViewContext.type !== "bible") {
-    await loadChapterView();
+    const ok = await loadChapterView();
+    if (!ok) return;
   }
   scrollToVerseAndHighlight(verse);
   openVerseXRayModal(verse);
@@ -20590,8 +20714,7 @@ function formatXRayDiffWords(baseText, targetText, isPrimary = false, targetTran
   return isItalianBible(targetTransId) ? decorateXRayInterlinearRoots(outHtml) : outHtml;
 }
 
-function copyXRayComparisonDossier(btnEl) {
-  bmChimeHaptic();
+async function copyXRayComparisonDossier(btnEl) {
   const d = lastXRayDossier;
   if (!d) return;
   const rowsList = d.rows || [];
@@ -20600,8 +20723,7 @@ function copyXRayComparisonDossier(btnEl) {
     ...rowsList.map(r => `• ${r.name}:\n  "${r.text}"`),
     `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
   ];
-  copyPubRefToClipboard(lines.join("\n"));
-  if (btnEl) btnEl.textContent = "✔ Copiato!";
+  await copyTextWithButtonFeedback(lines.join("\n"), btnEl, "✔ Copiato!", "chime");
 }
 
 function saveXRayDossierAsNote(btnEl) {
@@ -20869,7 +20991,7 @@ async function openVerseXRayModal(forcedVerseNum) {
 // Cronometro intelligente: conta solo minuti di studio reale (interazione negli ultimi 3 min o lettura audio attiva) + streak giornaliero
 let bmLastActivityAt = Date.now();
 const markBmUserActive = () => { bmLastActivityAt = Date.now(); };
-["pointerdown", "keydown", "touchstart"].forEach(ev => document.addEventListener(ev, markBmUserActive, { passive: true }));
+["pointerdown", "keydown"].forEach(ev => document.addEventListener(ev, markBmUserActive, { passive: true }));
 document.getElementById("mainContainer")?.addEventListener("scroll", function() {
   const el = this;
   markBmUserActive();
@@ -20935,14 +21057,54 @@ function computeStudyStreakDays() {
   return streak;
 }
 
-setInterval(() => {
-  const isRecentlyActive = (Date.now() - bmLastActivityAt) < 180000;
-  if (document.visibilityState === "visible" && (isRecentlyActive || bmAudioPlaying)) {
-    const mins = (Number(safeGetStorage("bm_study_minutes_v1")) || 0) + 1;
-    safeSaveStorage("bm_study_minutes_v1", String(mins));
-    recordActiveStudyDay();
+let bmStudyMinuteTimerId = null;
+let bmStudyAccumMs = 0;
+let bmStudyTickStartTs = 0;
+
+function flushStudyActiveElapsed(nowTs = Date.now()) {
+  if (!bmStudyTickStartTs) return;
+  const elapsed = Math.max(0, nowTs - bmStudyTickStartTs);
+  bmStudyTickStartTs = nowTs;
+  const isRecentlyActive = (nowTs - bmLastActivityAt) < 180000;
+  if (isRecentlyActive || bmAudioPlaying) {
+    bmStudyAccumMs += Math.min(elapsed, 65000);
+    if (bmStudyAccumMs >= 60000) {
+      const wholeMins = Math.floor(bmStudyAccumMs / 60000);
+      bmStudyAccumMs -= wholeMins * 60000;
+      const mins = (Number(safeGetStorage("bm_study_minutes_v1")) || 0) + wholeMins;
+      safeSaveStorage("bm_study_minutes_v1", String(mins));
+      recordActiveStudyDay();
+    }
   }
-}, 60000);
+}
+
+function scheduleStudyMinuteTick() {
+  if (bmStudyMinuteTimerId || document.visibilityState !== "visible") return;
+  const nowTs = Date.now();
+  bmStudyTickStartTs = nowTs;
+  const isActive = (nowTs - bmLastActivityAt) < 180000 || bmAudioPlaying;
+  const delay = isActive ? Math.max(1000, 60000 - bmStudyAccumMs) : 60000;
+  bmStudyMinuteTimerId = setTimeout(() => {
+    bmStudyMinuteTimerId = null;
+    if (document.visibilityState !== "visible") {
+      bmStudyTickStartTs = 0;
+      return;
+    }
+    flushStudyActiveElapsed();
+    scheduleStudyMinuteTick();
+  }, delay);
+}
+
+function pauseStudyMinuteTracker() {
+  if (bmStudyMinuteTimerId) {
+    clearTimeout(bmStudyMinuteTimerId);
+    bmStudyMinuteTimerId = null;
+  }
+  flushStudyActiveElapsed();
+  bmStudyTickStartTs = 0;
+}
+
+if (document.visibilityState === "visible") scheduleStudyMinuteTick();
 
 // 📊 Mappa Termica (Heatmap) e Statistiche Avanzate dei 66 Libri (include anche capitoli completati nel Piano Annuale)
 function openStudyAnalyticsModal() {
@@ -21604,10 +21766,11 @@ function jumpToMessianicProphecyIndex(targetIdx, expandBubble = true) {
   state.bookId = p.b;
   state.chapter = p.c;
   bmPendingProphecyIdx = targetIdx;
-  loadChapterView().then(() => {
+  loadChapterView().then((ok) => {
+    if (!ok) return;
     highlightMessianicVersesInDOM(p, false);
     scrollToVerseAndHighlight(p.v);
-  });
+  }).catch(() => {});
 }
 
 function onMessianicPrevDown(ev) { bmMessianicPrevLP.down(ev); }
@@ -22289,11 +22452,9 @@ function formatChapterDossierPlainText(d) {
   return lines.join("\n");
 }
 
-function copyChapterDossierText(btnEl) {
-  bmChimeHaptic();
+async function copyChapterDossierText(btnEl) {
   if (!lastChapterDossier) return;
-  copyPubRefToClipboard(formatChapterDossierPlainText(lastChapterDossier));
-  if (btnEl) btnEl.textContent = "✔ Dossier Copiato!";
+  await copyTextWithButtonFeedback(formatChapterDossierPlainText(lastChapterDossier), btnEl, "✔ Dossier Copiato!", "chime");
 }
 
 function saveChapterDossierAsNote(btnEl) {
@@ -22331,6 +22492,8 @@ const bmStudyDocsMissingIds = new Set();
 const bmStudyXrefsMissingIds = new Set();
 const bmStudyExtrasMissingIds = new Set();
 let bmStudyImgCache = new Map();
+const bmStudyImgInFlight = new Map();
+let bmStudyImgCacheGen = 0;
 const BM_STUDY_IMG_CACHE_MAX = 60;
 const bmPendingRevokeBlobUrls = new Set();
 let bmStudyMainImgObserver = null;
@@ -22434,6 +22597,8 @@ function resetStudyBibleCaches() {
       try { URL.revokeObjectURL(url); } catch (_e) {}
     }
   });
+  bmStudyImgCacheGen++;
+  bmStudyImgInFlight.clear();
   bmStudyImgCache.clear();
   flushPendingStudyBlobRevokes(true);
 }
@@ -22655,24 +22820,38 @@ async function loadStudyImageDataUrl(fileName) {
     bmStudyImgCache.set(clean, cachedUrl);
     return cachedUrl;
   }
-  const rec = await idbGet(BM_STUDY_IMG_PREFIX + clean);
-  if (!rec || !rec.b64) return "";
-  const mime = rec.mime || (clean.toLowerCase().endsWith(".svg") ? "image/svg+xml" : "image/jpeg");
-  const url = base64ToStudyBlobUrl(rec.b64, mime);
-  while (bmStudyImgCache.size >= BM_STUDY_IMG_CACHE_MAX) {
-    const oldestKey = bmStudyImgCache.keys().next().value;
-    const oldestUrl = bmStudyImgCache.get(oldestKey);
-    bmStudyImgCache.delete(oldestKey);
-    safeRevokeStudyBlobUrl(oldestUrl);
-  }
-  bmStudyImgCache.set(clean, url);
-  return url;
+  if (bmStudyImgInFlight.has(clean)) return bmStudyImgInFlight.get(clean);
+  const gen = bmStudyImgCacheGen;
+  const task = (async () => {
+    const rec = await idbGet(BM_STUDY_IMG_PREFIX + clean);
+    if (!rec || !rec.b64 || gen !== bmStudyImgCacheGen) return "";
+    const mime = rec.mime || (clean.toLowerCase().endsWith(".svg") ? "image/svg+xml" : "image/jpeg");
+    const url = base64ToStudyBlobUrl(rec.b64, mime);
+    if (bmStudyImgCache.has(clean)) {
+      const existing = bmStudyImgCache.get(clean);
+      if (existing !== url) safeRevokeStudyBlobUrl(url);
+      return existing;
+    }
+    while (bmStudyImgCache.size >= BM_STUDY_IMG_CACHE_MAX) {
+      const oldestKey = bmStudyImgCache.keys().next().value;
+      const oldestUrl = bmStudyImgCache.get(oldestKey);
+      bmStudyImgCache.delete(oldestKey);
+      safeRevokeStudyBlobUrl(oldestUrl);
+    }
+    bmStudyImgCache.set(clean, url);
+    return url;
+  })().finally(() => {
+    if (bmStudyImgInFlight.get(clean) === task) bmStudyImgInFlight.delete(clean);
+  });
+  bmStudyImgInFlight.set(clean, task);
+  return task;
 }
 
 async function hydrateSingleStudyImg(img) {
   if (!img || !img.isConnected) return;
   const fname = img.getAttribute("data-study-img") || "";
-  if (!fname || img.getAttribute("data-study-loaded") === "1") return;
+  const st = img.getAttribute("data-study-loaded");
+  if (!fname || st === "1" || st === "loading") return;
   img.setAttribute("data-study-loaded", "loading");
   const src = await loadStudyImageDataUrl(fname);
   if (!img.isConnected) return;
@@ -23685,7 +23864,16 @@ function setStudyDocsFilterCat(catId) {
       btn.classList.toggle("active", btn.getAttribute("data-cat") === bmStudyDocsFilterCat);
     });
   }
-  getStudyBibleDocsData(bmStudyDocsActiveBibleId).then(d => { if (d) renderStudyDocsFilteredList(d); });
+  refreshStudyDocsFilteredList();
+}
+
+function refreshStudyDocsFilteredList() {
+  const viewReqId = currentViewReqId;
+  const targetId = bmStudyDocsActiveBibleId;
+  getStudyBibleDocsData(targetId).then(d => {
+    if (!d || viewReqId !== currentViewReqId || targetId !== bmStudyDocsActiveBibleId) return;
+    renderStudyDocsFilteredList(d);
+  }).catch(() => {});
 }
 
 function onStudyDocsSearchInput(val) {
@@ -23694,7 +23882,7 @@ function onStudyDocsSearchInput(val) {
   if (clearBtn) clearBtn.style.display = bmStudyDocsSearchQuery ? "inline-flex" : "none";
   clearTimeout(bmStudyDocsSearchTimer);
   bmStudyDocsSearchTimer = setTimeout(() => {
-    getStudyBibleDocsData(bmStudyDocsActiveBibleId).then(d => { if (d) renderStudyDocsFilteredList(d); });
+    refreshStudyDocsFilteredList();
   }, 160);
 }
 
@@ -23706,7 +23894,7 @@ function clearStudyDocsSearch() {
   if (inp) { inp.value = ""; inp.focus(); }
   const clearBtn = document.getElementById("bmStudyDocsClearBtn");
   if (clearBtn) clearBtn.style.display = "none";
-  getStudyBibleDocsData(bmStudyDocsActiveBibleId).then(d => { if (d) renderStudyDocsFilteredList(d); });
+  refreshStudyDocsFilteredList();
 }
 
 function matchStudyDocBookTitle(normTitle, normBookName) {
@@ -24271,18 +24459,25 @@ async function handleLaunchMode(launchMode, isHotLaunch = false) {
       const pers = getPersonalReadingState();
       state.bookId = pers.bookId;
       state.chapter = pers.chapter;
-      await loadChapterView();
+      const ok = await loadChapterView();
+      if (!ok) return;
       const savedScroll = Number(safeGetStorage("bm_pers_scroll")) || 0;
       const mainEl = document.getElementById("mainContainer");
       if (mainEl && savedScroll > 20) mainEl.scrollTop = savedScroll;
     } else {
-      await showDailyTextView(0, true);
+      const dailyPromise = showDailyTextView(0, true);
+      const viewReqId = currentViewReqId;
+      await dailyPromise;
+      if (viewReqId !== currentViewReqId) return;
       openMyReading();
     }
   } else if (mode === "search") {
     showSearchView(true);
+    const viewReqId = currentViewReqId;
     setTimeout(() => {
-      if (currentViewContext.type === "search") document.getElementById("searchInput")?.focus();
+      if (viewReqId === currentViewReqId && currentViewContext.type === "search") {
+        document.getElementById("searchInput")?.focus();
+      }
     }, 140);
   } else if (mode === "notes") {
     showNotesView(true);
@@ -24297,7 +24492,7 @@ if ("launchQueue" in window && typeof window.launchQueue.setConsumer === "functi
     try {
       const u = new URL(launchParams.targetURL);
       const mode = (u.searchParams.get("launch") || "").toLowerCase().trim();
-      if (mode) handleLaunchMode(mode, true);
+      if (mode) handleLaunchMode(mode, true).catch(() => {});
     } catch (e) { console.debug(e); }
   });
 }
